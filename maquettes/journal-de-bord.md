@@ -6,7 +6,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 
 - **Suivi du Hub** : 6 étapes validées sur 36 (17 %). Phase 0 terminée. Phase 6 · Assistant IA ajoutée (4 étapes).
 - **Prochaine étape du Suivi** : « Ambiance validée sur une première maquette » (phase 1), à cocher par toi.
-- **Maquette en cours** : v6, en test. Version de référence : v4 ★.
+- **Maquette en cours** : v7, en test. Version de référence : v4 ★.
 - **Modèle** : on est toujours en conception (Opus). Le passage à Sonnet viendra après validation de l'ambiance.
 
 ## Historique
@@ -19,6 +19,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 | 23/10 | v4 ★ | Vue PC : météo discrète, agenda intégré, panneau Mon PC, bureau du PC en plan 3. Jugée « géniale ». |
 | 23/10 | v5 | Vue PC : filaments liés à la souris, effet de force en déplaçant, curseur HUD en plein écran, clic droit, vidéos à suivre sous le lecteur, fenêtre Progression + mods, images libres. |
 | 23/10 | v6 | Entité d'énergie en sommeil qui suit la souris (« ? »), traînée longue et lente, clic droit propre à chaque fenêtre, double-clic pour changer de plan, « Plan 3 ». |
+| 23/10 | v7 | Plan 2 en mode cinéma, grand écran vidéo et musique, appui long sur l'orbe pour l'énergie de la souris, entité posée sur le logo. |
 
 ## Décisions prises
 
