@@ -12,6 +12,7 @@ import { toast } from "./ui/toast.js";
 import { initData } from "./ui/data.js";
 import { initNotes } from "./widgets/notes.js";
 import { initTasks } from "./widgets/tasks.js";
+import { initAgenda } from "./widgets/agenda.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
 import { initTilt } from "./device/orientation.js";
@@ -61,6 +62,7 @@ async function start() {
   initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data });
   initNotes();
   initTasks();
+  initAgenda();
 
   let core = null, fx = null;
   function resize() {

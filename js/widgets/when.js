@@ -50,3 +50,21 @@ export function parseDue(text) {
   });
   return { text: out.replace(/\s{2,}/g, " ").trim(), due };
 }
+
+/** « 14h30 », « 9h », « 14:30 », « 14h-16h » dans un texte → { text sans l'heure, start: "HH:MM" | null, end }. */
+export function parseTime(text) {
+  let start = null, end = null;
+  const hm = "(\\d{1,2})(?:[h:](\\d{2})?|h)";
+  const re = new RegExp("(^|\\s)" + hm + "(?:\\s?[-–à]\\s?" + hm + ")?(?=\\s|$)", "i");
+  const out = text.replace(re, (all, sp, h1, m1, h2, m2) => {
+    if (+h1 > 23 || (m1 && +m1 > 59)) return all;
+    start = pad(+h1) + ":" + (m1 || "00");
+    if (h2 !== undefined && +h2 <= 23 && !(m2 && +m2 > 59)) end = pad(+h2) + ":" + (m2 || "00");
+    return sp;
+  });
+  return { text: out.replace(/\s{2,}/g, " ").trim(), start, end };
+}
+/** "HH:MM" → minutes depuis minuit. */
+export const toMin = (s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+/** Lundi de la semaine du jour k. */
+export const mondayOf = (k) => { const d = fromKey(k), n = (d.getDay() + 6) % 7; return dayKey(addDays(d, -n)); };

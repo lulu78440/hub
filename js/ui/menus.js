@@ -2,6 +2,7 @@
 // PC : clic droit propre à chaque endroit (fond, fenêtre, entité, bureau du plan 3). Maj + clic droit : menu de Brave.
 // Mobile : appui long sur le titre d'une fenêtre pour la masquer ou la déplacer dans la pile ; ordre mémorisé.
 // Les widgets ajoutent leurs propres lignes en haut du menu de leur fenêtre avec registerMenu(id, fn).
+// Une zone hors fenêtre marquée data-menu="nom" (ex. la bande d'agenda) a son propre menu : registerMenu("nom", fn).
 import { state } from "../state.js";
 import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
@@ -70,8 +71,9 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data }) {
     const t = e.target && e.target.closest ? e.target : document.body;
     if (t.closest("input, textarea, [contenteditable='true'], .diag, .ctx")) return;
     e.preventDefault();
-    const winEl = t.closest(".win:not(.mob-only)");
+    const winEl = t.closest(".win:not(.mob-only)"), zone = t.closest("[data-menu]");
     const items = entity.near(e.clientX, e.clientY) || t.closest("#logo") ? entMenu()
+      : zone && hooks[zone.dataset.menu] ? hooks[zone.dataset.menu](zone, t) || []
       : winEl ? winMenu(winEl, t)
       : plans.plan === 3 ? deskMenu()
       : bgMenu();
