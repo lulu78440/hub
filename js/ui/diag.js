@@ -1,5 +1,6 @@
 /* Panneau de diagnostic : version, mode, réseau, hors ligne, installation. Ouvert par le bouton « Diag » ou la touche D. */
 import { VERSION } from "../version.js";
+import { toast } from "./toast.js";
 
 const $ = (id) => document.getElementById(id);
 const set = (id, text, cls = "") => { const el = $(id); el.textContent = text; el.className = cls; };
@@ -44,7 +45,11 @@ async function refreshStatus(reg) {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register(new URL("../../sw.js", import.meta.url).href).then((reg) => {
     refreshStatus(reg);
-    navigator.serviceWorker.addEventListener("controllerchange", () => refreshStatus(reg));
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      refreshStatus(reg);
+      if (hadController) toast("Nouvelle version prête : recharge la page");   // la page ouverte est encore l'ancienne
+    });
     reg.addEventListener("updatefound", () => {
       const n = reg.installing;
       n && n.addEventListener("statechange", () => { if (n.state === "activated") refreshStatus(reg); });
