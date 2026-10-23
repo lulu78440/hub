@@ -42,7 +42,9 @@ async function refreshStatus(reg) {
   set("d-cache", mine ? "Oui · tout est en mémoire" : "Non", mine ? "ok" : "bad");
 }
 
-if ("serviceWorker" in navigator) {
+if (location.protocol === "file:") {
+  set("d-sw", "Fichier local : sans objet"); set("d-cache", "Oui · le fichier est déjà sur le disque", "ok");
+} else if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register(new URL("../../sw.js", import.meta.url).href).then((reg) => {
     refreshStatus(reg);
     const hadController = !!navigator.serviceWorker.controller;
