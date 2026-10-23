@@ -1,12 +1,12 @@
 /* Service worker du Hub : cache hors ligne versionné.
    Pour publier une nouvelle version : changer VERSION (et mettre à jour js/version.js). */
-const VERSION = "2.7.0";
+const VERSION = "2.8.0";
 const CACHE = "hub-" + VERSION;
 const ROOT = new URL("./", self.location).href;
 const PRECACHE = [
   "", "index.html", "manifest.webmanifest",
   "css/base.css", "css/hud.css", "css/mobile.css",
-  "js/main.js", "js/version.js", "js/state.js", "js/ui/diag.js", "js/ui/clock.js", "js/ui/search.js", "js/ui/topbar.js", "js/ui/plans.js", "js/ui/windows.js", "js/ui/menus.js", "js/ui/ctxmenu.js", "js/device/vibrate.js", "js/ui/data.js", "js/store/storage.js", "js/widgets/when.js", "js/widgets/notes.js", "js/widgets/tasks.js", "js/widgets/agenda.js", "js/widgets/reminders.js", "js/widgets/weather.js", "js/widgets/favs.js", "js/store/bookmarks.js", "js/ui/labels.js", "js/device/geo.js", "js/ui/alertsui.js", "js/device/sound.js", "js/device/notify.js", "js/device/orientation.js", "js/ui/toast.js", "js/ui/dom.js", "js/store/prefs.js", "js/fx/force.js", "js/fx/entity.js", "js/fx/cursor.js",
+  "js/main.js", "js/version.js", "js/state.js", "js/ui/diag.js", "js/ui/clock.js", "js/ui/search.js", "js/ui/topbar.js", "js/ui/plans.js", "js/ui/windows.js", "js/ui/menus.js", "js/ui/ctxmenu.js", "js/device/vibrate.js", "js/ui/data.js", "js/store/storage.js", "js/widgets/when.js", "js/widgets/notes.js", "js/widgets/tasks.js", "js/widgets/agenda.js", "js/widgets/reminders.js", "js/widgets/weather.js", "js/widgets/favs.js", "js/widgets/mypc.js", "js/device/system.js", "js/device/folders.js", "js/store/bookmarks.js", "js/ui/labels.js", "js/device/geo.js", "js/ui/alertsui.js", "js/device/sound.js", "js/device/notify.js", "js/device/orientation.js", "js/ui/toast.js", "js/ui/dom.js", "js/store/prefs.js", "js/fx/force.js", "js/fx/entity.js", "js/fx/cursor.js",
   "js/scene/loader.js", "js/scene/core3d.js", "js/scene/postfx.js",
   "vendor/three/three.min.js",
   "vendor/three/examples/shaders/CopyShader.js", "vendor/three/examples/shaders/LuminosityHighPassShader.js",
