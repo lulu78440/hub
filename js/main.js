@@ -16,6 +16,7 @@ import { initAgenda } from "./widgets/agenda.js";
 import { initReminders } from "./widgets/reminders.js";
 import { initAlertsUI } from "./ui/alertsui.js";
 import { initWeather } from "./widgets/weather.js";
+import { initFavs } from "./widgets/favs.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -70,6 +71,7 @@ async function start() {
   const reminders = initReminders();
   initAlertsUI(reminders);
   const weather = initWeather();
+  initFavs();
 
   let core = null, fx = null;
   function resize() {

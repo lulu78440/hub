@@ -69,6 +69,13 @@ export const store = {
     if (!db) memory[coll].delete(id); else await tx(db, coll, "readwrite", (st) => st.delete(id));
     emit(coll);
   },
+  /** Plusieurs ajouts ou remplacements en une fois (un seul signal de changement). */
+  async putMany(coll, objs) {
+    const db = await open();
+    if (!db) objs.forEach((o) => memory[coll].set(o.id, o));
+    else await tx(db, coll, "readwrite", (st) => { objs.forEach((o) => st.put(o)); });
+    emit(coll);
+  },
   /** Plusieurs suppressions en une fois. */
   async delMany(coll, ids) {
     const db = await open();

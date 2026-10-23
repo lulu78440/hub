@@ -31,7 +31,7 @@ function defaults(W, H) {
   const sh = th + 30 + 20 + 36 + 26;
   L.progress = { x: x0, y: B - sh, w: mw, h: sh };
   L.music = { x: -(Lw + 50), y: T, w: Lw, h: 250 };
-  L.favs = { x: -(Lw + 50), y: T + 270, w: Lw, h: 220 };
+  L.favs = { x: -(Lw + 50), y: T + 270, w: Lw, h: 340 };
   L.notes = { x: W + 50, y: T, w: Rw, h: 300 };
   const sw = Math.min(600, mw), sy = L.progress.y - 100;
   return { L, search: { x: x0 + (mw - sw) / 2, y: sy, w: sw }, anchor: { left: x0, top: T, width: mw, height: Math.max(sy - T - 6, 140) } };
