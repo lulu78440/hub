@@ -76,7 +76,7 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     if (t.closest("input, textarea, [contenteditable='true'], .diag, .ctx")) return;
     e.preventDefault();
     const winEl = t.closest(".win:not(.mob-only)"), zone = t.closest("[data-menu]");
-    const items = entity.near(e.clientX, e.clientY) || t.closest("#logo") ? entMenu()
+    const items = t.closest("#logo") || (entity.near(e.clientX, e.clientY) && !zone && !winEl && !t.closest(".top")) ? entMenu()
       : zone && hooks[zone.dataset.menu] ? hooks[zone.dataset.menu](zone, t) || []
       : winEl ? winMenu(winEl, t)
       : plans.plan === 3 ? deskMenu()

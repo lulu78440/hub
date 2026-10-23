@@ -6,6 +6,7 @@ import { dayKey, dayLabel, daysFrom, parseDue, parseTime, addDays } from "./when
 import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { pulse } from "../state.js";
+import { setLabel } from "../ui/labels.js";
 
 const C = "tasks";
 
@@ -49,6 +50,7 @@ export function initTasks() {
     });
     const todo = tasks.filter((t) => !t.done).length, done = tasks.length - todo, late = tasks.filter((t) => !t.done && t.due && daysFrom(t.due) < 0).length;
     tag.textContent = todo ? todo + " À FAIRE" : (tasks.length ? "TOUT EST FAIT" : "TÂCHES");
+    setLabel("tasks", todo ? todo + " à faire" : "");
     pf.querySelector(".sum").textContent = tasks.length ? `${done} faite${done > 1 ? "s" : ""} sur ${tasks.length}` + (late ? ` · ${late} en retard` : "") : "Stockées sur l'appareil";
     clearBtn.hidden = !done;
     const segs = Math.min(tasks.length, 12), filled = tasks.length ? Math.round(done / tasks.length * segs) : 0;

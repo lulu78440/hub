@@ -15,6 +15,8 @@ import { initTasks } from "./widgets/tasks.js";
 import { initAgenda } from "./widgets/agenda.js";
 import { initReminders } from "./widgets/reminders.js";
 import { initAlertsUI } from "./ui/alertsui.js";
+import { initWeather } from "./widgets/weather.js";
+import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
 import { initTilt } from "./device/orientation.js";
@@ -67,6 +69,7 @@ async function start() {
   initAgenda();
   const reminders = initReminders();
   initAlertsUI(reminders);
+  const weather = initWeather();
 
   let core = null, fx = null;
   function resize() {
@@ -93,6 +96,7 @@ async function start() {
     if (core) {
       const c = core.frame(anchorEl.getBoundingClientRect(), RW, RH); if (c) fx.setCenter(c);
       core.update({ t, dt, k, energy: state.energy, accent: state.accent, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
+      updateLabels(core.project(RW, RH), state.lite ? 1 : plans.zoom);
       fx.update(t, state.energy, state.cine);
       fx.render();
     }
@@ -103,7 +107,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse, plans, force, wins, data, reminders };   // pour les essais en console
+  window.__hub = { state, pulse, plans, force, wins, data, reminders, weather };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;

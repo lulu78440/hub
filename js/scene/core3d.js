@@ -117,6 +117,15 @@ export function createCore(THREE, { lite = false } = {}) {
     dust = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.06, map: dotTex, vertexColors: true, opacity: 0.75, ...ADD })); scene.add(dust);
   }
 
+  /* ---------- Points d'ancrage des légendes flottantes (Météo, Tâches, Agenda) autour du noyau ---------- */
+  const labelRoot = new THREE.Group(); coreG.add(labelRoot);
+  const labelPts = [[0.3, 0.9], [1.9, -0.5], [3.4, 0.6], [4.9, -0.8]].map(([a, y]) => { const o = new THREE.Object3D(); o.position.set(Math.cos(a) * 3.0, y, Math.sin(a) * 3.0); labelRoot.add(o); return o; });
+  const wp = new THREE.Vector3();
+  /** Position à l'écran (px) et profondeur de chaque point d'ancrage. */
+  function project(RW, RH) {
+    return labelPts.map((o) => { o.getWorldPosition(wp); const depth = wp.z; wp.project(camera); return { x: (wp.x + 1) / 2 * RW, y: (1 - wp.y) / 2 * RH, depth }; });
+  }
+
   /** (Re)construit les éléments dont la quantité dépend du mode : PC complet ou mobile allégé. */
   function build(isLite) {
     buildConstellation(isLite ? 70 : 180); buildDust(isLite ? 450 : 2800); buildPillars(isLite ? 40 : 140);
@@ -159,7 +168,7 @@ export function createCore(THREE, { lite = false } = {}) {
     ticks.rotation.z -= dt * k * (0.1 + e * 0.6); dial.lookAt(camera.position);
     rings.forEach((r) => { r.m.rotation.z += dt * k * r.speed * (1 + e * 2.5); });
     arc.rotation.y -= dt * k * 0.25; plate.rotation.z += dt * k * 0.05;
-    constel.rotation.y -= dt * k * 0.05; polar.rotation.y += dt * k * 0.05;
+    constel.rotation.y -= dt * k * 0.05; polar.rotation.y += dt * k * 0.05; labelRoot.rotation.y += dt * k * 0.06;
     updatePillars(t, e);
     const p = dust.geometry.attributes.position.array;
     for (let i = 0; i < dustSpeed.length; i++) { p[i * 3 + 1] += dustSpeed[i] * dt * k; if (p[i * 3 + 1] > 10) p[i * 3 + 1] = -4; }
@@ -174,5 +183,5 @@ export function createCore(THREE, { lite = false } = {}) {
     camera.lookAt(0, 0, 0);
   }
 
-  return { scene, camera, build, frame, resize, update };
+  return { scene, camera, build, frame, resize, update, project };
 }

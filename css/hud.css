@@ -51,7 +51,6 @@
 
 /* ---------- Actions du bandeau ---------- */
 .top > .actions { position: relative; z-index: 1; }
-.wxslot { width: 120px; height: 1px; }              /* place réservée à la météo (phase 2) */
 .seg { display: inline-flex; }
 .seg .btn + .btn { border-left: 0; }
 .brand { position: relative; z-index: 1; }
@@ -404,3 +403,54 @@ body.lite .alert .aacts .btn { padding: 11px 14px; }
 .cal .ev.bell span::after, .tasks em.bell::after { content: ""; display: inline-block; width: 5px; height: 5px; margin-left: 6px; vertical-align: 2px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 6px var(--amber); }
 .evform .inl.sel { width: auto; font-family: var(--mono); font-size: 13px; color-scheme: dark; background: rgba(12,10,32,.95); }
 .erow .inl.time { width: auto; flex: 0 1 110px; font-family: var(--mono); font-size: 13px; color-scheme: dark; }
+
+/* ---------- Météo (2.6, v8) ---------- */
+.wxm { position: relative; display: flex; align-items: center; gap: 8px; padding: 4px 6px; color: var(--ink); font-family: var(--mono); font-size: 12px; cursor: default; outline: none; }
+.wxm .wi { display: grid; color: var(--cyan); filter: drop-shadow(0 0 4px rgba(63,230,255,.6)); }
+.wxm .wt { font-family: var(--display); font-weight: 500; font-size: 18px; font-variant-numeric: tabular-nums; }
+.wxm .wl { color: var(--dim); white-space: nowrap; }
+.wxm:focus-visible { outline: 1px solid var(--cyan); }
+@media (max-width: 1400px) { .wxm .wl { display: none; } }
+.wxpop { position: absolute; right: 0; top: calc(100% + 8px); width: 310px; padding: 12px 14px; background: rgba(3,13,24,.96); border: 1px solid rgba(63,230,255,.35); display: grid; gap: 10px; opacity: 0; visibility: hidden; translate: 0 -6px; transition: opacity .25s, translate .25s, visibility .25s; z-index: 7; }
+.wxm:hover .wxpop, .wxm:focus-within .wxpop, .wxm.pinned .wxpop { opacity: 1; visibility: visible; translate: 0 0; }
+.wxpop p { margin: 0; font-size: 11px; color: var(--dim); display: flex; justify-content: space-between; gap: 10px; }
+.wxpop .wtop { flex-direction: column; gap: 2px; }
+.wxpop .wcity { font-family: var(--ui); font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: .04em; }
+.sun { width: 100%; height: 56px; overflow: visible; flex: none; }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 76px; flex: none; }
+.days div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; font-family: var(--mono); font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.days .di { color: var(--cyan); display: grid; }
+.days u { text-decoration: none; display: block; width: 100%; flex: none; background: linear-gradient(to top, rgba(63,230,255,.15), var(--cyan)); box-shadow: 0 0 8px rgba(63,230,255,.4); }
+.days div:first-child u { background: linear-gradient(to top, rgba(255,179,71,.2), var(--amber)); }
+.days div:first-child { color: var(--ink); }
+.wpick { display: grid; gap: 6px; }
+.wpick:not(.open) { display: none; }
+.wres { display: flex; flex-wrap: wrap; gap: 5px; font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.wres .btn, .wpick > .btn { padding: 5px 8px; text-transform: none; letter-spacing: .02em; }
+/* Mobile : la fenêtre Météo (v3) */
+.wx-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.deg { font-family: var(--display); font-size: 46px; font-weight: 700; line-height: .9; font-variant-numeric: tabular-nums; text-shadow: 0 0 18px rgba(63,230,255,.5); }
+.deg sup { font-size: .38em; color: var(--cyan); }
+.wx-top p { margin: 0; text-align: right; color: var(--dim); font-size: 14px; }
+.wx-top p b { display: block; color: var(--ink); font-size: 17px; letter-spacing: .04em; }
+.pb-meteo .days { height: 84px; }
+.pb-meteo .wchg { justify-self: center; align-self: center; }
+body.lite .pb-meteo .days div { font-size: 11px; }
+
+/* Légendes flottantes autour du noyau (v8) */
+.labels { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; transition: opacity .4s; }
+.lab { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); white-space: nowrap; will-change: transform, opacity; }
+.lab[hidden] { display: none; }
+.lab i { width: 8px; height: 8px; border: 1.5px solid var(--c, var(--cyan)); transform: rotate(45deg); box-shadow: 0 0 10px var(--c, var(--cyan)); }
+.lab b { font-weight: 500; color: var(--c, var(--cyan)); }
+.lab span { padding: 3px 8px; background: rgba(2,10,20,.7); border-left: 2px solid var(--c, var(--cyan)); }
+body.lite .lab { font-size: 10px; }
+
+/* Teinte du ciel sur la scène (discrète) */
+.skytint { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 3s, background 3s; mix-blend-mode: soft-light; }
+body[data-sky="pluie"] .skytint { opacity: .5; background: linear-gradient(#1b3d6b, transparent 70%); }
+body[data-sky="orage"] .skytint { opacity: .6; background: linear-gradient(#3a1d6b, transparent 70%); }
+body[data-sky="neige"] .skytint { opacity: .45; background: linear-gradient(#cfe8ff, transparent 75%); }
+body[data-sky="brouillard"] .skytint { opacity: .5; background: linear-gradient(#7ea3b6, transparent 80%); }
+body[data-sky="nuit"] .skytint { opacity: .5; background: linear-gradient(#000814, transparent 60%); }
+body[data-sky="nuages"] .skytint { opacity: .25; background: linear-gradient(#5a7a96, transparent 60%); }

@@ -8,6 +8,7 @@ import { dayKey, fromKey, addDays, daysFrom, parseDue, parseTime, toMin, mondayO
 import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { state, pulse } from "../state.js";
+import { setLabel } from "../ui/labels.js";
 
 const C = "events";
 const DAY0 = 8 * 60, SPAN = 14 * 60;            // bande du jour : 08:00 → 22:00
@@ -208,7 +209,7 @@ export function initAgenda() {
   addEventListener("pointerdown", (e) => { if (!drawer.hidden && !drawer.contains(e.target) && !bandEl.contains(e.target) && !e.target.closest(".ctx")) closeDrawer(); }, true);
   const band = {
     render() {
-      if (!bandEl || state.lite) return;
+      if (!bandEl || state.lite) { const m = new Date().getHours() * 60 + new Date().getMinutes(), nx = dayEvents(dayKey()).find((e) => e.start && toMin(e.start) > m); setLabel("agenda", nx ? nx.start : ""); return; }
       const k = dayKey(), now = new Date(), m = now.getHours() * 60 + now.getMinutes();
       const track = bandEl.querySelector(".agtrack");
       track.querySelectorAll(".ev").forEach((x) => x.remove());
@@ -223,6 +224,7 @@ export function initAgenda() {
       });
       track.querySelector(".now").style.left = (Math.min(Math.max((m - DAY0) / SPAN, 0), 1) * 100).toFixed(2) + "%";
       const next = evs.find((e) => e.start && toMin(e.start) > m), allDay = evs.filter((e) => !e.start);
+      setLabel("agenda", next ? next.start : "");
       const nt = bandEl.querySelector(".agnext");
       nt.innerHTML = "";
       if (next) nt.append(el("span", "", "Prochain"), el("b", "", next.start + " · " + next.title));
