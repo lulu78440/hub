@@ -20,8 +20,33 @@
     <div class="logo" aria-hidden="true"></div>
     <div><b>HUB</b><span><i></i>Phase 1 · construction</span></div>
   </div>
-  <div class="actions"><button type="button" class="btn" id="b-diag" aria-pressed="false" title="Diagnostic (touche D)">Diag</button></div>
+  <div class="clock">
+    <div class="rule" aria-hidden="true"></div>
+    <div class="tc">
+      <div class="time" id="time">--:--<small id="sec">--</small></div>
+      <div class="date" id="date">&nbsp;</div>
+    </div>
+    <div class="rule r" aria-hidden="true"></div>
+  </div>
+  <div class="actions">
+    <div class="wxslot pc-only" aria-hidden="true"></div>
+    <span class="seg plans pc-only" role="group" aria-label="Plans">
+      <button type="button" class="btn" id="plan1" aria-pressed="true">Hub</button><button type="button" class="btn" id="plan2" aria-pressed="false" aria-disabled="true" title="Arrive à la sous-étape 1.4">Plan 2</button><button type="button" class="btn" id="plan3" aria-pressed="false" aria-disabled="true" title="Arrive à la sous-étape 1.4">Plan 3</button>
+    </span>
+    <button type="button" class="btn" id="fs">Plein écran</button>
+    <button type="button" class="btn" id="b-diag" aria-pressed="false" title="Diagnostic (touche D)">Diag</button>
+  </div>
 </header>
+
+<form class="search" id="search" autocomplete="off" role="search">
+  <div class="bar"><div class="bar-in">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3fe6ff" stroke-width="2.2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+    <input id="q" type="search" placeholder="Rechercher, ou !y pour YouTube…" aria-label="Recherche" enterkeyhint="search">
+    <span class="engine" id="engine">Brave</span>
+  </div></div>
+  <div class="hints"><span><kbd>!g</kbd> Google</span><span><kbd>!d</kbd> DuckDuckGo</span><span><kbd>!y</kbd> YouTube</span><span><kbd>/</kbd> pour écrire</span></div>
+  <div class="go" id="go" role="status"></div>
+</form>
 
 <div class="fx" aria-hidden="true"></div>
 <span class="fps" id="fps" aria-hidden="true">-- img/s</span>

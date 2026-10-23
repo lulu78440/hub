@@ -8,7 +8,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 - **Prochaine étape du Suivi** : « Ambiance validée sur une première maquette » (phase 1), à cocher par toi.
 - **Maquette en cours** : v8, figée comme référence de construction. Version de référence : v4 ★.
 - **Modèle** : conception terminée avec Opus. Plan de construction rédigé (`docs/plan-phase1.md`). Construction en cours avec Sonnet 5.5 (discussion « Phase 1 · construction »).
-- **Construction phase 1** : 1.1 (squelette, appli installable, hors ligne) **validée par Lucien**. 1.2 (scène 3D PC) écrite et poussée, **en attente de ton test** sur `lulu78440.github.io/hub`. Prochaine : 1.3 (bandeau, horloge, recherche).
+- **Construction phase 1** : 1.1 (squelette, appli installable, hors ligne) **validée par Lucien**. 1.2 (scène 3D PC) poussée ; Lucien a demandé la suite sans donner le chiffre d'images par seconde, la case « Scène 3D fluide sur le PC » reste à cocher après mesure. 1.3 (bandeau, horloge, recherche) écrite et poussée, **en attente de ton test**. Prochaine : 1.4 (plans, cinéma, effets de souris).
 - **Suivi du Hub** : à cocher par toi après le test de 1.2 : « Scène 3D fluide sur le PC » (au moins 50 img/s).
 
 ## Historique
@@ -29,12 +29,14 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 | Date | Sous-étape | Ce qui a été fait | Statut |
 | --- | --- | --- | --- |
 | 23/10 | 1.1 Squelette | Arborescence du plan (`index.html`, `css/`, `js/`, `fonts/`, `icons/`), manifeste, icônes (192, 512, maskable, Apple), polices Orbitron / Rajdhani / IBM Plex Mono en local, service worker avec cache versionné `hub-1.1.0`, page de contrôle (version, mode PC / mobile, réseau, hors ligne, installation). Testé en local sous `/hub/` : installation du service worker, rechargement hors ligne, aucune erreur. | Validée par Lucien (23/10) |
-| 23/10 | 1.2 Scène 3D PC | Three.js r147 copié dans `vendor/three/` (plus aucun lien externe). Scène reprise de la v8 en modules : `scene/core3d.js` (noyau, anneaux, cadran, constellation, faisceau, sol en grille, colonnes, poussière), `scene/postfx.js` (halo, aberration chromatique, vignette, grain), `scene/loader.js`, `state.js`. Une seule boucle d'animation, arrêtée onglet caché, mouvement réduit respecté, compteur d'images par seconde en bas à gauche. Page de contrôle 1.1 gardée derrière le bouton « Diag » (ou touche D). Service worker v1.2.0. Rendu comparé à la v8 : identique. | À tester par Lucien (PC) |
+| 23/10 | 1.2 Scène 3D PC | Three.js r147 copié dans `vendor/three/` (plus aucun lien externe). Scène reprise de la v8 en modules : `scene/core3d.js` (noyau, anneaux, cadran, constellation, faisceau, sol en grille, colonnes, poussière), `scene/postfx.js` (halo, aberration chromatique, vignette, grain), `scene/loader.js`, `state.js`. Une seule boucle d'animation, arrêtée onglet caché, mouvement réduit respecté, compteur d'images par seconde en bas à gauche. Page de contrôle 1.1 gardée derrière le bouton « Diag » (ou touche D). Service worker v1.2.0. Rendu comparé à la v8 : identique. | Poussée, mesure d'images par seconde à faire par Lucien |
+| 23/10 | 1.3 Bandeau, horloge, recherche | Bandeau repris de la v8 : logo, horloge à la seconde et date en français, sélecteur Hub / Plan 2 / Plan 3 (Plan 2 et 3 grisés jusqu'à 1.4), bouton Plein écran, place réservée à la météo (phase 2). Recherche : Brave par défaut, `!g` Google, `!d` DuckDuckGo, `!y` YouTube, ouverture dans un nouvel onglet (lien de secours affiché si le navigateur bloque), curseur dans la barre au démarrage sur PC, touche `/` pour y revenir. Service worker v1.3.0. | À tester par Lucien (PC + Android) |
 
 Notes de construction :
 - Three.js v0.147.0 (comme les maquettes) est dans `vendor/three/`, pris depuis GitHub (npm est bloqué dans l'espace de travail).
 - Les images par seconde n'ont pas pu être mesurées sur une vraie carte graphique (l'espace de travail n'a qu'un rendu logiciel) : la mesure réelle se fait chez Lucien, avec le compteur en bas à gauche.
 - Pas de légendes flottantes (Météo, Tâches…) autour du noyau : elles affichaient des données d'exemple et viendront avec les widgets (phase 2).
+- Recherche : amélioration par rapport à la v8 : le raccourci doit être suivi d'un espace (`!y chat`). « !yoga » est donc une recherche Brave normale au lieu d'une recherche « oga » sur YouTube.
 - Le noyau est cadré au centre de l'écran ; les plans (1.4) fourniront leur propre rectangle de cadrage.
 - Les maquettes ne sont pas mises en cache hors ligne (elles restent en ligne).
 - Pour publier une nouvelle version du code : changer `VERSION` dans `sw.js` et `js/version.js`.

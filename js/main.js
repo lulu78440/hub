@@ -1,6 +1,9 @@
 /* Démarrage du Hub : détection PC / mobile, 3D, boucle d'animation unique. */
 import { state, pulse } from "./state.js";
 import { initDiag } from "./ui/diag.js";
+import { initClock } from "./ui/clock.js";
+import { initSearch } from "./ui/search.js";
+import { initTopbar } from "./ui/topbar.js";
 import { loadThree } from "./scene/loader.js";
 import { createCore } from "./scene/core3d.js";
 import { createPostFX } from "./scene/postfx.js";
@@ -13,6 +16,9 @@ state.lite = matchMedia("(max-width: 900px), (pointer: coarse)").matches;
 state.reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.body.classList.toggle("lite", state.lite);
 initDiag(state);
+initClock();
+initTopbar();
+initSearch({ focusOnStart: !state.lite });
 
 // Panneau de diagnostic masqué par défaut
 const diag = $("diag");
@@ -37,7 +43,7 @@ async function start() {
   // Emplacement du noyau à l'écran : au centre, sous le bandeau. Les plans (1.4) fourniront leur propre rectangle.
   let RW = 0, RH = 0;
   const anchorRect = () => lite
-    ? { left: 0, top: 70, width: RW, height: Math.max(RH * 0.44, 280) }
+    ? { left: 0, top: 140, width: RW, height: Math.max(RH * 0.4, 260) }
     : { left: RW * 0.2, top: RH * 0.13, width: RW * 0.6, height: RH * 0.62 };
   function resize() {
     RW = innerWidth; RH = innerHeight;

@@ -1,12 +1,12 @@
 /* Service worker du Hub : cache hors ligne versionné.
    Pour publier une nouvelle version : changer VERSION (et mettre à jour js/version.js). */
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
 const CACHE = "hub-" + VERSION;
 const ROOT = new URL("./", self.location).href;
 const PRECACHE = [
   "", "index.html", "manifest.webmanifest",
   "css/base.css", "css/hud.css",
-  "js/main.js", "js/version.js", "js/state.js", "js/ui/diag.js",
+  "js/main.js", "js/version.js", "js/state.js", "js/ui/diag.js", "js/ui/clock.js", "js/ui/search.js", "js/ui/topbar.js",
   "js/scene/loader.js", "js/scene/core3d.js", "js/scene/postfx.js",
   "vendor/three/three.min.js",
   "vendor/three/examples/shaders/CopyShader.js", "vendor/three/examples/shaders/LuminosityHighPassShader.js",
