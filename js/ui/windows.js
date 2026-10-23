@@ -175,5 +175,5 @@ export function createWindows({ world, plans, force }) {
   }
 
   function reset() { const D = layout(W, H, true); save(); return D; }
-  return { layout, update, reset, planOf, toggleMax, togglePin, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S };
+  return { layout, update, reset, planOf, toggleMax, togglePin, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
 }

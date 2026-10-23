@@ -3,8 +3,8 @@
 // de cet onglet et des autres onglets du hub ouverts (BroadcastChannel), pour que tout reste à jour.
 // Export / import : un seul fichier JSON avec toutes les collections et les réglages (clés hub-…).
 
-const DB_NAME = "hub", DB_VERSION = 1;
-export const COLLECTIONS = ["notes", "tasks", "events", "favs", "kv"];    // kv : petites valeurs diverses
+const DB_NAME = "hub", DB_VERSION = 2;
+export const COLLECTIONS = ["notes", "tasks", "events", "favs", "kv", "images"];    // kv : petites valeurs diverses ; images : champ blob
 const FORMAT = "hub-donnees", FORMAT_VERSION = 1;
 
 let dbp = null, memory = null;            // memory : secours si IndexedDB est indisponible (navigation privée…)
@@ -20,7 +20,8 @@ function open() {
     req.onupgradeneeded = () => { const db = req.result; COLLECTIONS.forEach((c) => { if (!db.objectStoreNames.contains(c)) db.createObjectStore(c, { keyPath: "id" }); }); };
     req.onsuccess = () => { const db = req.result; db.onversionchange = () => db.close(); res(db); };
     req.onerror = () => res(null);
-    req.onblocked = () => res(null);
+    // Mise à jour de la base bloquée par un vieil onglet du hub : il se ferme tout seul (onversionchange) ; sinon on attend un peu
+    req.onblocked = () => { setTimeout(() => res(null), 10000); };
   }).then((db) => {
     if (!db) memory = Object.fromEntries(COLLECTIONS.map((c) => [c, new Map()]));
     // Demande au navigateur de ne pas effacer ces données quand l'espace manque
@@ -88,9 +89,14 @@ export const store = {
 };
 
 /** Toutes les données et les réglages, prêts à être enregistrés dans un fichier. */
+const toDataURL = (blob) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(blob); });
+async function fromDataURL(s) { try { return await (await fetch(s)).blob(); } catch (e) { return null; } }
+
 export async function exportAll(version) {
   const data = {};
   for (const c of COLLECTIONS) data[c] = await store.all(c);
+  // Les images voyagent dans le fichier sous forme de texte (data:…)
+  data.images = await Promise.all(data.images.map(async (im) => ({ ...im, blob: im.blob instanceof Blob ? await toDataURL(im.blob) : null })));
   const prefs = {};
   try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("hub-")) prefs[k] = localStorage.getItem(k); } } catch (e) { /* réglages indisponibles */ }
   return { format: FORMAT, formatVersion: FORMAT_VERSION, appVersion: version, exportedAt: new Date().toISOString(), data, prefs };
@@ -111,7 +117,8 @@ export function readExport(text) {
 export async function importAll(d) {
   const db = await open();
   for (const c of COLLECTIONS) {
-    const items = (Array.isArray(d.data[c]) ? d.data[c] : []).filter((x) => x && typeof x === "object" && typeof x.id === "string");
+    let items = (Array.isArray(d.data[c]) ? d.data[c] : []).filter((x) => x && typeof x === "object" && typeof x.id === "string");
+    if (c === "images") items = (await Promise.all(items.map(async (im) => ({ ...im, blob: typeof im.blob === "string" && im.blob.startsWith("data:image/") ? await fromDataURL(im.blob) : null })))).filter((im) => im.blob);
     if (!db) { memory[c] = new Map(items.map((x) => [x.id, x])); }
     else await tx(db, c, "readwrite", (st) => { st.clear(); items.forEach((x) => st.put(x)); });
   }

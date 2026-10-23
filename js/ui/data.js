@@ -38,8 +38,9 @@ export function initData() {
     try { r = readExport(await f.text()); } catch (e) { toast(e.message, { ms: 4500 }); return; }
     const c = r.counts;
     const quand = r.date && !isNaN(r.date) ? " du " + fmt.format(r.date) : "";
-    const ok = confirm(`Importer l'export${quand} ?\n\n${c.notes} note(s), ${c.tasks} tâche(s), ${c.events} événement(s), ${c.favs} favori(s).\n\nATTENTION : tout ce qui est actuellement dans le hub sur cet appareil sera remplacé.`);
+    const ok = confirm(`Importer l'export${quand} ?\n\n${c.notes} note(s), ${c.tasks} tâche(s), ${c.events} événement(s), ${c.favs} favori(s), ${c.images} image(s).\n\nATTENTION : tout ce qui est actuellement dans le hub sur cet appareil sera remplacé.`);
     if (!ok) { toast("Import annulé"); return; }
+    toast("Import en cours…", { ms: 10000 });
     try { await importAll(r.d); toast("Import terminé : rechargement…"); setTimeout(() => location.reload(), 900); }
     catch (e) { toast("Import impossible : " + e.message, { ms: 4500 }); }
   });

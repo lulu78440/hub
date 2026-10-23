@@ -536,3 +536,42 @@ body.lite .gchip { padding: 7px 10px; font-size: 11px; }
 .pb-pc { gap: 9px; }
 .pb-pc .rec { overflow: hidden; }
 .dnote .lnk { font: inherit; font-family: var(--mono); font-size: 11px; border: 0; background: none; color: var(--cyan); cursor: pointer; padding: 0; text-decoration: underline; }
+
+/* ---------- Images libres (2.9, v8) ---------- */
+.pic { position: absolute; left: 0; top: 0; pointer-events: auto; will-change: transform; cursor: grab; --a: var(--cyan); touch-action: none; }
+.pic img { width: 100%; height: 100%; object-fit: cover; display: block; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.pic .fr { position: absolute; inset: -2px; border: 1px solid transparent; pointer-events: none; transition: border-color .25s; }
+.pic:hover .fr { border-color: rgba(63,230,255,.6); }
+.pic.holo::after { content: ""; position: absolute; inset: 0; pointer-events: none; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); background: repeating-linear-gradient(rgba(63,230,255,.14) 0 1px, transparent 1px 3px), linear-gradient(160deg, rgba(63,230,255,.22), rgba(155,114,255,.14)); mix-blend-mode: screen; }
+.pic.holo img { filter: saturate(.7) contrast(1.05); }
+.pic .grip { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; cursor: nwse-resize; opacity: 0; transition: opacity .3s; background: linear-gradient(135deg, transparent 50%, var(--a) 50% calc(50% + 1.5px), transparent calc(50% + 1.5px) 66%, var(--a) 66% calc(66% + 1.5px), transparent calc(66% + 1.5px)); }
+.pic:hover .grip { opacity: .9; }
+.pic.pinned { cursor: default; }
+.pic.pinned .grip { display: none; }
+.dropzone { position: fixed; z-index: 10; inset: 16px; border: 2px dashed var(--cyan); background: rgba(2,6,13,.55); display: grid; place-items: center; font-family: var(--display); font-size: 16px; letter-spacing: .3em; color: var(--cyan); pointer-events: none; }
+.dropzone[hidden] { display: none; }
+
+/* ---------- Progression + mods (2.9, v8) ---------- */
+.pb-prog { gap: 10px; }
+.prog-top { display: flex; align-items: center; gap: 12px; flex: none; min-width: 0; }
+.prog-top .pct { white-space: nowrap; font-family: var(--display); font-size: 24px; font-weight: 700; color: var(--cyan); font-variant-numeric: tabular-nums; line-height: 1; text-shadow: 0 0 12px rgba(63,230,255,.5); }
+.psegs { flex: 1; min-width: 120px; display: flex; gap: 3px; height: 10px; }
+.psegs div { position: relative; overflow: hidden; background: rgba(63,230,255,.14); }
+.psegs u { position: absolute; left: 0; top: 0; bottom: 0; text-decoration: none; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.psegs div.cur { outline: 1px solid var(--cyan); }
+.pnext { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pnext b { color: var(--amber); font-weight: 500; }
+.mods { flex: 1; min-height: 52px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.mod { position: relative; min-height: 0; overflow: hidden; border: 0; padding: 0; background: #000; color: var(--ink); cursor: pointer; text-align: left; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.mod canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mod:not(.active) canvas { filter: saturate(.85) brightness(.82); }
+.mod:not(.active)::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(-45deg, rgba(255,179,71,.07) 0 6px, transparent 6px 12px); pointer-events: none; }
+.mod .st { white-space: nowrap; position: absolute; z-index: 1; top: 4px; left: 6px; font-family: var(--mono); font-size: 9px; letter-spacing: .1em; padding: 1px 5px; background: rgba(2,6,13,.82); color: var(--amber); border: 1px solid rgba(255,179,71,.5); }
+.mod.active .st { color: var(--void); background: var(--ok); border-color: var(--ok); }
+.mod .mn { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 12px 6px 4px; background: linear-gradient(transparent, rgba(0,0,0,.88)); font-size: 12px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mod:hover, .mod:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.mod:hover canvas { filter: none; }
+.psub a { color: var(--cyan); }
+.modview { position: fixed; inset: 0; z-index: 10; background: rgba(2,6,13,.82); display: grid; place-items: center; align-content: center; gap: 14px; cursor: pointer; }
+.modview canvas { width: min(80vw, 1100px); aspect-ratio: 16 / 9; max-height: 74vh; max-width: 100%; clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); }
+.modview span { font-family: var(--display); font-size: 13px; letter-spacing: .3em; color: var(--cyan); text-transform: uppercase; }

@@ -1,0 +1,115 @@
+{
+ "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
+ "releve": "2026-10-24T01:30:00+02:00",
+ "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
+ "phases": [
+  {
+   "cle": "P0",
+   "nom": "Fondations",
+   "etapes": [
+    "p0-doc",
+    "p0-gh",
+    "p0-ghc",
+    "p0-pages",
+    "p0-backup",
+    "p0-proj"
+   ]
+  },
+  {
+   "cle": "P1",
+   "nom": "Coquille 3D",
+   "etapes": [
+    "p1-mood",
+    "p1-pc",
+    "p1-mob",
+    "p1-search",
+    "p1-home",
+    "p1-android",
+    "p1-offline",
+    "p1-backup"
+   ]
+  },
+  {
+   "cle": "P2",
+   "nom": "Widgets",
+   "etapes": [
+    "p2-fav",
+    "p2-week",
+    "p2-remind",
+    "p2-meteo",
+    "p2-drag",
+    "p2-export",
+    "p2-sunday"
+   ]
+  },
+  {
+   "cle": "P3",
+   "nom": "Monde extérieur",
+   "etapes": [
+    "p3-news",
+    "p3-down",
+    "p3-feeds",
+    "p3-media",
+    "p3-sync"
+   ]
+  },
+  {
+   "cle": "P4",
+   "nom": "Surprises",
+   "etapes": [
+    "p4-ok",
+    "p4-perf"
+   ]
+  },
+  {
+   "cle": "P5",
+   "nom": "Mails",
+   "etapes": [
+    "p5-read",
+    "p5-rules"
+   ]
+  },
+  {
+   "cle": "V2",
+   "nom": "Avant la V2",
+   "etapes": [
+    "p6-month",
+    "p6-decide"
+   ]
+  },
+  {
+   "cle": "P6",
+   "nom": "Assistant IA",
+   "etapes": [
+    "p6-orbe",
+    "p6-ent-vis",
+    "p6-ent-ia",
+    "p6-ent-pc"
+   ]
+  }
+ ],
+ "faites": [
+  "p0-backup",
+  "p0-doc",
+  "p0-gh",
+  "p0-ghc",
+  "p0-pages",
+  "p0-proj",
+  "p1-android",
+  "p1-backup",
+  "p1-home",
+  "p1-mob",
+  "p1-mood",
+  "p1-offline",
+  "p1-pc",
+  "p1-search",
+  "p2-fav",
+  "p2-meteo",
+  "p2-remind",
+  "p2-week"
+ ],
+ "prochaine": {
+  "id": "p2-drag",
+  "texte": "Panneaux déplacés, disposition mémorisée PC et mobile"
+ }
+}

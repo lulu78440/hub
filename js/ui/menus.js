@@ -33,8 +33,8 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
       { t: "Plan 2 · Notes et applis", k: "2", fn: () => plans.goPlan(2), off: plans.plan === 2 },
       { t: "Plan 3 · Bureau du PC", k: "3", fn: () => plans.goPlan(3), off: plans.plan === 3 }];
   }
-  function bgMenu() {
-    const it = [{ h: "Hub" },
+  function bgMenu(t, x, y) {
+    const it = [{ h: "Hub" }, ...(hooks.fond ? hooks.fond(t, x, y) : []),
       { t: entity.on ? "Masquer l'entité" : "Afficher l'entité", fn: () => entity.setOn(!entity.on) }];
     const hidden = wins.hiddenEls();
     if (hidden.length) {
@@ -80,7 +80,7 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
       : zone && hooks[zone.dataset.menu] ? hooks[zone.dataset.menu](zone, t) || []
       : winEl ? winMenu(winEl, t)
       : plans.plan === 3 ? deskMenu()
-      : bgMenu();
+      : bgMenu(t, e.clientX, e.clientY);
     items.push("-", { note: "Maj + clic droit : menu du navigateur" });
     menu.open(e.clientX, e.clientY, items);
   });
