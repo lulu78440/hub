@@ -14,7 +14,7 @@ export function registerMenu(id, fn) { hooks[id] = fn; }
 
 const MOB_STORE = "disposition-mobile-v1";
 
-export function initMenus({ wins, plans, entity, cursor, resetLayout }) {
+export function initMenus({ wins, plans, entity, cursor, resetLayout, data }) {
   const menu = createMenu(document.getElementById("ctx"));
   const $ = (id) => document.getElementById(id);
 
@@ -42,7 +42,10 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout }) {
     it.push("-", ...planItems(), "-",
       { t: document.fullscreenElement ? "Quitter le plein écran" : "Plein écran", k: "F11", fn: () => $("fs").click() },
       { t: cursor.forced ? "Curseur normal" : "Curseur HUD", fn: () => toast(cursor.toggle() ? "Curseur HUD activé" : (cursor.on ? "Curseur HUD : reste actif en plein écran" : "Curseur normal")) },
-      { t: "Réinitialiser la disposition", fn: resetLayout });
+      { t: "Réinitialiser la disposition", fn: resetLayout },
+      "-", { h: "Mes données" },
+      { t: "Exporter (fichier de sauvegarde)", fn: data.exportFile },
+      { t: "Importer un export…", fn: data.importFile });
     return it;
   }
   function winMenu(el, t) {

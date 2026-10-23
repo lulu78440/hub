@@ -38,7 +38,7 @@
 .btn[aria-pressed="true"]:hover { color: var(--void); }
 .fx { position: fixed; inset: 0; z-index: 8; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px); mix-blend-mode: screen; }
 .fps { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left, 0px)); bottom: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim); opacity: .7; pointer-events: none; }
-.err { position: fixed; z-index: 11; left: 50%; top: 40%; transform: translate(-50%,-50%); max-width: 360px; text-align: center; color: var(--dim); font-family: var(--mono); font-size: 13px; }
+.err { position: fixed; z-index: 11; left: 50%; bottom: 64px; transform: translateX(-50%); background: rgba(3,13,24,.9); padding: 8px 14px; max-width: 360px; text-align: center; color: var(--dim); font-family: var(--mono); font-size: 13px; }
 
 /* ---------- Horloge (v8) ---------- */
 .clock { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; gap: 18px; pointer-events: none; }
@@ -232,3 +232,63 @@ body.lite .ph.pressing h2 { filter: brightness(1.35); transition: filter .5s; }
 .mchips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .mchips:empty { display: none; }
 .mlayout .btn { padding: 10px 14px; }
+
+/* ---------- Message bref avec bouton (Annuler) ---------- */
+.toast.act { pointer-events: auto; display: flex; align-items: center; gap: 12px; }
+.toast button { font: inherit; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--void); background: var(--cyan); border: 0; padding: 4px 10px; cursor: pointer; }
+.toast:not(.show) { pointer-events: none; }
+
+/* ---------- Widgets : éléments communs (2.3) ---------- */
+.inl { width: 100%; flex: none; background: rgba(63,230,255,.06); border: 1px solid rgba(63,230,255,.35); color: var(--ink); font-family: var(--ui); font-size: 15px; font-weight: 600; padding: 5px 8px; outline: none; border-radius: 0; }
+.inl::placeholder { color: var(--dim); font-weight: 500; }
+.inl:focus { border-color: var(--a, var(--cyan)); background: rgba(63,230,255,.1); }
+.inl.date { width: auto; flex: 1 1 130px; font-family: var(--mono); font-size: 13px; color-scheme: dark; }
+.addrow { flex: none; display: flex; }
+.erow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.erow .btn { padding: 5px 9px; font-size: 10px; }
+.btn.ok { border-color: var(--ok); color: var(--ok); }
+.btn.danger { border-color: rgba(255,77,106,.6); color: var(--red); }
+.btn.prio[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: var(--void); }
+.pf .lnk { font: inherit; border: 0; background: none; color: var(--a, var(--cyan)); cursor: pointer; padding: 0; text-transform: uppercase; letter-spacing: .08em; }
+.pf .lnk:hover, .pf .lnk:focus-visible { text-decoration: underline; outline: none; }
+.pb-notes .notes, .pb-tasks .tasks { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--a) 50%, transparent) transparent; padding-right: 4px; }
+.pb .notes .empty, .pb .tasks .empty { margin: 10px 0; text-align: left; text-transform: none; letter-spacing: .04em; font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+/* Notes (v8) */
+.notes { display: flex; flex-direction: column; gap: 8px; }
+.note { flex: none; padding: 8px 12px; background: rgba(255,179,71,.08); border-left: 3px solid var(--amber); font-size: 15px; cursor: text; outline: none; }
+.note:hover, .note:focus-visible { background: rgba(255,179,71,.14); }
+.note.pinned { border-left-color: #ffd27a; box-shadow: inset 0 0 0 1px rgba(255,179,71,.25); }
+.note small { display: block; font-family: var(--mono); font-size: 10px; color: var(--dim); margin-bottom: 3px; }
+.note .nt { white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.note.editing { cursor: default; background: rgba(255,179,71,.12); }
+.note textarea { width: 100%; resize: vertical; min-height: 64px; background: rgba(2,9,18,.7); border: 1px solid var(--amber); color: var(--ink); font-family: var(--ui); font-size: 15px; font-weight: 500; line-height: 1.35; padding: 6px 8px; outline: none; }
+
+/* Tâches (v8) */
+.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.tasks li { flex: none; display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 6px; align-items: center; font-size: 15px; }
+.tasks li.editing { display: block; padding: 6px 0; }
+.tasks .chk { width: 22px; height: 22px; display: grid; place-items: center; border: 0; background: none; padding: 0; cursor: pointer; }
+.tasks .chk i { width: 9px; height: 9px; border: 1.5px solid var(--amber); transform: rotate(45deg); transition: background .2s, box-shadow .2s; }
+.tasks .chk:hover i, .tasks .chk:focus-visible i { box-shadow: 0 0 8px var(--amber); }
+.tasks .chk:focus-visible { outline: 1px solid var(--amber); }
+.tasks li.hi .chk i { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.tasks li.done .chk i { background: var(--ok); border-color: var(--ok); box-shadow: none; }
+.tasks .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: text; outline: none; padding: 2px 0; }
+.tasks .tt:focus-visible { text-decoration: underline; }
+.tasks li.done .tt { color: var(--dim); text-decoration: line-through; }
+.tasks em { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; }
+.tasks em.today { color: var(--amber); }
+.tasks em.late { color: var(--red); }
+.meter { display: flex; gap: 3px; height: 6px; flex: none; }
+.meter u { flex: 1; text-decoration: none; background: rgba(255,179,71,.18); }
+.meter u.f { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.meter:empty { display: none; }
+
+/* Mobile : listes plus hautes, saisie confortable */
+body.lite .pb-notes .notes, body.lite .pb-tasks .tasks { max-height: 55vh; }
+body.lite .inl { font-size: 16px; padding: 9px 10px; }
+body.lite .tasks li { font-size: 16px; padding: 3px 0; }
+body.lite .tasks .chk { width: 34px; height: 34px; }
+body.lite .tasks li { grid-template-columns: 34px minmax(0, 1fr) auto; }
+body.lite .erow .btn { padding: 9px 12px; font-size: 11px; }

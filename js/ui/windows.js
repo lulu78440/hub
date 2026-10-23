@@ -24,8 +24,8 @@ function defaults(W, H) {
   L.watch = { x: Lx, y: B - wh, w: Lw, h: wh };
   const vh = (Rw - 36) * 9 / 16 + 76;
   L.video = { x: Rx, y: T, w: Rw, h: vh };
-  L.tasks = { x: Rx, y: B - 150, w: Rw, h: 150 };
-  L.web = { x: Rx, y: T + vh + g, w: Rw, h: Math.max(B - 150 - g - (T + vh + g), MIN.h) };
+  L.tasks = { x: Rx, y: B - 240, w: Rw, h: 240 };
+  L.web = { x: Rx, y: T + vh + g, w: Rw, h: Math.max(B - 240 - g - (T + vh + g), MIN.h) };
   const x0 = Lx + Lw + mid, x1 = Rx - mid, mw = x1 - x0;
   const th = clamp((mw - 36 - 32) / 5 * 9 / 16, 50, 110);
   const sh = th + 30 + 20 + 36 + 26;

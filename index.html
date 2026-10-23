@@ -173,7 +173,7 @@
 <main class="diag" id="diag" hidden>
   <section class="card" aria-labelledby="diag-titre">
     <h1 id="diag-titre">Diagnostic</h1>
-    <p>Version du code, mode détecté, réseau, hors ligne et installation. Touche D ou Échap pour fermer.</p>
+    <p>Version du code, mode détecté, réseau, hors ligne, installation et sauvegarde de tes données. Touche D ou Échap pour fermer.</p>
     <dl>
       <dt>Version du code</dt><dd id="d-version">…</dd>
       <dt>Mode détecté</dt><dd id="d-mode">…</dd>
@@ -183,9 +183,13 @@
       <dt>Affichage</dt><dd id="d-display">…</dd>
       <dt>Mouvement réduit</dt><dd id="d-motion">…</dd>
       <dt>Inclinaison</dt><dd id="d-tilt">…</dd>
+      <dt>Données</dt><dd id="d-store">…</dd>
+      <dt>Dernier export</dt><dd id="d-export">…</dd>
     </dl>
     <div class="actions">
       <button class="btn" id="b-install" hidden>Installer le hub</button>
+      <button class="btn" id="b-export">Exporter mes données</button>
+      <button class="btn" id="b-import">Importer…</button>
       <button class="btn pc-only" id="b-layout">Réinitialiser la disposition</button>
       <button class="btn" id="b-update">Vérifier les mises à jour</button>
       <button class="btn" id="b-reset">Vider le cache et recharger</button>
