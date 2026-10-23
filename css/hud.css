@@ -15,7 +15,8 @@
 .brand span { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-top: 5px; }
 .brand span i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 6px var(--ok); margin-right: 6px; vertical-align: 1px; }
 
-.diag { position: fixed; z-index: 5; inset: 0; display: grid; place-items: center; padding: 90px 16px 24px; overflow: auto; }
+.diag[hidden] { display: none; }
+.diag { position: fixed; z-index: 7; background: rgba(2,6,13,.6); inset: 0; display: grid; place-items: center; padding: 90px 16px 24px; overflow: auto; }
 .diag .card { width: min(560px, 100%); background: rgba(3,13,24,.82); border: 1px solid rgba(63,230,255,.35); padding: 18px 20px 16px; clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut)); }
 .diag h1 { margin: 0 0 4px; font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: .24em; text-transform: uppercase; color: var(--cyan); }
 .diag p { margin: 0 0 12px; color: var(--dim); font-size: 15px; }
@@ -31,3 +32,10 @@
 body.lite .brand span { display: none; }
 @media (prefers-reduced-motion: no-preference) { .logo { animation: breathe 5s ease-in-out infinite; } }
 @keyframes breathe { 50% { filter: drop-shadow(0 0 8px rgba(63,230,255,.7)); } }
+
+.actions { display: flex; gap: 8px; align-items: center; }
+.btn[aria-pressed="true"] { background: var(--cyan); color: var(--void); border-color: var(--cyan); }
+.btn[aria-pressed="true"]:hover { color: var(--void); }
+.fx { position: fixed; inset: 0; z-index: 8; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px); mix-blend-mode: screen; }
+.fps { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left, 0px)); bottom: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim); opacity: .7; pointer-events: none; }
+.err { position: fixed; z-index: 11; left: 50%; top: 40%; transform: translate(-50%,-50%); max-width: 360px; text-align: center; color: var(--dim); font-family: var(--mono); font-size: 13px; }

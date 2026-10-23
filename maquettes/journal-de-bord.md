@@ -8,7 +8,8 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 - **Prochaine étape du Suivi** : « Ambiance validée sur une première maquette » (phase 1), à cocher par toi.
 - **Maquette en cours** : v8, figée comme référence de construction. Version de référence : v4 ★.
 - **Modèle** : conception terminée avec Opus. Plan de construction rédigé (`docs/plan-phase1.md`). Construction en cours avec Sonnet 5.5 (discussion « Phase 1 · construction »).
-- **Construction phase 1** : sous-étape 1.1 (squelette, appli installable, hors ligne) écrite et poussée, **en attente de ton test** sur `lulu78440.github.io/hub`. Prochaine : 1.2 (scène 3D PC).
+- **Construction phase 1** : 1.1 (squelette, appli installable, hors ligne) **validée par Lucien**. 1.2 (scène 3D PC) écrite et poussée, **en attente de ton test** sur `lulu78440.github.io/hub`. Prochaine : 1.3 (bandeau, horloge, recherche).
+- **Suivi du Hub** : à cocher par toi après le test de 1.2 : « Scène 3D fluide sur le PC » (au moins 50 img/s).
 
 ## Historique
 
@@ -27,10 +28,14 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 
 | Date | Sous-étape | Ce qui a été fait | Statut |
 | --- | --- | --- | --- |
-| 23/10 | 1.1 Squelette | Arborescence du plan (`index.html`, `css/`, `js/`, `fonts/`, `icons/`), manifeste, icônes (192, 512, maskable, Apple), polices Orbitron / Rajdhani / IBM Plex Mono en local, service worker avec cache versionné `hub-1.1.0`, page de contrôle (version, mode PC / mobile, réseau, hors ligne, installation). Testé en local sous `/hub/` : installation du service worker, rechargement hors ligne, aucune erreur. | À tester par Lucien (PC + Android) |
+| 23/10 | 1.1 Squelette | Arborescence du plan (`index.html`, `css/`, `js/`, `fonts/`, `icons/`), manifeste, icônes (192, 512, maskable, Apple), polices Orbitron / Rajdhani / IBM Plex Mono en local, service worker avec cache versionné `hub-1.1.0`, page de contrôle (version, mode PC / mobile, réseau, hors ligne, installation). Testé en local sous `/hub/` : installation du service worker, rechargement hors ligne, aucune erreur. | Validée par Lucien (23/10) |
+| 23/10 | 1.2 Scène 3D PC | Three.js r147 copié dans `vendor/three/` (plus aucun lien externe). Scène reprise de la v8 en modules : `scene/core3d.js` (noyau, anneaux, cadran, constellation, faisceau, sol en grille, colonnes, poussière), `scene/postfx.js` (halo, aberration chromatique, vignette, grain), `scene/loader.js`, `state.js`. Une seule boucle d'animation, arrêtée onglet caché, mouvement réduit respecté, compteur d'images par seconde en bas à gauche. Page de contrôle 1.1 gardée derrière le bouton « Diag » (ou touche D). Service worker v1.2.0. Rendu comparé à la v8 : identique. | À tester par Lucien (PC) |
 
 Notes de construction :
-- Three.js (v0.147.0, comme les maquettes) sera copié dans `vendor/three/` à la sous-étape 1.2 ; l'espace de travail ne joint pas npm, il sera pris depuis GitHub.
+- Three.js v0.147.0 (comme les maquettes) est dans `vendor/three/`, pris depuis GitHub (npm est bloqué dans l'espace de travail).
+- Les images par seconde n'ont pas pu être mesurées sur une vraie carte graphique (l'espace de travail n'a qu'un rendu logiciel) : la mesure réelle se fait chez Lucien, avec le compteur en bas à gauche.
+- Pas de légendes flottantes (Météo, Tâches…) autour du noyau : elles affichaient des données d'exemple et viendront avec les widgets (phase 2).
+- Le noyau est cadré au centre de l'écran ; les plans (1.4) fourniront leur propre rectangle de cadrage.
 - Les maquettes ne sont pas mises en cache hors ligne (elles restent en ligne).
 - Pour publier une nouvelle version du code : changer `VERSION` dans `sw.js` et `js/version.js`.
 

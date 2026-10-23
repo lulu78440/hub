@@ -1,64 +1,75 @@
-/* Démarrage du Hub. Sous-étape 1.1 : détection PC / mobile, service worker, page de contrôle. */
-import { VERSION } from "./version.js";
+/* Démarrage du Hub : détection PC / mobile, 3D, boucle d'animation unique. */
+import { state, pulse } from "./state.js";
+import { initDiag } from "./ui/diag.js";
+import { loadThree } from "./scene/loader.js";
+import { createCore } from "./scene/core3d.js";
+import { createPostFX } from "./scene/postfx.js";
 
 const $ = (id) => document.getElementById(id);
-const set = (id, text, cls = "") => { const el = $(id); el.textContent = text; el.className = cls; };
+const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 
 // Même règle que les maquettes : mobile si écran étroit ou tactile principal.
-const lite = matchMedia("(max-width: 900px), (pointer: coarse)").matches;
-document.body.classList.toggle("lite", lite);
-set("d-version", VERSION);
-set("d-mode", lite ? "Mobile (allégé)" : "PC (complet)");
-set("d-motion", matchMedia("(prefers-reduced-motion: reduce)").matches ? "Oui (respecté)" : "Non");
+state.lite = matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+state.reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.body.classList.toggle("lite", state.lite);
+initDiag(state);
 
-const standalone = matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches || navigator.standalone;
-set("d-display", standalone ? "Appli installée" : "Onglet de navigateur", standalone ? "ok" : "");
+// Panneau de diagnostic masqué par défaut
+const diag = $("diag");
+const toggleDiag = (on) => { diag.hidden = on === undefined ? !diag.hidden : !on; $("b-diag").setAttribute("aria-pressed", String(!diag.hidden)); };
+$("b-diag").addEventListener("click", () => toggleDiag());
+addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "d" && !e.ctrlKey && !e.metaKey && !e.altKey && !/input|textarea/i.test(e.target.tagName)) toggleDiag(); else if (e.key === "Escape") toggleDiag(false); });
 
-const net = () => set("d-net", navigator.onLine ? "En ligne" : "Hors ligne", navigator.onLine ? "ok" : "warn");
-addEventListener("online", net); addEventListener("offline", net); net();
+function showError(msg) { const d = document.createElement("div"); d.className = "err"; d.textContent = msg; document.body.append(d); }
 
-// Installation (Brave / Chrome : bouton proposé quand le navigateur le permet)
-let deferred = null;
-addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; $("b-install").hidden = false; });
-$("b-install").addEventListener("click", async () => {
-  if (!deferred) return;
-  deferred.prompt(); await deferred.userChoice; deferred = null; $("b-install").hidden = true;
-});
-addEventListener("appinstalled", () => { $("b-install").hidden = true; set("d-display", "Appli installée", "ok"); });
+async function start() {
+  let THREE;
+  try { THREE = await loadThree(); }
+  catch (e) { showError("La bibliothèque 3D n'a pas pu se charger. Recharge la page."); return; }
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: $("scene"), antialias: true, powerPreference: "high-performance" }); }
+  catch (e) { showError("La 3D (WebGL) est désactivée. Active l'accélération matérielle dans les réglages de Brave."); return; }
 
-// Service worker
-async function askVersion(sw) {
-  return new Promise((res) => {
-    const ch = new MessageChannel(); ch.port1.onmessage = (e) => res(e.data);
-    sw.postMessage({ type: "VERSION" }, [ch.port2]); setTimeout(() => res(null), 2000);
-  });
+  const lite = state.lite;
+  const core = createCore(THREE, { lite });
+  const fx = createPostFX(THREE, renderer, core.scene, core.camera, { lite });
+
+  // Emplacement du noyau à l'écran : au centre, sous le bandeau. Les plans (1.4) fourniront leur propre rectangle.
+  let RW = 0, RH = 0;
+  const anchorRect = () => lite
+    ? { left: 0, top: 70, width: RW, height: Math.max(RH * 0.44, 280) }
+    : { left: RW * 0.2, top: RH * 0.13, width: RW * 0.6, height: RH * 0.62 };
+  function resize() {
+    RW = innerWidth; RH = innerHeight;
+    fx.resize(RW, RH, lite ? 1 : Math.min(devicePixelRatio || 1, 1.75));
+    core.resize(RW, RH);
+  }
+  resize(); addEventListener("resize", resize);
+
+  addEventListener("pointermove", (e) => { if (e.pointerType === "touch") return; state.mx = e.clientX / RW * 2 - 1; state.my = e.clientY / RH * 2 - 1; });
+
+  // Une seule boucle d'animation, arrêtée quand l'onglet est caché.
+  const clock = new THREE.Clock();
+  const fpsEl = $("fps");
+  let t = 0, frames = 0, fpsT = 0, raf = 0;
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    frames++; fpsT += dt;
+    if (fpsT >= 0.5) { fpsEl.textContent = Math.round(frames / fpsT) + " img/s"; frames = 0; fpsT = 0; }
+    if (state.paused) return;
+    const k = state.reduce ? 0.15 : 1; t += dt * k;
+    const c = core.frame(anchorRect(), RW, RH); if (c) fx.setCenter(c);
+    state.energy += (state.energyTarget - state.energy) * Math.min(dt * 3, 1);
+    core.update({ t, dt, k, energy: state.energy, accent: state.accent, cine: state.cine, mx: state.mx, my: state.my });
+    fx.update(t, state.energy, state.cine);
+    fx.render();
+  }
+  const run = () => { if (!raf) { clock.getDelta(); loop(); } };
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
+  run();
+  document.body.classList.add("ready");
+  window.__hub = { state, pulse };   // pour les essais en console
 }
-async function refreshStatus(reg) {
-  const sw = navigator.serviceWorker.controller || reg.active;
-  if (!sw) { set("d-sw", "En cours d'installation…", "warn"); return; }
-  const info = await askVersion(sw);
-  set("d-sw", info ? "Actif · v" + info.version : "Actif", "ok");
-  const keys = await caches.keys();
-  const mine = info && keys.includes(info.cache);
-  set("d-cache", mine ? "Oui · tout est en mémoire" : "Non", mine ? "ok" : "bad");
-}
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").then((reg) => {
-    refreshStatus(reg);
-    navigator.serviceWorker.addEventListener("controllerchange", () => refreshStatus(reg));
-    reg.addEventListener("updatefound", () => {
-      const n = reg.installing;
-      n && n.addEventListener("statechange", () => { if (n.state === "activated") refreshStatus(reg); });
-    });
-    $("b-update").addEventListener("click", async () => {
-      set("d-sw", "Vérification…", "warn"); await reg.update(); setTimeout(() => refreshStatus(reg), 800);
-    });
-    $("b-reset").addEventListener("click", async () => {
-      for (const k of await caches.keys()) await caches.delete(k);
-      await reg.unregister(); location.reload();
-    });
-  }).catch((err) => { set("d-sw", "Erreur : " + err.message, "bad"); set("d-cache", "Non", "bad"); });
-} else {
-  set("d-sw", "Non pris en charge (HTTPS requis)", "bad"); set("d-cache", "Non", "bad");
-}
+start();

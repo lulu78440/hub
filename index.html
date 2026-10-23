@@ -11,7 +11,6 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/hud.css">
-<link rel="modulepreload" href="js/main.js">
 </head>
 <body>
 <canvas id="scene" aria-hidden="true"></canvas>
@@ -21,12 +20,16 @@
     <div class="logo" aria-hidden="true"></div>
     <div><b>HUB</b><span><i></i>Phase 1 · construction</span></div>
   </div>
+  <div class="actions"><button type="button" class="btn" id="b-diag" aria-pressed="false" title="Diagnostic (touche D)">Diag</button></div>
 </header>
 
-<main class="diag">
+<div class="fx" aria-hidden="true"></div>
+<span class="fps" id="fps" aria-hidden="true">-- img/s</span>
+
+<main class="diag" id="diag" hidden>
   <section class="card" aria-labelledby="diag-titre">
-    <h1 id="diag-titre">Squelette · sous-étape 1.1</h1>
-    <p>Page de contrôle : elle confirme que le hub est installable et qu'il marche hors ligne. Elle disparaîtra quand la scène 3D arrivera (1.2).</p>
+    <h1 id="diag-titre">Diagnostic</h1>
+    <p>Version du code, mode détecté, réseau, hors ligne et installation. Touche D ou Échap pour fermer.</p>
     <dl>
       <dt>Version du code</dt><dd id="d-version">…</dd>
       <dt>Mode détecté</dt><dd id="d-mode">…</dd>

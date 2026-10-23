@@ -1,12 +1,17 @@
 /* Service worker du Hub : cache hors ligne versionné.
    Pour publier une nouvelle version : changer VERSION (et mettre à jour js/version.js). */
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const CACHE = "hub-" + VERSION;
 const ROOT = new URL("./", self.location).href;
 const PRECACHE = [
   "", "index.html", "manifest.webmanifest",
   "css/base.css", "css/hud.css",
-  "js/main.js", "js/version.js",
+  "js/main.js", "js/version.js", "js/state.js", "js/ui/diag.js",
+  "js/scene/loader.js", "js/scene/core3d.js", "js/scene/postfx.js",
+  "vendor/three/three.min.js",
+  "vendor/three/examples/shaders/CopyShader.js", "vendor/three/examples/shaders/LuminosityHighPassShader.js",
+  "vendor/three/examples/postprocessing/EffectComposer.js", "vendor/three/examples/postprocessing/RenderPass.js",
+  "vendor/three/examples/postprocessing/ShaderPass.js", "vendor/three/examples/postprocessing/UnrealBloomPass.js",
   "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-48.png",
   "fonts/orbitron-latin-500-normal.woff2", "fonts/orbitron-latin-700-normal.woff2", "fonts/orbitron-latin-900-normal.woff2",
   "fonts/rajdhani-latin-500-normal.woff2", "fonts/rajdhani-latin-600-normal.woff2", "fonts/rajdhani-latin-700-normal.woff2",
