@@ -7,7 +7,8 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 - **Suivi du Hub** : 6 étapes validées sur 36 (17 %). Phase 0 terminée. Phase 6 · Assistant IA ajoutée (4 étapes).
 - **Prochaine étape du Suivi** : « Ambiance validée sur une première maquette » (phase 1), à cocher par toi.
 - **Maquette en cours** : v8, figée comme référence de construction. Version de référence : v4 ★.
-- **Modèle** : conception terminée avec Opus. Plan de construction rédigé (`docs/plan-phase1.md`). Suite : discussion « Phase 1 · construction » avec Sonnet.
+- **Modèle** : conception terminée avec Opus. Plan de construction rédigé (`docs/plan-phase1.md`). Construction en cours avec Sonnet 5.5 (discussion « Phase 1 · construction »).
+- **Construction phase 1** : sous-étape 1.1 (squelette, appli installable, hors ligne) écrite et poussée, **en attente de ton test** sur `lulu78440.github.io/hub`. Prochaine : 1.2 (scène 3D PC).
 
 ## Historique
 
@@ -21,6 +22,17 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 | 23/10 | v6 | Entité d'énergie en sommeil qui suit la souris (« ? »), traînée longue et lente, clic droit propre à chaque fenêtre, double-clic pour changer de plan, « Plan 3 ». |
 | 23/10 | v7 | Plan 2 en mode cinéma, grand écran vidéo et musique, appui long sur l'orbe pour l'énergie de la souris, entité posée sur le logo. |
 | 23/10 | v8 | Bouton « Écran en direct » inactif sur le plan 3. Maquette figée, plan de construction de la phase 1 rédigé. |
+
+## Construction · Phase 1
+
+| Date | Sous-étape | Ce qui a été fait | Statut |
+| --- | --- | --- | --- |
+| 23/10 | 1.1 Squelette | Arborescence du plan (`index.html`, `css/`, `js/`, `fonts/`, `icons/`), manifeste, icônes (192, 512, maskable, Apple), polices Orbitron / Rajdhani / IBM Plex Mono en local, service worker avec cache versionné `hub-1.1.0`, page de contrôle (version, mode PC / mobile, réseau, hors ligne, installation). Testé en local sous `/hub/` : installation du service worker, rechargement hors ligne, aucune erreur. | À tester par Lucien (PC + Android) |
+
+Notes de construction :
+- Three.js (v0.147.0, comme les maquettes) sera copié dans `vendor/three/` à la sous-étape 1.2 ; l'espace de travail ne joint pas npm, il sera pris depuis GitHub.
+- Les maquettes ne sont pas mises en cache hors ligne (elles restent en ligne).
+- Pour publier une nouvelle version du code : changer `VERSION` dans `sw.js` et `js/version.js`.
 
 ## Décisions prises
 

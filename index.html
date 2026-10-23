@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hub</title>
+<meta name="theme-color" content="#02060d">
+<meta name="description" content="Mon hub futuriste">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/hud.css">
+<link rel="modulepreload" href="js/main.js">
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <div><b>HUB</b><span><i></i>Phase 1 · construction</span></div>
+  </div>
+</header>
+
+<main class="diag">
+  <section class="card" aria-labelledby="diag-titre">
+    <h1 id="diag-titre">Squelette · sous-étape 1.1</h1>
+    <p>Page de contrôle : elle confirme que le hub est installable et qu'il marche hors ligne. Elle disparaîtra quand la scène 3D arrivera (1.2).</p>
+    <dl>
+      <dt>Version du code</dt><dd id="d-version">…</dd>
+      <dt>Mode détecté</dt><dd id="d-mode">…</dd>
+      <dt>Réseau</dt><dd id="d-net">…</dd>
+      <dt>Service worker</dt><dd id="d-sw">…</dd>
+      <dt>Hors ligne prêt</dt><dd id="d-cache">…</dd>
+      <dt>Affichage</dt><dd id="d-display">…</dd>
+      <dt>Mouvement réduit</dt><dd id="d-motion">…</dd>
+    </dl>
+    <div class="actions">
+      <button class="btn" id="b-install" hidden>Installer le hub</button>
+      <button class="btn" id="b-update">Vérifier les mises à jour</button>
+      <button class="btn" id="b-reset">Vider le cache et recharger</button>
+    </div>
+  </section>
+</main>
+
+<noscript><p style="position:fixed;inset:40% 0 auto;text-align:center;font-family:monospace">Le hub a besoin de JavaScript.</p></noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
