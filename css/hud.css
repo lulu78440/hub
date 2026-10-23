@@ -380,3 +380,27 @@ body.lite .cal-day li { grid-template-columns: 80px minmax(0, 1fr); }
 body.lite .cal .ev { font-size: 15px; padding: 7px 8px; }
 .tasks li.empty { display: block; }
 .cal .addrow .inl { flex: 1; width: auto; min-width: 0; }
+
+/* ---------- Rappels (2.5) : alertes au centre en haut ---------- */
+.alerts { position: fixed; z-index: 10; top: 124px; left: 50%; transform: translateX(-50%); width: min(520px, calc(100vw - 24px)); display: grid; gap: 10px; }
+.alerts[hidden] { display: none; }
+.alert { --a: var(--violet); display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 14px; align-items: center; padding: 14px 16px 12px; background: rgba(8,8,26,.96); border: 1px solid var(--a);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); box-shadow: 0 0 40px color-mix(in srgb, var(--a) 35%, transparent); animation: alertIn .45s cubic-bezier(.2,.8,.2,1); }
+.alert.task { --a: var(--amber); }
+.alert.missed { --a: var(--dim); }
+.alert .ring { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--a); box-shadow: 0 0 14px var(--a), inset 0 0 10px var(--a); animation: ringPulse 1.4s ease-in-out infinite; grid-row: span 2; }
+.alert .atx { display: grid; gap: 2px; min-width: 0; }
+.alert small { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--a); }
+.alert b { font-size: 19px; font-weight: 700; letter-spacing: .02em; overflow-wrap: anywhere; }
+.alert .sub { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.alert .aacts { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; }
+.alert .aacts .btn.ok { background: var(--ok); color: var(--void); border-color: var(--ok); }
+@keyframes alertIn { from { opacity: 0; transform: translateY(-14px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes ringPulse { 50% { transform: scale(.82); opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .alert, .alert .ring { animation: none; } }
+body.lite .alerts { top: calc(10px + env(safe-area-inset-top, 0px)); }
+body.lite .alert .aacts .btn { padding: 11px 14px; }
+/* Petit repère « rappel » sur les événements et les tâches */
+.cal .ev.bell span::after, .tasks em.bell::after { content: ""; display: inline-block; width: 5px; height: 5px; margin-left: 6px; vertical-align: 2px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.evform .inl.sel { width: auto; font-family: var(--mono); font-size: 13px; color-scheme: dark; background: rgba(12,10,32,.95); }
+.erow .inl.time { width: auto; flex: 0 1 110px; font-family: var(--mono); font-size: 13px; color-scheme: dark; }

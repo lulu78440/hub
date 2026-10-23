@@ -13,6 +13,8 @@ import { initData } from "./ui/data.js";
 import { initNotes } from "./widgets/notes.js";
 import { initTasks } from "./widgets/tasks.js";
 import { initAgenda } from "./widgets/agenda.js";
+import { initReminders } from "./widgets/reminders.js";
+import { initAlertsUI } from "./ui/alertsui.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
 import { initTilt } from "./device/orientation.js";
@@ -59,10 +61,12 @@ async function start() {
   const resetLayout = () => { if (state.lite) return; place(wins.reset()); plans.goPlan(1); toast("Disposition d'origine restaurée"); };
   $("b-layout").addEventListener("click", resetLayout);
   const data = initData();
-  initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data });
+  initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data, test: () => window.__hub.reminders.test() });
   initNotes();
   initTasks();
   initAgenda();
+  const reminders = initReminders();
+  initAlertsUI(reminders);
 
   let core = null, fx = null;
   function resize() {
@@ -99,7 +103,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse, plans, force, wins, data };   // pour les essais en console
+  window.__hub = { state, pulse, plans, force, wins, data, reminders };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;

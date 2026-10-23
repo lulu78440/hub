@@ -1,5 +1,6 @@
 // Widget Agenda (2.4) : calendrier propre au hub, stocké sur l'appareil.
-// Un événement : { id, title, date "AAAA-MM-JJ", start "HH:MM" | null (journée entière), end "HH:MM" | null, created }.
+// Un événement : { id, title, date "AAAA-MM-JJ", start "HH:MM" | null (journée entière), end "HH:MM" | null,
+//   remind : minutes avant le début pour le rappel (null = pas de rappel), created }.
 // PC : bande du jour sous le bandeau (v8) ; un clic l'ouvre en grand (vues jour, semaine, mois). Mobile : la fenêtre Agenda.
 // Les tâches qui ont une échéance apparaissent aussi dans le calendrier (losanges).
 import { store, newId } from "../store/storage.js";
@@ -10,6 +11,8 @@ import { state, pulse } from "../state.js";
 
 const C = "events";
 const DAY0 = 8 * 60, SPAN = 14 * 60;            // bande du jour : 08:00 → 22:00
+const DEFAULT_REMIND = 10;                      // rappel par défaut, en minutes avant (événements à heure fixe)
+const REMINDS = [[null, "Pas de rappel"], [0, "À l'heure"], [5, "5 min avant"], [10, "10 min avant"], [15, "15 min avant"], [30, "30 min avant"], [60, "1 h avant"], [120, "2 h avant"], [1440, "La veille"]];
 const JOURS = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
 const fmtLong = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 const fmtMonth = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
@@ -38,9 +41,9 @@ export function initAgenda() {
   async function quickAdd(raw, fallbackDay) {
     const d = parseDue(raw), t = parseTime(d.text);
     if (!t.text) return;
-    const e = { id: newId("e"), title: t.text, date: d.due || fallbackDay, start: t.start, end: t.end, created: Date.now() };
+    const e = { id: newId("e"), title: t.text, date: d.due || fallbackDay, start: t.start, end: t.end, remind: t.start ? DEFAULT_REMIND : null, created: Date.now() };
     await save(e);
-    toast("Ajouté : " + fmtLong.format(fromKey(e.date)) + (e.start ? " à " + e.start : ""));
+    toast("Ajouté : " + fmtLong.format(fromKey(e.date)) + (e.start ? " à " + e.start + " · rappel " + DEFAULT_REMIND + " min avant" : ""));
     return e;
   }
 
@@ -84,7 +87,8 @@ export function initAgenda() {
       const b = el("button", "ev"); b.type = "button"; b.dataset.id = e.id;
       if (withTime && e.start) b.append(el("em", "", e.start));
       b.append(el("span", "", e.title));
-      b.title = span(e) + " · " + e.title;
+      b.title = span(e) + " · " + e.title + (e.start && e.remind != null ? " · rappel " + (e.remind ? e.remind + " min avant" : "à l'heure") : "");
+      if (e.start && e.remind != null) b.classList.add("bell");
       b.addEventListener("click", (ev) => { ev.stopPropagation(); openForm(e); });
       return b;
     }
@@ -155,11 +159,17 @@ export function initAgenda() {
       const sync = () => { t1.disabled = t2.disabled = cb.checked; };
       cb.addEventListener("change", sync); sync();
       row.append(dt, all, t1, el("span", "to", "→"), t2);
+      const rrow = el("div", "erow"), rs = el("select", "inl sel"); rs.setAttribute("aria-label", "Rappel");
+      REMINDS.forEach(([v, l]) => { const o = el("option", "", "🔔 " + l); o.value = v === null ? "" : String(v); rs.append(o); });
+      const cur0 = e ? (e.remind === undefined ? null : e.remind) : DEFAULT_REMIND;
+      rs.value = cur0 === null ? "" : String(cur0);
+      const syncR = () => { rs.disabled = cb.checked; }; cb.addEventListener("change", syncR); syncR();
+      rrow.append(rs);
       const acts = el("div", "erow");
       const mk = (l, cls, fn, type = "button") => { const b = el("button", "btn " + cls, l); b.type = type; if (fn) b.addEventListener("click", fn); return b; };
       if (!isNew) acts.append(mk("Supprimer", "danger", () => { closeForm(); remove(e.id); }));
       acts.append(mk("Annuler", "", () => closeForm()), mk(isNew ? "Ajouter" : "Enregistrer", "ok", null, "submit"));
-      f.append(el("div", "fh", isNew ? "Nouvel événement" : "Modifier l'événement"), t, row, acts);
+      f.append(el("div", "fh", isNew ? "Nouvel événement" : "Modifier l'événement"), t, row, rrow, acts);
       f.addEventListener("submit", async (ev) => {
         ev.preventDefault();
         const title = t.value.trim(); if (!title) { t.focus(); return; }
@@ -167,7 +177,8 @@ export function initAgenda() {
         const start = cb.checked ? null : (t1.value || null);
         let end = cb.checked || !t2.value ? null : t2.value;
         if (start && end && toMin(end) <= toMin(start)) end = null;
-        const obj = Object.assign(e ? { ...e } : { id: newId("e"), created: Date.now() }, { title, date: dt.value, start, end });
+        const remind = start && rs.value !== "" ? +rs.value : null;
+        const obj = Object.assign(e ? { ...e } : { id: newId("e"), created: Date.now() }, { title, date: dt.value, start, end, remind });
         form = null; f.remove(); body.hidden = false;
         if (view === "day") cur = obj.date;
         await save(obj);

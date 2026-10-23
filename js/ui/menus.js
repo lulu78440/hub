@@ -8,6 +8,7 @@ import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
 import { createMenu } from "./ctxmenu.js";
 import { buzz } from "../device/vibrate.js";
+import { sound } from "../device/sound.js";
 
 const hooks = {};
 /** fn(el, cible) renvoie les lignes propres à la fenêtre `id` (voir ctxmenu.js pour le format). */
@@ -15,7 +16,7 @@ export function registerMenu(id, fn) { hooks[id] = fn; }
 
 const MOB_STORE = "disposition-mobile-v1";
 
-export function initMenus({ wins, plans, entity, cursor, resetLayout, data }) {
+export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test }) {
   const menu = createMenu(document.getElementById("ctx"));
   const $ = (id) => document.getElementById(id);
 
@@ -44,6 +45,9 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data }) {
       { t: document.fullscreenElement ? "Quitter le plein écran" : "Plein écran", k: "F11", fn: () => $("fs").click() },
       { t: cursor.forced ? "Curseur normal" : "Curseur HUD", fn: () => toast(cursor.toggle() ? "Curseur HUD activé" : (cursor.on ? "Curseur HUD : reste actif en plein écran" : "Curseur normal")) },
       { t: "Réinitialiser la disposition", fn: resetLayout },
+      "-", { h: "Rappels" },
+      { t: sound.on ? "Couper le son des rappels" : "Activer le son des rappels", fn: () => { sound.set(!sound.on); toast(sound.on ? "Son des rappels activé" : "Son des rappels coupé"); } },
+      { t: "Tester un rappel", fn: test },
       "-", { h: "Mes données" },
       { t: "Exporter (fichier de sauvegarde)", fn: data.exportFile },
       { t: "Importer un export…", fn: data.importFile });

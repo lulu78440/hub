@@ -170,6 +170,7 @@
 
 <div class="zoom pc-only" aria-hidden="true"><div class="track"><div class="mark" id="zmark"></div></div><span id="zlbl">PLAN 1 · 100 %</span></div>
 <div class="toast" id="toast" role="status"></div>
+<div class="alerts" id="alerts" aria-live="assertive" hidden></div>
 <div class="ctx" id="ctx" role="menu" aria-label="Menu du hub" hidden></div>
 <div class="fx" aria-hidden="true"></div>
 <div class="boot" aria-hidden="true"><p>INITIALISATION</p></div>
@@ -192,9 +193,14 @@
       <dt>Inclinaison</dt><dd id="d-tilt">…</dd>
       <dt>Données</dt><dd id="d-store">…</dd>
       <dt>Dernier export</dt><dd id="d-export">…</dd>
+      <dt>Son des rappels</dt><dd id="d-sound">…</dd>
+      <dt>Notifications</dt><dd id="d-notif">…</dd>
     </dl>
     <div class="actions">
       <button class="btn" id="b-install" hidden>Installer le hub</button>
+      <button class="btn" id="b-test">Tester un rappel</button>
+      <button class="btn" id="b-sound">Couper le son</button>
+      <button class="btn" id="b-notif" hidden>Autoriser les notifications</button>
       <button class="btn" id="b-export">Exporter mes données</button>
       <button class="btn" id="b-import">Importer…</button>
       <button class="btn pc-only" id="b-layout">Réinitialiser la disposition</button>
