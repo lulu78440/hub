@@ -52,6 +52,7 @@ Notes de construction :
 - Le noyau est cadré au centre de l'écran ; les plans (1.4) fourniront leur propre rectangle de cadrage.
 - Les maquettes ne sont pas mises en cache hors ligne (elles restent en ligne).
 - Pour publier une nouvelle version du code : changer `VERSION` dans `sw.js` et `js/version.js`.
+| 23/10 | Abyss v0 | Ligne parallèle « Mods » ajoutée à la feuille de route. Copie de départ d'Abyss créée depuis la v8 (`maquettes/mods/abyss-v0-base.html`). |
 
 ## Décisions prises
 
@@ -60,7 +61,8 @@ Notes de construction :
 - **Sauvegarde** : chaque version est rangée sur GitHub (`maquettes/`), dans le Projet et dans l'historique de la maquette. Rien n'est écrasé.
 - **IA à 0 €, sans carte bancaire** : l'entité utilisera un petit modèle d'IA qui tourne directement dans Brave, sur le PC (gratuit, privé, moins puissant, gros téléchargement unique, pas sur téléphone). Pas d'API payante.
 - **Ordre de la phase 6** : d'abord une IA reliée à l'orbe principale, ensuite l'entité.
-- **Mods graphiques** : refontes visuelles fortes sans changer les fonctions, prévues en V2. Aperçus actuels : Hologramme (actif), Biomécanique, Putréfaction, Mécanique, Esprits des planètes.
+- **Mods graphiques** : refontes visuelles fortes sans changer les fonctions. Maquettes en parallèle (ligne Mods, fichiers dans `maquettes/mods/`), construction en V2. Mods : Hologramme (actif), Abyss (ex-Biomécanique, renommé le 23/10), Putréfaction, Mécanique, Esprits des planètes.
+- **Habillage séparé des fonctions** dans le code dès la phase 1, pour pouvoir brancher les mods sans réécriture.
 
 ## À trancher plus tard
 

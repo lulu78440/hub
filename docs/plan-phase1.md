@@ -41,7 +41,7 @@ La phase 1 livre la coquille : tout ce qui se voit et se ressent, sans les widge
 | Surprises | 4 |
 | Mails importants | 5 |
 | IA de l'orbe, puis entité réveillée avec une IA gratuite qui tourne dans Brave | 6 |
-| Mods graphiques (Biomécanique, Putréfaction, Mécanique, Esprits des planètes) | V2 |
+| Mods graphiques (Abyss, Putréfaction, Mécanique, Esprits des planètes) : maquettes en parallèle, construction | V2 |
 | Appli Windows : fonctions ◇, écran du PC en direct avec navigation | V2 PC |
 
 ## Architecture du code
@@ -70,6 +70,8 @@ hub/
     fx/cursor.js           curseur HUD
     device/                accès à l'appareil isolés (pour Capacitor en V2)
     store/storage.js       IndexedDB et export / import (utilisé dès la phase 2)
+  themes/
+    hologramme/            l'habillage actuel : jetons, scène 3D, effets ; les mods viendront à côté
   maquettes/  docs/        inchangés
 ```
 
@@ -80,6 +82,7 @@ Règles de construction :
 - **Budgets de performance** : PC au moins 50 images par seconde, Android au moins 30, sans chauffe. Si ça chauffe, on allège avant d'ajouter.
 - **Mouvement réduit** respecté (réglage du système).
 - **Chaque accès à l'appareil** passe par `js/device/`.
+- **Habillage séparé des fonctions** : tout ce qui fait l'apparence (jetons de couleur et de typo, matières des panneaux, scène 3D, effets de souris, sons) vit dans un thème, par exemple `themes/hologramme/`, chargé par le hub. Les fonctions (plans, fenêtres, recherche, données) ne dépendent d'aucun visuel précis. C'est ce qui permettra de brancher les mods (Abyss, Putréfaction, Mécanique, Esprits des planètes) en V2 sans réécriture.
 - **Mobile** : on reproduit la v3 telle quelle.
 
 ## Ordre de travail et validations
