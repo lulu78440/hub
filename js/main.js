@@ -20,6 +20,7 @@ import { initFavs } from "./widgets/favs.js";
 import { initMyPC } from "./widgets/mypc.js";
 import { initImages } from "./widgets/images.js";
 import { initProgress } from "./widgets/progress.js";
+import { initBackup } from "./widgets/backup.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -78,6 +79,8 @@ async function start() {
   if (!state.lite) initMyPC({ plans });
   const images = initImages({ world: $("world"), plans, force, wins });
   initProgress();
+  const backup = initBackup(data);
+  $("b-backup").addEventListener("click", () => backup.test());
 
   let core = null, fx = null;
   function resize() {

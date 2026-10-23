@@ -575,3 +575,4 @@ body.lite .gchip { padding: 7px 10px; font-size: 11px; }
 .modview { position: fixed; inset: 0; z-index: 10; background: rgba(2,6,13,.82); display: grid; place-items: center; align-content: center; gap: 14px; cursor: pointer; }
 .modview canvas { width: min(80vw, 1100px); aspect-ratio: 16 / 9; max-height: 74vh; max-width: 100%; clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); }
 .modview span { font-family: var(--display); font-size: 13px; letter-spacing: .3em; color: var(--cyan); text-transform: uppercase; }
+.alert.backup { --a: var(--ok); }
