@@ -1,0 +1,36 @@
+# Tâche programmée du hub (phase 3) : actualité, vidéos YouTube et état des sites surveillés,
+# publiés dans flux.json sur la branche « flux » (un seul commit, réécrit à chaque fois).
+name: Flux du hub
+on:
+  schedule:
+    - cron: "7,27,47 * * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ["flux/sources.json", "tools/flux.py", ".github/workflows/flux.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: flux
+  cancel-in-progress: false
+jobs:
+  flux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reprendre le flux précédent (pour savoir depuis quand un site est en panne)
+        run: |
+          mkdir -p sortie
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/flux/flux.json" -o sortie/flux.json || true
+      - name: Lire les sources
+        run: python3 tools/flux.py sortie
+      - name: Publier sur la branche flux
+        run: |
+          cd sortie
+          git init -q -b flux
+          git config user.name "hub-flux"
+          git config user.email "hub-flux@users.noreply.github.com"
+          git add flux.json
+          git commit -q -m "Flux du $(date -u +'%Y-%m-%d %H:%M') UTC"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" flux

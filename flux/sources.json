@@ -1,0 +1,16 @@
+{
+ "_lisezmoi": "Sources lues par la tâche programmée (tools/flux.py) toutes les 20 minutes environ. Dépôt public : n'écris rien de personnel ici. Pour une chaîne YouTube, mets son identifiant (commence par UC…). Tu peux aussi demander à Claude de modifier ce fichier.",
+ "actus": [
+  { "cat": "TECH & IA", "couleur": "var(--cyan)", "flux": ["https://www.numerama.com/feed/", "https://www.frandroid.com/feed", "https://www.lemonde.fr/pixels/rss_full.xml"] },
+  { "cat": "FRANCE", "couleur": "var(--violet)", "flux": ["https://www.francetvinfo.fr/titres.rss", "https://www.lemonde.fr/rss/une.xml"] },
+  { "cat": "MONDE", "couleur": "#ff7a8a", "flux": ["https://www.lemonde.fr/international/rss_full.xml", "https://www.france24.com/fr/rss"] },
+  { "cat": "JEUX VIDÉO", "couleur": "var(--amber)", "flux": ["https://www.gamekult.com/feed.xml", "https://www.jeuxvideo.com/rss/rss.xml"] }
+ ],
+ "youtube": [],
+ "sites": [
+  { "nom": "Le hub", "url": "https://lulu78440.github.io/hub/", "articles": "" },
+  { "nom": "YouTube", "url": "https://www.youtube.com/", "articles": "" },
+  { "nom": "GitHub", "url": "https://github.com/", "articles": "" }
+ ],
+ "par_categorie": 12
+}
