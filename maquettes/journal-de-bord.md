@@ -23,6 +23,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 | 23/10 | v7 | Plan 2 en mode cinéma, grand écran vidéo et musique, appui long sur l'orbe pour l'énergie de la souris, entité posée sur le logo. |
 | 23/10 | v8 | Bouton « Écran en direct » inactif sur le plan 3. Maquette figée, plan de construction de la phase 1 rédigé. |
 | 23/10 | Abyss v0 | Ligne parallèle « Mods » ajoutée à la feuille de route. Copie de départ d'Abyss créée depuis la v8 (`maquettes/mods/abyss-v0-base.html`). |
+| 24/10 | Abyss v1 | Mod Abyss : méduse géante qui attrape les fenêtres du plan 1, fenêtres en membrane, bulles et rayons de lumière, petite méduse cartoon aux tentacules collants. Onglet « Horreur abyssale » : Cthulhu, fenêtres en chair avec dents, yeux dans le noir, lamproie à lanterne, énergie rouge. Hub et v8 non modifiés. |
 
 ## Construction · Phase 1
 
