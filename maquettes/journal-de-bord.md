@@ -4,7 +4,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 
 ## Où on en est
 
-- **Phase en cours** : **phase 2 · widgets**, ouverte le 23/10 dans la discussion « Phase 2 · widgets ». Découpage en 11 sous-étapes validé par Lucien (ci-dessous). Consigne du 24/10 : enchaîner toutes les étapes sans attendre de confirmation. **Phase 2 terminée : version stable `v2.0.0` (branche `version-2.0.0`)**, archive `hub-v2.0.0.zip` (à ranger sur le PC et dans Google Drive). Phase 3 en cours (plan : `docs/plan-phases-3-6.md`). Suivi relevé le 24/10 : 18/36 (50 %) ; cases de la phase 2 à cocher par toi.
+- **Phase en cours** : **phase 2 · widgets**, ouverte le 23/10 dans la discussion « Phase 2 · widgets ». Découpage en 11 sous-étapes validé par Lucien (ci-dessous). Consigne du 24/10 : enchaîner toutes les étapes sans attendre de confirmation. **Phase 2 terminée : version stable `v2.0.0` (branche `version-2.0.0`)**, archive `hub-v2.0.0.zip` (à ranger sur le PC et dans Google Drive). Phase 3 en cours (plan : `docs/plan-phases-3-6.md`) : 3.1 et 3.2 livrées. Suivi relevé le 24/10 : 18/36 (50 %) ; cases de la phase 2 à cocher par toi.
 - **Code réel** : version stable `v1.0.0` sur `lulu78440.github.io/hub` (phase 1 terminée, sous-étapes 1.1 à 1.7 validées le 23/10, archive `hub-v1.0.0.zip` à ranger sur le PC et dans Google Drive).
 - **Maquettes** : v8 figée, référence PC (v4 ★ pour la validation) ; v3 référence mobile.
 - **Modèle** : découpage de la phase 2 fait avec Opus ; construction avec Sonnet 5.5. Retour à Opus seulement sur STOP (voir 2.8, ou bug qui résiste après deux essais).
@@ -81,6 +81,15 @@ Ordre de test à chaque sous-étape : 1) push sur `main`, version du service wor
 | 24/10 | 2.10 Sauvegarde des données | `widgets/backup.js` : le dimanche dès 9 h, si le dernier export a plus de 5 jours (et qu'il y a des données), alerte verte « Sauvegarde du dimanche » avec « Exporter maintenant » (télécharge `hub-donnees-AAAA-MM-JJ.json`) ou « Plus tard » (3 h) ; son doux, notification si le hub est en arrière-plan ; rattrapage n'importe quel jour si plus de 8 jours. Diag : « Tester le rappel du dimanche ». L'export contient tout (notes, tâches, agenda, favoris, images, réglages) ; l'import remplace tout après confirmation. Testé avec horloge simulée (dimanche 10 h, export à 7 jours). Service worker v2.10.0. | « Export puis import testé », « Rappel du dimanche reçu » | Livrée (à cocher par Lucien après un vrai dimanche) |
 | 24/10 | 2.11 Recette et v2.0.0 | Recette complète rejouée dans le navigateur de test (fenêtres, menus, notes, tâches, agenda, rappels, météo simulée, favoris, Mon PC, images, progression, sauvegarde, mobile) : aucune erreur du hub. Vibration seulement après un premier toucher (règle des navigateurs). Archive : mode d'emploi complété (les données se gardent à part, fichiers `hub-donnees-…json`). Service worker v2.11.0, version stable rangée dans la **branche `version-2.0.0`** du dépôt (les étiquettes ne passent pas par l'accès GitHub de Claude : l'étiquette `v1.0.0` de la phase 1 n'était en fait jamais arrivée sur GitHub), archive `hub-v2.0.0.zip` livrée. | « Panneaux déplacés, disposition mémorisée PC et mobile » ; « Notes, tâches et calendrier une semaine » | Terminée : branche `version-2.0.0` |
 
+## Construction · Phase 3
+
+Plan et décisions : `docs/plan-phases-3-6.md` (rédigé avec Opus le 24/10). Consigne de Lucien : enchaîner sans attendre de confirmation.
+
+| Date | Sous-étape | Ce qui a été fait | Étape du Suivi | Statut |
+| --- | --- | --- | --- | --- |
+| 24/10 | 3.1 Moteur de flux | Tâche programmée GitHub Actions (`.github/workflows/flux.yml`, minutes 7, 27, 47 de chaque heure + à chaque changement des sources) qui lance `tools/flux.py` (bibliothèque standard Python : RSS, Atom, flux YouTube, test des sites avec temps de réponse et « depuis quand ») et publie `flux.json` sur la branche `flux` (un seul commit réécrit). Sources par défaut dans `flux/sources.json` : Tech et IA (Numerama, Frandroid, Korben), France (franceinfo, Le Monde), Monde (Le Monde international, France 24), Jeux vidéo (Gamekult, jeuxvideo.com) ; sites surveillés : le hub, YouTube, GitHub ; chaînes YouTube : à ajouter. Premier passage réussi : 48 titres, 3 sites en ligne, 0 erreur. | — | Livrée |
+| 24/10 | 3.2 Actualité et veille | `widgets/flux.js` lit `flux.json` sur raw.githubusercontent.com toutes les 10 min (copie gardée hors ligne). Bandeau d'actualité défilant de la v8 en bas (PC) : catégories colorées, clic = article, survol = pause, clic droit : arrêter le défilement, actualiser, « Modifier les sources (GitHub) ». Fenêtre Veille (PC et mobile) : sites en ligne / en panne avec temps de réponse, nouveaux articles des sites suivis, alerte rouge + son + notification quand un site tombe (une fois par panne). Testé avec le vrai flux et une panne simulée. Service worker v3.2.0. | « Sources d'actualité choisies et affichées », « Alerte reçue quand un de tes sites tombe » | Livrée |
+
 ## Décisions prises
 
 - **Vue mobile** : on n'y touche plus jusqu'à nouvel ordre (état de la v3). Exception accordée le 23/10 (phase 2) : masquer et réordonner les fenêtres par appui long, pour la disposition mémorisée sur mobile.
@@ -99,6 +108,7 @@ Ordre de test à chaque sous-étape : 1) push sur `main`, version du service wor
 ## À trancher plus tard
 
 - **Mod Abyss · combat de minuit** : à minuit, les cachalots du mode normal combattent des calmars géants (clin d'œil au chapitre des poulpes de Jules Verne). Idée notée par Lucien le 24/10, à construire plus tard.
+- **Sources d'actualité, chaînes YouTube et sites surveillés** : dans `flux/sources.json` (public). À compléter par Lucien (lien « Modifier les sources » dans le hub) ou en le demandant à Claude. « Ta ville » non ajoutée par défaut (le dépôt est public).
 - **IA de l'orbe** : avec la règle 0 €, une API payante est exclue. Options à étudier en phase 6 : le même type de modèle local (plus gros), ou une offre gratuite sans carte bancaire si elle existe à ce moment-là.
 - **Onglet « Nos projets »** à gauche, avec Mon PC : Suivi, journal, cahier des charges et maquettes lus depuis GitHub, liens vers le Projet Claude.
 - **Appli Windows** pour les fonctions marquées ◇ (processeur, volume direct, lancement de programmes, Corbeille) et pour l'écran du PC en direct avec navigation. Une page web peut seulement afficher une vue en direct (avec l'accord de Brave), sans pouvoir cliquer dedans.
