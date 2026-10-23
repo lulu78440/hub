@@ -6,8 +6,8 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 
 - **Suivi du Hub** : 6 étapes validées sur 36 (17 %). Phase 0 terminée. Phase 6 · Assistant IA ajoutée (4 étapes).
 - **Prochaine étape du Suivi** : « Ambiance validée sur une première maquette » (phase 1), à cocher par toi.
-- **Maquette en cours** : v7, en test. Version de référence : v4 ★.
-- **Modèle** : on est toujours en conception (Opus). Le passage à Sonnet viendra après validation de l'ambiance.
+- **Maquette en cours** : v8, figée comme référence de construction. Version de référence : v4 ★.
+- **Modèle** : conception terminée avec Opus. Plan de construction rédigé (`docs/plan-phase1.md`). Suite : discussion « Phase 1 · construction » avec Sonnet.
 
 ## Historique
 
@@ -20,6 +20,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 | 23/10 | v5 | Vue PC : filaments liés à la souris, effet de force en déplaçant, curseur HUD en plein écran, clic droit, vidéos à suivre sous le lecteur, fenêtre Progression + mods, images libres. |
 | 23/10 | v6 | Entité d'énergie en sommeil qui suit la souris (« ? »), traînée longue et lente, clic droit propre à chaque fenêtre, double-clic pour changer de plan, « Plan 3 ». |
 | 23/10 | v7 | Plan 2 en mode cinéma, grand écran vidéo et musique, appui long sur l'orbe pour l'énergie de la souris, entité posée sur le logo. |
+| 23/10 | v8 | Bouton « Écran en direct » inactif sur le plan 3. Maquette figée, plan de construction de la phase 1 rédigé. |
 
 ## Décisions prises
 
@@ -35,6 +36,6 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 - **IA de l'orbe** : avec la règle 0 €, une API payante est exclue. Options à étudier en phase 6 : le même type de modèle local (plus gros), ou une offre gratuite sans carte bancaire si elle existe à ce moment-là.
 - **Onglet « Nos projets »** à gauche, avec Mon PC : Suivi, journal, cahier des charges et maquettes lus depuis GitHub, liens vers le Projet Claude.
 
-- **Appli Windows** pour les fonctions marquées ◇ (processeur, volume direct, lancement de programmes, Corbeille). Une page web ne peut pas les faire seule.
-- **Mise à jour du cahier des charges** avec : module Mon PC, trois plans, mods V2, images libres, menu du clic droit, curseur HUD. À faire quand l'ambiance sera validée.
+- **Appli Windows** pour les fonctions marquées ◇ (processeur, volume direct, lancement de programmes, Corbeille) et pour l'écran du PC en direct avec navigation. Une page web peut seulement afficher une vue en direct (avec l'accord de Brave), sans pouvoir cliquer dedans.
+- **Cahier des charges** : les ajouts des maquettes sont repris dans `docs/plan-phase1.md` (tableau des phases), qui fait foi en cas de doute.
 - **Liaison automatique** entre la fenêtre Progression et le Suivi du Hub : pour l'instant c'est un relevé, mis à jour à chaque nouvelle version.
