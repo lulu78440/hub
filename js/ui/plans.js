@@ -13,10 +13,10 @@ export function createPlans({ world, anchor, desk }) {
   let zoom = 1, zoomTarget = 1, snapT = 0, lastT = "";
   const zmark = $("zmark"), zlbl = $("zlbl");
 
-  /** Place l'emplacement du noyau et le centre du zoom (PC : bloc central). */
-  function layout(RW, RH) {
+  /** Place l'emplacement du noyau et le centre du zoom (PC : entre les colonnes de fenêtres, calculé par ui/windows.js). */
+  function layout(RW, RH, rect) {
     if (state.lite) return;   // mobile : l'emplacement du noyau est géré par css/mobile.css (bloc dans la pile)
-    const r = { left: RW * 0.2, top: RH * 0.13, width: RW * 0.6, height: RH * 0.62 };
+    const r = rect || { left: RW * 0.2, top: RH * 0.13, width: RW * 0.6, height: RH * 0.62 };
     Object.assign(anchor.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
     world.style.transformOrigin = `${r.left + r.width / 2}px ${r.top + r.height / 2}px`;
   }
@@ -65,6 +65,7 @@ export function createPlans({ world, anchor, desk }) {
       b.style.setProperty("--cine", cine.toFixed(3));
       b.classList.toggle("cine", cine > 0.45);
       b.classList.toggle("zoomed", zoom < 0.99);
+      b.classList.toggle("global", zoom < 0.85);   // vue globale : fenêtres figées en vedette, les autres en retrait
       zmark.style.top = ((1 - (zoom - ZMIN) / (1 - ZMIN)) * 167).toFixed(1) + "px";
       zlbl.textContent = "PLAN " + (PLANS.indexOf(nearestPlan(zoom)) + 1) + " · " + Math.round(zoom * 100) + " %";
       // Le bureau du PC arrive de derrière la caméra quand on recule au-delà du plan 2
@@ -73,5 +74,5 @@ export function createPlans({ world, anchor, desk }) {
       desk.classList.toggle("on", d > 0.03);
     }
   }
-  return { layout, update, goPlan, get zoom() { return zoom; } };
+  return { layout, update, goPlan, get zoom() { return zoom; }, get plan() { return planIndex() + 1; } };
 }

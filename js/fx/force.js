@@ -128,6 +128,32 @@ export function createForce({ canvas, anchor, logo }) {
     fg.globalAlpha = 0.25; fg.fillRect(0, cy - 7, F.FW, 14); fg.globalAlpha = 1;
   }
 
+  // Champ de force autour de la fenêtre qu'on déplace : arcs reliés à la souris, étincelles qui courent sur le bord
+  let dragEl = null;
+  function perim(r, s) {
+    const P = 2 * (r.width + r.height); let d = (((s % 1) + 1) % 1) * P;
+    if (d < r.width) return [r.left + d, r.top]; d -= r.width;
+    if (d < r.height) return [r.right, r.top + d]; d -= r.height;
+    if (d < r.width) return [r.right - d, r.bottom]; d -= r.width;
+    return [r.left, r.bottom - d];
+  }
+  function forceWrap(r) {
+    const { fmx, fmy, ft } = F;
+    for (let k = 0; k < 9; k++) {
+      const [x, y] = perim(r, k / 9 + ft * 0.06);
+      const cx = (fmx + x) / 2 + Math.sin(ft * 3 + k * 1.7) * 50, cy = (fmy + y) / 2 + Math.cos(ft * 2.6 + k) * 50;
+      fg.strokeStyle = "rgba(63,230,255,0.07)"; fg.lineWidth = 5; fg.beginPath(); fg.moveTo(fmx, fmy); fg.quadraticCurveTo(cx, cy, x, y); fg.stroke();
+      fg.strokeStyle = "rgba(160,240,255,0.5)"; fg.lineWidth = 1; fg.beginPath(); fg.moveTo(fmx, fmy); fg.quadraticCurveTo(cx, cy, x, y); fg.stroke();
+    }
+    for (let i = 0; i < 48; i++) {
+      const [x, y] = perim(r, i / 48 + ft * (i % 2 ? 0.11 : -0.07)), j = Math.sin(ft * 9 + i * 2.3) * 4, a = 0.35 + 0.35 * Math.sin(ft * 6 + i);
+      fg.fillStyle = i % 5 === 0 ? `rgba(155,114,255,${a.toFixed(2)})` : `rgba(120,240,255,${a.toFixed(2)})`;
+      fg.beginPath(); fg.arc(x + j, y - j, 1.6, 0, 6.283); fg.fill();
+    }
+    fg.strokeStyle = "rgba(63,230,255,0.16)"; fg.lineWidth = 6; fg.strokeRect(r.left - 3, r.top - 3, r.width + 6, r.height + 6);
+    fg.strokeStyle = "rgba(160,240,255,0.35)"; fg.lineWidth = 1; fg.strokeRect(r.left - 3, r.top - 3, r.width + 6, r.height + 6);
+  }
+
   const entity = createEntity(F);
 
   /** Une image du champ de force. Rien n'est dessiné sur mobile, en pause ou avec « mouvement réduit ». */
@@ -148,7 +174,8 @@ export function createForce({ canvas, anchor, logo }) {
     if (F.fin && F.energyOn) { F.filaments(F.fmx, F.fmy, 210, 22, true); mouseAura(); }
     if (press) drawPress();
     entity.draw(dt);
+    if (F.fin && dragEl) forceWrap(dragEl.getBoundingClientRect());
     fg.globalCompositeOperation = "source-over";
   }
-  return { draw, entity, clear };
+  return { draw, entity, clear, setDrag(el) { dragEl = el; } };
 }

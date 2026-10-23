@@ -4,13 +4,11 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 
 ## Où on en est
 
-- **Suivi du Hub** : 6 étapes validées sur 36 avant la phase 1 (17 %) ; les 7 étapes de la phase 1 sont à cocher par toi. Phase 0 terminée. Phase 6 · Assistant IA ajoutée (4 étapes).
-- **Prochaine étape du Suivi** : cocher les étapes de la phase 1 (ci-dessous), puis ouvrir la phase 2.
-- **Maquettes** : v8 figée, référence de construction (v4 ★ pour la validation, v3 pour le mobile). Code réel : version stable `v1.0.0` sur `lulu78440.github.io/hub`.
-- **Modèle** : conception terminée avec Opus. Plan de construction rédigé (`docs/plan-phase1.md`). Construction en cours avec Sonnet 5.5 (discussion « Phase 1 · construction »).
-- **Construction phase 1** : **terminée** (sous-étapes 1.1 à 1.7, toutes validées par Lucien le 23/10). Version stable `v1.0.0`, archive `hub-v1.0.0.zip` livrée (à ranger sur le PC et dans Google Drive). Prochaine : phase 2 (widgets), dans une nouvelle discussion du Projet, avec Sonnet.
-- **Suivi du Hub** : cases à cocher par toi pour la phase 1 : « Scène 3D fluide sur le PC », « Barre de recherche fonctionnelle », « Version allégée fluide sur Android », « Page d'accueil », « Installation Android », « Hors ligne », « Archive du code rangée ».
-- **Suivi du Hub** : à cocher par toi après le test de 1.2 : « Scène 3D fluide sur le PC » (au moins 50 img/s).
+- **Phase en cours** : **phase 2 · widgets**, ouverte le 23/10 dans la discussion « Phase 2 · widgets ». Découpage en 11 sous-étapes validé par Lucien (ci-dessous). **2.1 Fenêtres PC** publiée, à tester par toi (« 1 » = validé, on passe à la suivante).
+- **Code réel** : version stable `v1.0.0` sur `lulu78440.github.io/hub` (phase 1 terminée, sous-étapes 1.1 à 1.7 validées le 23/10, archive `hub-v1.0.0.zip` à ranger sur le PC et dans Google Drive).
+- **Maquettes** : v8 figée, référence PC (v4 ★ pour la validation) ; v3 référence mobile.
+- **Modèle** : découpage de la phase 2 fait avec Opus ; construction avec Sonnet 5.5. Retour à Opus seulement sur STOP (voir 2.8, ou bug qui résiste après deux essais).
+- **Suivi du Hub** : cases de la phase 1 à cocher par toi si ce n'est pas fait : « Scène 3D fluide sur le PC » (au moins 50 img/s), « Barre de recherche fonctionnelle », « Version allégée fluide sur Android », « Page d'accueil », « Installation Android », « Hors ligne », « Archive du code rangée ».
 
 ## Historique
 
@@ -24,6 +22,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 | 23/10 | v6 | Entité d'énergie en sommeil qui suit la souris (« ? »), traînée longue et lente, clic droit propre à chaque fenêtre, double-clic pour changer de plan, « Plan 3 ». |
 | 23/10 | v7 | Plan 2 en mode cinéma, grand écran vidéo et musique, appui long sur l'orbe pour l'énergie de la souris, entité posée sur le logo. |
 | 23/10 | v8 | Bouton « Écran en direct » inactif sur le plan 3. Maquette figée, plan de construction de la phase 1 rédigé. |
+| 23/10 | Abyss v0 | Ligne parallèle « Mods » ajoutée à la feuille de route. Copie de départ d'Abyss créée depuis la v8 (`maquettes/mods/abyss-v0-base.html`). |
 
 ## Construction · Phase 1
 
@@ -52,23 +51,49 @@ Notes de construction :
 - Le noyau est cadré au centre de l'écran ; les plans (1.4) fourniront leur propre rectangle de cadrage.
 - Les maquettes ne sont pas mises en cache hors ligne (elles restent en ligne).
 - Pour publier une nouvelle version du code : changer `VERSION` dans `sw.js` et `js/version.js`.
-| 23/10 | Abyss v0 | Ligne parallèle « Mods » ajoutée à la feuille de route. Copie de départ d'Abyss créée depuis la v8 (`maquettes/mods/abyss-v0-base.html`). |
+
+Notes de construction phase 2 :
+- Les fenêtres, les plans et les effets sont créés après le chargement de la 3D : si WebGL est coupé, le hub affiche un message et pas de fenêtres. À découpler si ça arrive (prévu au plus tard en 2.3, quand les fenêtres porteront de vraies données).
+- Agrandir et réinitialiser se feront aussi par le clic droit en 2.2.
+
+## Construction · Phase 2
+
+Découpage validé par Lucien le 23/10. Références : `maquettes/noyau-v8.html` (PC), `maquettes/noyau-v3.html` (mobile). Ordre choisi : le cadre (fenêtres) d'abord ; notes et tâches tôt, pour que la « semaine d'usage » du Suivi tourne pendant qu'on construit le reste ; l'export arrive avec les premières vraies données.
+
+Ordre de test à chaque sous-étape : 1) push sur `main`, version du service worker montée ; 2) test PC dans Brave (après « Nouvelle version prête » ou Ctrl+F5) ; 3) test Android, au minimum pour vérifier que rien n'a cassé ; 4) « validé » de Lucien, journal mis à jour, sous-étape suivante.
+
+| Date | Sous-étape | Contenu prévu / ce qui a été fait | Étape du Suivi | Statut |
+| --- | --- | --- | --- | --- |
+| 23/10 | 2.1 Fenêtres PC | Module `ui/windows.js` (coque v8 : punaise, poignée, badge « FIGÉE »). Déplacer par la barre de titre (calage sur 8 px), redimensionner par le coin, figer, agrandir / restaurer par double-clic sur la barre, inclinaison vers le noyau, penche quand on la traîne, champ de force autour de la fenêtre déplacée (`fx/force.js`), halo couleur de la fenêtre survolée sur le noyau. Disposition v8 : Mon PC + Veille à gauche, Vidéo (figée par défaut) + Page en direct + Tâches à droite, Progression en bas au centre, Musique + Favoris + Notes hors champ (plan 2). Le noyau et la recherche se placent entre les deux colonnes. Vue globale (plans 2 et 3) : fenêtres figées en vedette ; mode cinéma : premier plan flouté. Double-clic sur une fenêtre depuis le plan 2 ou 3 : on va à son plan. Disposition mémorisée (`hub-disposition-pc-v1`), bouton « Réinitialiser la disposition » dans Diag. Mobile inchangé (mêmes coques partagées, sans punaise ni poignée). Testé dans un navigateur de test : déplacement, taille, figer, agrandir, mémorisation après rechargement, plans, réinitialisation, mobile, aucune erreur. Service worker v2.1.0. | prépare « Panneaux déplacés » | À tester par Lucien |
+| — | 2.2 Clic droit et masquage | Menu du fond (plans, entité, plein écran, fenêtres masquées), menu de fenêtre (figer, agrandir, ramener devant, masquer), menu de l'entité ; Maj + clic droit = menu de Brave. Mobile : masquer et réordonner les fenêtres par appui long, ordre mémorisé. | idem | À faire |
+| — | 2.3 Coffre de données, notes, tâches | `store/storage.js` (IndexedDB) avec export et import en fichier. Notes épinglables et modifiables. Tâches avec priorité, échéance et jauge. La semaine d'usage démarre ici. | démarre « Notes, tâches, calendrier une semaine » | À faire |
+| — | 2.4 Agenda | Bande du jour sur PC (repère « maintenant », prochain événement). Fenêtre agenda, vues jour, semaine, mois. Ajout, modification, suppression. | idem | À faire |
+| — | 2.5 Rappels et son | Rappel sur tâche ou événement, alerte dans le hub, notification Brave si autorisée, rattrapage des rappels manqués à l'ouverture. Son futuriste synthétisé dans le code, désactivable (remplaçable plus tard par un son d'IA). Limite : hub ouvert. | « Rappel reçu avec le son futuriste » | À faire |
+| — | 2.6 Météo | Open-Meteo, localisation automatique (autorisation demandée, via `js/device/`). Bandeau discret, survol 7 jours, lever et coucher du soleil, °C ou °F, cache hors ligne, fenêtre Météo mobile. Légendes flottantes autour du noyau avec vraies données. Teinte légère de la scène selon le ciel. | « Météo exacte pour ta ville » | À faire |
+| — | 2.7 Favoris | Import du fichier HTML exporté par Brave et Chrome, groupes, ajout et retrait, icônes hexagonales. | « Favoris importés » | À faire |
+| — | 2.8 Mon PC et plan 3 | Batterie, réseau, écran réels. Liens vers les réglages Windows. Dossiers autorisés et fichiers récents. Barre d'applis ✓ / ◇ (◇ inactifs jusqu'à l'appli Windows). ⚠ À vérifier : Brave désactive peut-être par défaut l'accès aux dossiers depuis une page web → STOP Opus possible pour choisir la voie. | — | À faire |
+| — | 2.9 Images libres et Progression | 12 images max (glisser, coller, hologramme, opacité, devant / derrière, mémorisées). Fenêtre Progression qui lit un fichier de suivi dans le dépôt, aperçus des mods. | — | À faire |
+| — | 2.10 Sauvegarde des données | Export et import complets avec confirmation, rappel de sauvegarde du dimanche dans le hub. | « Export puis import testé », « Rappel du dimanche reçu » | À faire |
+| — | 2.11 Recette et v2.0.0 | Test complet PC et Android (50 img/s PC, 30 Android, hors ligne), étiquette `v2.0.0`, archive .zip. | « Panneaux déplacés, disposition mémorisée PC et mobile » ; clôture de la semaine d'usage | À faire |
 
 ## Décisions prises
 
-- **Vue mobile** : on n'y touche plus jusqu'à nouvel ordre (état de la v3).
+- **Vue mobile** : on n'y touche plus jusqu'à nouvel ordre (état de la v3). Exception accordée le 23/10 (phase 2) : masquer et réordonner les fenêtres par appui long, pour la disposition mémorisée sur mobile.
 - **Trois plans sur PC** : 1 = hub, 2 = notes et applis, 3 = bureau du PC.
 - **Sauvegarde** : chaque version est rangée sur GitHub (`maquettes/`), dans le Projet et dans l'historique de la maquette. Rien n'est écrasé.
 - **IA à 0 €, sans carte bancaire** : l'entité utilisera un petit modèle d'IA qui tourne directement dans Brave, sur le PC (gratuit, privé, moins puissant, gros téléchargement unique, pas sur téléphone). Pas d'API payante.
 - **Ordre de la phase 6** : d'abord une IA reliée à l'orbe principale, ensuite l'entité.
 - **Mods graphiques** : refontes visuelles fortes sans changer les fonctions. Maquettes en parallèle (ligne Mods, fichiers dans `maquettes/mods/`), construction en V2. Mods : Hologramme (actif), Abyss (ex-Biomécanique, renommé le 23/10), Putréfaction, Mécanique, Esprits des planètes.
 - **Habillage séparé des fonctions** dans le code dès la phase 1, pour pouvoir brancher les mods sans réécriture.
+- **Phase 2 · fenêtres de la phase 3** (Vidéo, Musique, Veille, Page en direct) : coques vides « PHASE 3 » sur PC, à leur place de la v8 (23/10).
+- **Phase 2 · son des rappels** : son synthétisé dans le code d'abord, remplaçable plus tard par un son créé avec une IA de sons (23/10).
+- **Phase 2 · météo** : localisation automatique, avec l'autorisation du navigateur (23/10).
 
 ## À trancher plus tard
 
 - **IA de l'orbe** : avec la règle 0 €, une API payante est exclue. Options à étudier en phase 6 : le même type de modèle local (plus gros), ou une offre gratuite sans carte bancaire si elle existe à ce moment-là.
 - **Onglet « Nos projets »** à gauche, avec Mon PC : Suivi, journal, cahier des charges et maquettes lus depuis GitHub, liens vers le Projet Claude.
-
 - **Appli Windows** pour les fonctions marquées ◇ (processeur, volume direct, lancement de programmes, Corbeille) et pour l'écran du PC en direct avec navigation. Une page web peut seulement afficher une vue en direct (avec l'accord de Brave), sans pouvoir cliquer dedans.
+- **Accès aux dossiers du PC dans Brave** (sous-étape 2.8) : vérifier si Brave le bloque par défaut ; sinon choisir entre réglage `brave://flags`, choix manuel des fichiers, ou report à l'appli Windows.
 - **Cahier des charges** : les ajouts des maquettes sont repris dans `docs/plan-phase1.md` (tableau des phases), qui fait foi en cas de doute.
 - **Liaison automatique** entre la fenêtre Progression et le Suivi du Hub : pour l'instant c'est un relevé, mis à jour à chaque nouvelle version.

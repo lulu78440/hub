@@ -5,6 +5,8 @@ import { initClock } from "./ui/clock.js";
 import { initSearch } from "./ui/search.js";
 import { initTopbar } from "./ui/topbar.js";
 import { createPlans } from "./ui/plans.js";
+import { createWindows } from "./ui/windows.js";
+import { toast } from "./ui/toast.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
 import { initTilt } from "./device/orientation.js";
@@ -49,11 +51,19 @@ async function start() {
   const anchorEl = $("anchor");
   const plans = createPlans({ world: $("world"), anchor: anchorEl, desk: $("desk") });
   const force = createForce({ canvas: $("force"), anchor: anchorEl, logo: $("logo") });
+  const wins = createWindows({ world: $("world"), plans, force });
   initCursor();
   let RW = 0, RH = 0;
+  const searchEl = $("search");
+  // PC : les fenêtres décident de la place du noyau et de la recherche (entre les deux colonnes, comme la v8).
+  function place(D) {
+    plans.layout(RW, RH, D.anchor);
+    Object.assign(searchEl.style, { left: D.search.x + "px", top: D.search.y + "px", width: D.search.w + "px", transform: "none" });
+  }
+  $("b-layout").addEventListener("click", () => { if (state.lite) return; place(wins.reset()); plans.goPlan(1); toast("Disposition d'origine restaurée"); });
   function resize() {
     RW = innerWidth; RH = innerHeight;
-    plans.layout(RW, RH);
+    if (state.lite) plans.layout(RW, RH); else place(wins.layout(RW, RH));
     fx.resize(RW, RH, lite ? 1 : Math.min(devicePixelRatio || 1, 1.75));
     core.resize(RW, RH);
   }
@@ -73,6 +83,7 @@ async function start() {
     if (state.paused) return;
     const k = state.reduce ? 0.15 : 1; t += dt * k;
     plans.update(dt);
+    wins.update(dt);
     const c = core.frame(anchorEl.getBoundingClientRect(), RW, RH); if (c) fx.setCenter(c);
     state.energy += (state.energyTarget - state.energy) * Math.min(dt * 3, 1);
     core.update({ t, dt, k, energy: state.energy, accent: state.accent, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
@@ -85,6 +96,6 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse, plans, force };   // pour les essais en console
+  window.__hub = { state, pulse, plans, force, wins };   // pour les essais en console
 }
 start();

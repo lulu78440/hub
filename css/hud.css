@@ -166,3 +166,42 @@ body.lite #force, body.lite .reticle { display: none !important; }
 @keyframes sweep { to { top: 100%; } }
 @keyframes bootout { to { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .boot { display: none; } }
+
+/* ---------- Fenêtres libres du PC (2.1, repris de la v8) ---------- */
+body:not(.lite) .win { position: absolute; left: 0; top: 0; pointer-events: auto; will-change: transform; transform-origin: 50% 50%; }
+body:not(.lite):not(.ready) .win { visibility: hidden; }      /* pas de flash avant la mise en place */
+body:not(.lite) .win.hid { display: none; }
+.win::before { content: ""; position: absolute; inset: -14px; background: var(--a); filter: blur(26px); opacity: 0; transition: opacity .6s; pointer-events: none; z-index: -1; }
+.win .badge { position: absolute; left: 0; top: -30px; display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .3em; color: var(--void); background: var(--a); padding: 4px 14px 4px 10px; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); opacity: 0; translate: 0 8px; transition: opacity .5s, translate .5s; pointer-events: none; }
+.win .grip { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; cursor: nwse-resize; touch-action: none; opacity: 0; transition: opacity .3s; background: linear-gradient(135deg, transparent 50%, var(--a) 50% calc(50% + 1.5px), transparent calc(50% + 1.5px) 66%, var(--a) 66% calc(66% + 1.5px), transparent calc(66% + 1.5px)); }
+.win:hover .grip { opacity: .8; }
+.win.pinned .grip { display: none; }
+body:not(.lite) .ph { cursor: grab; touch-action: none; }
+body:not(.lite) .win.dragging .ph { cursor: grabbing; }
+body:not(.lite) .win.pinned .ph { cursor: default; }
+.win:hover .panel { filter: brightness(1.15) saturate(1.1); }
+.panel { transition: opacity .5s, filter .5s; }
+.ph .tag { margin-right: 6px; }
+.pin { flex: none; align-self: center; width: 26px; height: 26px; margin-right: 6px; display: grid; place-items: center; border: 0; background: transparent; cursor: pointer; color: var(--dim); opacity: .55; transition: opacity .25s, color .25s; padding: 0; }
+.win:hover .pin, .pin:focus-visible { opacity: 1; }
+.pin:hover { color: var(--a); }
+.pin:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.pin[aria-pressed="true"] { color: var(--a); opacity: 1; }
+.pin[aria-pressed="true"] svg path { fill: currentColor; }
+body.lite .pin, body.lite .grip, body.lite .badge { display: none; }
+body.lite .ph .tag { margin-right: 12px; }
+
+/* Vue globale (plans 2 et 3) : fenêtres figées en vedette, les autres en retrait */
+body.global:not(.lite) .win:not(.pinned) .panel { opacity: .42; filter: saturate(.35) brightness(.85); }
+body.global:not(.lite) .win:not(.pinned):hover .panel { opacity: .85; filter: none; }
+body.global:not(.lite) .win.pinned::before { opacity: .5; animation: glow 2.4s ease-in-out infinite; }
+body.global:not(.lite) .win.pinned .badge { opacity: 1; translate: 0 0; }
+body.global:not(.lite) .win.pinned .panel { animation: shimmer 3s linear infinite; }
+/* Plan 2 en mode cinéma : le premier plan se floute, les fenêtres du plan 2 ressortent */
+body.cine:not(.lite) .win.p1:not(.pinned) .panel { filter: blur(2.4px) brightness(.5) saturate(.5); opacity: .7; }
+body.cine:not(.lite) .win.p1:not(.pinned):hover .panel { filter: none; opacity: 1; }
+body.cine:not(.lite) .win.p2 .panel { opacity: 1; filter: brightness(1.12) saturate(1.15); }
+body.cine:not(.lite) .win.p2::before { opacity: .35; }
+@keyframes glow { 50% { opacity: .25; } }
+@keyframes shimmer { from { background-position: 0 0; } to { background-position: 0 -220%; } }
+@media (prefers-reduced-motion: reduce) { body.global .win.pinned::before, body.global .win.pinned .panel { animation: none !important; } }
