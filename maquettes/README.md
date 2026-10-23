@@ -19,6 +19,7 @@ Chaque version de la maquette d'ambiance est gardée ici, dans l'ordre. Rien n'e
 | --- | --- | --- | --- | --- |
 | Abyss | v0 | 23/10/2026 | Copie de départ, identique à la v8 | [abyss-v0-base.html](https://lulu78440.github.io/hub/maquettes/mods/abyss-v0-base.html) |
 | Abyss | v1 | 24/10/2026 | Méduse géante bioluminescente qui attrape les fenêtres, membranes, bulles et rayons de lumière, entité petite méduse cartoon. Onglet « Horreur abyssale » (touche H) : Cthulhu, chair et dents, yeux dans le noir, lamproie à lanterne, énergie rouge. | [abyss-v1.html](https://lulu78440.github.io/hub/maquettes/mods/abyss-v1.html) |
+| Abyss | v2 | 24/10/2026 | Plus sérieux et réaliste. Normal façon *Vingt mille lieues sous les mers* : hublots de laiton du Nautilus, méduse réaliste aux tentacules collants, cachalots au loin, baudroie au leurre bleu électrique. Horreur abyssale façon Lovecraft : vert visqueux et noir, R'lyeh, Cthulhu colossal, pierre noire tenue par des tentacules, léviathans, pelote de tentacules noirs. | [abyss-v2.html](https://lulu78440.github.io/hub/maquettes/mods/abyss-v2.html) |
 
 ## Restaurer une version
 

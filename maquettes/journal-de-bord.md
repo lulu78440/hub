@@ -24,6 +24,7 @@ Ce journal suit l'avancée du projet entre deux étapes du « Suivi du Hub ». L
 | 23/10 | v8 | Bouton « Écran en direct » inactif sur le plan 3. Maquette figée, plan de construction de la phase 1 rédigé. |
 | 23/10 | Abyss v0 | Ligne parallèle « Mods » ajoutée à la feuille de route. Copie de départ d'Abyss créée depuis la v8 (`maquettes/mods/abyss-v0-base.html`). |
 | 24/10 | Abyss v1 | Mod Abyss : méduse géante qui attrape les fenêtres du plan 1, fenêtres en membrane, bulles et rayons de lumière, petite méduse cartoon aux tentacules collants. Onglet « Horreur abyssale » : Cthulhu, fenêtres en chair avec dents, yeux dans le noir, lamproie à lanterne, énergie rouge. Hub et v8 non modifiés. |
+| 24/10 | Abyss v2 | Mod Abyss plus sérieux et réaliste. Mode normal façon *Vingt mille lieues sous les mers* : fenêtres en hublots de laiton riveté du Nautilus, méduse réaliste (cloche translucide, canaux, gonades, bras oraux plissés) qui flotte avec plus d'amplitude que l'orbe, tentacules physiques qui traînent derrière elle et se collent aux fenêtres puis s'en décollent, cachalots qui passent au loin, faisceaux de projecteur, entité = baudroie réaliste au leurre bleu électrique. Onglet « Horreur abyssale » façon Lovecraft : vert visqueux et noir, R'lyeh (monolithes aux angles faux), Cthulhu colossal à peine visible, fenêtres en blocs de pierre noire tenus aux coins par des tentacules à ventouses, bave qui coule, léviathans qui passent, tentacules noirs géants qui montent du fond, entité = pelote de tentacules noirs collants. Yeux mystérieux retirés ; le rouge est réservé au démoniaque (cœur de l'entité, regard de Cthulhu, rares éclairs). Hub et v8 non modifiés. |
 
 ## Construction · Phase 1
 
@@ -92,9 +93,11 @@ Ordre de test à chaque sous-étape : 1) push sur `main`, version du service wor
 - **Phase 2 · fenêtres de la phase 3** (Vidéo, Musique, Veille, Page en direct) : coques vides « PHASE 3 » sur PC, à leur place de la v8 (23/10).
 - **Phase 2 · son des rappels** : son synthétisé dans le code d'abord, remplaçable plus tard par un son créé avec une IA de sons (23/10).
 - **Phase 2 · météo** : localisation automatique, avec l'autorisation du navigateur (23/10).
+- **Mod Abyss · direction (24/10)** : sérieux et réaliste, plus de cartoon. Normal = *Vingt mille lieues sous les mers* (Nautilus, hublots de laiton, cachalots, méduse réaliste, baudroie bleu électrique). Horreur abyssale = Lovecraft (R'lyeh, Cthulhu, pierre noire tenue par des tentacules noirs collants), vert visqueux et noir, rouge seulement pour le démoniaque, pas d'yeux flottants.
 
 ## À trancher plus tard
 
+- **Mod Abyss · combat de minuit** : à minuit, les cachalots du mode normal combattent des calmars géants (clin d'œil au chapitre des poulpes de Jules Verne). Idée notée par Lucien le 24/10, à construire plus tard.
 - **IA de l'orbe** : avec la règle 0 €, une API payante est exclue. Options à étudier en phase 6 : le même type de modèle local (plus gros), ou une offre gratuite sans carte bancaire si elle existe à ce moment-là.
 - **Onglet « Nos projets »** à gauche, avec Mon PC : Suivi, journal, cahier des charges et maquettes lus depuis GitHub, liens vers le Projet Claude.
 - **Appli Windows** pour les fonctions marquées ◇ (processeur, volume direct, lancement de programmes, Corbeille) et pour l'écran du PC en direct avec navigation. Une page web peut seulement afficher une vue en direct (avec l'accord de Brave), sans pouvoir cliquer dedans.
