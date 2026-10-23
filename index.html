@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/hud.css">
+<link rel="stylesheet" href="css/mobile.css" media="(max-width: 900px), (pointer: coarse)">
 </head>
 <body>
 <canvas id="scene" aria-hidden="true"></canvas>
@@ -52,6 +53,82 @@
     <div class="hints"><span><kbd>!g</kbd> Google</span><span><kbd>!d</kbd> DuckDuckGo</span><span><kbd>!y</kbd> YouTube</span><span><kbd>/</kbd> pour écrire</span></div>
     <div class="go" id="go" role="status"></div>
   </form>
+
+  <div class="win mob-only" data-id="video" data-accent="amber">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Vidéo</h2><span class="hatch"></span><span class="tag">PHASE 3</span></div>
+      <div class="pb pb-player"><p class="empty">Cette fenêtre se remplira en phase 3.</p></div>
+      <div class="pf"><span>Lecteur YouTube intégré</span><span>—</span></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="strip" data-accent="cyan">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Vidéos à suivre</h2><span class="hatch"></span><span class="tag">PHASE 3</span></div>
+      <div class="pb pb-strip"><p class="empty">Cette fenêtre se remplira en phase 3.</p></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="meteo" data-accent="cyan">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Météo</h2><span class="hatch"></span><span class="tag">PHASE 2</span></div>
+      <div class="pb pb-h150"><p class="empty">Cette fenêtre se remplira en phase 2.</p></div>
+      <div class="pf"><span>Source Open-Meteo</span><span>7 jours</span></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="tasks" data-accent="amber">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Tâches</h2><span class="hatch"></span><span class="tag">PHASE 2</span></div>
+      <div class="pb pb-h130"><p class="empty">Cette fenêtre se remplira en phase 2.</p></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="agenda" data-accent="violet">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Agenda</h2><span class="hatch"></span><span class="tag">PHASE 2</span></div>
+      <div class="pb pb-h130"><p class="empty">Cette fenêtre se remplira en phase 2.</p></div>
+      <div class="pf"><span>Calendrier du hub</span><span>—</span></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="music" data-accent="violet">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Musique</h2><span class="hatch"></span><span class="tag">PHASE 3</span></div>
+      <div class="pb pb-h130"><p class="empty">Cette fenêtre se remplira en phase 3.</p></div>
+      <div class="pf"><span>Radios, YouTube, MP3</span><span>—</span></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="notes" data-accent="amber">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Notes</h2><span class="hatch"></span><span class="tag">PHASE 2</span></div>
+      <div class="pb pb-h130"><p class="empty">Cette fenêtre se remplira en phase 2.</p></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="favs" data-accent="cyan">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Favoris</h2><span class="hatch"></span><span class="tag">PHASE 2</span></div>
+      <div class="pb pb-h130"><p class="empty">Cette fenêtre se remplira en phase 2.</p></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="watch" data-accent="cyan">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Veille</h2><span class="hatch"></span><span class="tag">PHASE 3</span></div>
+      <div class="pb pb-h130"><p class="empty">Cette fenêtre se remplira en phase 3.</p></div>
+      <div class="pf"><span>Vérification toutes les 10 min</span><span>—</span></div>
+    </div></section>
+  </div>
+
+  <div class="win mob-only" data-id="web" data-accent="violet">
+    <section class="panel"><div class="in">
+      <div class="ph"><h2>Page en direct</h2><span class="hatch"></span><span class="tag">PHASE 3</span></div>
+      <div class="pb pb-web"><p class="empty">Cette fenêtre se remplira en phase 3.</p></div>
+      <div class="pf"><span>Aperçu actualisé</span><span>—</span></div>
+    </div></section>
+  </div>
 </div>
 
 <div class="desk pc-only" id="desk" aria-label="Bureau de ton ordinateur">
@@ -66,6 +143,7 @@
 <div class="zoom pc-only" aria-hidden="true"><div class="track"><div class="mark" id="zmark"></div></div><span id="zlbl">PLAN 1 · 100 %</span></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="fx" aria-hidden="true"></div>
+<div class="boot" aria-hidden="true"><p>INITIALISATION</p></div>
 <span class="fps" id="fps" aria-hidden="true">-- img/s</span>
 <canvas id="force" class="pc-only" aria-hidden="true"></canvas>
 <div class="reticle pc-only" id="reticle" aria-hidden="true"><span class="r2"></span><span class="r1"></span><span class="dot"></span></div>
@@ -82,6 +160,7 @@
       <dt>Hors ligne prêt</dt><dd id="d-cache">…</dd>
       <dt>Affichage</dt><dd id="d-display">…</dd>
       <dt>Mouvement réduit</dt><dd id="d-motion">…</dd>
+      <dt>Inclinaison</dt><dd id="d-tilt">…</dd>
     </dl>
     <div class="actions">
       <button class="btn" id="b-install" hidden>Installer le hub</button>

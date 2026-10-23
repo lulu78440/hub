@@ -7,6 +7,7 @@ export const state = {
   energyTarget: 0,      // intensité visée
   accent: null,         // couleur d'accent temporaire (ex. 0x9b72ff) ou null = cyan
   cine: 0,              // 0..1 : mode cinéma du plan 2 (utilisé en 1.4)
-  mx: 0, my: 0          // souris normalisée -1..1 (PC)
+  tilt: false,          // inclinaison du téléphone disponible (mobile)
+  mx: 0, my: 0          // souris (PC) ou inclinaison (mobile), normalisées -1..1
 };
 export const pulse = (v) => { state.energy = Math.max(state.energy, v); };

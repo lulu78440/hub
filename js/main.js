@@ -7,6 +7,7 @@ import { initTopbar } from "./ui/topbar.js";
 import { createPlans } from "./ui/plans.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
+import { initTilt } from "./device/orientation.js";
 import { loadThree } from "./scene/loader.js";
 import { createCore } from "./scene/core3d.js";
 import { createPostFX } from "./scene/postfx.js";
@@ -22,6 +23,7 @@ initDiag(state);
 initClock();
 initTopbar();
 initSearch({ focusOnStart: !state.lite });
+initTilt(state, (txt) => { const el = $("d-tilt"); if (el) el.textContent = txt; });
 
 // Panneau de diagnostic masqué par défaut
 const diag = $("diag");
@@ -73,7 +75,7 @@ async function start() {
     plans.update(dt);
     const c = core.frame(anchorEl.getBoundingClientRect(), RW, RH); if (c) fx.setCenter(c);
     state.energy += (state.energyTarget - state.energy) * Math.min(dt * 3, 1);
-    core.update({ t, dt, k, energy: state.energy, accent: state.accent, cine: state.cine, mx: state.mx, my: state.my });
+    core.update({ t, dt, k, energy: state.energy, accent: state.accent, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
     fx.update(t, state.energy, state.cine);
     fx.render();
     force.draw(dt);

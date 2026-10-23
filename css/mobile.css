@@ -1,0 +1,23 @@
+/* Mode mobile : disposition empilée de la maquette v3, reproduite telle quelle.
+   Chargé seulement sur écran étroit ou tactile (voir index.html) ; les règles dépendent de body.lite. */
+body.lite { overflow-y: auto; overscroll-behavior-y: none; }
+body.lite .top { position: relative; flex-wrap: wrap; background: none; }
+body.lite .clock { position: static; transform: none; width: 100%; order: 3; }
+body.lite .clock .rule { width: 50px; }
+body.lite .brand span { display: none; }
+body.lite .world { position: relative; inset: auto; transform: none !important; will-change: auto; display: flex; flex-direction: column; gap: 14px; padding-block: 0 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body.lite .anchor { position: relative; left: auto !important; top: auto !important; width: auto !important; height: 44vh !important; min-height: 280px; order: 1; }
+body.lite .search { position: relative; left: auto; top: auto; width: auto; transform: none; order: 2; }
+body.lite .win { position: relative; transform: none; width: auto; height: auto; }
+body.lite .win .panel { height: auto; }
+body.lite .win[data-id="video"] { order: 3; } body.lite .win[data-id="video"] .pb-player { flex: none; aspect-ratio: 16 / 9; background: #000; }
+body.lite .win[data-id="strip"] { order: 4; } body.lite .pb-strip { height: 120px; flex: none; }
+body.lite .win[data-id="meteo"] { order: 5; } body.lite .win[data-id="tasks"] { order: 6; }
+body.lite .win[data-id="agenda"] { order: 7; } body.lite .win[data-id="music"] { order: 8; }
+body.lite .win[data-id="notes"] { order: 9; } body.lite .win[data-id="favs"] { order: 10; }
+body.lite .win[data-id="watch"] { order: 11; } body.lite .win[data-id="web"] { order: 12; }
+body.lite .pb-h150 { min-height: 150px; } body.lite .pb-h130 { min-height: 130px; } body.lite .pb-web { min-height: 200px; }
+body.lite .hints { display: none; }
+body.lite .bar input { font-size: 18px; padding: 12px 0; }
+body.lite .fps { text-shadow: 0 0 4px var(--void), 0 0 8px var(--void); }
+body.lite .win { pointer-events: auto; }

@@ -144,7 +144,7 @@ export function createCore(THREE, { lite = false } = {}) {
   const camPos = new THREE.Vector3(), tmpCol = new THREE.Color();
   /** s = { t, dt, k, energy, accent (couleur ou null), cine, mx, my } */
   function update(s) {
-    const { t, dt, k, energy: e, accent, cine, mx, my } = s;
+    const { t, dt, k, energy: e, accent, cine, mx, my, tilt } = s;
     spin.rotation.y += dt * k * (0.12 + e * 0.5);
     shellMat.uniforms.uTime.value = t; beamMat.uniforms.uTime.value = t;
     shellMat.uniforms.uPower.value = 1 + e * 0.9;
@@ -166,8 +166,9 @@ export function createCore(THREE, { lite = false } = {}) {
     dust.geometry.attributes.position.needsUpdate = true;
 
     const sway = Math.sin(t * 0.12) * 0.6;
-    const ax = lite ? Math.sin(t * 0.25) * 0.4 : mx * 1.1 + sway;
-    const ay = lite ? Math.cos(t * 0.2) * 0.15 : -my * 0.5;
+    // Mobile : inclinaison du téléphone si disponible, sinon balancement lent
+    const ax = lite && !tilt ? Math.sin(t * 0.25) * 0.4 : mx * 1.1 + sway;
+    const ay = lite && !tilt ? Math.cos(t * 0.2) * 0.15 : -my * 0.5;
     camPos.set(ax, 0.7 + ay + cine * 1.6, camZ);
     camera.position.lerp(camPos, Math.min(dt * 2, 1));
     camera.lookAt(0, 0, 0);

@@ -13,11 +13,10 @@ export function createPlans({ world, anchor, desk }) {
   let zoom = 1, zoomTarget = 1, snapT = 0, lastT = "";
   const zmark = $("zmark"), zlbl = $("zlbl");
 
-  /** Place l'emplacement du noyau et le centre du zoom. PC : bloc central. Mobile : bandeau sous l'horloge. */
+  /** Place l'emplacement du noyau et le centre du zoom (PC : bloc central). */
   function layout(RW, RH) {
-    const r = state.lite
-      ? { left: 0, top: 140, width: RW, height: Math.max(RH * 0.4, 260) }
-      : { left: RW * 0.2, top: RH * 0.13, width: RW * 0.6, height: RH * 0.62 };
+    if (state.lite) return;   // mobile : l'emplacement du noyau est géré par css/mobile.css (bloc dans la pile)
+    const r = { left: RW * 0.2, top: RH * 0.13, width: RW * 0.6, height: RH * 0.62 };
     Object.assign(anchor.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
     world.style.transformOrigin = `${r.left + r.width / 2}px ${r.top + r.height / 2}px`;
   }
