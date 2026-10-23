@@ -71,5 +71,8 @@ export function createEntity(F) {
     ent.bolts = ent.bolts.filter((b) => ft - b.t < 0.14);
     fg.strokeStyle = "rgba(200,250,255,.85)"; fg.lineWidth = 1; ent.bolts.forEach((b) => F.strokePts(b.pts));
   }
-  return { draw, setDock, get docked() { return docked; } };
+  function setOn(v) { on = v; prefs.setOn("entite", v); if (!v && docked) { docked = false; prefs.setOn("entite-posee", false); } toast(v ? "Entité affichée" : "Entité masquée · clic droit sur le fond pour la réafficher"); }
+  /** Vrai si le point (x, y) de l'écran touche l'entité visible. */
+  const near = (x, y) => on && !state.lite && !state.reduce && Math.hypot(x - ent.x, y - ent.y) < 30;
+  return { draw, setDock, setOn, near, get docked() { return docked; }, get on() { return on; }, get pos() { return [Math.round(ent.x), Math.round(ent.y)]; } };
 }

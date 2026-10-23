@@ -145,6 +145,11 @@
       <div class="pf"><span>Aperçu actualisé</span><span>—</span></div>
     </div></section>
   </div>
+  <div class="mlayout mob-only" id="mlayout">
+    <p>Appui long sur le titre d'une fenêtre : la masquer ou la déplacer.</p>
+    <div class="mchips" id="mlayout-hidden" aria-label="Fenêtres masquées"></div>
+    <button type="button" class="btn" id="mlayout-reset">Ordre d'origine</button>
+  </div>
 </div>
 
 <div class="desk pc-only" id="desk" aria-label="Bureau de ton ordinateur">
@@ -158,6 +163,7 @@
 
 <div class="zoom pc-only" aria-hidden="true"><div class="track"><div class="mark" id="zmark"></div></div><span id="zlbl">PLAN 1 · 100 %</span></div>
 <div class="toast" id="toast" role="status"></div>
+<div class="ctx" id="ctx" role="menu" aria-label="Menu du hub" hidden></div>
 <div class="fx" aria-hidden="true"></div>
 <div class="boot" aria-hidden="true"><p>INITIALISATION</p></div>
 <span class="fps" id="fps" aria-hidden="true">-- img/s</span>

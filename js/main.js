@@ -6,6 +6,7 @@ import { initSearch } from "./ui/search.js";
 import { initTopbar } from "./ui/topbar.js";
 import { createPlans } from "./ui/plans.js";
 import { createWindows } from "./ui/windows.js";
+import { initMenus } from "./ui/menus.js";
 import { toast } from "./ui/toast.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -52,7 +53,7 @@ async function start() {
   const plans = createPlans({ world: $("world"), anchor: anchorEl, desk: $("desk") });
   const force = createForce({ canvas: $("force"), anchor: anchorEl, logo: $("logo") });
   const wins = createWindows({ world: $("world"), plans, force });
-  initCursor();
+  const cursor = initCursor();
   let RW = 0, RH = 0;
   const searchEl = $("search");
   // PC : les fenêtres décident de la place du noyau et de la recherche (entre les deux colonnes, comme la v8).
@@ -60,7 +61,9 @@ async function start() {
     plans.layout(RW, RH, D.anchor);
     Object.assign(searchEl.style, { left: D.search.x + "px", top: D.search.y + "px", width: D.search.w + "px", transform: "none" });
   }
-  $("b-layout").addEventListener("click", () => { if (state.lite) return; place(wins.reset()); plans.goPlan(1); toast("Disposition d'origine restaurée"); });
+  const resetLayout = () => { if (state.lite) return; place(wins.reset()); plans.goPlan(1); toast("Disposition d'origine restaurée"); };
+  $("b-layout").addEventListener("click", resetLayout);
+  initMenus({ wins, plans, entity: force.entity, cursor, resetLayout });
   function resize() {
     RW = innerWidth; RH = innerHeight;
     if (state.lite) plans.layout(RW, RH); else place(wins.layout(RW, RH));

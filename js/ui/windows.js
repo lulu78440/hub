@@ -90,6 +90,21 @@ export function createWindows({ world, plans, force }) {
     applySize(el, s); el.style.zIndex = ++zTop; pulse(0.6); save();
   }
 
+  function togglePin(el) {
+    const s = S[el.dataset.id]; s.pin = !s.pin; applyPin(el, s);
+    toast(s.pin ? "Fenêtre figée : elle ne bouge plus" : "Fenêtre libérée"); pulse(0.8); save();
+  }
+  const title = (el) => el.querySelector("h2").textContent;
+  function bringFront(el) { el.style.zIndex = ++zTop; }
+  /** Masquer ou réafficher une fenêtre (elle garde sa place et sa taille). */
+  function setHidden(el, hid) {
+    const s = S[el.dataset.id]; s.hid = hid; el.classList.toggle("hid", hid);
+    if (hid) { s.hover = false; state.energyTarget = 0; state.accent = null; toast("« " + title(el) + " » masquée · clic droit sur le fond pour la réafficher"); }
+    else { bringFront(el); pulse(0.8); }
+    save();
+  }
+  const hiddenEls = () => els.filter((el) => S[el.dataset.id] && S[el.dataset.id].hid);
+
   /** 1 si la fenêtre est dans l'écran du hub, 2 si elle attend hors champ. */
   function planOf(el) {
     const s = S[el.dataset.id]; if (!s) return 1;
@@ -104,10 +119,7 @@ export function createWindows({ world, plans, force }) {
     el.addEventListener("pointerleave", () => { if (state.lite) return; S[id].hover = false; if (!mode) { state.energyTarget = 0; state.accent = null; } });
     pinBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
     pinBtn.addEventListener("dblclick", (e) => e.stopPropagation());
-    pinBtn.addEventListener("click", () => {
-      const s = S[id]; s.pin = !s.pin; applyPin(el, s);
-      toast(s.pin ? "Fenêtre figée : elle ne bouge plus" : "Fenêtre libérée"); pulse(0.8); save();
-    });
+    pinBtn.addEventListener("click", () => togglePin(el));
     function start(e, m) {
       if (state.lite || e.button !== 0) return;
       const s = S[id];
@@ -163,5 +175,5 @@ export function createWindows({ world, plans, force }) {
   }
 
   function reset() { const D = layout(W, H, true); save(); return D; }
-  return { layout, update, reset, planOf, toggleMax, get dragEl() { return dragEl; }, elById, S };
+  return { layout, update, reset, planOf, toggleMax, togglePin, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S };
 }
