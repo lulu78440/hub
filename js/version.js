@@ -1,2 +1,2 @@
 // Version du code. À garder identique à VERSION dans sw.js.
-export const VERSION = "2.10.0";
+export const VERSION = "2.11.0";

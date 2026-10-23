@@ -18,6 +18,10 @@ POUR OUVRIR LE HUB DEPUIS CETTE ARCHIVE
 2. Ouvre le fichier « hub-hors-ligne.html » avec Brave (double-clic, ou glisse-le dans Brave).
    C'est tout le hub dans un seul fichier : il marche sans Internet, sans serveur et sans installation.
    Limites : pas d'installation en appli ni de mise à jour automatique (le fichier est une photo de cette version).
+
+TES DONNÉES (notes, tâches, agenda, favoris, images, réglages)
+Elles ne sont pas dans cette archive : elles vivent sur chaque appareil. Garde tes fichiers « hub-donnees-AAAA-MM-JJ.json »
+(bouton Diag > Exporter, ou le rappel du dimanche) à côté de cette archive, puis Diag > Importer pour les remettre.
    La recherche a évidemment besoin d'Internet pour ouvrir les sites.
 
 POUR RETROUVER LA VERSION EN LIGNE
