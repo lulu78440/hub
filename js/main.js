@@ -4,6 +4,9 @@ import { initDiag } from "./ui/diag.js";
 import { initClock } from "./ui/clock.js";
 import { initSearch } from "./ui/search.js";
 import { initTopbar } from "./ui/topbar.js";
+import { createPlans } from "./ui/plans.js";
+import { createForce } from "./fx/force.js";
+import { initCursor } from "./fx/cursor.js";
 import { loadThree } from "./scene/loader.js";
 import { createCore } from "./scene/core3d.js";
 import { createPostFX } from "./scene/postfx.js";
@@ -40,13 +43,15 @@ async function start() {
   const core = createCore(THREE, { lite });
   const fx = createPostFX(THREE, renderer, core.scene, core.camera, { lite });
 
-  // Emplacement du noyau à l'écran : au centre, sous le bandeau. Les plans (1.4) fourniront leur propre rectangle.
+  // Emplacement du noyau à l'écran : un bloc « ancre » au centre du monde zoomable (les plans le font reculer).
+  const anchorEl = $("anchor");
+  const plans = createPlans({ world: $("world"), anchor: anchorEl, desk: $("desk") });
+  const force = createForce({ canvas: $("force"), anchor: anchorEl, logo: $("logo") });
+  initCursor();
   let RW = 0, RH = 0;
-  const anchorRect = () => lite
-    ? { left: 0, top: 140, width: RW, height: Math.max(RH * 0.4, 260) }
-    : { left: RW * 0.2, top: RH * 0.13, width: RW * 0.6, height: RH * 0.62 };
   function resize() {
     RW = innerWidth; RH = innerHeight;
+    plans.layout(RW, RH);
     fx.resize(RW, RH, lite ? 1 : Math.min(devicePixelRatio || 1, 1.75));
     core.resize(RW, RH);
   }
@@ -65,17 +70,19 @@ async function start() {
     if (fpsT >= 0.5) { fpsEl.textContent = Math.round(frames / fpsT) + " img/s"; frames = 0; fpsT = 0; }
     if (state.paused) return;
     const k = state.reduce ? 0.15 : 1; t += dt * k;
-    const c = core.frame(anchorRect(), RW, RH); if (c) fx.setCenter(c);
+    plans.update(dt);
+    const c = core.frame(anchorEl.getBoundingClientRect(), RW, RH); if (c) fx.setCenter(c);
     state.energy += (state.energyTarget - state.energy) * Math.min(dt * 3, 1);
     core.update({ t, dt, k, energy: state.energy, accent: state.accent, cine: state.cine, mx: state.mx, my: state.my });
     fx.update(t, state.energy, state.cine);
     fx.render();
+    force.draw(dt);
   }
   const run = () => { if (!raf) { clock.getDelta(); loop(); } };
   const stop = () => { cancelAnimationFrame(raf); raf = 0; };
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse };   // pour les essais en console
+  window.__hub = { state, pulse, plans, force };   // pour les essais en console
 }
 start();

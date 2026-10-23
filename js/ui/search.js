@@ -33,6 +33,8 @@ export function initSearch({ focusOnStart = false } = {}) {
     go.textContent = ""; go.append(a); pulse(1);
     a.click();   // nouvel onglet ; le lien reste affiché si le navigateur bloque l'ouverture
   });
+  // Échap quitte la barre : les touches 1 2 3 (plans) fonctionnent alors
+  input.addEventListener("keydown", (e) => { if (e.key === "Escape") input.blur(); });
   // « / » ramène dans la barre de recherche
   addEventListener("keydown", (e) => {
     if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey && !/input|textarea/i.test(e.target.tagName)) { e.preventDefault(); input.focus(); input.select(); }
