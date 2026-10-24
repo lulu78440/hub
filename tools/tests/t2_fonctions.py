@@ -176,3 +176,22 @@ def test_fonctions_deux_onglets(h):
     a.wait_for_function("document.querySelectorAll('.win[data-id=\"notes\"] .note').length === 0", timeout=5000)
     _assert(not d.errors, "erreurs console : " + str(d.errors))
     d.close()
+
+
+def test_fonctions_medias_et_page_en_direct(h):
+    """Vidéo collée → lecteur youtube-nocookie au clic ; lien piégé refusé ; page en direct d'un autre site dans un bac à sable."""
+    h.mock = make_mock()
+    d = h.device(); p = d.page()
+    p.evaluate("document.activeElement && document.activeElement.blur()"); p.keyboard.press("2"); p.wait_for_timeout(900)
+    inp = p.locator('.win[data-id="video"] form.vlink input')
+    inp.fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL0123456789abcdef"); inp.press("Enter"); p.wait_for_timeout(400)
+    p.evaluate("document.querySelector('.win[data-id=\"video\"] .poster').click()"); p.wait_for_timeout(500)
+    src = p.evaluate("(document.querySelector('.win[data-id=\"video\"] iframe') || {}).src || ''")
+    _assert(src.startswith("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ") and "list=PL0123456789abcdef" in src, "lecteur vidéo : " + src)
+    inp.fill('https://www.youtube.com/playlist?list=PL"><img src=x onerror=alert(1)>'); inp.press("Enter"); p.wait_for_timeout(400)
+    _assert(p.evaluate("document.querySelectorAll('img[src=x]').length") == 0, "lien vidéo piégé inséré")
+    web = p.locator('.win[data-id="web"] form.url input'); web.fill("fr.wikipedia.org"); web.press("Enter"); p.wait_for_timeout(500)
+    fr = p.locator('.win[data-id="web"] iframe')
+    _assert(fr.get_attribute("src") == "https://fr.wikipedia.org/" and "allow-scripts" in (fr.get_attribute("sandbox") or ""), "page en direct : " + str(fr.get_attribute("src")))
+    _assert(not [e for e in d.errors if "wikipedia" not in e], "erreurs console : " + str(d.errors))
+    d.close()

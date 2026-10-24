@@ -159,3 +159,27 @@ def test_limites_fuseaux_horloge_textes_longs(h):
     _assert(back, "texte long altéré")
     _assert(not d.errors, "erreurs console (textes longs) : " + str(d.errors))
     d.close()
+
+
+def test_limites_onglet_ferme_pendant_changement_de_phrase(h):
+    """Changement de phrase (nouvelle clé interne, données rechiffrées) interrompu par la fermeture de l'onglet :
+    au retour, l'ancienne OU la nouvelle phrase ouvre le hub et toutes les données sont lisibles."""
+    from hubtest import PHRASE, enable_vault, unlock_page
+    NEW = "nouvelle phrase factice 77"
+    for delay in (5, 60, 200, 800):
+        d = h.device(); p = d.page()
+        ev(p, BIG, {"n": 300, "f": 300})
+        enable_vault(p)
+        p.evaluate("""(np) => { import('/js/store/storage.js').then(async (s) => { const { vault } = await import('/js/store/vault.js');
+            await s.migrate(async () => { await vault.rotate(np); await s.rewriteAll(); await vault.flush(); vault.endRotation(); }); }); }""", NEW)
+        p.wait_for_timeout(delay)
+        p.close()
+        q = d.ctx.new_page(); q.on("dialog", lambda x: x.accept())
+        q.goto(h.server.url, wait_until="domcontentloaded")
+        q.wait_for_selector(".lock .lcard input", timeout=20000)
+        ok_new = ev(q, "return (await import('/js/store/vault.js')).vault.check(arg);", NEW)
+        unlock_page(q, NEW if ok_new else PHRASE)
+        q.wait_for_function("window.__hub && document.body.classList.contains('ready')", timeout=60000)
+        c = counts(q)
+        _assert(c["notes"] == 300 and c["tasks"] == 300 and c["favs"] == 300, f"données perdues après interruption à {delay} ms (phrase {'nouvelle' if ok_new else 'ancienne'}) : {c}")
+        d.close()
