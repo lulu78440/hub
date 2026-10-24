@@ -52,7 +52,8 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
       { t: "Tester un rappel", fn: test },
       "-", { h: "Mes données" },
       { t: "Exporter (fichier de sauvegarde)", fn: data.exportFile },
-      { t: "Importer un export…", fn: data.importFile });
+      { t: "Importer un export…", fn: data.importFile },
+      { t: "Importer le Coffre du Hub (ajoute sans effacer)…", fn: data.importCoffre });
     return it;
   }
   function winMenu(el, t) {

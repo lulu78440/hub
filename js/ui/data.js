@@ -6,6 +6,7 @@ import { VERSION } from "../version.js";
 import { toast } from "./toast.js";
 import { vault } from "../store/vault.js";
 import { askSecret } from "./lockui.js";
+import { initCoffre } from "./coffre.js";
 
 const pad = (n) => String(n).padStart(2, "0");
 const fmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -71,5 +72,6 @@ export function initData() {
     el.className = ok ? "ok" : "bad";
     if (!ok) toast("Attention : ce navigateur n'enregistre pas les données du hub (navigation privée ?)", { ms: 6000 });
   })();
-  return { exportFile, importFile };
+  const importCoffre = initCoffre();
+  return { exportFile, importFile, importCoffre };
 }

@@ -33,7 +33,7 @@ const embed = (y, autoplay = 1) => y.v
 const thumb = (v) => `https://i.ytimg.com/vi/${v}/hqdefault.jpg`;
 
 // Radios web (flux directs, sans compte). On peut en ajouter depuis le menu de la fenêtre Musique.
-const RADIOS = [
+export const RADIOS = [
   { n: "FIP", u: "https://icecast.radiofrance.fr/fip-midfi.mp3" },
   { n: "FIP Électro", u: "https://icecast.radiofrance.fr/fipelectro-midfi.mp3" },
   { n: "SomaFM · Space Station", u: "https://ice2.somafm.com/spacestation-128-mp3" },
