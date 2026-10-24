@@ -128,6 +128,7 @@ export async function executerScenario(sc, opt = {}) {
       if (e.apres_import_reimport) ctx.import2 = await noyau.importer38(JSON.stringify(e.apres_import_reimport));
       const trace = noyau.inspecteur()[0] || { requetes: 0, systeme: "" };
       ctx.rep = rep || {}; ctx.trace = trace; ctx.journal = (await noyau.journal({ limite: 5000 })).slice(0, (await noyau.journal({ limite: 5000 })).length - nj);
+      if (e.dit && sc.mode === "reel" && rep && ["reseau", "cle", "quota", "hors_ligne", "delai"].includes(rep.code)) return { id: sc.id, titre: sc.titre, famille: sc.famille, mode: "réel", ok: null, saute: "Gemini injoignable (" + rep.code + ") : essai non jugé.", ecarts: [], requetes, ms: Date.now() - t0 };
       if (e.dit) requetes += trace.requetes;
       const bad = await verifier(e.attends || {}, ctx);
       bad.forEach((b) => ecarts.push(`étape ${i + 1} : ${b}`));

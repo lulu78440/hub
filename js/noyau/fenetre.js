@@ -3,6 +3,7 @@
 // Contient : l'échange, l'état (pouls, phase, budget), la fenêtre de confirmation (qui appartient au hub : le modèle ne peut ni la cocher
 // ni la contourner), la boîte « À valider », le journal, la mémoire, les réglages et les imports.
 import { hote } from "./hote.js";
+import { SOURCES, DOMAINES } from "./sources.js";
 import { lire as lireVoix, arreter as arreterVoix, dicter, lectureDispo, dicteeDispo } from "./voix.js";
 
 const PHASES = { reflechit: "Je réfléchis", se_souvient: "Je me souviens", cherche: "Je cherche", attend: "J'attends ton accord", parle: "Je réponds", dort: "Je consolide ma mémoire", repos: "Au repos", horsligne: "Hors ligne" };
@@ -256,6 +257,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       h("div", { class: "nx-actions" },
         h("button", { class: "nx-btn", type: "button", onclick: async (e) => { e.currentTarget.disabled = true; const r = await noyau.dormir({ force: true }); note(r.fait ? `Sommeil terminé : ${r.propositions} proposition(s) à valider.` : "Sommeil : " + r.raison); majNav(); majBudget(); e.currentTarget.disabled = false; } }, "Dormir maintenant"),
         h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.cycle.oublierConversation(); fil.textContent = ""; accueilVide(); changerVue("chat"); } }, "Nouvelle conversation")),
+      h("h4", { texte: "Références consultées" }), sourcesBloc(),
       h("h4", { texte: "Importer" }), imports);
     imports.append(importBloc("Ma mémoire v3.8 (fichier noyau-full-state.json)", async (texte, zone) => {
       zone.textContent = "Lecture du fichier…";
@@ -276,6 +278,22 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       try { const r = await noyau.importerCerveau(texte); zone.textContent = `Cerveau importé (${r.faitsFondateurs} fait(s) fondateur(s)). Il est gardé chiffré par le coffre.`; zone.className = "nx-ok"; }
       catch (e) { zone.textContent = e.message; zone.className = "nx-erreur"; }
     }, "Le cerveau personnalisé n'est jamais dans le dépôt public : il vient de ton Projet."));
+  }
+  function sourcesBloc() {
+    let coupees = []; try { coupees = JSON.parse(noyau.reglage("sources-off") || "[]"); } catch (e) { coupees = []; }
+    const enreg = () => noyau.reglage("sources-off", JSON.stringify(coupees));
+    const zone = h("details", {}, h("summary", { texte: `${SOURCES.length - coupees.length} sources actives sur ${SOURCES.length}` }),
+      h("p", { class: "nx-dim", texte: "Seuls des mots-clés partent vers ces sites, jamais ton nom, un mail ni un numéro. Décoche ce que tu ne veux pas consulter." }));
+    for (const [d, nom] of Object.entries(DOMAINES)) {
+      const l = SOURCES.filter((x) => x.domaines[0] === d); if (!l.length) continue;
+      zone.append(h("p", { class: "nx-dim", texte: nom }));
+      for (const x of l) {
+        const cb = h("input", { type: "checkbox" }); cb.checked = !coupees.includes(x.id);
+        cb.addEventListener("change", () => { coupees = cb.checked ? coupees.filter((i) => i !== x.id) : [...coupees, x.id]; enreg(); zone.querySelector("summary").textContent = `${SOURCES.length - coupees.length} sources actives sur ${SOURCES.length}`; });
+        zone.append(h("label", { class: "nx-bascule" }, cb, h("span", {}, x.nom, h("small", { texte: x.hote }))));
+      }
+    }
+    return zone;
   }
   function importBloc(titre, quand, aide) {
     const zone = h("div", { class: "nx-zone", "aria-live": "polite" });

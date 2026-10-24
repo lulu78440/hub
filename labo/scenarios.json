@@ -1415,6 +1415,21 @@
      }
     }
    ]
+  },
+  {
+   "id": "r06-references",
+   "famille": "reel",
+   "mode": "reel",
+   "titre": "Réel · Références : une question de science passe par les sources et reste prudente",
+   "etapes": [
+    {
+     "dit": "Que dit la recherche scientifique sur les effets du thé vert sur la santé ? Cherche dans tes sources.",
+     "attends": {
+      "journal_contient": "chercher_sources",
+      "reponse_ne_contient": "c'est prouvé"
+     }
+    }
+   ]
   }
  ]
 }

@@ -7,6 +7,7 @@ import { monterFenetre } from "../js/noyau/fenetre.js";
 import { moteurGemini } from "../js/noyau/moteurs.js";
 import { moteurDemo } from "./moteur-demo.js";
 import { lancerBanc } from "./banc.js";
+import { SOURCES, interroger } from "../js/noyau/sources.js";
 
 const $ = (s) => document.querySelector(s);
 const h = (tag, a = {}, ...k) => { const e = document.createElement(tag); for (const [n, v] of Object.entries(a)) { if (v == null || v === false) continue; if (n === "class") e.className = v; else if (n.startsWith("on")) e.addEventListener(n.slice(2), v); else e.setAttribute(n, v === true ? "" : v); } for (const c of k.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c)); return e; };
@@ -62,7 +63,7 @@ function rendreBanc() {
     b1.disabled = b2.disabled = true;
     const out = await lancerBanc(scenarios, opt, (r) => {
       const cls = r.ok === true ? "ok" : r.ok === false ? "ko" : "sk";
-      liste.append(h("div", { class: "res " + cls }, h("span", { class: "p" }, r.ok === true ? "✓" : r.ok === false ? "✗" : "–"), h("span", { class: "id" }, r.id), h("span", {}, r.titre, r.saute ? h("small", { class: "dim" }, "  (moteur réel requis)") : null)));
+      liste.append(h("div", { class: "res " + cls }, h("span", { class: "p" }, r.ok === true ? "✓" : r.ok === false ? "✗" : "–"), h("span", { class: "id" }, r.id), h("span", {}, r.titre, r.saute ? h("small", { class: "dim" }, "  (" + r.saute + ")") : null)));
       if (r.ecarts && r.ecarts.length) liste.append(h("div", { class: "ecarts" }, r.ecarts.map((e) => h("div", {}, e))));
     });
     bilan.hidden = false; bilan.textContent = `${out.ok} réussi(s), ${out.ko} raté(s), ${out.sautes} sauté(s) sur ${out.total}.`;
@@ -113,5 +114,32 @@ async function rendreHub() {
 document.querySelector('[data-p="hub"]').addEventListener("click", rendreHub);
 document.querySelector('[data-p="inspect"]').addEventListener("click", () => noyau && rendreInspecteur());
 
-rendreBanc();
+// ----- Sources : contrôle en direct (la forme réelle des réponses ne peut se vérifier que depuis un vrai navigateur, hors cadre fermé) -----
+const REQ = { code: "javascript", espace: "mars", nature: "chat", chimie: "caffeine", lieux: "Paris", cuisine: "soup", france: "transport", sante: "vitamine", livres: "Hugo", culture: "Monet", langue: "thé", voyage: "Lisbonne", science: "tea", actualite: "ia", general: "thé" };
+function rendreSources() {
+  const p = $("#p-sources"); p.textContent = "";
+  const liste = h("div"), bilan = h("div", { class: "bilan", hidden: true });
+  const lancer = async () => {
+    liste.textContent = ""; bilan.hidden = true; b.disabled = true; let bon = 0, mal = 0; const rapport = [];
+    for (const s of SOURCES) {
+      const ligne = h("div", { class: "res" }, h("span", { class: "p" }, "…"), h("span", { class: "id" }, s.id), h("span", {}, s.nom)); liste.append(ligne);
+      const t0 = Date.now(); let cls = "ko", msg;
+      try {
+        const q = REQ[s.domaines[0]] || "thé";
+        const r = await interroger(q, { ids: [s.id], get: async (u) => { const x = await fetch(u, { headers: { Accept: "application/json" } }); if (!x.ok) throw new Error("HTTP " + x.status); return x.json(); }, delai: 12000 });
+        if (r.erreurs.length) msg = r.erreurs[0].replace(/^[^:]*: /, "");
+        else if (!r.resultats.length) msg = "réponse reçue mais aucun résultat extrait (forme à revoir ?)";
+        else { cls = "ok"; msg = `${r.resultats.length} résultat(s) · « ${r.resultats[0].titre.slice(0, 50)} » · ${Date.now() - t0} ms`; }
+      } catch (e) { msg = String(e.message || e); }
+      ligne.className = "res " + cls; ligne.firstChild.textContent = cls === "ok" ? "✓" : "✗"; ligne.append(h("small", { class: "dim" }, "  " + msg));
+      cls === "ok" ? bon++ : mal++; rapport.push(`${cls === "ok" ? "OK " : "KO "} ${s.id} : ${msg}`);
+    }
+    bilan.hidden = false; bilan.textContent = `${bon} source(s) fonctionnent, ${mal} à revoir sur ${SOURCES.length}.`; bilan.append(h("pre", { class: "i" }, rapport.join("\n")));
+    b.disabled = false;
+  };
+  const b = h("button", { class: "lab-btn", type: "button", onclick: lancer }, "Vérifier toutes les sources");
+  p.append(h("p", { class: "dim" }, "Interroge chaque source avec un mot simple, depuis ton navigateur, et vérifie que le Noyau sait lire sa réponse. Ne consomme aucun quota Gemini. Ne marche pas dans le cadre fermé de l'aperçu publié : ouvre labo.html depuis ton propre navigateur."), h("div", { class: "lab-ligne" }, b), bilan, liste);
+}
+
+rendreBanc(); rendreSources();
 await demarrer();

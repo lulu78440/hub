@@ -3,7 +3,7 @@
 // ils ne sont jamais présentés au modèle (barriere.js refuse tout nom inconnu).
 import { hote } from "./hote.js";
 import { jetons, Index } from "./recherche.js";
-import { interroger } from "./sources.js";
+import { interroger, DOMAINES, SOURCES } from "./sources.js";
 import { journalActions } from "./journal.js";
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -122,12 +122,13 @@ export function creerCatalogue(ctx = {}) {
       exec: async (p) => { if (/^mails?$/i.test(String(p.fenetre))) throw new Error("Les mails ne se lisent que par l'outil lire_mails (avec confirmation : leur contenu part chez Google)."); return agir("lire_fenetre", p); } },
     { nom: "lire_journal", niveau: "LIBRE", description: "Les dernières actions du Noyau.", params: O({ limite: { type: "integer", description: "1 à 30" } }), resume: () => "Lire le journal des actions",
       exec: async (p) => ({ lignes: (await journalActions.lire({ limite: Math.min(Math.max(p.limite || 10, 1), 30) })).map((l) => ({ quand: l.quand, outil: l.outil, statut: l.statut, resume: l.params })) }) },
-    { nom: "chercher_sources", niveau: "LIBRE", description: "Interroge les sources de connaissances autorisées (Wikipedia, OpenAlex, Europe PMC, Open Library, Hacker News, Spaceflight News, MDN). Seuls les mots-clés partent.",
-      params: O({ requete: S("Quelques mots-clés, 8 au plus", { maxLength: 120 }), sources: { type: "array", items: { type: "string" }, description: "Identifiants de sources (facultatif)" } }, ["requete"]),
-      resume: (p) => "Chercher dans les sources : « " + court(p.requete, 60) + " »", sortie: () => ["wikipedia, openalex, europepmc, openlibrary, hackernews, spaceflight, mdn (mots-clés seulement)"],
+    { nom: "chercher_sources", niveau: "LIBRE", description: "Interroge des références publiques (une trentaine de sources). Choisis les domaines utiles à la question : " + Object.entries(DOMAINES).map(([d, n]) => `${d} (${n})`).join(" ; ") + ". Sans domaine : encyclopédies générales. « tout » interroge toutes les sources (lent, à réserver aux recherches larges). Seuls les mots-clés partent.",
+      params: O({ requete: S("Quelques mots-clés, 8 au plus", { maxLength: 120 }), domaines: { type: "array", items: { type: "string", enum: [...Object.keys(DOMAINES), "tout"] }, description: "Domaines à interroger (facultatif)" }, sources: { type: "array", items: { type: "string", enum: SOURCES.map((x) => x.id) }, description: "Identifiants de sources précis (facultatif, prioritaire sur les domaines)" } }, ["requete"]),
+      resume: (p) => "Chercher dans les sources" + (Array.isArray(p.domaines) && p.domaines.length ? " (" + p.domaines.join(", ") + ")" : "") + " : « " + court(p.requete, 60) + " »", sortie: () => ["sites de référence publics (mots-clés seulement)"],
       exec: async (p) => { if (!hote.enLigne()) throw new Error("Hors ligne : les sources ne sont pas joignables.");
-        const r = await interroger(p.requete, { ids: Array.isArray(p.sources) && p.sources.length ? p.sources : null, interdits: ctx.interdits ? await ctx.interdits() : [], get: async (u) => { const x = await hote.fetch(u, { headers: { Accept: "application/json" } }); if (!x.ok) throw new Error("HTTP " + x.status); return x.json(); } });
-        return { mots_cles_envoyes: r.motsCles, retires_avant_envoi: r.retires, resultats: r.resultats.slice(0, 9), erreurs: r.erreurs, _sorties: r.sorties }; } },
+        let coupees = []; try { coupees = JSON.parse(hote.reglage.lire("noyau-sources-off", "[]")); } catch (e) { coupees = []; }
+        const r = await interroger(p.requete, { ids: Array.isArray(p.sources) && p.sources.length ? p.sources : null, domaines: Array.isArray(p.domaines) ? p.domaines : null, coupees, interdits: ctx.interdits ? await ctx.interdits() : [], get: async (u) => { const x = await hote.fetch(u, { headers: { Accept: "application/json" } }); if (!x.ok) throw new Error("HTTP " + x.status); return x.json(); } });
+        return { mots_cles_envoyes: r.motsCles, retires_avant_envoi: r.retires, sources_interrogees: r.interrogees, resultats: r.resultats, erreurs: r.erreurs.slice(0, 6), _sorties: r.sorties }; } },
     { nom: "afficher", niveau: "LIBRE", description: "Met une fenêtre du hub en avant.", params: O({ fenetre: S("Identifiant de la fenêtre") }, ["fenetre"]),
       resume: (p) => "Afficher la fenêtre " + p.fenetre, exec: async (p) => agir("afficher", p) },
     { nom: "lancer_focus", niveau: "LIBRE", description: "Lance le mode Focus du hub (25 ou 50 minutes).", params: O({ minutes: { type: "integer", description: "25 ou 50" } }, ["minutes"]),

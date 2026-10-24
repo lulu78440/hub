@@ -15,7 +15,7 @@ import { creerSommeil } from "./sommeil.js";
 import { journalActions, journalMemoire } from "./journal.js";
 import * as imp from "./import38.js";
 
-export const VERSION_NOYAU = "noyau-0.9";
+export const VERSION_NOYAU = "noyau-1.0";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
