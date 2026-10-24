@@ -137,6 +137,8 @@ Plan : `docs/plan-phase7.md` (24/10), à partir des 21 idées de la Boîte à id
 
 ## Décisions prises
 
+- **Coffre du Hub** (24/10, ajouté depuis la discussion de cadrage) : `js/ui/coffre.js`, version 7.1.1. Bouton Diag « Importer le Coffre du Hub » et ligne du menu « Mes données » : lit `coffre-hub.json` (artifact Coffre du Hub) et ajoute sans effacer (sites → Favoris, radios → Musique, vidéos YouTube → À suivre, autres vidéos et playlists → Favoris, musique / autres / sources de veille → notes). Le lecteur vidéo « à part entière » reste à concevoir avec Lucien.
+
 - **Verrouillage (24/10, avec Opus)** : facultatif, activé par Lucien dans Diag. Phrase demandée à chaque ouverture (la clé n'est jamais gardée, même dans l'onglet après rechargement). Verrouillage auto par défaut après 15 min. Exports chiffrés seulement quand le verrouillage est actif (pas de choix « en clair » pour éviter les fuites). Clé de secours à ranger hors du dépôt et hors du hub (papier ou gestionnaire de mots de passe). Limite assumée : un onglet déjà ouvert garde ses données en mémoire (l'écran se verrouille, les rappels continuent) et les notifications de rappel affichent leur texte.
 - **Noyau IA (24/10)** : deux moteurs, au choix de Lucien. Local (0 €, privé, PC) et Gemini (gratuit sans carte, plus intelligent, en ligne, téléphone aussi). La clé Gemini exige le verrouillage actif. La contradiction « 0 €, sans carte » est levée : l'offre gratuite d'AI Studio n'en demande pas.
 
