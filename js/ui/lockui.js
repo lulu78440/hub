@@ -128,9 +128,9 @@ export function askSecret(title, intro, tryIt) {
     no.addEventListener("click", () => { closeSheet(); res(null); });
     card.onsubmit = async (e) => {
       e.preventDefault(); ok.disabled = true; msg.textContent = "Vérification…";
-      let r = null; try { r = await tryIt(i.value); } catch (err) { r = null; }
+      let r = null, why = ""; try { r = await tryIt(i.value); } catch (err) { r = null; why = err && err.message === "Export chiffré non reconnu" ? "Fichier chiffré abîmé ou modifié : import impossible." : "Fichier chiffré illisible (abîmé ?)."; }
       ok.disabled = false;
-      if (r) { closeSheet(); res(r); } else { msg.textContent = "Phrase ou clé incorrecte pour ce fichier."; i.select(); }
+      if (r) { closeSheet(); res(r); } else { msg.textContent = why || "Phrase ou clé incorrecte pour ce fichier."; i.select(); }
     };
     setTimeout(() => i.focus(), 30);
   });
