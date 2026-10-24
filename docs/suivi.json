@@ -117,5 +117,22 @@
  "prochaine": {
   "id": "p3-media",
   "texte": "Radio web, playlist YouTube et MP3 lus"
- }
+ },
+ "built": [
+  "ns-int",
+  "p3-media",
+  "p3-sync",
+  "p4-ok",
+  "p4-perf",
+  "p5-read",
+  "p5-rules",
+  "p6-ent-ia",
+  "p6-ent-vis",
+  "p6-orbe",
+  "p7-1",
+  "p7-2",
+  "p7-voix"
+ ],
+ "maj": "2026-10-24T12:40:00+02:00",
+ "par": "Claude"
 }

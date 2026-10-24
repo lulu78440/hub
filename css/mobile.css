@@ -12,7 +12,7 @@ body.lite .win { position: relative; transform: none; width: auto; height: auto;
 body.lite .win .panel { height: auto; }
 body.lite .win[data-id="video"] { order: 3; } body.lite .win[data-id="video"] .pb-player { flex: none; aspect-ratio: 16 / 9; background: #000; }
 body.lite .win[data-id="strip"] { order: 4; } body.lite .pb-strip { height: 120px; flex: none; }
-body.lite .win[data-id="meteo"] { order: 5; } body.lite .win[data-id="tasks"] { order: 6; } body.lite .win[data-id="rituels"] { order: 6; }
+body.lite .win[data-id="meteo"] { order: 5; } body.lite .win[data-id="tasks"] { order: 6; } body.lite .win[data-id="rituels"] { order: 6; } body.lite .win[data-id="radar"] { order: 7; }
 body.lite .win[data-id="agenda"] { order: 7; } body.lite .win[data-id="music"] { order: 8; }
 body.lite .win[data-id="notes"] { order: 9; } body.lite .win[data-id="favs"] { order: 10; } body.lite .win[data-id="mails"] { order: 11; }
 body.lite .win[data-id="watch"] { order: 11; } body.lite .win[data-id="web"] { order: 12; }

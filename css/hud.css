@@ -824,3 +824,31 @@ body.lite .aip { left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-b
 body.lite .rrow { grid-template-columns: 10px 1fr auto 36px 36px; font-size: 15px; }
 body.lite .rrow .btn { height: 34px; font-size: 18px; }
 body.lite .rmb { padding: 8px 10px; font-size: 20px; }
+
+/* ---------- Recherche vocale ---------- */
+.mic { flex: none; display: grid; place-items: center; width: 34px; height: 34px; margin-right: 6px; color: var(--cyan); background: none; border: 1px solid transparent; cursor: pointer; border-radius: 50%; }
+.mic[hidden] { display: none; }
+.mic:hover, .mic:focus-visible { border-color: rgba(63,230,255,.5); outline: none; }
+.mic.on { color: var(--void); background: #ff5d6c; box-shadow: 0 0 14px #ff5d6c; animation: micpulse 1.1s ease-in-out infinite; }
+@keyframes micpulse { 50% { box-shadow: 0 0 26px #ff5d6c; } }
+@media (prefers-reduced-motion: reduce) { .mic.on { animation: none; } }
+.vhelp { display: grid; gap: 6px; justify-items: center; padding: 8px 12px; background: rgba(3,13,24,.92); border: 1px solid rgba(63,230,255,.4); }
+.vhelp p { margin: 0; color: var(--ink); line-height: 1.4; }
+.vhelp a.btn { text-decoration: none; display: inline-block; }
+body.lite .mic { width: 44px; height: 44px; }
+
+/* ---------- 7.2 · Radar des dates, mode crépuscule ---------- */
+.pb-radar { gap: 8px; overflow-y: auto; }
+.rcanvas { flex: none; width: 100%; max-width: 300px; aspect-ratio: 1; align-self: center; }
+.rlist2 { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.rlist2 li { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 6px; align-items: center; font-size: 13px; padding: 3px 6px; border-left: 2px solid var(--c); background: color-mix(in srgb, var(--c) 8%, transparent); }
+.rlist2 li.none { display: block; border: 0; background: none; font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.rlist2 .ri { color: var(--c); text-align: center; }
+.rlist2 .rn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rlist2 em { font: normal 11px var(--mono); color: var(--c); }
+.rlist2 .mini { padding: 0 4px; }
+body.lite .rlist2 li { font-size: 15px; padding: 7px 8px; }
+.dusk { position: fixed; inset: 0; z-index: 10; pointer-events: none; background: rgb(255, 160, 70); mix-blend-mode: color; opacity: 0; transition: opacity 4s ease; }
+body.dusk-on .dusk { opacity: .6; }
+body.locked .dusk { z-index: 21; }
+@media (prefers-reduced-motion: reduce) { .dusk { transition: none; } }
