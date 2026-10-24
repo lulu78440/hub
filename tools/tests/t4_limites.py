@@ -92,13 +92,15 @@ def test_limites_coupure_reseau_pendant_synchro(h):
     _assert("avant coupure" in clear, "note non envoyée après retour du réseau")
     # Coupure ENTRE la lecture et l'écriture (PATCH perdu) : rien de perdu, la prochaine synchro rattrape
     orig = gh.__call__
-    def flaky(route, state={"n": 0}):
-        if route.request.method == "PATCH" and state["n"] == 0:
-            state["n"] += 1; route.abort(); return True
+    cut = {"on": True}            # toutes les écritures (PATCH) échouent tant que la coupure dure (la synchro auto peut aussi tourner)
+    def flaky(route):
+        if route.request.method == "PATCH" and cut["on"] and route.request.url.startswith("https://api.github.com/"):
+            route.abort(); return True
         return orig(route)
     h.mock = flaky
     ev(p, "const s = await import('/js/store/storage.js'); await s.store.put('notes', { id: 'n-coupure2', text: 'pendant coupure', created: 1, updated: 1 });")
     r1 = ev(p, "const { sync } = await import('/js/store/sync.js'); try { await sync.run(); return 'ok'; } catch (e) { return 'ERR ' + e.message; }")
+    cut["on"] = False
     r2 = ev(p, "const { sync } = await import('/js/store/sync.js'); try { await sync.run(); return 'ok'; } catch (e) { return 'ERR ' + e.message; }")
     clear = ev(p, "const { open } = await import('/js/store/sync.js'); return JSON.stringify(await open(arg, 'phrase de synchro factice'));", gh.gists[next(iter(gh.gists))]["files"]["hub-synchro.txt"])
     _assert(r1.startswith("ERR") and r2 == "ok" and "pendant coupure" in clear, f"reprise après PATCH perdu : {r1} / {r2}")

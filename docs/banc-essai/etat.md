@@ -40,7 +40,9 @@ Tour 2 · approfondissement (cycles 1 à 6 terminés)
 | 5 | Navigation au clavier | corrigé | B13 |
 | 5 | Contrastes | réussi | mesure partielle (fonds en dégradé non mesurables) |
 | 3 | Relecture statique (second agent) | corrigé | B7 à B12 corrigés ; B14 à B16 décrits |
-| 6 | Suite automatique `tools/tests/` (28 tests, mode d'emploi `tools/tests/README.md`) | réussi | `--rapide` : 28/28 en 7 min après toutes les corrections |
+| 6 | Suite automatique `tools/tests/` (32 tests, mode d'emploi `tools/tests/README.md`) | réussi | complète : 32/32 en 12 min (un test de coupure rendu déterministe) |
+| 4 | Onglet fermé pendant un changement de phrase (5 à 800 ms) | réussi | données toujours lisibles avec l'ancienne ou la nouvelle phrase |
+| 2 | Médias (vidéo collée, lien piégé) et page en direct | réussi | |
 
 ## Prochaine action
 
