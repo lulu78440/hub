@@ -872,3 +872,13 @@ body.lite .win.mfoc .panel { border-color: var(--a, var(--cyan)); box-shadow: 0 
 .mfocus-exit { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
 @media (prefers-reduced-motion: reduce) { body.lite .world.mfocus .win:not(.mfoc) { transition: none; } }
 body.lite .focus-veil { display: none; }
+
+/* Mini barre de progression, dans la barre du haut à côté de « HUB » */
+.mprog { display: inline-flex; align-items: center; gap: 8px; margin-left: 4px; padding: 6px 2px; background: none; border: 0; cursor: pointer; color: var(--dim); opacity: .72; transition: opacity .25s; }
+.mprog:hover, .mprog:focus-visible { opacity: 1; }
+.mprog:focus-visible { outline: 1px solid var(--cyan); outline-offset: 3px; }
+.mp-segs { display: flex; gap: 2px; width: 74px; height: 4px; }
+.mp-segs u { position: relative; display: block; overflow: hidden; background: rgba(63,230,255,.16); text-decoration: none; }
+.mp-segs u i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ok); box-shadow: 0 0 5px var(--ok); }
+.mp-segs u.cur { outline: 1px solid rgba(63,230,255,.55); outline-offset: 0; }
+.mp-pct { font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .08em; font-variant-numeric: tabular-nums; }

@@ -119,6 +119,20 @@ export function initProgress() {
     const nx = pb.querySelector(".pnext"); nx.textContent = `${ok}/${tot} · prochaine : `;
     const b = document.createElement("b"); b.textContent = S.prochaine ? S.prochaine.texte : "tout est fait"; nx.append(b);
     pf.querySelector(".psrc").textContent = "Relevé dans ton Suivi le " + fmt.format(new Date(S.releve));
+    renderMini(done, ok, tot);
+  }
+  // Mini barre dans la barre du haut, à côté de « HUB » : une case par phase (remplie selon l'avancement) et le pourcentage.
+  function renderMini(done, ok, tot) {
+    const ms = document.getElementById("mp-segs"), mp = document.getElementById("mp-pct"), mb = document.getElementById("mprog");
+    if (!ms || !mp || !mb) return;
+    ms.innerHTML = ""; let curSet = false;
+    S.phases.forEach((ph) => {
+      const n = ph.etapes.length, d = ph.etapes.filter((id) => done.has(id)).length, cur = !curSet && d < n; if (cur) curSet = true;
+      const u = document.createElement("u"); u.style.flex = String(n); if (cur) u.className = "cur"; u.title = `${ph.cle} · ${ph.nom} · ${d}/${n}`;
+      const f = document.createElement("i"); f.style.width = (d / n * 100).toFixed(0) + "%"; u.append(f); ms.append(u);
+    });
+    mp.textContent = Math.round(ok / tot * 100) + " %";
+    mb.title = `Progression : ${ok}/${tot} étapes` + (S.prochaine ? " · prochaine : " + S.prochaine.texte : "") + " · clic pour le détail";
   }
 
   // Mods

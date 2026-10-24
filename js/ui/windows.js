@@ -10,6 +10,7 @@ const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 const MIN = { w: 220, h: 120 };
 const STORE = "disposition-pc-v1";          // clé hub-disposition-pc-v1 dans le stockage de l'appareil
 const PINNED_BY_DEFAULT = ["video"];
+const LAYOUT_V = 2;                          // v2 : la Progression quitte le centre (mini barre en haut, détail au plan 2)
 const FOCUS = { max: 1.45, w: 0.62, h: 0.86, hold: 550, move: 6, z: 9000 };   // « Ramener vers moi » (p2-focus)
 const ACCENTS = { cyan: 0x3fe6ff, violet: 0x9b72ff, amber: 0xffb347 };
 const PIN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4z"/><path d="M12 13v8"/></svg>';
@@ -29,15 +30,14 @@ function defaults(W, H) {
   L.web = { x: Rx, y: T + vh + g, w: Rw, h: Math.max(B - 240 - g - (T + vh + g), MIN.h) };
   const x0 = Lx + Lw + mid, x1 = Rx - mid, mw = x1 - x0;
   const th = clamp((mw - 36 - 32) / 5 * 9 / 16, 50, 110);
-  const sh = th + 30 + 20 + 36 + 26;
-  L.progress = { x: x0, y: B - sh, w: mw, h: sh };
+  L.progress = { x: -(Lw + 50), y: T + 990, w: Lw, h: 330 };
   L.music = { x: -(Lw + 50), y: T, w: Lw, h: 250 };
   L.favs = { x: -(Lw + 50), y: T + 270, w: Lw, h: 340 };
   L.rituels = { x: -(Lw + 50), y: T + 630, w: Lw, h: 330 };
   L.notes = { x: W + 50, y: T, w: Rw, h: 300 };
   L.mails = { x: W + 50, y: T + 320, w: Rw, h: 280 };
   L.radar = { x: W + 50, y: T + 620, w: Rw, h: 440 };
-  const sw = Math.min(600, mw), sy = L.progress.y - 100;
+  const sw = Math.min(600, mw), sy = B - 96;     // la recherche descend à la place libérée par la Progression ; l'orbe prend le reste
   return { L, search: { x: x0 + (mw - sw) / 2, y: sy, w: sw }, anchor: { left: x0, top: T, width: mw, height: Math.max(sy - T - 6, 140) } };
 }
 
@@ -58,10 +58,14 @@ export function createWindows({ world, plans, force }) {
   });
 
   function load() {
-    try { const d = JSON.parse(prefs.get(STORE, "null")); return d && typeof d === "object" ? d : null; } catch (e) { return null; }
+    try {
+      const d = JSON.parse(prefs.get(STORE, "null")); if (!d || typeof d !== "object") return null;
+      if (d._v !== LAYOUT_V) { delete d.progress; d._v = LAYOUT_V; }      // ancienne place de la Progression : elle prend la nouvelle
+      return d;
+    } catch (e) { return null; }
   }
   function save() {
-    const out = {};
+    const out = { _v: LAYOUT_V };
     els.forEach((el) => { const s = S[el.dataset.id]; out[el.dataset.id] = { x: s.tx / W, y: s.ty / H, w: s.w / W, h: s.h / H, pin: s.pin, hid: !!s.hid }; });
     prefs.set(STORE, JSON.stringify(out));
   }

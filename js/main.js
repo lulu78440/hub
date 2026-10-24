@@ -91,6 +91,7 @@ async function start() {
   if (!state.lite) initMyPC({ plans });
   const images = initImages({ world: $("world"), plans, force, wins });
   initProgress();
+  $("mprog").addEventListener("click", () => { if (state.lite) return; const w = wins.elById("progress"); if (w) wins.focus(w); });
   const backup = initBackup(data);
   initNews();
   initMedia();

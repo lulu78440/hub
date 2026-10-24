@@ -133,6 +133,7 @@ export function createCore(THREE, { lite = false } = {}) {
   build(lite);
 
   /* ---------- Cadrage : place le noyau dans un rectangle d'écran ---------- */
+  const ORB_ZOOM = 1.2;   // zoom de l'orbe (mise en page du plan 1 : plus de place au centre)
   let camZ = 9, lastKey = "";
   /** rect = { left, top, width, height } en pixels. Retourne le centre du noyau à l'écran (0..1) si le cadrage a changé, sinon null. */
   function frame(rect, RW, RH) {
@@ -142,7 +143,7 @@ export function createCore(THREE, { lite = false } = {}) {
     if (key === lastKey) return null; lastKey = key;
     const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), span = 5.4;
     const zH = span * RH / (hc * 2 * tanH * 0.92), zW = span * RW / (wc * 2 * tanH * camera.aspect * 0.92);
-    camZ = clamp(Math.max(zH, zW), 6.5, 70);
+    camZ = clamp(Math.max(zH, zW) / ORB_ZOOM, 5.4, 70);
     scene.fog.density = 0.045 * 9 / Math.max(camZ, 9);
     camera.setViewOffset(RW, RH, RW / 2 - cx, RH / 2 - cy, RW, RH);
     return { x: cx / RW, y: 1 - cy / RH };
