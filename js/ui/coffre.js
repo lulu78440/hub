@@ -8,7 +8,7 @@
 import { store, newId } from "../store/storage.js";
 import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
-import { parseYouTube, RADIOS } from "../widgets/media.js";
+import { parseYouTube, RADIOS, fixRadios } from "../widgets/media.js";
 
 const norm = (u) => (u || "").trim().replace(/#.*$/, "").replace(/\/+$/, "").toLowerCase();
 const isWeb = (u) => /^https:\/\//i.test(u || "");
@@ -62,7 +62,7 @@ export async function importCoffre(s) {
   }
 
   // Radios (adresse https uniquement ; une page web au lieu d'un flux ne jouera pas)
-  let radios = readJ("radios", null) || RADIOS.slice(); const ru = new Set(radios.map((r) => norm(r.u))); let nr = 0;
+  let radios = fixRadios(readJ("radios", null) || RADIOS.slice()).list; const ru = new Set(radios.map((r) => norm(r.u))); let nr = 0;
   s.radios.forEach((r) => { if (!isWeb(r.lien) || ru.has(norm(r.lien))) { out.skipped++; return; } ru.add(norm(r.lien)); radios = radios.concat({ n: clip(r.nom, 60), u: r.lien }); nr++; });
   if (nr) { prefs.set("radios", JSON.stringify(radios)); out.radios = nr; }
 

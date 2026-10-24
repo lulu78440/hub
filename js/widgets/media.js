@@ -33,11 +33,20 @@ const embed = (y, autoplay = 1) => y.v
 const thumb = (v) => `https://i.ytimg.com/vi/${v}/hqdefault.jpg`;
 
 // Radios web (flux directs, sans compte). On peut en ajouter depuis le menu de la fenêtre Musique.
+// Anciennes adresses qui ne répondent plus → nouvelles (appliqué aux radios déjà enregistrées par l'import du Coffre ou une ancienne version)
+const RADIO_FIX = {
+  "https://icecast.radiofrance.fr/fip-midfi.mp3": "https://icecast.radiofrance.fr/fip-hifi.aac?id=radiofrance",
+  "https://icecast.radiofrance.fr/fipelectro-midfi.mp3": "https://icecast.radiofrance.fr/fipelectro-hifi.aac?id=radiofrance",
+  "https://ice2.somafm.com/spacestation-128-mp3": "https://ice.somafm.com/spacestation",
+  "https://ice2.somafm.com/groovesalad-128-mp3": "https://ice.somafm.com/groovesalad"
+};
+export const fixRadios = (list) => { let ch = false; const out = list.map((r) => (RADIO_FIX[r.u] ? (ch = true, { ...r, u: RADIO_FIX[r.u] }) : r)); return { list: out, changed: ch }; };
+
 export const RADIOS = [
-  { n: "FIP", u: "https://icecast.radiofrance.fr/fip-midfi.mp3" },
-  { n: "FIP Électro", u: "https://icecast.radiofrance.fr/fipelectro-midfi.mp3" },
-  { n: "SomaFM · Space Station", u: "https://ice2.somafm.com/spacestation-128-mp3" },
-  { n: "SomaFM · Groove Salad", u: "https://ice2.somafm.com/groovesalad-128-mp3" },
+  { n: "FIP", u: "https://icecast.radiofrance.fr/fip-hifi.aac?id=radiofrance" },
+  { n: "FIP Électro", u: "https://icecast.radiofrance.fr/fipelectro-hifi.aac?id=radiofrance" },
+  { n: "SomaFM · Space Station", u: "https://ice.somafm.com/spacestation" },
+  { n: "SomaFM · Groove Salad", u: "https://ice.somafm.com/groovesalad" },
   { n: "France Inter", u: "https://icecast.radiofrance.fr/franceinter-midfi.mp3" },
   { n: "Radio Nova", u: "https://novazz.ice.infomaniak.ch/novazz-128.mp3" }
 ];
@@ -111,6 +120,7 @@ export function initMedia() {
   mpb.innerHTML = '<div class="np"><div class="eq off" aria-hidden="true"><u></u><u></u><u></u><u></u><u></u><u></u></div><div><b class="mt">Rien en écoute</b><span class="ms">Choisis une radio ou tes MP3</span></div></div><div class="mctl"><button type="button" class="btn mplay">▶ Lecture</button><button type="button" class="btn mnext">Suivant</button><button type="button" class="btn mbig" title="Grand écran">⤢</button><input type="range" class="mvol" min="0" max="100" aria-label="Volume"></div><ul class="stations"></ul><div class="myt"></div><div class="erow"><button type="button" class="btn mmp3">Mes MP3…</button><button type="button" class="btn mytb">Playlist YouTube…</button></div>';
   const audio = new Audio(); audio.preload = "none";
   let radios = readJ("radios", null) || RADIOS, src = readJ("musique-source", null), mp3 = [], vol = +prefs.get("musique-volume", "60");
+  { const fx = fixRadios(radios); if (fx.changed) { radios = fx.list; if (readJ("radios", null)) prefs.set("radios", JSON.stringify(radios)); if (src && src.kind === "radio") { const m = radios.find((r) => r.n === src.n); if (m) src = { ...src, u: m.u }; } } }
   audio.volume = vol / 100; mpb.querySelector(".mvol").value = vol;
   const eq = mpb.querySelector(".eq"), mt = mpb.querySelector(".mt"), ms = mpb.querySelector(".ms"), bplay = mpb.querySelector(".mplay"), ytBox = mpb.querySelector(".myt");
   function sources() { return radios.map((r) => ({ kind: "radio", n: r.n, u: r.u })).concat(mp3.map((f, i) => ({ kind: "mp3", n: f.name.replace(/\.[^.]+$/, ""), i }))); }
