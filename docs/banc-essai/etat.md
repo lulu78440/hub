@@ -43,6 +43,7 @@ Tour 2 · approfondissement (cycles 1 à 6 terminés)
 | 6 | Suite automatique `tools/tests/` (32 tests, mode d'emploi `tools/tests/README.md`) | réussi | complète : 32/32 en 12 min (un test de coupure rendu déterministe) |
 | 4 | Onglet fermé pendant un changement de phrase (5 à 800 ms) | réussi | données toujours lisibles avec l'ancienne ou la nouvelle phrase |
 | 2 | Médias (vidéo collée, lien piégé) et page en direct | réussi | |
+| 4 | Import d'un export abîmé (types inattendus) | corrigé | B17 |
 
 ## Prochaine action
 

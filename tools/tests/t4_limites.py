@@ -42,6 +42,7 @@ def test_limites_charge_1000_notes_taches_2000_favoris(h):
     t2 = time.time()
     p.fill('.win[data-id="favs"] input[type=search]', "Favori 1999"); p.wait_for_timeout(400)
     _assert(time.time() - t2 < 3, "recherche lente dans 2 000 favoris")
+    p.wait_for_function("import('/js/store/storage.js').then(s => s.store.all('notes')).then(l => l.length === 1001)", timeout=10000)
     # Export puis import de ce volume
     t3 = time.time(); path, _ = export_file(p, "c4-gros.json"); exp = time.time() - t3
     d2 = h.device(); q = d2.page()
@@ -185,3 +186,24 @@ def test_limites_onglet_ferme_pendant_changement_de_phrase(h):
         c = counts(q)
         _assert(c["notes"] == 300 and c["tasks"] == 300 and c["favs"] == 300, f"données perdues après interruption à {delay} ms (phrase {'nouvelle' if ok_new else 'ancienne'}) : {c}")
         d.close()
+
+
+def test_limites_import_malforme_ne_casse_pas_le_hub(h):
+    """Export abîmé (types inattendus) : le hub démarre quand même, sans erreur, et reste utilisable."""
+    h.mock = make_mock()
+    d = h.device(); p = d.page()
+    data = {"format": "hub-donnees", "formatVersion": 1, "data": {
+        "notes": [{"id": "n1", "text": 42}, {"id": "n2"}, {"id": 3, "text": "id numérique"}, None, "texte", {"id": "n4", "text": "ok", "pinned": "oui", "updated": "hier"}],
+        "tasks": [{"id": "t1", "text": None, "due": "pas une date", "remindAt": 12}, {"id": "t2", "text": "ok", "due": "2026-13-45"}],
+        "events": [{"id": "e1", "title": {"x": 1}, "date": "n'importe quoi", "start": "99:99"}, {"id": "e2"}],
+        "favs": [{"id": "f1", "url": None, "title": None, "group": None}, {"id": "f2", "url": "https://ok.test/", "title": 5, "group": ["g"]}],
+        "kv": [{"id": "rituels-config", "habits": "pas une liste"}, {"id": "radar-dates", "items": {"a": 1}}, {"id": "rappels", "fired": 5}, {"id": "rit-2026-10-24", "mood": "x", "c": "y"}],
+        "images": [{"id": "i1", "blob": "data:text/html,<script>alert(1)</script>"}, {"id": "i2", "blob": 7}]},
+        "prefs": {"hub-meteo-lieu": "{pas du json", "hub-radios": "[1,2", "hub-video-file": json.dumps([{"v": 5}]), "hub-disposition-pc": "null", "pas-hub": "x", "hub-x": {"objet": 1}}}
+    import_file(p, write_json(h, "c4-malforme.json", data))
+    p.wait_for_function("window.__hub && document.body.classList.contains('ready')", timeout=40000)
+    p.evaluate("document.activeElement && document.activeElement.blur()"); p.keyboard.press("2"); p.wait_for_timeout(1500)
+    inp = p.locator('.win[data-id="notes"] form.addrow input'); inp.fill("après import abîmé"); inp.press("Enter"); p.wait_for_timeout(300)
+    _assert(ev(p, "const s = await import('/js/store/storage.js'); return (await s.store.all('notes')).some(n => n.text === 'après import abîmé');"), "hub inutilisable après import abîmé")
+    _assert(not d.errors, "erreurs après import abîmé : " + str(d.errors[:6]))
+    d.close()
