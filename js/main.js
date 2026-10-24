@@ -26,6 +26,7 @@ import { initMedia } from "./widgets/media.js";
 import { initWebview } from "./widgets/webview.js";
 import { initSyncUI } from "./ui/syncui.js";
 import { initSurprises } from "./widgets/surprises.js";
+import { initMail } from "./widgets/mail.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -90,6 +91,7 @@ async function start() {
   initWebview();
   initSyncUI();
   const surprises = initSurprises({ force, plans, wins });
+  initMail();
   $("b-backup").addEventListener("click", () => backup.test());
 
   let core = null, fx = null;

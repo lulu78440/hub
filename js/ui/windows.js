@@ -33,6 +33,7 @@ function defaults(W, H) {
   L.music = { x: -(Lw + 50), y: T, w: Lw, h: 250 };
   L.favs = { x: -(Lw + 50), y: T + 270, w: Lw, h: 340 };
   L.notes = { x: W + 50, y: T, w: Rw, h: 300 };
+  L.mails = { x: W + 50, y: T + 320, w: Rw, h: 280 };
   const sw = Math.min(600, mw), sy = L.progress.y - 100;
   return { L, search: { x: x0 + (mw - sw) / 2, y: sy, w: sw }, anchor: { left: x0, top: T, width: mw, height: Math.max(sy - T - 6, 140) } };
 }

@@ -14,7 +14,7 @@ body.lite .win[data-id="video"] { order: 3; } body.lite .win[data-id="video"] .p
 body.lite .win[data-id="strip"] { order: 4; } body.lite .pb-strip { height: 120px; flex: none; }
 body.lite .win[data-id="meteo"] { order: 5; } body.lite .win[data-id="tasks"] { order: 6; }
 body.lite .win[data-id="agenda"] { order: 7; } body.lite .win[data-id="music"] { order: 8; }
-body.lite .win[data-id="notes"] { order: 9; } body.lite .win[data-id="favs"] { order: 10; }
+body.lite .win[data-id="notes"] { order: 9; } body.lite .win[data-id="favs"] { order: 10; } body.lite .win[data-id="mails"] { order: 11; }
 body.lite .win[data-id="watch"] { order: 11; } body.lite .win[data-id="web"] { order: 12; }
 body.lite .pb-h150 { min-height: 150px; } body.lite .pb-h130 { min-height: 130px; } body.lite .pb-web { min-height: 200px; }
 body.lite .hints { display: none; }

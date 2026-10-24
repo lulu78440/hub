@@ -116,7 +116,7 @@ export async function exportAll(version) {
   // Les images voyagent dans le fichier sous forme de texte (data:…)
   data.images = await Promise.all(data.images.map(async (im) => ({ ...im, blob: im.blob instanceof Blob ? await toDataURL(im.blob) : null })));
   const prefs = {};
-  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("hub-") && !k.startsWith("hub-synchro")) prefs[k] = localStorage.getItem(k); /* jamais le jeton de synchro dans un fichier */ } } catch (e) { /* réglages indisponibles */ }
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("hub-") && !k.startsWith("hub-synchro") && !k.startsWith("hub-secret")) prefs[k] = localStorage.getItem(k); /* jamais le jeton de synchro dans un fichier */ } } catch (e) { /* réglages indisponibles */ }
   return { format: FORMAT, formatVersion: FORMAT_VERSION, appVersion: version, exportedAt: new Date().toISOString(), data, prefs };
 }
 
@@ -141,7 +141,7 @@ export async function importAll(d) {
     else await tx(db, c, "readwrite", (st) => { st.clear(); items.forEach((x) => st.put(x)); });
   }
   if (d.prefs && typeof d.prefs === "object") {
-    try { Object.entries(d.prefs).forEach(([k, v]) => { if (k.startsWith("hub-") && typeof v === "string") localStorage.setItem(k, v); }); } catch (e) { /* réglages non restaurés */ }
+    try { Object.entries(d.prefs).forEach(([k, v]) => { if (k.startsWith("hub-") && !k.startsWith("hub-secret") && !k.startsWith("hub-synchro") && typeof v === "string") localStorage.setItem(k, v); }); } catch (e) { /* réglages non restaurés */ }
   }
   COLLECTIONS.forEach((c) => emit(c));
 }

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hub · connexion</title>
+<meta name="robots" content="noindex">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#02060d;color:#dff6fd;font:15px system-ui,sans-serif;text-align:center;padding:16px}b{color:#3fe6ff}</style>
+</head>
+<body>
+<p id="m"><b>Connexion en cours…</b><br>Cette fenêtre va se fermer toute seule.</p>
+<script>
+// Retour de connexion Google ou Microsoft (phase 5, mails en lecture seule).
+// Transmet le résultat à la fenêtre du hub qui a ouvert celle-ci (même site uniquement), puis se ferme. Rien n'est gardé ici.
+(function () {
+  var data = { hash: location.hash.slice(1), search: location.search.slice(1) };
+  history.replaceState(null, "", location.pathname);          // efface le jeton de la barre d'adresse
+  // Google et Microsoft coupent souvent le lien avec la fenêtre d'origine : on passe par un canal du même site.
+  var sent = false;
+  try { var bc = new BroadcastChannel("hub-oauth"); bc.postMessage({ type: "hub-oauth", data: data }); sent = true; } catch (e) { /* ancien navigateur */ }
+  try { if (window.opener) { window.opener.postMessage({ type: "hub-oauth", data: data }, location.origin); sent = true; } } catch (e) { /* lien coupé */ }
+  if (sent) { setTimeout(function () { window.close(); }, 400); }
+  document.getElementById("m").innerHTML = "<b>Connexion terminée.</b><br>Tu peux fermer cette fenêtre et revenir au hub.";
+})();
+</script>
+</body>
+</html>
