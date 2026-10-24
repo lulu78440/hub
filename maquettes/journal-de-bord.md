@@ -93,6 +93,7 @@ Lucien annule « enchaîner sans confirmation » : une sous-étape, son test PC 
 | Date | Étape | Ce qui a été fait | Statut |
 | --- | --- | --- | --- |
 | 24/10 | p2-lock Verrouillage | Guidage pas à pas : activation (Diag → Verrouillage), clé de secours de 24 caractères notée sur papier hors du PC, test du rechargement (écran « HUB · VERROUILLÉ »). Aucun changement de code. Au passage, synchro PC activée (jeton GitHub fine-grained avec Gists en lecture et écriture ; la permission avait d'abord été oubliée). Piège rencontré : la valeur du jeton ne s'affiche qu'une fois (utiliser « Regenerate token »). | Validée par Lucien (24/10) |
+| 24/10 | p2-coffre Import du Coffre | Test de Lucien : les favoris sont arrivés ; deux radios (radio-fmr.net, Radio Campus) semblaient manquer, puis Lucien a confirmé « c'est bon » (probablement retrouvées dans Musique). Piste notée si le doute revient : le hub n'importe que les adresses https ; une radio en http:// est ignorée, et pourrait aller en Favoris, groupe « Radios ». Aucun changement de code. | Livrée, en attente du « validé » de Lucien |
 
 ## Construction · Phase 3
 
