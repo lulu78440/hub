@@ -1,13 +1,13 @@
 /* Service worker du Hub : cache hors ligne versionné.
    Pour publier une nouvelle version : changer VERSION (et mettre à jour js/version.js). */
-const VERSION = "7.2.6";
+const VERSION = "7.3.0";
 const CACHE = "hub-" + VERSION;
 const ROOT = new URL("./", self.location).href;
 const PRECACHE = [
   "", "index.html", "manifest.webmanifest",
-  "css/base.css", "css/hud.css", "css/mobile.css",
+  "css/base.css", "css/hud.css", "css/noyau.css", "css/mobile.css",
   "js/main.js", "js/version.js", "js/state.js", "js/ui/diag.js", "js/ui/clock.js", "js/ui/search.js", "js/ui/topbar.js", "js/ui/plans.js", "js/ui/windows.js", "js/ui/menus.js", "js/ui/ctxmenu.js", "js/device/vibrate.js", "js/ui/data.js", "js/ui/coffre.js", "js/store/storage.js", "js/widgets/when.js", "js/widgets/notes.js", "js/widgets/tasks.js", "js/widgets/agenda.js", "js/widgets/reminders.js", "js/widgets/weather.js", "js/widgets/favs.js", "js/widgets/mypc.js", "js/widgets/images.js", "js/widgets/progress.js", "js/widgets/backup.js", "js/widgets/flux.js", "js/widgets/news.js", "js/widgets/media.js", "js/widgets/webview.js", "js/store/sync.js", "js/ui/syncui.js", "js/widgets/surprises.js", "js/widgets/mail.js", "js/widgets/ai.js", "js/store/vault.js", "js/ui/lockui.js", "js/widgets/rituels.js", "js/widgets/radar.js", "js/ui/dusk.js", "js/ui/voice.js", "oauth.html", "js/device/system.js", "js/device/folders.js", "js/store/bookmarks.js", "js/ui/labels.js", "js/device/geo.js", "js/ui/alertsui.js", "js/device/sound.js", "js/device/notify.js", "js/device/orientation.js", "js/ui/toast.js", "js/ui/dom.js", "js/store/prefs.js", "js/fx/force.js", "js/fx/entity.js", "js/fx/cursor.js",
-  "js/scene/loader.js", "js/scene/core3d.js", "js/scene/postfx.js",
+  "js/noyau/actualite.js", "js/noyau/barriere.js", "js/noyau/boucle.js", "js/noyau/cerveau.js", "js/noyau/etat.js", "js/noyau/fenetre.js", "js/noyau/hote.js", "js/noyau/import38.js", "js/noyau/initiative.js", "js/noyau/journal.js", "js/noyau/memoire.js", "js/noyau/moteurs.js", "js/noyau/noyau.js", "js/noyau/outils.js", "js/noyau/perception.js", "js/noyau/recherche.js", "js/noyau/sommeil.js", "js/noyau/sources.js", "js/noyau/voix.js", "js/scene/loader.js", "js/scene/core3d.js", "js/scene/postfx.js",
   "vendor/three/three.min.js",
   "vendor/three/examples/shaders/CopyShader.js", "vendor/three/examples/shaders/LuminosityHighPassShader.js",
   "vendor/three/examples/postprocessing/EffectComposer.js", "vendor/three/examples/postprocessing/RenderPass.js",

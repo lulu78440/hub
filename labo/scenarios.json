@@ -1381,6 +1381,40 @@
      }
     }
    ]
+  },
+  {
+   "id": "c10-rappel-the",
+   "famille": "cerveau",
+   "titre": "Rappel : le mot « thé » n'est pas pris pour un mot vide",
+   "prepare": {
+    "memoire": [
+     {
+      "type": "sem",
+      "texte": "Aime le thé vert le matin"
+     }
+    ]
+   },
+   "modele": [
+    {
+     "repondre": {
+      "texte": "Tu aimes le thé vert [1].",
+      "ton": "calme",
+      "confiance": "haute",
+      "sources": [
+       1
+      ]
+     }
+    }
+   ],
+   "etapes": [
+    {
+     "dit": "Quel thé est-ce que je préfère ?",
+     "attends": {
+      "systeme_contient": "thé vert",
+      "sources_non_vides": true
+     }
+    }
+   ]
   }
  ]
 }

@@ -124,7 +124,7 @@ export async function executerScenario(sc, opt = {}) {
       if (e.dit) { const m = await noyau.poser(e.dit, e.origine || "lucien"); rep = m; }
       if (e.avis) { const dernier = noyau.inspecteur()[0]; await noyau.avis({ tour: dernier.tour, valide: e.avis.valide, commentaire: e.avis.commentaire || "" }); rep = { ...(noyau.inspecteur()[0].reponse), code: null }; }
       if (e.dormir) ctx.sommeil = await noyau.dormir({ force: true });
-      if (e.importer) { const { readFileSync } = await import("node:fs").catch(() => ({})); const txt = e.importer.contenu ? JSON.stringify(e.importer.contenu) : (opt.lireFichier ? await opt.lireFichier(e.importer.fichier) : readFileSync(e.importer.fichier, "utf8")); ctx.import = await noyau.importer38(txt); }
+      if (e.importer) { const txt = e.importer.contenu ? JSON.stringify(e.importer.contenu) : (opt.lireFichier ? await opt.lireFichier(e.importer.fichier) : (await import("node:fs")).readFileSync(e.importer.fichier, "utf8")); ctx.import = await noyau.importer38(txt); }
       if (e.apres_import_reimport) ctx.import2 = await noyau.importer38(JSON.stringify(e.apres_import_reimport));
       const trace = noyau.inspecteur()[0] || { requetes: 0, systeme: "" };
       ctx.rep = rep || {}; ctx.trace = trace; ctx.journal = (await noyau.journal({ limite: 5000 })).slice(0, (await noyau.journal({ limite: 5000 })).length - nj);

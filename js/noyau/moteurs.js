@@ -69,7 +69,7 @@ const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
 export function moteurGemini({ cle, modele = MODELE_DEFAUT, budget, attenteQuota = 8000, delaiMax = 45000 }) {
   async function appeler(corps, essai = 0) {
     if (!hote.enLigne()) throw new ErreurNoyau("hors_ligne", "Hors ligne : Gemini n'est pas joignable.");
-    if (!cle) throw new ErreurNoyau("cle", "Aucune clé Gemini : colle-la dans les réglages du Noyau.");
+    if (!cle) throw new ErreurNoyau("cle", "Aucune clé Gemini : colle-la dans le panneau de l'orbe (clic sur l'orbe, engrenage).");
     if (budget) budget.reserver();
     const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
     const minuteur = ctl ? setTimeout(() => ctl.abort(), delaiMax) : 0;

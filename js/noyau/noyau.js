@@ -32,7 +32,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     if (m === "claude") return moteurClaude();
     if (m === "local") return local || (local = moteurLocal());
     const cle = hote.secret.cle();
-    if (!cle) return { nom: "Gemini (sans clé)", async generer() { throw new ErreurNoyau("cle", "Aucune clé Gemini : colle-la dans les réglages du Noyau."); } };
+    if (!cle) return { nom: "Gemini (sans clé)", async generer() { throw new ErreurNoyau("cle", "Aucune clé Gemini : colle-la dans le panneau de l'orbe (clic sur l'orbe, engrenage)."); } };
     if (!hote.secret.protege()) return { nom: "Gemini (coffre inactif)", async generer() { throw new ErreurNoyau("cle", "Active le verrouillage du hub (Diag → Verrouillage) : la clé Gemini ne s'utilise que chiffrée par le coffre."); } };
     const modele = hote.reglage.lire("noyau-modele", MODELE_DEFAUT);
     if (!geminiCache || geminiCache.cle !== cle || geminiCache.modele !== modele) geminiCache = { cle, modele, m: moteurGemini({ cle, modele, budget }) };
@@ -82,6 +82,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
 export async function initNoyau() {
   await brancherHub();
   const noyau = await creerNoyau();
+  noyau.verrouillePar(() => document.body.classList.contains("locked"));       // écran verrouillé : aucune confirmation ne passe
   const { monterFenetre } = await import("./fenetre.js");
   const ui = monterFenetre(hote.ui.conteneur(), noyau, { orbe: true });
   hote.ui.ajouterMenuFond(() => [{ t: "Ouvrir le Noyau", fn: () => ui.ouvrir() }]);

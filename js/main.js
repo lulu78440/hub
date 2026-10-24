@@ -28,6 +28,7 @@ import { initSyncUI } from "./ui/syncui.js";
 import { initSurprises } from "./widgets/surprises.js";
 import { initMail } from "./widgets/mail.js";
 import { initAI } from "./widgets/ai.js";
+import { initNoyau } from "./noyau/noyau.js";
 import { gate, initLockUI } from "./ui/lockui.js";
 import { initRituels } from "./widgets/rituels.js";
 import { initRadar } from "./widgets/radar.js";
@@ -100,6 +101,7 @@ async function start() {
   const surprises = initSurprises({ force, plans, wins });
   initMail();
   const ai = initAI({ force });
+  initNoyau().catch((e) => console.warn("Noyau :", e));
   const rituels = initRituels({ force, plans });
   const radar = initRadar({ force, plans });
   initDusk();

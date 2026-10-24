@@ -4,7 +4,7 @@
 // recours, quand la recherche exacte ne trouve rien.
 
 const STOP = new Set(("a au aux avec ce ces cet cette c d de des du elle elles en es est et eux il ils j je l la le les leur leurs lui m ma mais me meme mes moi mon n ne nos notre nous on ou par pas pour qu que qui s sa se ses son sur t ta te tes toi ton tu un une vos votre vous y " +
-  "ai as avons avez ont suis sommes etes sont etais etait ete etre avoir fait faire dit dans plus tout tous tres si comme donc or ni car aussi bien cela ca ceci quoi dont ou quel quelle quels quelles quand comment pourquoi combien the of and to in is it for on that this with").split(" "));
+  "ai as avons avez ont suis sommes etes sont etais etait ete etre avoir fait faire dit dans plus tout tous tres si comme donc or ni car aussi bien cela ca ceci quoi dont ou quel quelle quels quelles quand comment pourquoi combien of and to in is it for that this with").split(" "));
 
 /** Minuscules, sans accents, apostrophes unifiées. */
 export function normaliser(s) {
