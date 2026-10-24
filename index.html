@@ -24,6 +24,8 @@
   <div class="brand">
     <div class="logo" id="logo" role="button" tabindex="0" aria-label="Poser ou reprendre l'entité" title="Poser ou reprendre l'entité"></div>
     <div><b>HUB</b><span><i></i>Phase 7 · radar</span></div>
+    <button type="button" class="mprog pc-only" id="mprog" data-menu="progress-bar" aria-label="Progression du projet : clic pour ouvrir le détail" title="Progression du projet"><em class="mp-segs" id="mp-segs"></em><em class="mp-pct" id="mp-pct">–</em></button>
+    <div class="mthumbs pc-only" id="mthumbs" role="group" aria-label="Aperçus des modes graphiques"></div>
   </div>
   <div class="clock">
     <div class="rule" aria-hidden="true"></div>
@@ -51,7 +53,10 @@
 </div>
 <div class="agdrawer pc-only" id="agdrawer" data-menu="agenda" role="dialog" aria-label="Calendrier" hidden><div class="agin"></div></div>
 
+<div class="dof t pc-only" aria-hidden="true"></div>
+<div class="dof b pc-only" aria-hidden="true"></div>
 <div class="world" id="world">
+  <div class="floor pc-only" aria-hidden="true"></div>
   <div class="anchor" id="anchor"></div>
   <form class="search" id="search" autocomplete="off" role="search">
     <div class="bar"><div class="bar-in">

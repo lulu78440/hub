@@ -119,6 +119,20 @@ export function initProgress() {
     const nx = pb.querySelector(".pnext"); nx.textContent = `${ok}/${tot} · prochaine : `;
     const b = document.createElement("b"); b.textContent = S.prochaine ? S.prochaine.texte : "tout est fait"; nx.append(b);
     pf.querySelector(".psrc").textContent = "Relevé dans ton Suivi le " + fmt.format(new Date(S.releve));
+    renderMini(done, ok, tot);
+  }
+  // Mini barre dans la barre du haut, à côté de « HUB » : une case par phase (remplie selon l'avancement) et le pourcentage.
+  function renderMini(done, ok, tot) {
+    const ms = document.getElementById("mp-segs"), mp = document.getElementById("mp-pct"), mb = document.getElementById("mprog");
+    if (!ms || !mp || !mb) return;
+    ms.innerHTML = ""; let curSet = false;
+    S.phases.forEach((ph) => {
+      const n = ph.etapes.length, d = ph.etapes.filter((id) => done.has(id)).length, cur = !curSet && d < n; if (cur) curSet = true;
+      const u = document.createElement("u"); u.style.flex = String(n); if (cur) u.className = "cur"; u.title = `${ph.cle} · ${ph.nom} · ${d}/${n}`;
+      const f = document.createElement("i"); f.style.width = (d / n * 100).toFixed(0) + "%"; u.append(f); ms.append(u);
+    });
+    mp.textContent = Math.round(ok / tot * 100) + " %";
+    mb.title = `Progression : ${ok}/${tot} étapes` + (S.prochaine ? " · prochaine : " + S.prochaine.texte : "") + " · clic pour le détail";
   }
 
   // Mods
@@ -156,6 +170,60 @@ export function initProgress() {
       { t: "Actualiser le relevé", fn: () => { load(); toast("Relevé actualisé"); } });
     return it;
   });
+
+  // ---------- Barre du haut : miniatures des modes (sans texte) et résumé du Suivi ----------
+  const th = document.getElementById("mthumbs");
+  if (th) {
+    th.innerHTML = MODS.map((m, i) => `<button type="button" class="mt${i === 0 ? " active" : ""}" data-i="${i}" aria-label="Mode ${m.n}, ${m.st.toLowerCase()} : clic pour voir en grand" title="${m.n} · ${m.st}"><canvas></canvas></button>`).join("");
+    const tb = [...th.querySelectorAll(".mt")];
+    const drawT = () => tb.forEach((b, i) => {
+      const c = b.querySelector("canvas"), w = Math.max(2, b.clientWidth), h = Math.max(2, b.clientHeight);
+      c.width = Math.round(w * 2); c.height = Math.round(h * 2);
+      const g = c.getContext("2d"); g.setTransform(2, 0, 0, 2, 0, 0); MODS[i].draw(g, w, h, rng(7 + i * 13));
+    });
+    tb.forEach((b) => b.addEventListener("click", () => preview(+b.dataset.i)));
+    requestAnimationFrame(drawT);
+  }
+  const mpanel = document.createElement("div"); mpanel.className = "mpanel pc-only"; mpanel.hidden = true; mpanel.setAttribute("role", "dialog"); mpanel.setAttribute("aria-label", "Résumé du Suivi du Hub");
+  document.body.append(mpanel);
+  const mbtn = document.getElementById("mprog");
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+  function renderPanel() {
+    mpanel.innerHTML = "";
+    if (!S) { mpanel.append(el("p", "mpl", "Relevé indisponible pour l'instant (hors ligne ?).")); return; }
+    const done = new Set(S.faites || []), built = new Set(S.built || []), T = S.titres || {};
+    let tot = 0, ok = 0; S.phases.forEach((ph) => { tot += ph.etapes.length; ok += ph.etapes.filter((id) => done.has(id)).length; });
+    const head = el("div", "mph"); head.append(el("b", "", "SUIVI DU HUB"), el("em", "", Math.round(ok / tot * 100) + " % · " + ok + "/" + tot + " étapes")); mpanel.append(head);
+    const list = el("div", "mpphases");
+    let curSet = false;
+    S.phases.forEach((ph) => {
+      const n = ph.etapes.length, d = ph.etapes.filter((id) => done.has(id)).length, cur = !curSet && d < n; if (cur) curSet = true;
+      const row = el("div", "mpr" + (cur ? " cur" : "") + (d === n ? " full" : ""));
+      const bar = el("u"); const f = el("i"); f.style.width = (d / n * 100).toFixed(0) + "%"; bar.append(f);
+      row.append(el("em", "", ph.cle), el("span", "", ph.nom), bar, el("em", "", d + "/" + n)); list.append(row);
+    });
+    mpanel.append(list);
+    const todo = []; S.phases.forEach((ph) => ph.etapes.forEach((id) => { if (built.has(id) && !done.has(id)) todo.push(id); }));
+    (S.built || []).forEach((id) => { if (!done.has(id) && !todo.includes(id)) todo.push(id); });
+    if (todo.length) {
+      mpanel.append(el("p", "mpl", "Livrées, à valider par toi (" + todo.length + ")"));
+      const ul = el("ul", "mpul"); todo.forEach((id) => ul.append(el("li", "", T[id] || id))); mpanel.append(ul);
+    }
+    if (S.prochaine) { const p = el("p", "mpnx"); p.append("Prochaine étape · ", el("b", "", S.prochaine.texte)); mpanel.append(p); }
+    const foot = el("div", "mpf"); foot.append(el("span", "", "Relevé le " + fmt.format(new Date(S.releve))));
+    const a = el("a", "", "Ouvrir le suivi ↗"); a.href = "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da"; a.target = "_blank"; a.rel = "noopener"; foot.append(a); mpanel.append(foot);
+  }
+  function placePanel() { const b = document.querySelector(".brand").getBoundingClientRect(); mpanel.style.left = Math.max(12, b.left) + "px"; mpanel.style.top = (b.bottom + 10) + "px"; }
+  function togglePanel(on) {
+    const open = on === undefined ? mpanel.hidden : on;
+    if (open) { renderPanel(); placePanel(); }
+    mpanel.hidden = !open; if (mbtn) mbtn.setAttribute("aria-expanded", String(open));
+  }
+  if (mbtn) mbtn.addEventListener("click", (e) => { e.stopPropagation(); togglePanel(); });
+  addEventListener("pointerdown", (e) => { if (!mpanel.hidden && !e.target.closest(".mpanel, #mprog")) togglePanel(false); }, true);
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !mpanel.hidden) togglePanel(false); });
+  addEventListener("resize", () => { if (!mpanel.hidden) placePanel(); });
+  registerMenu("progress-bar", () => [{ h: "Progression" }, { t: "Voir le détail (fenêtre)", fn: () => document.dispatchEvent(new CustomEvent("hub:focus-win", { detail: "progress" })) }]);
 
   load();
   setInterval(load, 30 * 60e3);

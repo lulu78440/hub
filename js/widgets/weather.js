@@ -15,6 +15,18 @@ const API = "https://api.open-meteo.com/v1/forecast";
 const GEO = "https://geocoding-api.open-meteo.com/v1/search";
 const REV = "https://api.bigdatacloud.net/data/reverse-geocode-client";
 const pad = (n) => String(n).padStart(2, "0");
+/** Lit des coordonnées saisies à la main : « 48.85, 2.35 », « 48,85 ; 2,35 », « 48.85 2.35 », avec ou sans nom devant (« Maison 48.85, 2.35 »).
+ *  Renvoie { lat, lon, name } vérifiés (latitude -90…90, longitude -180…180), ou null si ce n'est pas un couple de nombres, ou { error } si hors limites. */
+export function parseCoords(text) {
+  const t = String(text || "").trim();
+  const m = t.match(/^(.*?)(-?\d+(?:[.,]\d+)?)\s*°?\s*(?:[;,]|\s)\s*(-?\d+(?:[.,]\d+)?)\s*°?\s*$/);
+  if (!m) return null;
+  const lat = parseFloat(m[2].replace(",", ".")), lon = parseFloat(m[3].replace(",", "."));
+  if (!isFinite(lat) || !isFinite(lon)) return null;
+  if (lat < -90 || lat > 90) return { error: "Latitude hors limites : entre -90 et 90." };
+  if (lon < -180 || lon > 180) return { error: "Longitude hors limites : entre -180 et 180." };
+  return { lat, lon, name: m[1].replace(/[\s:,;-]+$/, "").trim().slice(0, 60) };
+}
 const JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
 
 /** Code météo WMO → libellé et famille d'icône. */
@@ -172,18 +184,40 @@ export function initWeather() {
   }
 
   // ---------- Choix d'une ville ----------
+  /** Retient un lieu saisi par ses coordonnées (mémorisé et chiffré par le coffre comme « meteo-lieu »). */
+  async function useCoords(c, close) {
+    const lat = +c.lat.toFixed(4), lon = +c.lon.toFixed(4);
+    place = { lat, lon, name: c.name || (lat + ", " + lon), auto: false, manual: true, at: Date.now() };
+    prefs.set("meteo-lieu", JSON.stringify(place)); close(); refresh(true);
+    if (!c.name) { const n = await cityName(lat, lon).catch(() => ""); if (n && n !== "Ma position" && place && place.lat === lat && place.lon === lon) { place.name = n; prefs.set("meteo-lieu", JSON.stringify(place)); render(); } }
+  }
   function openPicker(box) {
     if (!box) return;
     box.innerHTML = ""; box.classList.add("open");
     const f = document.createElement("form"); f.className = "addrow"; f.autocomplete = "off";
-    const inp = document.createElement("input"); inp.className = "inl"; inp.type = "search"; inp.placeholder = "Ville, ex. Bordeaux"; inp.setAttribute("aria-label", "Ville");
+    const inp = document.createElement("input"); inp.className = "inl"; inp.type = "search"; inp.placeholder = "Ville, ou coordonnées : 48.85, 2.35"; inp.setAttribute("aria-label", "Ville");
     const ul = document.createElement("div"); ul.className = "wres";
     const mine = document.createElement("button"); mine.type = "button"; mine.className = "btn"; mine.textContent = "📍 Ma position";
     mine.addEventListener("click", () => { close(); useMyPosition(true); });
-    f.append(inp); box.append(f, ul, mine);
+    const cf = document.createElement("form"); cf.className = "addrow wcoord"; cf.autocomplete = "off";
+    const mk = (ph, lab) => { const i = document.createElement("input"); i.className = "inl"; i.type = "text"; i.inputMode = "decimal"; i.placeholder = ph; i.setAttribute("aria-label", lab); return i; };
+    const la = mk("Latitude (48.85)", "Latitude"), lo = mk("Longitude (2.35)", "Longitude"), nm = mk("Nom (facultatif)", "Nom du lieu"); nm.inputMode = "text";
+    const go = document.createElement("button"); go.type = "submit"; go.className = "btn"; go.textContent = "Utiliser ces coordonnées";
+    const cm = document.createElement("p"); cm.className = "wcmsg"; cm.setAttribute("role", "alert");
+    cf.append(la, lo, nm, go, cm);
+    [la, lo, nm].forEach((x) => x.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Escape") close(); }));
+    cf.addEventListener("submit", (e) => {
+      e.preventDefault(); const r = parseCoords(la.value + " ; " + lo.value);
+      if (!r) { cm.textContent = "Entre deux nombres, par exemple 48.85 et 2.35."; return; }
+      if (r.error) { cm.textContent = r.error; return; }
+      useCoords({ lat: r.lat, lon: r.lon, name: nm.value.trim().slice(0, 60) }, close);
+    });
+    f.append(inp); box.append(f, ul, cf, mine);
     const close = () => { box.innerHTML = ""; box.classList.remove("open"); if (wxm) wxm.classList.remove("pinned"); };
     f.addEventListener("submit", async (e) => {
       e.preventDefault(); const v = inp.value.trim(); if (!v) return;
+      const pc = parseCoords(v);
+      if (pc) { if (pc.error) { ul.textContent = pc.error; return; } useCoords(pc, close); return; }
       ul.textContent = "Recherche…";
       try {
         const r = await getJSON(`${GEO}?name=${encodeURIComponent(v)}&count=6&language=fr&format=json`);

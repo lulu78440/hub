@@ -1,6 +1,6 @@
 {
  "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
- "releve": "2026-10-24T11:45:00+02:00",
+ "releve": "2026-10-24T15:30:00+02:00",
  "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
  "phases": [
   {
@@ -39,7 +39,12 @@
     "p2-meteo",
     "p2-drag",
     "p2-export",
-    "p2-sunday"
+    "p2-sunday",
+    "p2-lock",
+    "p2-coffre",
+    "p2-geo",
+    "p2-focus",
+    "p2-plan2"
    ]
   },
   {
@@ -103,16 +108,23 @@
   "p1-offline",
   "p1-pc",
   "p1-search",
+  "p2-coffre",
   "p2-drag",
   "p2-export",
   "p2-fav",
+  "p2-focus",
+  "p2-lock",
+  "p2-plan2",
+  "p2-lock",
   "p2-meteo",
   "p2-remind",
   "p2-sunday",
   "p2-week",
   "p3-down",
   "p3-feeds",
-  "p3-news"
+  "p3-media",
+  "p3-news",
+  "p3-sync"
  ],
  "prochaine": {
   "id": "p3-media",
@@ -131,8 +143,29 @@
   "p6-orbe",
   "p7-1",
   "p7-2",
-  "p7-voix"
+  "p7-voix",
+  "p2-lock",
+  "p2-coffre",
+  "p2-geo",
+  "p2-focus",
+  "p2-plan2"
  ],
- "maj": "2026-10-24T12:40:00+02:00",
- "par": "Claude"
+ "maj": "2026-10-24T16:00:00+02:00",
+ "par": "Claude",
+ "titres": {
+  "p2-focus": "Ramener vers moi",
+  "p2-plan2": "Plan 2 plus vaste",
+  "p3-media": "Radio, playlist et MP3",
+  "p3-sync": "Synchro PC / téléphone",
+  "p4-ok": "Surprises",
+  "p4-perf": "Fluidité avec les surprises",
+  "p5-read": "Mails : lecture",
+  "p5-rules": "Mails : règles",
+  "p6-orbe": "Orbe de l'assistant",
+  "p6-ent-vis": "Entité : apparence",
+  "p6-ent-ia": "Entité : intelligence",
+  "p7-1": "Rituels",
+  "p7-2": "Radar des dates",
+  "p7-voix": "Recherche vocale"
+ }
 }

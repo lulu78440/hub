@@ -91,6 +91,7 @@ async function start() {
   if (!state.lite) initMyPC({ plans });
   const images = initImages({ world: $("world"), plans, force, wins });
   initProgress();
+  document.addEventListener("hub:focus-win", (e) => { const w = wins.elById(e.detail); if (w && !state.lite) wins.focus(w); });
   const backup = initBackup(data);
   initNews();
   initMedia();

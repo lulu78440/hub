@@ -1,0 +1,273 @@
+<title>Maquette Ramener vers moi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : une scène de fenêtres du hub, comme au plan 1, avec la fenêtre « ramenée vers moi » au centre et un seul voile flou derrière. */
+:root {
+  --void: #050b14;
+  --panel: #0a1626;
+  --panel-2: #0d1d31;
+  --line: #16314a;
+  --ink: #d7ecf7;
+  --dim: #8aa5b8;
+  --cyan: #39d9f2;
+  --violet: #9b72ff;
+  --amber: #f2b63b;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--void);
+  background-image: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(57,217,242,.10), transparent 70%);
+  color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 22px 44px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 18px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); margin: 0 0 6px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(26px, 5.5vw, 34px); line-height: 1.1; margin: 0 0 8px; text-wrap: balance; }
+.lead { margin: 0; color: var(--dim); max-width: 64ch; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { background: transparent; color: var(--dim); border: 0; padding: 7px 12px; font: inherit; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--cyan); color: var(--void); font-weight: 500; }
+.seg button:focus-visible, .chk input:focus-visible, .mbtn:focus-visible, .sheetx:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.chk { display: inline-flex; gap: 7px; align-items: center; cursor: pointer; }
+.hint { color: var(--dim); font-size: 13px; font-family: var(--body); }
+
+/* Scène */
+.stage-box { display: grid; justify-items: center; }
+.stage {
+  position: relative; width: 100%; height: 470px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px;
+  background: radial-gradient(ellipse 50% 60% at 50% 55%, rgba(155,114,255,.16), transparent 70%), #07101c;
+  isolation: isolate;
+}
+.core { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #b9f3ff, var(--cyan) 35%, #1a6f86 70%, transparent 72%); box-shadow: 0 0 60px rgba(57,217,242,.5); opacity: .85; }
+.win {
+  position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 8px;
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden; transform-origin: center;
+  transition: translate .46s cubic-bezier(.2,.8,.2,1), scale .46s cubic-bezier(.2,.8,.2,1), box-shadow .46s, border-color .3s;
+  z-index: 1;
+}
+.win .tb { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); padding: 7px 10px; border-bottom: 1px solid var(--line); cursor: grab; user-select: none; display: flex; justify-content: space-between; }
+.win .tb i { font-style: normal; color: var(--dim); }
+.win .bd { padding: 10px; font-size: 13px; color: var(--ink); display: grid; gap: 6px; align-content: start; cursor: default; user-select: none; touch-action: pan-y; }
+.win .bd span { color: var(--dim); }
+.row { display: flex; gap: 8px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--cyan); flex: none; }
+.dot.on { background: var(--cyan); }
+.bar2 { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar2 b { display: block; height: 100%; width: 62%; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+.big { font-family: var(--display); font-size: 30px; line-height: 1; }
+
+/* Voile : un seul calque flouté et assombri, au lieu de flouter chaque fenêtre */
+.veil { position: absolute; inset: 0; z-index: 10; opacity: 0; pointer-events: none;
+  background: rgba(2,6,13,.45); -webkit-backdrop-filter: blur(3.5px) saturate(.8); backdrop-filter: blur(3.5px) saturate(.8);
+  transition: opacity .4s ease; }
+.stage.has-focus .veil { opacity: 1; pointer-events: auto; }
+.stage.has-focus .win:not(.on) { scale: .965; }
+.win.on { z-index: 20; border-color: var(--cyan); box-shadow: 0 30px 80px rgba(0,0,0,.65), 0 0 0 1px rgba(57,217,242,.35), 0 0 50px rgba(57,217,242,.18); }
+.stage.rm .win, .stage.rm .veil { transition: none; }
+.stage.rm .win.on { box-shadow: 0 0 0 2px var(--cyan); }
+
+/* Anneau de maintien du clic */
+.ring { position: absolute; z-index: 30; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: conic-gradient(var(--cyan) calc(var(--p, 0) * 1turn), rgba(57,217,242,.15) 0);
+  -webkit-mask: radial-gradient(circle, transparent 13px, #000 14px); mask: radial-gradient(circle, transparent 13px, #000 14px); }
+.ring.on { opacity: 1; }
+
+/* Menu clic droit */
+.menu { position: absolute; z-index: 40; min-width: 190px; background: #08121f; border: 1px solid var(--cyan); border-radius: 6px; padding: 4px; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+.menu .h { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); padding: 5px 8px; }
+.mbtn { display: block; width: 100%; text-align: left; background: transparent; border: 0; color: var(--ink); padding: 7px 8px; font: inherit; font-size: 13px; border-radius: 4px; cursor: pointer; }
+.mbtn:hover, .mbtn:focus-visible { background: rgba(57,217,242,.14); }
+.mbtn.mute { color: var(--dim); cursor: default; }
+
+/* Téléphone */
+.stage.mobile { width: 360px; max-width: 100%; height: 560px; overflow-y: auto; overflow-x: hidden; }
+.stage.mobile .core { display: none; }
+.stage.mobile .win { position: relative; left: auto; top: auto; width: auto; height: auto; margin: 10px 12px; min-height: 120px; }
+.stage.mobile.has-focus { overflow: hidden; }
+.stage.mobile .veil { position: sticky; top: 0; height: 100%; margin-bottom: -100%; -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(2,6,13,.7); }
+.stage.mobile.has-focus .win:not(.on) { scale: 1; }
+.sheet { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 30; max-height: 78%; background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--cyan); border-radius: 12px;
+  box-shadow: 0 -10px 50px rgba(0,0,0,.6); transform: translateY(24px); opacity: 0; pointer-events: none; transition: transform .28s ease, opacity .22s ease; display: grid; grid-template-rows: auto 1fr; overflow: hidden; }
+.sheet.on { transform: none; opacity: 1; pointer-events: auto; }
+.stage.rm .sheet { transition: none; }
+.sheet .bd { padding: 14px; font-size: 15px; overflow: auto; }
+.sheet .tb { cursor: default; }
+.sheetx { background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 5px 9px; font-family: var(--mono); font-size: 11px; cursor: pointer; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--panel); display: grid; gap: 8px; align-content: start; }
+.card h2 { font-family: var(--display); font-weight: 600; font-size: 17px; margin: 0; }
+.card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--ink); font-size: 14px; }
+.card code { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
+@media (max-width: 640px) { .stage:not(.mobile) { height: 380px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Hub · phase 2 · maquette</p>
+    <h1>Ramener vers moi</h1>
+    <p class="lead">Une fenêtre du hub avance vers toi, grandit, et le reste recule dans un flou léger. Essaie l'effet ci-dessous : clic droit sur une fenêtre, ou maintiens le clic gauche sur son contenu.</p>
+  </header>
+
+  <div class="bar" role="group" aria-label="Réglages de la maquette">
+    <span class="seg" role="group" aria-label="Appareil">
+      <button type="button" id="m-pc" aria-pressed="true">PC</button>
+      <button type="button" id="m-mob" aria-pressed="false">Téléphone</button>
+    </span>
+    <label class="chk" for="rm"><input type="checkbox" id="rm"> Mouvement réduit</label>
+    <span class="hint" id="hint">Sortie : Échap, clic sur le fond flouté, ou clic droit.</span>
+  </div>
+
+  <div class="stage-box">
+    <div class="stage" id="stage">
+      <div class="core" aria-hidden="true"></div>
+
+      <section class="win" style="--x:3%;--y:6%;--w:25%;--h:40%" data-name="Notes">
+        <div class="tb"><span>Notes</span><i>3</i></div>
+        <div class="bd"><div>Appeler le garage</div><div>Idée : mixeur son</div><div>Clé de secours : papier</div><span>+ nouvelle note</span></div>
+      </section>
+      <section class="win" style="--x:3%;--y:52%;--w:25%;--h:40%" data-name="Tâches">
+        <div class="tb"><span>Tâches</span><i>2 / 5</i></div>
+        <div class="bd"><div class="row"><i class="dot on"></i>Tester la synchro</div><div class="row"><i class="dot"></i>Valider p2-focus</div><div class="row"><i class="dot"></i>Radios</div><div class="bar2"><b></b></div></div>
+      </section>
+      <section class="win" style="--x:72%;--y:6%;--w:25%;--h:30%" data-name="Météo">
+        <div class="tb"><span>Météo</span><i>Paris</i></div>
+        <div class="bd"><div class="big">12°</div><div>Peu nuageux</div><span>Coucher 18 h 40</span></div>
+      </section>
+      <section class="win" style="--x:72%;--y:42%;--w:25%;--h:50%" data-name="Agenda">
+        <div class="tb"><span>Agenda</span><i>sam. 24</i></div>
+        <div class="bd"><div class="row"><i class="dot on"></i>14 h 30 · Dentiste</div><div class="row"><i class="dot"></i>16 h · Courses</div><div class="row"><i class="dot"></i>20 h 30 · Appel</div><span>Demain : 2 événements</span></div>
+      </section>
+      <section class="win" style="--x:33%;--y:70%;--w:34%;--h:24%" data-name="Musique">
+        <div class="tb"><span>Musique</span><i>direct</i></div>
+        <div class="bd"><div>France Inter</div><div class="bar2"><b style="width:40%"></b></div><span>vol. 60 %</span></div>
+      </section>
+
+      <div class="veil" id="veil"></div>
+      <div class="ring" id="ring"></div>
+      <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Fenêtre ramenée"></div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Ce que fait l'effet</h2>
+      <ul>
+        <li>La fenêtre glisse au centre et grandit jusqu'à 1,45 fois, sans dépasser 62 % de la largeur ni 86 % de la hauteur.</li>
+        <li>Le reste du hub s'assombrit de 45 %, se floute de 3,5 px et recule un peu.</li>
+        <li>Renvoyer en arrière rejoue l'animation à l'envers, vers la place d'origine.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Déclencheurs et sorties</h2>
+      <ul>
+        <li>Clic droit sur une fenêtre : <code>Ramener vers moi</code>.</li>
+        <li>Maintien du clic gauche 0,55 s sur le <b>contenu</b> : l'anneau se remplit puis la fenêtre avance. La barre de titre reste réservée au déplacement.</li>
+        <li>Sortie : clic droit <code>Renvoyer en arrière</code>, Échap, ou clic sur le fond flouté.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>PC, mobile, mouvement réduit</h2>
+      <ul>
+        <li>PC : un seul voile flou pour tout le fond, donc fluide même avec beaucoup de fenêtres.</li>
+        <li>Téléphone : la fenêtre monte en feuille pleine largeur, fond assombri sans flou. Appui long sur le titre : menu du hub existant.</li>
+        <li>Mouvement réduit : la fenêtre passe au premier plan sans zoom animé, avec un simple contour.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $("stage"), veil = $("veil"), ring = $("ring"), sheet = $("sheet"), menu = null, cur = null, timer = 0, hold = null;
+  var HOLD = 550, MOVE = 6;
+  var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+  var rmBox = $("rm"); rmBox.checked = mq.matches; sync();
+  function sync() { stage.classList.toggle("rm", rmBox.checked); }
+  rmBox.addEventListener("change", sync);
+  var isMob = function () { return stage.classList.contains("mobile"); };
+
+  function setMode(mob) {
+    release(true);
+    stage.classList.toggle("mobile", mob);
+    $("m-pc").setAttribute("aria-pressed", String(!mob)); $("m-mob").setAttribute("aria-pressed", String(mob));
+    $("hint").textContent = mob ? "Téléphone : appui long sur le contenu, ou menu du titre. Sortie : toucher le fond, ou Fermer." : "Sortie : Échap, clic sur le fond flouté, ou clic droit.";
+  }
+  $("m-pc").addEventListener("click", function () { setMode(false); });
+  $("m-mob").addEventListener("click", function () { setMode(true); });
+
+  function focusWin(w) {
+    if (cur === w) return;
+    if (cur) release(true);
+    closeMenu(); cur = w;
+    stage.classList.add("has-focus"); w.classList.add("on");
+    if (isMob()) {
+      sheet.innerHTML = "";
+      var tb = w.querySelector(".tb").cloneNode(true), bd = w.querySelector(".bd").cloneNode(true);
+      var x = document.createElement("button"); x.type = "button"; x.className = "sheetx"; x.textContent = "Fermer"; x.addEventListener("click", function () { release(); });
+      tb.lastElementChild.replaceWith(x); sheet.append(tb, bd); sheet.classList.add("on"); x.focus({ preventScroll: true });
+      return;
+    }
+    var s = stage.getBoundingClientRect(), r = w.getBoundingClientRect();
+    var k = Math.max(1.12, Math.min(1.45, s.width * 0.62 / r.width, s.height * 0.86 / r.height));
+    var dx = (s.left + s.width / 2) - (r.left + r.width / 2), dy = (s.top + s.height / 2) - (r.top + r.height / 2);
+    w.style.translate = dx + "px " + dy + "px"; w.style.scale = String(k);
+  }
+  function release(now) {
+    var w = cur; if (!w) return; cur = null;
+    stage.classList.remove("has-focus"); sheet.classList.remove("on");
+    w.style.translate = ""; w.style.scale = "";
+    if (now) { w.classList.remove("on"); return; }
+    var done = function () { w.classList.remove("on"); w.removeEventListener("transitionend", done); };
+    if (stage.classList.contains("rm") || isMob()) w.classList.remove("on"); else { w.addEventListener("transitionend", done); setTimeout(done, 520); }
+  }
+
+  // Menu clic droit
+  function closeMenu() { if (menu) { menu.remove(); menu = null; } }
+  function openMenu(e, w) {
+    closeMenu(); var r = stage.getBoundingClientRect();
+    menu = document.createElement("div"); menu.className = "menu"; menu.setAttribute("role", "menu");
+    var h = document.createElement("div"); h.className = "h"; h.textContent = w.dataset.name; menu.append(h);
+    var add = function (label, fn, mute) { var b = document.createElement("button"); b.type = "button"; b.className = "mbtn" + (mute ? " mute" : ""); b.setAttribute("role", "menuitem"); b.textContent = label; if (!mute) b.addEventListener("click", function () { closeMenu(); fn(); }); menu.append(b); return b; };
+    if (cur === w) add("Renvoyer en arrière", function () { release(); }); else add("Ramener vers moi", function () { focusWin(w); });
+    add("Figer la fenêtre", function () {}, true); add("Masquer", function () {}, true);
+    menu.style.left = Math.min(e.clientX - r.left, r.width - 200) + "px"; menu.style.top = Math.min(e.clientY - r.top, r.height - 130) + "px";
+    stage.append(menu); menu.querySelector(".mbtn").focus({ preventScroll: true });
+  }
+  stage.addEventListener("contextmenu", function (e) {
+    var w = e.target.closest(".win"); if (!w && e.target.closest(".sheet")) { e.preventDefault(); release(); return; }
+    if (!w) { if (cur) { e.preventDefault(); release(); } return; }
+    e.preventDefault();
+    if (cur === w && !menu) { release(); return; }
+    openMenu(e, w);
+  });
+  document.addEventListener("pointerdown", function (e) { if (menu && !menu.contains(e.target)) closeMenu(); }, true);
+  veil.addEventListener("click", function () { release(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (menu) closeMenu(); else release(); } });
+
+  // Maintien du clic gauche sur le contenu (pas sur la barre de titre)
+  function cancelHold() { clearTimeout(timer); hold = null; ring.classList.remove("on"); ring.style.setProperty("--p", 0); cancelAnimationFrame(cancelHold.raf); }
+  stage.addEventListener("pointerdown", function (e) {
+    if (e.button !== 0 || e.target.closest(".tb") || e.target.closest(".menu")) return;
+    var w = e.target.closest(".win"); if (!w || cur === w) return;
+    var r = stage.getBoundingClientRect(), t0 = performance.now();
+    hold = { x: e.clientX, y: e.clientY, w: w };
+    ring.style.left = (e.clientX - r.left) + "px"; ring.style.top = (e.clientY - r.top) + "px"; ring.classList.add("on");
+    (function tick() { if (!hold) return; var p = Math.min(1, (performance.now() - t0) / HOLD); ring.style.setProperty("--p", p); if (p < 1) cancelHold.raf = requestAnimationFrame(tick); })();
+    timer = setTimeout(function () { var ww = hold && hold.w; cancelHold(); if (ww) focusWin(ww); }, HOLD);
+  });
+  stage.addEventListener("pointermove", function (e) { if (hold && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > MOVE) cancelHold(); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) { stage.addEventListener(t, cancelHold); });
+})();
+</script>

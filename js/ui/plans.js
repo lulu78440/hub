@@ -4,7 +4,7 @@ import { state } from "../state.js";
 import { onBackground } from "./dom.js";
 import { toast } from "./toast.js";
 
-const PLANS = [1, 0.55, 0.27], ZMIN = 0.27;
+const PLANS = [1, 0.5, 0.27], ZMIN = 0.27;     // plan 2 à 50 % : environ 4 fois la surface visible du plan 1
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 const $ = (id) => document.getElementById(id);
 const nearestPlan = (z) => PLANS.reduce((a, b) => (Math.abs(b - z) < Math.abs(a - z) ? b : a));
@@ -58,7 +58,8 @@ export function createPlans({ world, anchor, desk }) {
     const d = clamp((0.5 - zoom) / 0.2, 0, 1);
     const cine = clamp((0.92 - zoom) / 0.3, 0, 1) * (1 - d);
     state.cine = cine;
-    const tf = `perspective(1500px) rotateX(${(cine * 7).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
+    // Grand angle au plan 2 : perspective plus serrée, inclinaison plus marquée, caméra un peu remontée
+    const tf = `perspective(${(1500 - 420 * cine).toFixed(0)}px) translateY(${(-72 * cine).toFixed(1)}px) rotateX(${(cine * 11).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
     if (tf !== lastT) {
       lastT = tf; world.style.transform = tf;
       const b = document.body;

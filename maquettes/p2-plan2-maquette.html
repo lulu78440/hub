@@ -1,0 +1,202 @@
+<title>Maquette Plan 2 vaste</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : la caméra du hub vue de face. Le même monde est montré sous trois cadrages : plan 1, plan 2 actuel, plan 2 vaste (grand angle, profondeur de champ). */
+:root {
+  --void: #050b14;
+  --panel: #0a1626;
+  --panel-2: #0d1d31;
+  --line: #16314a;
+  --ink: #d7ecf7;
+  --dim: #8aa5b8;
+  --cyan: #39d9f2;
+  --violet: #9b72ff;
+  --amber: #f2b63b;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--void); background-image: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(57,217,242,.10), transparent 70%); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 22px 44px; }
+.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 16px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); margin: 0 0 6px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(26px, 5.5vw, 34px); line-height: 1.1; margin: 0 0 8px; text-wrap: balance; }
+.lead { margin: 0; color: var(--dim); max-width: 66ch; }
+.ctl { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { background: transparent; color: var(--dim); border: 0; padding: 8px 13px; font: inherit; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--cyan); color: var(--void); font-weight: 500; }
+.seg button:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.rg { display: inline-flex; gap: 8px; align-items: center; }
+.rg input { width: 130px; accent-color: var(--cyan); }
+.rg output { min-width: 3ch; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* Cadre : l'écran du PC */
+.screen { position: relative; width: 100%; aspect-ratio: 14 / 9; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: #040a13; isolation: isolate; }
+.cam { position: absolute; left: 0; top: 0; width: 1400px; height: 900px; transform-origin: 0 0; }
+.world { position: absolute; inset: 0; transform-origin: 50% 50%; transition: transform .9s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+.world.static { transition: none; }
+.gridfloor { position: absolute; left: -1400px; top: -900px; width: 4200px; height: 2700px; background:
+  linear-gradient(rgba(57,217,242,.07) 1px, transparent 1px) 0 0 / 100px 100px,
+  linear-gradient(90deg, rgba(57,217,242,.07) 1px, transparent 1px) 0 0 / 100px 100px; }
+.room { position: absolute; left: -700px; top: -450px; width: 2800px; height: 1800px; border: 2px dashed rgba(155,114,255,.0); border-radius: 18px; transition: border-color .6s, background .6s; }
+.world[data-mode="after"] .room { border-color: rgba(155,114,255,.55); background: rgba(155,114,255,.045); }
+.plan1 { position: absolute; left: 0; top: 0; width: 1400px; height: 900px; border: 2px solid rgba(57,217,242,.35); border-radius: 6px; }
+.plan1::after { content: "PLAN 1 · ÉCRAN DU HUB"; position: absolute; left: 12px; bottom: -26px; font-family: var(--mono); font-size: 14px; letter-spacing: .14em; color: var(--cyan); opacity: 0; transition: opacity .5s; }
+.world[data-mode="before"] .plan1::after, .world[data-mode="after"] .plan1::after { opacity: .9; }
+
+.win { position: absolute; background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; transition: filter .6s, opacity .6s; }
+.win .tb { font-family: var(--mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid var(--line); color: var(--cyan); }
+.win.v .tb { color: var(--violet); }
+.win.a .tb { color: var(--amber); }
+.win .bd { padding: 12px; font-size: 14px; color: var(--dim); display: grid; gap: 7px; align-content: start; }
+.win .bd i { display: block; height: 8px; border-radius: 4px; background: var(--line); }
+.win .bd i:nth-child(2) { width: 70%; } .win .bd i:nth-child(3) { width: 85%; } .win .bd i:nth-child(4) { width: 50%; }
+.free { position: absolute; border: 2px dashed rgba(155,114,255,.5); border-radius: 8px; color: rgba(155,114,255,.9); font-family: var(--mono); font-size: 14px; letter-spacing: .12em; display: grid; place-items: center; opacity: 0; transition: opacity .6s; }
+.world[data-mode="after"] .free { opacity: 1; }
+.orb { position: absolute; left: 700px; top: 400px; width: 330px; height: 330px; margin: -165px 0 0 -165px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #c7f6ff, var(--cyan) 30%, #146a85 62%, transparent 68%); box-shadow: 0 0 110px rgba(57,217,242,.5); }
+.search { position: absolute; left: 400px; top: 760px; width: 600px; height: 58px; border: 1px solid var(--cyan); border-radius: 29px; background: rgba(8,20,34,.9); display: flex; align-items: center; padding-left: 22px; color: var(--dim); font-size: 17px; }
+
+/* Au plan 2 : les fenêtres du plan 1 reculent (comme aujourd'hui), celles du plan 2 sont au premier plan */
+.world:not([data-mode="plan1"]) .p1 { filter: blur(2.4px) brightness(.55) saturate(.6); opacity: .8; }
+.world:not([data-mode="plan1"]) .orb, .world:not([data-mode="plan1"]) .search { filter: blur(2px) brightness(.6); }
+
+/* Profondeur de champ : bandes floues en haut (arrière-plan) et en bas (premier plan) */
+.dof { position: absolute; left: 0; right: 0; z-index: 5; pointer-events: none; opacity: 0; transition: opacity .6s;
+  -webkit-backdrop-filter: blur(var(--bl, 0px)); backdrop-filter: blur(var(--bl, 0px)); }
+.dof.t { top: 0; height: 30%; -webkit-mask-image: linear-gradient(to bottom, #000 20%, transparent); mask-image: linear-gradient(to bottom, #000 20%, transparent); }
+.dof.b { bottom: 0; height: 26%; -webkit-mask-image: linear-gradient(to top, #000 25%, transparent); mask-image: linear-gradient(to top, #000 25%, transparent); }
+.screen[data-mode="after"] .dof { opacity: 1; }
+.tag { position: absolute; z-index: 6; left: 12px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); background: rgba(5,11,20,.7); padding: 4px 8px; border-radius: 4px; }
+.zone { position: absolute; z-index: 6; right: 12px; top: 10px; font-family: var(--mono); font-size: 11px; color: var(--dim); background: rgba(5,11,20,.7); padding: 4px 8px; border-radius: 4px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--panel); display: grid; gap: 8px; align-content: start; }
+.card h2 { font-family: var(--display); font-weight: 600; font-size: 17px; margin: 0; }
+.card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.card code { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+td, th { text-align: left; padding: 5px 8px; border-top: 1px solid var(--line); }
+th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); border-top: 0; }
+.tw { overflow-x: auto; }
+@media (prefers-reduced-motion: reduce) { .world, .dof, .free, .room { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Hub · phase 2 · maquette</p>
+    <h1>Plan 2 beaucoup plus vaste</h1>
+    <p class="lead">Même monde, trois cadrages de caméra. Passe de « Plan 2 avant » à « Plan 2 après » pour comparer : surface environ quatre fois celle du plan 1, grand angle, premier plan et arrière-plan flous, zone de travail nette.</p>
+  </header>
+
+  <div class="ctl">
+    <span class="seg" role="group" aria-label="Cadrage">
+      <button type="button" id="b-plan1" aria-pressed="false">Plan 1</button>
+      <button type="button" id="b-before" aria-pressed="false">Plan 2 avant</button>
+      <button type="button" id="b-after" aria-pressed="true">Plan 2 après</button>
+    </span>
+    <label class="rg" for="angle">Grand angle <input type="range" id="angle" min="0" max="100" value="60"><output id="angle-o">60</output></label>
+    <label class="rg" for="dof">Profondeur de champ <input type="range" id="dof" min="0" max="100" value="55"><output id="dof-o">55</output></label>
+  </div>
+
+  <div class="screen" id="screen" data-mode="after">
+    <span class="tag" id="tag">Plan 2 après</span><span class="zone" id="zone">surface visible</span>
+    <div class="cam" id="cam">
+      <div class="world" id="world" data-mode="after">
+        <div class="gridfloor"></div>
+        <div class="room"></div>
+        <div class="plan1"></div>
+
+        <!-- Plan 1 : l'écran du hub -->
+        <div class="win p1" style="left:16px;top:124px;width:320px;height:420px"><div class="tb">Mon PC</div><div class="bd"><i></i><i></i><i></i><i></i></div></div>
+        <div class="win p1 a" style="left:16px;top:560px;width:320px;height:200px"><div class="tb">Veille</div><div class="bd"><i></i><i></i></div></div>
+        <div class="win p1 a" style="left:1030px;top:124px;width:354px;height:280px"><div class="tb">Vidéo</div><div class="bd"><i></i><i></i></div></div>
+        <div class="win p1 v" style="left:1030px;top:420px;width:354px;height:150px"><div class="tb">Page en direct</div><div class="bd"><i></i><i></i></div></div>
+        <div class="win p1 a" style="left:1030px;top:586px;width:354px;height:200px"><div class="tb">Tâches</div><div class="bd"><i></i><i></i><i></i></div></div>
+        <div class="orb"></div>
+        <div class="search">Rechercher, ou !y pour YouTube…</div>
+
+        <!-- Plan 2 : fenêtres rangées hors de l'écran du hub (places actuelles, relatives au plan 1) -->
+        <div class="win" style="left:-430px;top:124px;width:380px;height:250px"><div class="tb">Musique</div><div class="bd"><i></i><i></i><i></i></div></div>
+        <div class="win v" style="left:-430px;top:394px;width:380px;height:340px"><div class="tb">Favoris</div><div class="bd"><i></i><i></i><i></i><i></i></div></div>
+        <div class="win v" style="left:-430px;top:754px;width:380px;height:330px"><div class="tb">Rituels</div><div class="bd"><i></i><i></i><i></i></div></div>
+        <div class="win" style="left:-430px;top:1114px;width:380px;height:330px"><div class="tb">Progression</div><div class="bd"><i></i><i></i></div></div>
+        <div class="win a" style="left:1450px;top:124px;width:440px;height:300px"><div class="tb">Notes</div><div class="bd"><i></i><i></i><i></i></div></div>
+        <div class="win" style="left:1450px;top:444px;width:440px;height:280px"><div class="tb">Mails</div><div class="bd"><i></i><i></i><i></i></div></div>
+        <div class="win v" style="left:1450px;top:744px;width:440px;height:440px"><div class="tb">Radar</div><div class="bd"><i></i><i></i></div></div>
+
+        <!-- Place gagnée par le plan 2 vaste -->
+        <div class="free" style="left:80px;top:-420px;width:560px;height:340px">Place libre</div>
+        <div class="free" style="left:700px;top:-420px;width:620px;height:340px">Place libre</div>
+        <div class="free" style="left:80px;top:980px;width:560px;height:340px">Place libre</div>
+        <div class="free" style="left:700px;top:980px;width:620px;height:340px">Place libre</div>
+        <div class="free" style="left:-430px;top:-420px;width:380px;height:340px">Place libre</div>
+        <div class="free" style="left:1450px;top:-420px;width:440px;height:340px">Place libre</div>
+      </div>
+    </div>
+    <div class="dof t"></div><div class="dof b"></div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Ce qui change</h2>
+      <ul>
+        <li><b>Surface :</b> le plan 2 montre environ 2 fois la largeur et 2 fois la hauteur de l'écran du hub, soit plus de 4 fois la surface du plan 1, avec des places libres pour ranger de nouvelles fenêtres. Les fenêtres existantes gardent leur place relative.</li>
+        <li><b>Grand angle :</b> caméra plus large avec une perspective plus marquée (inclinaison et fuite des bords).</li>
+        <li><b>Profondeur de champ :</b> bandes floues en haut et en bas de l'écran, zone centrale nette.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Réglages proposés</h2>
+      <div class="tw"><table>
+        <thead><tr><th></th><th>Avant</th><th>Après</th></tr></thead>
+        <tbody>
+          <tr><td>Échelle</td><td>55 %</td><td>49 %</td></tr>
+          <tr><td>Perspective</td><td>1500 px</td><td>1080 px</td></tr>
+          <tr><td>Inclinaison</td><td>7°</td><td>11°</td></tr>
+          <tr><td>Flou haut et bas</td><td>aucun</td><td>jusqu'à 6 px</td></tr>
+        </tbody>
+      </table></div>
+      <p style="margin:0;color:var(--dim);font-size:13px">Valeurs au réglage par défaut des curseurs (60 et 55).</p>
+    </div>
+    <div class="card">
+      <h2>Inchangé</h2>
+      <ul>
+        <li>Molette, touches <code>1</code> <code>2</code> <code>3</code>, double-clic : mêmes plans.</li>
+        <li>Fluide sur PC : le flou est limité à deux bandes (un seul filtre chacune).</li>
+        <li>Mobile : l'équivalent simple actuel est conservé, sans perspective ni flou.</li>
+        <li>Mouvement réduit : cadrage immédiat, sans animation.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var screen = $("screen"), cam = $("cam"), world = $("world"), mode = "after";
+  var angle = $("angle"), dof = $("dof");
+  function fit() { var k = screen.clientWidth / 1400; cam.style.transform = "scale(" + k + ")"; }
+  fit(); addEventListener("resize", fit);
+  var rm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (rm) world.classList.add("static");
+  function apply() {
+    var a = +angle.value / 100, d = +dof.value / 100, t;
+    if (mode === "plan1") t = "perspective(1500px) rotateX(0deg) scale(1)";
+    else if (mode === "before") t = "perspective(1500px) rotateX(7deg) scale(.55)";
+    else t = "perspective(" + Math.round(1500 - 700 * a) + "px) translateY(" + Math.round(-120 * a) + "px) rotateX(" + (7 + 7 * a).toFixed(1) + "deg) scale(" + (.55 - .1 * a).toFixed(3) + ")";
+    world.style.transform = t; world.dataset.mode = mode; screen.dataset.mode = mode;
+    screen.style.setProperty("--bl", (d * 6).toFixed(1) + "px");
+    $("tag").textContent = mode === "plan1" ? "Plan 1" : mode === "before" ? "Plan 2 avant" : "Plan 2 après";
+    var sc = mode === "plan1" ? 1 : mode === "before" ? .55 : .55 - .1 * a;
+    $("zone").textContent = "surface visible ×" + (1 / (sc * sc)).toFixed(1).replace(".", ",");
+    $("angle-o").textContent = angle.value; $("dof-o").textContent = dof.value;
+    [["plan1", "b-plan1"], ["before", "b-before"], ["after", "b-after"]].forEach(function (p) { $(p[1]).setAttribute("aria-pressed", String(mode === p[0])); });
+  }
+  [["plan1", "b-plan1"], ["before", "b-before"], ["after", "b-after"]].forEach(function (p) { $(p[1]).addEventListener("click", function () { mode = p[0]; apply(); }); });
+  angle.addEventListener("input", apply); dof.addEventListener("input", apply);
+  apply();
+})();
+</script>
