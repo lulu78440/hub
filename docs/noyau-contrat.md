@@ -363,3 +363,29 @@ Tests sur PC (Brave) et Android.
 - Park et coll., « Generative Agents » (2023) : flux de mémoire, rappel par pertinence, importance, récence (agentpatterns.ai).
 - Synthèse « Episodic-to-semantic memory consolidation architectures for agents » (juillet 2026) : réflexion, sommeil, MemGPT, A-MEM.
 - Cheng et coll., « Sycophantic A.I. Decreases Prosocial Intentions and Promotes Dependence », *Science*, 26/03/2026.
+
+## Annexe A · Laboratoire du Noyau (ajout du 24/10, demande de Lucien, à valider)
+
+But : travailler sur l'IA **en parallèle du hub, comme dans un laboratoire indépendant**, pour l'améliorer et l'optimiser en permanence, sans jamais casser le hub ni toucher aux vraies données.
+
+### A.1 Principe
+- Le Noyau est construit en **modules indépendants du hub** : `js/noyau/` ne dépend du hub que par un seul adaptateur (`hote.js` : stockage, coffre, widgets, fenêtres). Le laboratoire remplace cet adaptateur par un hub simulé.
+- **Deux versions vivent côte à côte** : le Noyau **stable** (dans le hub, sur `main`) et le Noyau **de labo** (branche `noyau`, permanente). Une amélioration ne passe dans le hub qu'en version numérotée (`noyau-1.0`, `noyau-1.1`…), après le banc d'essai et la validation de Lucien.
+
+### A.2 La page du laboratoire (`labo.html`)
+Page à part du site (même adresse que le hub, `…/hub/labo.html`), au style Hologramme, PC d'abord :
+- **Bac à sable** : une copie chiffrée de la mémoire, prise à l'ouverture ; les outils agissent sur un hub simulé ; rien n'est écrit dans les vraies données. Mode « lecture réelle » possible (lecture seule).
+- **Banc d'essai** : les scénarios de la section 11 lancés d'un clic (sécurité et cerveau), résultat réussi ou raté pour chacun. Scénarios génériques dans le dépôt (`labo/scenarios.json`, sans donnée personnelle) ; scénarios personnels dans le Projet (privé), importés à la main.
+- **Comparateur** : la même question posée à deux cerveaux (version A et B) ou deux réglages ; Lucien choisit la meilleure réponse ; le choix est noté.
+- **Mesures** : requêtes consommées, temps de réponse, citations valides ou inventées, taux de « je ne sais pas », refus, notes de 1 à 5, coût par question. Tableau de l'évolution d'une version à l'autre.
+- **Rejeu** : rejouer des conversations passées avec un nouveau cerveau (coûte du quota : limité et annoncé).
+- **Inspecteur** : ce que le Noyau a reçu (extraits, état du monde) et renvoyé (`repondre`) pour chaque tour, pour comprendre une mauvaise réponse.
+
+### A.3 Quota séparé
+Le quota gratuit de Gemini est compté **par projet Google**. Conseil : une **deuxième clé**, créée dans un second projet AI Studio (gratuit, sans carte), réservée au laboratoire, gardée elle aussi par le coffre. Ainsi les essais ne vident jamais le quota du hub. Sans deuxième clé, le labo est plafonné à 15 requêtes par jour sur les 40.
+
+### A.4 Méthode de travail
+- Une discussion permanente **« Noyau · labo »** dans le Projet : Opus pour analyser et décider, Sonnet pour coder (règle du cahier).
+- Chaque amélioration suit le même cycle : **hypothèse → changement (cerveau ou module) → banc d'essai → comparaison → validation de Lucien → version**.
+- Cahier de laboratoire : `docs/noyau-labo.md` (public, sans donnée personnelle : versions, hypothèses, résultats chiffrés) ; versions du cerveau dans le Projet (`noyau/cerveau.md` et son historique).
+- Les mêmes permissions s'appliquent au labo : aucun INTERDIT n'y est levé, même pour un test (les tests d'interdits vérifient seulement le refus).
