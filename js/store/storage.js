@@ -151,12 +151,26 @@ export function readExport(text) {
   return { d, counts, date: d.exportedAt ? new Date(d.exportedAt) : null };
 }
 
+// Fichier abîmé ou trafiqué : les champs connus reprennent un type attendu (sinon les fenêtres plantent à l'affichage).
+const str = (v, d = "") => (typeof v === "string" ? v : v == null ? d : String(v));
+const opt = (v, re) => (typeof v === "string" && re.test(v) ? v : null);
+const DAY_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/, AT_RE = /^\d{4}-\d\d-\d\dT([01]\d|2[0-3]):[0-5]\d$/;
+const num = (v) => (Number.isFinite(+v) && v !== null && v !== "" ? +v : 0);
+function cleanItem(c, x) {
+  if (c === "notes") return { ...x, text: str(x.text), pinned: x.pinned === true, created: num(x.created), updated: num(x.updated) };
+  if (c === "tasks") return { ...x, text: str(x.text), done: x.done === true, prio: x.prio ? 1 : 0, due: opt(x.due, DAY_RE), remindAt: opt(x.remindAt, AT_RE), created: num(x.created), doneAt: x.doneAt == null ? null : num(x.doneAt) };
+  if (c === "events") { const date = opt(x.date, DAY_RE); return date ? { ...x, title: str(x.title), date, start: opt(x.start, HM_RE), end: opt(x.end, HM_RE), created: num(x.created) } : null; }
+  if (c === "favs") return typeof x.url === "string" ? { ...x, url: x.url, title: str(x.title, x.url), group: str(x.group, "Favoris"), created: num(x.created) } : null;
+  return x;
+}
+
 /** Remplace toutes les données de l'appareil par celles de l'export (déjà lu avec readExport).
  *  Tout est préparé (et chiffré) d'abord, puis écrit en UNE transaction : en cas d'échec, rien n'est remplacé. */
 export async function importAll(d) {
   const db = await open(), all = {};
   for (const c of COLLECTIONS) {
     let items = (Array.isArray(d.data[c]) ? d.data[c] : []).filter((x) => x && typeof x === "object" && typeof x.id === "string");
+    items = items.map((x) => cleanItem(c, x)).filter(Boolean);
     if (c === "images") items = (await Promise.all(items.map(async (im) => ({ ...im, blob: typeof im.blob === "string" && im.blob.startsWith("data:image/") ? await fromDataURL(im.blob) : null })))).filter((im) => im.blob);
     all[c] = items;
   }
