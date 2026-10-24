@@ -6,7 +6,7 @@ Reprise programmée : une seule en attente (voir fin de fichier).
 
 ## Cycle en cours
 
-Tour 2 · approfondissement (cycles 1 à 6 terminés)
+Mission terminée à 18 h 15 (cycles 1 à 6 + tour 2). Rien fusionné.
 
 ## Tests
 
@@ -47,8 +47,8 @@ Tour 2 · approfondissement (cycles 1 à 6 terminés)
 
 ## Prochaine action
 
-Tour 2 : onglet fermé pendant un changement de phrase (rotation de clé) ; import + synchro (B2) ; puis résumé final du rapport à 18 h 15.
+Attendre Lucien. Au prochain banc : trouver le test qui bloque le passage complet final (lancer `HUB_TRACE=1 python3 tools/tests/run.py` test par test), puis décisions B2, B9, B14 à B16.
 
 ## Reprise programmée
 
-Prochaine reprise : 17 h 15 (Paris).
+Aucune (annulée en fin de mission).

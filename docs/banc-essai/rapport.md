@@ -1,11 +1,25 @@
 # Banc d'essai · rapport
 
-(Résumé ajouté en fin de mission.)
+## Résumé (24/10/2026, 16 h 14 → 18 h 15)
+
+1. **Cycles réalisés** : 1 à 6 complets, puis un 2e tour d'approfondissement (imports, liens, coupures). Suite automatique : 33 tests, `python3 tools/tests/run.py` (mode d'emploi `tools/tests/README.md`). Dernier passage complet : 32/32 (après correction d'un test instable) ; après B17, les 18 tests d'import, sécurité et charge sont verts, mais le passage complet final s'est bloqué et a été arrêté à 25 min : test à identifier (`HUB_TRACE=1`).
+2. **Problèmes** : 17 au total · **1 critique** (B7) · **7 importants** (B3, B4, B5, B6, B8, B9, B14) · **9 mineurs** (B1, B2, B10 à B13, B15 à B17).
+3. **Corrigés sur `banc-essai`** (13, un commit par problème) : B1, B3 à B13, B17. **Décrits seulement** (4) : B2, B14, B15, B16.
+4. Le plus grave : un fichier HTML/SVG ouvert depuis **Mon PC** tournait avec les droits du hub (B7) ; liens `javascript:` venus d'un flux RSS ou d'un export trafiqué (B3, B4) ; météo piégeable par un export (B8) ; stockage plein = perte silencieuse (B6).
+5. **Décisions qui te reviennent** : B9 (désactiver le verrouillage efface la clé Gemini, à recoller) ; B2 (un import sur un appareil synchronisé se comporte comme une fusion) ; B14 (figer la version de WebLLM, origine partagée avec tes autres pages GitHub) ; B15 (CSP à tester sur Brave) ; B16.
+6. **À la fusion** : monter la version (sw.js et js/version.js, ex. 7.2.7), sinon les appareils gardent l'ancien code en cache. La correction de `tools/flux.py` (B3) n'agit qu'une fois sur main.
+7. **Ordre conseillé** : fusionner `banc-essai` dans main en premier (corrections indépendantes du Noyau, aucun fichier `js/noyau/` touché), version 7.2.7, recette rapide sur Brave et Android ; ensuite la branche `noyau`. Si tu préfères trier : B7, puis B8, B3, B4, B5, B6, puis le reste (commits séparés, `git cherry-pick` possible).
+8. Limites : Chromium sans carte graphique (pas Brave), images/s non représentatives ; Mon PC et les vraies connexions Google/Microsoft/GitHub non rejouées ; mémoire mesurée sur 3 min (stable), pas 30.
 
 ## Décisions prises en l'absence de Lucien
 
 - Tests en Chromium headless (Playwright) sur serveur local ; Brave non disponible dans l'espace de travail : comportements propres à Brave non vérifiés.
 - `docs/suivi.json` (relevé du Suivi) jamais modifié, conformément à la consigne.
+- Version du service worker non montée sur `banc-essai` (pour ne pas entrer en conflit avec main) : à faire au moment de la fusion.
+- B9 : la clé Gemini est retirée à la désactivation du verrouillage (cohérent avec « Gemini exige le verrouillage ») ; si tu préfères la garder chiffrée ailleurs, le commit se retire seul.
+- B2 : comportement actuel gardé (le plus prudent : aucune donnée perdue).
+- Contrastes : seuls les textes sur fond uni sont mesurés ; les titres sur fond en dégradé ne le sont pas.
+- Quelques messages de commit ont leurs lignes de signature collées au titre (envoi forcé interdit pour les corriger).
 
 ## Problèmes
 
