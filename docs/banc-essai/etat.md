@@ -6,7 +6,7 @@ Reprise programmée : une seule en attente (voir fin de fichier).
 
 ## Cycle en cours
 
-Cycle 2 · Fonctionnalités (cycle 1 terminé : 7/7)
+Cycle 3 · Sécurité (cycles 1 et 2 terminés : 11/11)
 
 ## Tests
 
@@ -19,7 +19,10 @@ Cycle 2 · Fonctionnalités (cycle 1 terminé : 7/7)
 | 1 | Coffre du Hub : ajout sans effacer, doublons ignorés, refus d'un export du hub | réussi | javascript: et http: refusés |
 | 1 | Rappel du dimanche (horloge simulée) | réussi | 7 cas d'horloge + « Plus tard » 3 h |
 | 1 | Synchro simulée deux appareils (fusion, suppressions, conflits) | réussi | GitHub simulé ; Gist secret, illisible ; voir B2 (import + synchro) |
-| 2 | Recette fonctionnelle PC + mobile, hors ligne, SW, deux onglets, console | à faire | |
+| 2 | Recette PC : plans 1-2-3, notes, tâches (! @demain 18h), favori, menu du fond, météo simulée, actu + veille + alerte de panne, rappel | réussi | 0 erreur console |
+| 2 | Recette mobile simulé (390×844, tactile) | réussi | pas de défilement horizontal |
+| 2 | Hors ligne + mise à jour du service worker | réussi | nouvelle version annoncée, ancien cache retiré, données gardées |
+| 2 | Deux onglets (ajout, suppression vus dans l'autre) | réussi | |
 | 3 | Sécurité | à faire | |
 | 4 | Cas limites et charge | à faire | |
 | 5 | Performance et confort | à faire | |
@@ -27,7 +30,7 @@ Cycle 2 · Fonctionnalités (cycle 1 terminé : 7/7)
 
 ## Prochaine action
 
-Cycle 2 : écrire `tools/tests/t2_fonctions.py` (fenêtres, plans, menus, notes, tâches, agenda, favoris, PC + mobile, hors ligne, deux onglets, console).
+Cycle 3 : injections (flux RSS avec lien javascript:, notes, favoris, Coffre), verrouillage, secrets ; relecture statique en cours par un second agent.
 
 ## Reprise programmée
 

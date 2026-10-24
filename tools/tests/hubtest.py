@@ -15,8 +15,19 @@ IGNORED = ("Failed to load resource", "net::ERR_", "ERR_FAILED", "ERR_BLOCKED")
 
 
 class _Quiet(http.server.SimpleHTTPRequestHandler):
+    overrides = {}          # chemin → (type, contenu) : fichiers remplacés le temps d'un test (ex. nouvelle version de sw.js)
+
     def log_message(self, *a):
         pass
+
+    def do_GET(self):
+        path = self.path.split("?", 1)[0]
+        if path in self.overrides:
+            ctype, body = self.overrides[path]
+            data = body.encode("utf-8")
+            self.send_response(200); self.send_header("Content-Type", ctype); self.send_header("Content-Length", str(len(data)))
+            self.end_headers(); self.wfile.write(data); return
+        return super().do_GET()
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
