@@ -19,7 +19,7 @@ export const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
 
 // Réglages personnels (clés de localStorage) : chiffrés quand le verrouillage est actif.
-const PRIVATE = new Set(["constellation", "meteo-cache", "meteo-lieu", "mails", "web-url", "video-suivre", "video-courante", "musique-yt", "ia-instructions", "radios", "video-file"].map((k) => "hub-" + k));
+const PRIVATE = new Set(["constellation", "meteo-cache", "meteo-lieu", "mails", "web-url", "video-suivre", "video-courante", "musique-yt", "ia-instructions", "radios", "video-file", "musique-source"].map((k) => "hub-" + k));
 const isPrivate = (k) => PRIVATE.has(k) || k.startsWith("hub-secret") || k === "hub-synchro";
 
 let dek = null;              // CryptoKey de la clé de données (en mémoire seulement)
@@ -136,7 +136,9 @@ export const vault = {
   /** Remet les réglages et secrets en clair et oublie la clé (les données sont remises en clair par storage.unlockAll()). */
   async destroy() {
     await writes;
-    for (const [k, v] of cache) localStorage.setItem(k, v);
+    // La clé Gemini exige le verrouillage : elle part avec lui, au lieu de rester en clair sur l'appareil
+    for (const [k, v] of cache) if (k !== "hub-secret-ia") localStorage.setItem(k, v);
+    localStorage.removeItem("hub-secret-ia");
     writeMeta(null); dek = null; raw = null; cache.clear(); tellOthers();
   },
   announce: tellOthers,
