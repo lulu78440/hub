@@ -1,6 +1,6 @@
 {
  "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
- "releve": "2026-10-24T14:25:00+02:00",
+ "releve": "2026-10-24T14:30:00+02:00",
  "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
  "phases": [
   {
@@ -116,7 +116,9 @@
   "p2-week",
   "p3-down",
   "p3-feeds",
-  "p3-news"
+  "p3-media",
+  "p3-news",
+  "p3-sync"
  ],
  "prochaine": {
   "id": "p3-media",
