@@ -1,6 +1,6 @@
 {
  "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
- "releve": "2026-10-24T14:30:00+02:00",
+ "releve": "2026-10-24T14:45:00+02:00",
  "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
  "phases": [
   {
@@ -41,7 +41,8 @@
     "p2-export",
     "p2-sunday",
     "p2-lock",
-    "p2-coffre"
+    "p2-coffre",
+    "p2-geo"
    ]
   },
   {
@@ -139,7 +140,8 @@
   "p7-2",
   "p7-voix",
   "p2-lock",
-  "p2-coffre"
+  "p2-coffre",
+  "p2-geo"
  ],
  "maj": "2026-10-24T12:40:00+02:00",
  "par": "Claude"
