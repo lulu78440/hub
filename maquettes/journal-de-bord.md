@@ -99,6 +99,8 @@ Lucien annule « enchaîner sans confirmation » : une sous-étape, son test PC 
 
 **Demandes de Lucien notées (24/10, à traiter à leur tour)** : 1) mixage musique + vidéo sans conflit audio, avec réglages de superposition au plan 3 (Boîte à idées, `idee-audio-mix`, après la phase 2) ; 2) maintenir le clic gauche sur une fenêtre pour qu'elle se rapproche de la vue : intégré à p2-focus (« Ramener vers moi »), à trancher sur la maquette (conflit possible avec le déplacement par la barre de titre).
 
+**File d'attente de la phase 2 (ordre fixé par Lucien, 24/10)** : p2-geo (livrée, à valider) → p2-focus « Ramener vers moi » (maquette d'abord ; inclut le zoom au maintien du clic gauche) → p2-plan2 « Plan 2 beaucoup plus vaste » : surface environ 4 fois celle du plan 1, caméra grand angle (champ de vision plus large, perspective plus marquée), profondeur de champ renforcée (premier plan et arrière-plan flous, zone de travail nette), fenêtres existantes du plan 2 à leur place relative, molette, touches 1 2 3 et double-clic inchangés, fluide sur PC, équivalent simple conservé sur mobile ; maquette avant / après d'abord, puis code. Ensuite : résumé de 10 lignes, archive de la version stable, STOP, discussion Phase 3.
+
 ## Construction · Phase 3
 
 Plan et décisions : `docs/plan-phases-3-6.md` (rédigé avec Opus le 24/10). Consigne de Lucien : enchaîner sans attendre de confirmation.
