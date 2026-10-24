@@ -29,6 +29,7 @@ import { initSurprises } from "./widgets/surprises.js";
 import { initMail } from "./widgets/mail.js";
 import { initAI } from "./widgets/ai.js";
 import { gate, initLockUI } from "./ui/lockui.js";
+import { initRituels } from "./widgets/rituels.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -96,6 +97,7 @@ async function start() {
   const surprises = initSurprises({ force, plans, wins });
   initMail();
   const ai = initAI({ force });
+  const rituels = initRituels({ force, plans });
   $("b-backup").addEventListener("click", () => backup.test());
 
   let core = null, fx = null;
@@ -123,7 +125,7 @@ async function start() {
     state.energy += (state.energyTarget - state.energy) * Math.min(dt * 3, 1);
     if (core) {
       const c = core.frame(anchorEl.getBoundingClientRect(), RW, RH); if (c) fx.setCenter(c);
-      core.update({ t, dt, k, energy: state.energy, accent: state.accent, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
+      core.update({ t, dt, k, energy: state.energy, accent: state.accent ?? state.mood, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
       updateLabels(core.project(RW, RH), state.lite ? 1 : plans.zoom);
       fx.update(t, state.energy, state.cine);
       fx.render();
@@ -135,7 +137,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse, plans, force, wins, data, reminders, weather, surprises, ai };   // pour les essais en console
+  window.__hub = { state, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;

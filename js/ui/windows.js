@@ -32,6 +32,7 @@ function defaults(W, H) {
   L.progress = { x: x0, y: B - sh, w: mw, h: sh };
   L.music = { x: -(Lw + 50), y: T, w: Lw, h: 250 };
   L.favs = { x: -(Lw + 50), y: T + 270, w: Lw, h: 340 };
+  L.rituels = { x: -(Lw + 50), y: T + 630, w: Lw, h: 330 };
   L.notes = { x: W + 50, y: T, w: Rw, h: 300 };
   L.mails = { x: W + 50, y: T + 320, w: Rw, h: 280 };
   const sw = Math.min(600, mw), sy = L.progress.y - 100;
