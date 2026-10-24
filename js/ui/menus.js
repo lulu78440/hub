@@ -61,6 +61,7 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     const it = hooks[id] ? hooks[id](el, t) || [] : [];
     if (it.length) it.push("-");
     it.push({ h: "Fenêtre · " + wins.title(el) },
+      wins.focused === el ? { t: "Renvoyer en arrière", k: "Échap", fn: () => wins.unfocus() } : { t: "Ramener vers moi", fn: () => wins.focus(el), off: s.hid },
       { t: s.pin ? "Libérer la fenêtre" : "Figer la fenêtre", fn: () => wins.togglePin(el) },
       { t: s.max ? "Restaurer la taille" : "Agrandir", k: "double-clic", fn: () => wins.toggleMax(el), off: s.pin },
       { t: "Ramener devant", fn: () => wins.bringFront(el) },
@@ -125,9 +126,25 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     moveTo(id, order.indexOf(vis[j]));
     byId(id).scrollIntoView({ block: "center", behavior: state.reduce ? "auto" : "smooth" });
   }
+  // « Ramener vers moi » sur téléphone : la fenêtre reste en place, les autres s'estompent (pas de flou), un bouton la renvoie en arrière.
+  let mfoc = null, mexit = null;
+  function mUnfocus() {
+    if (!mfoc) return; mfoc.classList.remove("mfoc"); mfoc = null; document.getElementById("world").classList.remove("mfocus");
+    if (mexit) { mexit.remove(); mexit = null; }
+  }
+  function mFocus(id) {
+    mUnfocus(); const w = byId(id); if (!w) return;
+    mfoc = w; w.classList.add("mfoc"); document.getElementById("world").classList.add("mfocus");
+    w.scrollIntoView({ block: "center", behavior: state.reduce ? "auto" : "smooth" });
+    mexit = document.createElement("button"); mexit.type = "button"; mexit.className = "btn mfocus-exit"; mexit.textContent = "Renvoyer en arrière";
+    mexit.addEventListener("click", mUnfocus); document.body.append(mexit);
+  }
+  addEventListener("pointerdown", (e) => { if (mfoc && !e.target.closest(".mfoc, .mfocus-exit, .ctx")) mUnfocus(); }, true);
+  addEventListener("keydown", (e) => { if (e.key === "Escape") mUnfocus(); });
   function mobMenu(id) {
     const vis = order.filter((x) => !hid.includes(x)).length, i = visibleIndex(id);
     return [{ h: "Fenêtre · " + titleOf(id) },
+      { t: "Ramener vers moi", fn: () => mFocus(id) },
       { t: "Monter", fn: () => stepTo(id, -1), off: i <= 0 },
       { t: "Descendre", fn: () => stepTo(id, 1), off: i >= vis - 1 },
       { t: "Tout en haut", fn: () => { moveTo(id, 0); byId(id).scrollIntoView({ block: "center" }); }, off: i <= 0 },

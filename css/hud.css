@@ -858,3 +858,17 @@ body.locked .dusk { z-index: 21; }
 .wcoord .inl:nth-of-type(3), .wcoord .btn, .wcoord .wcmsg { grid-column: 1 / -1; }
 .wcmsg { margin: 0; min-height: 0; font-family: var(--mono); font-size: 11px; color: #ff9b8a; }
 .wcmsg:empty { display: none; }
+
+/* Ramener vers moi (p2-focus) : un seul voile assombri et flou derrière la fenêtre avancée */
+.focus-veil { position: absolute; left: -200%; top: -200%; width: 500%; height: 500%; z-index: 8000; opacity: 0; pointer-events: none;
+  background: rgba(2, 6, 13, .45); -webkit-backdrop-filter: blur(3.5px) saturate(.8); backdrop-filter: blur(3.5px) saturate(.8); transition: opacity .4s ease; }
+.world.has-focus .focus-veil { opacity: 1; pointer-events: auto; }
+.win.focus { z-index: 9000; }
+.win.focus .panel { border-color: var(--a, var(--cyan)); box-shadow: 0 30px 80px rgba(0, 0, 0, .65), 0 0 50px rgba(63, 230, 255, .18); }
+@media (prefers-reduced-motion: reduce) { .focus-veil { transition: none; -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(2, 6, 13, .6); } }
+/* Téléphone : estomper les autres fenêtres, sans flou */
+body.lite .world.mfocus .win:not(.mfoc) { opacity: .25; pointer-events: none; transition: opacity .25s ease; }
+body.lite .win.mfoc .panel { border-color: var(--a, var(--cyan)); box-shadow: 0 0 0 1px rgba(63, 230, 255, .4), 0 12px 40px rgba(0, 0, 0, .6); }
+.mfocus-exit { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+@media (prefers-reduced-motion: reduce) { body.lite .world.mfocus .win:not(.mfoc) { transition: none; } }
+body.lite .focus-veil { display: none; }

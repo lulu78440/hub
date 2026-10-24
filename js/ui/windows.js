@@ -10,6 +10,7 @@ const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 const MIN = { w: 220, h: 120 };
 const STORE = "disposition-pc-v1";          // clé hub-disposition-pc-v1 dans le stockage de l'appareil
 const PINNED_BY_DEFAULT = ["video"];
+const FOCUS = { max: 1.45, w: 0.62, h: 0.86, hold: 550, move: 6, z: 9000 };   // « Ramener vers moi » (p2-focus)
 const ACCENTS = { cyan: 0x3fe6ff, violet: 0x9b72ff, amber: 0xffb347 };
 const PIN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4z"/><path d="M12 13v8"/></svg>';
 
@@ -43,7 +44,7 @@ function defaults(W, H) {
 export function createWindows({ world, plans, force }) {
   const els = [...world.querySelectorAll(".win:not(.mob-only)")];
   const S = {};
-  let W = innerWidth, H = innerHeight, core = { x: W / 2, y: H / 2 }, zTop = 3, dragEl = null;
+  let fzoom = 1, W = innerWidth, H = innerHeight, core = { x: W / 2, y: H / 2 }, zTop = 3, dragEl = null;
   const elById = (id) => els.find((el) => el.dataset.id === id);
 
   // Punaise, badge « figée », poignée : ajoutés ici pour ne pas alourdir index.html
@@ -73,7 +74,7 @@ export function createWindows({ world, plans, force }) {
     const D = defaults(W, H), saved = reset ? null : load();
     els.forEach((el) => {
       const id = el.dataset.id, d = D.L[id] || { x: W / 2 - 150, y: H / 2 - 100, w: 300, h: 200 }, sv = saved && saved[id], prev = S[id];
-      const s = prev || { cx: 0, cy: 0, ry: 0, rz: 0, vx: 0, hover: false, drag: false, pin: PINNED_BY_DEFAULT.includes(id), hid: false, max: null, last: "" };
+      const s = prev || { cx: 0, cy: 0, ry: 0, rz: 0, vx: 0, hover: false, drag: false, pin: PINNED_BY_DEFAULT.includes(id), hid: false, max: null, last: "", fx: 0, fy: 0, fk: 1, fxT: 0, fyT: 0, fkT: 1, foc: false };
       if (sv) { s.tx = sv.x * W; s.ty = sv.y * H; s.w = Math.max(sv.w * W, MIN.w); s.h = Math.max(sv.h * H, MIN.h); s.pin = !!sv.pin; s.hid = !!sv.hid; }
       else { s.tx = d.x; s.ty = d.y; s.w = d.w; s.h = d.h; if (reset) { s.pin = PINNED_BY_DEFAULT.includes(id); s.hid = false; s.max = null; } }
       if (!prev) { s.cx = s.tx; s.cy = s.ty; }       // ensuite, chaque changement de place glisse en douceur
@@ -115,6 +116,49 @@ export function createWindows({ world, plans, force }) {
     return cx > 0 && cx < W && cy > 0 && cy < H ? 1 : 2;
   }
 
+  // ---------- Ramener vers moi (p2-focus) ----------
+  // La fenêtre avance au centre et grandit ; un seul voile (assombri et flou) recule le reste. Calculé dans le repère du « monde » :
+  // on retrouve par approches successives le point du monde qui tombe au centre de l'écran, même quand la caméra est au plan 2.
+  const veil = document.createElement("div"); veil.className = "focus-veil"; veil.setAttribute("aria-hidden", "true"); world.prepend(veil);
+  let focusEl = null, prevPlan = 1;
+  function worldMap() {
+    const cs = getComputedStyle(world), o = (cs.transformOrigin || "0 0").split(" ").map(parseFloat);
+    const m = cs.transform && cs.transform !== "none" ? new DOMMatrix(cs.transform) : new DOMMatrix();
+    const full = new DOMMatrix().translate(o[0] || 0, o[1] || 0).multiply(m).translate(-(o[0] || 0), -(o[1] || 0));
+    return (x, y) => { const p = full.transformPoint(new DOMPoint(x, y, 0, 1)); return { x: p.x / (p.w || 1), y: p.y / (p.w || 1) }; };
+  }
+  function aim(el) {
+    const s = S[el.dataset.id], f = worldMap(), vw = innerWidth, vh = innerHeight, tx = vw / 2, ty = vh / 2 + 24;
+    const bx = s.cx + s.w / 2, by = s.cy + s.h / 2, p = { x: bx, y: by };
+    const scaleAt = () => { const a = f(p.x, p.y), b = f(p.x + 1, p.y); return Math.max(0.05, Math.hypot(b.x - a.x, b.y - a.y)); };
+    for (let i = 0; i < 6; i++) { const q = f(p.x, p.y), ls = scaleAt(); p.x += (tx - q.x) / ls; p.y += (ty - q.y) / ls; }
+    const kS = Math.min(FOCUS.max, vw * FOCUS.w / s.w, vh * FOCUS.h / s.h);
+    s.fxT = p.x - bx; s.fyT = p.y - by; s.fkT = kS / scaleAt();
+  }
+  function focus(el) {
+    if (state.lite || !el || focusEl === el) return;
+    const s = S[el.dataset.id]; if (!s || s.hid) return;
+    if (focusEl) unfocus(true);
+    focusEl = el; prevPlan = plans.plan; s.foc = true;
+    el.classList.add("focus"); el.style.zIndex = FOCUS.z; world.classList.add("has-focus");
+    if (prevPlan !== 1) plans.goPlan(1);          // la caméra revient au plan 1 pour une fenêtre nette et droite
+    fzoom = plans.zoom; aim(el); pulse(0.8);
+  }
+  /** Renvoie la fenêtre à sa place (animation inverse). keepPlan : ne pas ramener la caméra au plan d'avant (changement de plan voulu). */
+  function unfocus(keepPlan) {
+    const el = focusEl; if (!el) return; focusEl = null;
+    const s = S[el.dataset.id]; s.foc = false; s.fxT = 0; s.fyT = 0; s.fkT = 1;
+    world.classList.remove("has-focus");
+    if (!keepPlan && prevPlan !== 1) plans.goPlan(prevPlan);
+  }
+  veil.addEventListener("click", () => unfocus());
+  addEventListener("contextmenu", (e) => { if (focusEl && e.target === veil) { e.preventDefault(); e.stopPropagation(); unfocus(); } }, true);
+  addEventListener("keydown", (e) => {
+    if (!focusEl) return;
+    if (e.key === "Escape" && !(e.target.closest && e.target.closest("input, textarea, .diag, .ctx"))) unfocus();
+    else if ((e.key === "1" || e.key === "2" || e.key === "3") && !(e.target.closest && e.target.closest("input, textarea")) && !e.ctrlKey && !e.metaKey && !e.altKey) unfocus(true);
+  });
+
   els.forEach((el) => {
     const id = el.dataset.id, ph = el.querySelector(".ph"), grip = el.querySelector(".grip"), pinBtn = el.querySelector(".pin");
     let sx = 0, sy = 0, ox = 0, oy = 0, ow = 0, oh = 0, mode = null, lastX = 0;
@@ -155,6 +199,17 @@ export function createWindows({ world, plans, force }) {
       if (plans.plan !== 1) { const n = planOf(el); plans.goPlan(n); toast("Plan " + n); return; }
       if (e.target.closest(".ph")) toggleMax(el);
     });
+    // Maintien du clic gauche sur le contenu (pas la barre de titre ni un contrôle) : ramener la fenêtre vers soi.
+    let hT = 0, hS = null;
+    const hCancel = () => { clearTimeout(hT); hT = 0; hS = null; };
+    el.addEventListener("pointerdown", (e) => {
+      if (state.lite || e.button !== 0 || focusEl === el || S[id].hid) return;
+      if (e.target.closest(".ph, .grip, .pin, button, a, input, textarea, select, label, canvas, iframe, [contenteditable='true']")) return;
+      hCancel(); hS = { x: e.clientX, y: e.clientY };
+      hT = setTimeout(() => { hT = 0; hS = null; const stopClick = (ev) => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener("click", stopClick, { capture: true, once: true }); setTimeout(() => removeEventListener("click", stopClick, true), 400); focus(el); }, FOCUS.hold);
+    });
+    el.addEventListener("pointermove", (e) => { if (hS && Math.hypot(e.clientX - hS.x, e.clientY - hS.y) > FOCUS.move) hCancel(); });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((t) => el.addEventListener(t, hCancel));
   });
 
   /** Une image : les fenêtres glissent vers leur cible, s'inclinent vers le noyau, penchent quand on les traîne. */
@@ -167,16 +222,23 @@ export function createWindows({ world, plans, force }) {
       s.cx += (s.tx - s.cx) * kPos; s.cy += (s.ty - s.cy) * kPos;
       if (Math.abs(s.tx - s.cx) < 0.05) s.cx = s.tx;
       if (Math.abs(s.ty - s.cy) < 0.05) s.cy = s.ty;
+      if (s.foc && Math.abs(plans.zoom - fzoom) > 0.002) { fzoom = plans.zoom; aim(el); }   // la caméra bouge : on revise la cible
+      const kF = state.reduce ? 1 : 1 - Math.exp(-dt * 9);
+      s.fx += (s.fxT - s.fx) * kF; s.fy += (s.fyT - s.fy) * kF; s.fk += (s.fkT - s.fk) * kF;
+      if (!s.foc && Math.abs(s.fx) + Math.abs(s.fy) < 0.6 && Math.abs(s.fk - 1) < 0.004) {
+        s.fx = s.fy = 0; s.fk = 1;
+        if (el.classList.contains("focus")) { el.classList.remove("focus"); el.style.zIndex = ++zTop; }
+      }
       const mid = s.cx + s.w / 2;
-      const ryT = (s.hover || s.drag) ? 0 : -9 * clamp((mid - core.x) / (W * 0.33), -1, 1);
+      const ryT = (s.hover || s.drag || s.foc) ? 0 : -9 * clamp((mid - core.x) / (W * 0.33), -1, 1);
       const rzT = s.drag && !state.reduce ? clamp(s.vx * 0.12, -3, 3) : 0;
       s.ry += (ryT - s.ry) * kRot; s.rz += (rzT - s.rz) * kRot; s.vx *= 0.85;
       if (Math.abs(s.rz) < 0.005) s.rz = 0;
-      const tf = `translate3d(${s.cx.toFixed(1)}px, ${s.cy.toFixed(1)}px, 0) perspective(1200px) rotateY(${s.ry.toFixed(2)}deg) rotateZ(${s.rz.toFixed(2)}deg) scale(${s.drag ? 1.025 : 1})`;
+      const tf = `translate3d(${(s.cx + s.fx).toFixed(1)}px, ${(s.cy + s.fy).toFixed(1)}px, 0) perspective(1200px) rotateY(${s.ry.toFixed(2)}deg) rotateZ(${s.rz.toFixed(2)}deg) scale(${((s.drag ? 1.025 : 1) * s.fk).toFixed(4)})`;
       if (tf !== s.last) { s.last = tf; el.style.transform = tf; }
     });
   }
 
   function reset() { const D = layout(W, H, true); save(); return D; }
-  return { layout, update, reset, planOf, toggleMax, togglePin, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
+  return { layout, update, reset, planOf, focus, unfocus, get focused() { return focusEl; }, toggleMax, togglePin, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
 }
