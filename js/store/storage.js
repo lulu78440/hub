@@ -39,9 +39,21 @@ function tx(db, coll, mode, fn) {
   });
 }
 
-function emit(coll, broadcast = true) {
+function emit(coll, broadcast = true, fromSync = false) {
   (listeners[coll] || []).forEach((fn) => { try { fn(); } catch (e) { console.error(e); } });
+  if (!fromSync) (listeners["*"] || []).forEach((fn) => { try { fn(coll); } catch (e) { console.error(e); } });   // « quelque chose a changé ici » (synchro)
   if (broadcast && chan) chan.postMessage({ coll });
+}
+
+// Traces des suppressions (pour la synchro) : { collection: { id: date } }, gardées 90 jours, jamais exportées.
+const TOMB = "hub-synchro-suppressions";
+export function tombstones() { try { return JSON.parse(localStorage.getItem(TOMB) || "{}") || {}; } catch (e) { return {}; } }
+function tomb(coll, ids) {
+  if (coll === "images") return;
+  const t = tombstones(), now = Date.now(); t[coll] = t[coll] || {};
+  ids.forEach((id) => { t[coll][id] = now; });
+  Object.keys(t).forEach((c) => Object.keys(t[c]).forEach((id) => { if (now - t[c][id] > 90 * 864e5) delete t[c][id]; }));
+  try { localStorage.setItem(TOMB, JSON.stringify(t)); } catch (e) { /* plein : tant pis pour la trace */ }
 }
 
 /** Nouvel identifiant court, unique sur l'appareil. */
@@ -60,29 +72,35 @@ export const store = {
     if (!db) return memory[coll].get(id);
     return tx(db, coll, "readonly", (st) => st.get(id));
   },
-  async put(coll, obj) {
+  // Chaque écriture est datée (_m) et chaque suppression laisse une trace (pour la synchro entre appareils, 3.5).
+  // sync = true : écriture venue de la synchro (on garde sa date, pas de nouvelle trace).
+  async put(coll, obj, sync = false) {
+    if (!sync) obj._m = Date.now();
     const db = await open();
     if (!db) memory[coll].set(obj.id, obj); else await tx(db, coll, "readwrite", (st) => st.put(obj));
-    emit(coll); return obj;
+    emit(coll, true, sync); return obj;
   },
-  async del(coll, id) {
+  async del(coll, id, sync = false) {
     const db = await open();
     if (!db) memory[coll].delete(id); else await tx(db, coll, "readwrite", (st) => st.delete(id));
-    emit(coll);
+    if (!sync) tomb(coll, [id]);
+    emit(coll, true, sync);
   },
   /** Plusieurs ajouts ou remplacements en une fois (un seul signal de changement). */
-  async putMany(coll, objs) {
+  async putMany(coll, objs, sync = false) {
+    if (!sync) { const now = Date.now(); objs.forEach((o) => { o._m = now; }); }
     const db = await open();
     if (!db) objs.forEach((o) => memory[coll].set(o.id, o));
     else await tx(db, coll, "readwrite", (st) => { objs.forEach((o) => st.put(o)); });
-    emit(coll);
+    emit(coll, true, sync);
   },
   /** Plusieurs suppressions en une fois. */
-  async delMany(coll, ids) {
+  async delMany(coll, ids, sync = false) {
     const db = await open();
     if (!db) ids.forEach((id) => memory[coll].delete(id));
     else await tx(db, coll, "readwrite", (st) => { ids.forEach((id) => st.delete(id)); });
-    emit(coll);
+    if (!sync) tomb(coll, ids);
+    emit(coll, true, sync);
   },
   /** Écoute les changements d'une collection (cet onglet et les autres). Renvoie de quoi se désabonner. */
   on(coll, fn) { (listeners[coll] = listeners[coll] || []).push(fn); return () => { listeners[coll] = listeners[coll].filter((f) => f !== fn); }; }
@@ -98,7 +116,7 @@ export async function exportAll(version) {
   // Les images voyagent dans le fichier sous forme de texte (data:…)
   data.images = await Promise.all(data.images.map(async (im) => ({ ...im, blob: im.blob instanceof Blob ? await toDataURL(im.blob) : null })));
   const prefs = {};
-  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("hub-")) prefs[k] = localStorage.getItem(k); } } catch (e) { /* réglages indisponibles */ }
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("hub-") && !k.startsWith("hub-synchro")) prefs[k] = localStorage.getItem(k); /* jamais le jeton de synchro dans un fichier */ } } catch (e) { /* réglages indisponibles */ }
   return { format: FORMAT, formatVersion: FORMAT_VERSION, appVersion: version, exportedAt: new Date().toISOString(), data, prefs };
 }
 

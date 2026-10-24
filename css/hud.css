@@ -693,3 +693,11 @@ body:not(.lite) .fps { top: 64px; bottom: auto; left: 74px; }
 .web .vp .wempty { inset: 10px; color: var(--dim); }
 .web .vp:has(.wempty) { background: #071423; }
 body.lite .web { min-height: 260px; }
+
+/* ---------- Phase 3 · synchro (Diag) ---------- */
+.syncbox { display: grid; gap: 8px; margin-top: 14px; padding: 12px; border: 1px solid rgba(63,230,255,.35); background: rgba(3,20,36,.7); }
+.syncbox[hidden] { display: none; }
+.sguide { font-size: 14px; line-height: 1.4; color: var(--ink); }
+.sguide ol { margin: 6px 0 0; padding-left: 20px; color: var(--dim); }
+.sguide a { color: var(--cyan); }
+.diag .card { max-height: calc(100vh - 110px); overflow-y: auto; }

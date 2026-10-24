@@ -24,6 +24,7 @@ import { initBackup } from "./widgets/backup.js";
 import { initNews } from "./widgets/news.js";
 import { initMedia } from "./widgets/media.js";
 import { initWebview } from "./widgets/webview.js";
+import { initSyncUI } from "./ui/syncui.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -86,6 +87,7 @@ async function start() {
   initNews();
   initMedia();
   initWebview();
+  initSyncUI();
   $("b-backup").addEventListener("click", () => backup.test());
 
   let core = null, fx = null;
