@@ -56,7 +56,7 @@ function rendreBanc() {
   const p = $("#p-banc"); p.textContent = "";
   const liste = h("div"), bilan = h("div", { class: "bilan", hidden: true });
   const lancer = async (reel) => {
-    if (!scenarios) scenarios = (await (await fetch("labo/scenarios.json")).json()).scenarios;
+    if (!scenarios) scenarios = (window.__SCENARIOS && window.__SCENARIOS.scenarios) || (await (await fetch("labo/scenarios.json")).json()).scenarios;
     liste.textContent = ""; bilan.hidden = true;
     const opt = { lireFichier: async (f) => (await fetch("labo/" + f.replace(/^\.?\/?labo\//, ""))).text() };
     if (reel && cle) opt.moteurReel = moteurGemini({ cle });
