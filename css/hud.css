@@ -926,3 +926,6 @@ body.lite .focus-veil { display: none; }
 body.cine:not(.lite) .dof { display: block; }
 @media (prefers-reduced-motion: reduce) { .dof { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(2, 6, 13, .35); } }
 body.lite .floor, body.lite .dof { display: none; }
+
+/* Banc d'essai (B13) : contour de focus pour tout élément atteint au clavier qui n'a pas le sien (spécificité nulle : les styles existants gardent la main) */
+:where(a, button, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
