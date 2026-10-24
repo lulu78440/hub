@@ -6,7 +6,7 @@ Reprise programmée : une seule en attente (voir fin de fichier).
 
 ## Cycle en cours
 
-Cycle 5 · Performance et confort (cycles 1 à 4 terminés : 23/23 après corrections)
+Tour 2 · approfondissement (cycles 1 à 6 terminés)
 
 ## Tests
 
@@ -34,12 +34,17 @@ Cycle 5 · Performance et confort (cycles 1 à 4 terminés : 23/23 après correc
 | 4 | Réseau coupé en pleine synchro (avant lecture, entre lecture et écriture) | réussi | rien de perdu, reprise au tour suivant |
 | 4 | Onglet fermé en plein import (50 à 1 200 ms) | réussi | toujours ancien OU nouvel état |
 | 4 | Fuseaux (Kiritimati, Los Angeles, Calcutta), horloge reculée/avancée, passage à l'heure d'hiver, textes de 100 000 caractères | réussi | |
-| 5 | Performance et confort | à faire | |
-| 6 | Suite automatique `tools/tests/` | en cours | écrite au fil des cycles : `python3 tools/tests/run.py` |
+| 5 | Chargement à froid PC / mobile, images/s (rendu logiciel, valeur plancher) | réussi | < 1,5 s ; 2 et 9 img/s sans carte graphique : non représentatif |
+| 5 | Mémoire dans la durée (version 3 min, gestes) | réussi | tas JS stable ~10 Mo ; 30 min complètes non rejouées (temps) |
+| 5 | Mouvement réduit | réussi | aucune animation sans fin |
+| 5 | Navigation au clavier | corrigé | B13 |
+| 5 | Contrastes | réussi | mesure partielle (fonds en dégradé non mesurables) |
+| 3 | Relecture statique (second agent) | corrigé | B7 à B12 corrigés ; B14 à B16 décrits |
+| 6 | Suite automatique `tools/tests/` (28 tests, mode d'emploi `tools/tests/README.md`) | réussi | `--rapide` : 28/28 en 7 min après toutes les corrections |
 
 ## Prochaine action
 
-Cycle 5 : images/s PC et mobile, mémoire, chargement à froid, mouvement réduit, clavier, contrastes. Intégrer les constats de la relecture statique (second agent) dès son retour.
+Tour 2 : onglet fermé pendant un changement de phrase (rotation de clé) ; import + synchro (B2) ; puis résumé final du rapport à 18 h 15.
 
 ## Reprise programmée
 
