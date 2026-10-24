@@ -144,6 +144,7 @@ Travail sur la branche `noyau` uniquement, fichiers propres (`js/noyau/…`, fen
 | Date | Étape | Ce qui a été fait | Étape du Suivi | Statut |
 | --- | --- | --- | --- | --- |
 | 24/10 | N1 Questions | Réponses de Lucien (voir décisions ci-dessous). Application encore en cours dans AI Studio : code non transmis. | — | Faite |
+| 24/10 | N2 Façons de relier | Trois options comparées (app hébergée en fenêtre, cerveau importé, app séparée). Choix : **cerveau importé** (option B). Sauvegarde JSON de l'app lue sur place (données seulement, aucune clé ; non versionnée). | — | Faite |
 
 Décisions (24/10) :
 - L'application est une app « Build » d'AI Studio, pas terminée. Lucien la finit dans AI Studio ; le hub reprendra ses **instructions et son catalogue d'actions**, pas forcément son code (à confirmer à l'étape 2).
@@ -156,6 +157,13 @@ Décisions (24/10) :
 - Clé : **la même clé AI Studio que l'orbe**, chiffrée par le coffre (verrouillage actif obligatoire).
 - Fenêtre Noyau sur le **plan 1**, avec l'orbe (PC).
 - Hors ligne : **IA locale en secours** sur le PC (petit modèle dans Brave) ; mode réduit sur Android.
+- **Option B (24/10)** : le cerveau du Noyau (instructions, catalogue d'outils, niveaux) est rangé dans un **document privé du Projet Claude**, amélioré avec Claude, importé dans le hub et gardé chiffré par le coffre. Rien de personnel dans le dépôt public.
+- **Moteur** : Gemini (offre gratuite, sans carte) actif ; IA locale en secours hors ligne (PC). Catalogue d'outils neutre (JSON Schema) avec deux adaptateurs : Gemini actif, **Claude (Tool Use) prêt mais coupé** (l'API Claude est facturée à part : l'abonnement Pro n'inclut pas de crédits API). Pas de serveur MCP (incompatible avec une page web et Android). Mistral gratuit écarté pour les données personnelles (requêtes utilisables pour l'entraînement).
+- **Mode autonome hub fermé** : reporté à la V2 ; autonome seulement hub ouvert, avec un budget de requêtes par jour (quota gratuit Gemini faible).
+- **Données** : le hub reste la seule source (import unique des tâches, notes, favoris, rappel de l'app) ; souvenirs et connaissances importés dans le coffre, comptés et vérifiés par empreinte avant et après (import annulé s'il manque un élément). Supprimer une mémoire est INTERDIT à l'IA ; seulement Lucien, dans Diag, avec double validation.
+- **Sources** : les 11 sources de connaissances de l'app en lecture LIBRE (liste fixe) ; tout autre site en CONFIRMATION ; ouvrir un onglet vers un site reste INTERDIT.
+- **Méthode** : l'app AI Studio est terminée par Lucien puis **gelée** comme référence (v3.7). Conception ici (Opus), construction dans une discussion « Noyau · construction » (Sonnet), sur la branche `noyau`.
+- **Consigne de Lucien (24/10)** : l'app AI Studio sert **uniquement d'exemple**. Son visuel n'est **pas reproduit** : interface conçue pour le hub (Hologramme, fenêtre au plan 1 liée à l'orbe), rendu professionnel et futuriste. Le **modèle de réflexion est repris et amélioré**, la **mémoire accumulée est conservée intégralement**. Claude est autonome sur la conception ; objectif : les réponses les plus réalistes possible.
 
 ## Décisions prises
 
