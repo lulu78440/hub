@@ -22,6 +22,8 @@ import { initImages } from "./widgets/images.js";
 import { initProgress } from "./widgets/progress.js";
 import { initBackup } from "./widgets/backup.js";
 import { initNews } from "./widgets/news.js";
+import { initMedia } from "./widgets/media.js";
+import { initWebview } from "./widgets/webview.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -82,6 +84,8 @@ async function start() {
   initProgress();
   const backup = initBackup(data);
   initNews();
+  initMedia();
+  initWebview();
   $("b-backup").addEventListener("click", () => backup.test());
 
   let core = null, fx = null;
