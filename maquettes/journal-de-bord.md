@@ -152,6 +152,10 @@ Décisions (24/10) :
 - Appareils : **PC et Android**.
 - Permissions « plus prudent » : LIBRE = lire, répondre, afficher ; CONFIRMATION = créer ou modifier ; INTERDIT = supprimer des données, envoyer un message au nom de Lucien, toucher à la sécurité (coffre, clés, synchro, verrouillage), **exporter les données**, **ouvrir des sites extérieurs**.
 - La fenêtre Noyau est **liée à l'orbe** (l'orbe réagit quand l'application travaille).
+- Rôle : **assistant personnel général** (organiser la journée, répondre, agir dans le hub).
+- Clé : **la même clé AI Studio que l'orbe**, chiffrée par le coffre (verrouillage actif obligatoire).
+- Fenêtre Noyau sur le **plan 1**, avec l'orbe (PC).
+- Hors ligne : **IA locale en secours** sur le PC (petit modèle dans Brave) ; mode réduit sur Android.
 
 ## Décisions prises
 
