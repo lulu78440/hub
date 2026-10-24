@@ -13,6 +13,8 @@ import { sound } from "../device/sound.js";
 const hooks = {};
 /** fn(el, cible) renvoie les lignes propres à la fenêtre `id` (voir ctxmenu.js pour le format). */
 export function registerMenu(id, fn) { hooks[id] = fn; }
+/** Ajoute des lignes à un menu déjà enregistré (ex. « fond », « fenetre ») au lieu de le remplacer. */
+export function extendMenu(id, fn) { const prev = hooks[id]; hooks[id] = (...a) => (prev ? prev(...a) || [] : []).concat(fn(...a) || []); }
 
 const MOB_STORE = "disposition-mobile-v1";
 
@@ -62,6 +64,7 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
       { t: s.max ? "Restaurer la taille" : "Agrandir", k: "double-clic", fn: () => wins.toggleMax(el), off: s.pin },
       { t: "Ramener devant", fn: () => wins.bringFront(el) },
       { t: "Masquer la fenêtre", fn: () => wins.setHidden(el, true) });
+    if (hooks.fenetre) it.push(...(hooks.fenetre(el, t) || []));
     return it;
   }
   function deskMenu() {

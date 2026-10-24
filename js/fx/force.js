@@ -155,6 +155,7 @@ export function createForce({ canvas, anchor, logo }) {
   }
 
   const entity = createEntity(F);
+  const layers = [];          // dessins ajoutés par d'autres modules (surprises de la phase 4)
 
   /** Une image du champ de force. Rien n'est dessiné sur mobile, en pause ou avec « mouvement réduit ». */
   function draw(dt) {
@@ -175,7 +176,8 @@ export function createForce({ canvas, anchor, logo }) {
     if (press) drawPress();
     entity.draw(dt);
     if (F.fin && dragEl) forceWrap(dragEl.getBoundingClientRect());
+    layers.forEach((fn) => { try { fn(fg, dt, F); } catch (e) { console.error(e); } });
     fg.globalCompositeOperation = "source-over";
   }
-  return { draw, entity, clear, setDrag(el) { dragEl = el; } };
+  return { draw, entity, clear, setDrag(el) { dragEl = el; }, addLayer(fn) { layers.push(fn); }, get F() { return F; } };
 }

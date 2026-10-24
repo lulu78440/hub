@@ -8,6 +8,7 @@ import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { setLabel } from "../ui/labels.js";
 import { state } from "../state.js";
+import { moon } from "./surprises.js";
 
 const REFRESH = 30 * 60e3, PLACE_MAX_AGE = 7 * 864e5;
 const API = "https://api.open-meteo.com/v1/forecast";
@@ -117,7 +118,7 @@ export function initWeather() {
       wxm.querySelector(".wt").textContent = T(c.temperature_2m) + deg();
       wxm.querySelector(".wl").textContent = s[0];
       wxm.querySelector(".wcity").textContent = name;
-      wxm.querySelector(".wfeel").textContent = detail;
+      const mo = moon(); wxm.querySelector(".wfeel").textContent = detail + " · " + mo.icon + " " + mo.name.toLowerCase();
       wxm.querySelector(".days").innerHTML = daysHtml(d);
       wxm.querySelector(".wage").textContent = ageText();
       wxm.setAttribute("aria-label", `Météo à ${name} : ${T(c.temperature_2m)} degrés, ${s[0]}. Survole pour les prévisions.`);

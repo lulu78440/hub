@@ -701,3 +701,25 @@ body.lite .web { min-height: 260px; }
 .sguide ol { margin: 6px 0 0; padding-left: 20px; color: var(--dim); }
 .sguide a { color: var(--cyan); }
 .diag .card { max-height: calc(100vh - 110px); overflow-y: auto; }
+
+/* ---------- Phase 4 · Surprises ---------- */
+.brief { position: fixed; z-index: 9; left: 50%; top: 150px; transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); padding: 16px 20px 14px; display: grid; gap: 4px; cursor: pointer;
+  background: linear-gradient(160deg, rgba(10,30,52,.94), rgba(18,10,40,.94)); border: 1px solid rgba(63,230,255,.5); box-shadow: 0 0 50px rgba(63,230,255,.18), inset 0 0 30px rgba(63,230,255,.06);
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); animation: briefIn .7s cubic-bezier(.2,.8,.2,1); }
+.brief[hidden] { display: none; }
+.brief::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(rgba(63,230,255,.06) 0 1px, transparent 1px 3px); }
+.brief .bh { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--cyan); margin-bottom: 4px; }
+.brief p { margin: 0; font-size: 16px; color: var(--ink); letter-spacing: .02em; opacity: 0; animation: briefLine .5s ease forwards; }
+.brief p.b1 { font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: .06em; text-shadow: 0 0 14px rgba(63,230,255,.6); }
+@keyframes briefIn { from { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(.97); filter: blur(4px) brightness(2); } to { opacity: 1; transform: translateX(-50%); filter: none; } }
+@keyframes briefLine { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .brief, .brief p { animation: none; opacity: 1; } }
+body.lite .brief { top: calc(12px + env(safe-area-inset-top, 0px)); }
+/* Focus : tout s'estompe sauf l'orbe (et la fenêtre choisie) */
+body.focus:not(.lite) .win:not(.focused) .panel { filter: blur(1.6px) brightness(.45) saturate(.4); opacity: .55; }
+body.focus:not(.lite) .win:not(.focused):hover .panel { filter: none; opacity: 1; }
+body.focus:not(.lite) .win.focused::before { opacity: .45; }
+body.focus:not(.lite) .ticker, body.focus:not(.lite) .agband { opacity: .25; }
+/* Réglages des surprises (Diag) */
+.surprises { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(63,230,255,.18); }
+.surprises b { width: 100%; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--amber); text-transform: uppercase; font-weight: 500; }

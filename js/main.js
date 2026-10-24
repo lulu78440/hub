@@ -25,6 +25,7 @@ import { initNews } from "./widgets/news.js";
 import { initMedia } from "./widgets/media.js";
 import { initWebview } from "./widgets/webview.js";
 import { initSyncUI } from "./ui/syncui.js";
+import { initSurprises } from "./widgets/surprises.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -88,6 +89,7 @@ async function start() {
   initMedia();
   initWebview();
   initSyncUI();
+  const surprises = initSurprises({ force, plans, wins });
   $("b-backup").addEventListener("click", () => backup.test());
 
   let core = null, fx = null;
@@ -127,7 +129,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse, plans, force, wins, data, reminders, weather };   // pour les essais en console
+  window.__hub = { state, pulse, plans, force, wins, data, reminders, weather, surprises };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;
