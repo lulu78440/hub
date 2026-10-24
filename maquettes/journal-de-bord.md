@@ -137,6 +137,22 @@ Plan : `docs/plan-phase7.md` (24/10), à partir des 21 idées de la Boîte à id
 | 24/10 | 7.1b Recherche vocale | `ui/voice.js` : micro dans la barre de recherche (Alt+V au clavier, réglage dans Diag). Phrases comprises en français : « youtube chats drôles » (ou « … sur YouTube »), « vidéo de recette de crêpes » → **Brave Vidéos**, « images de montagne » → Brave Images, « actualités météo » → Brave Actus, « google … », « duckduckgo … », sinon Brave. Nouveaux raccourcis écrits : `!v` vidéos, `!i` images, `!n` actualités. **Brave bloque la reconnaissance vocale** : le hub le détecte et propose d'ouvrir le hub dans Chrome (lien direct sur Android et iPhone ; sur PC, lien vers Chrome et bouton « Copier le lien du hub »). Message dédié si le micro est refusé. Testé avec un micro simulé. Livrée avec la version `v7.2.0`. | (idée « Commandes vocales », première partie) | Livrée |
 | 24/10 | 7.2 Temps et dates | **Radar des dates** (`widgets/radar.js`, fenêtre à droite au plan 2, mobile après les rituels) : anniversaires, jours fériés et fêtes calculés pour la France (Pâques, Ascension, fête des mères et des pères, changements d'heure…), rendez-vous de l'agenda et échéances de tâches. Chaque date a une place fixe sur le cercle (sa position dans l'année), elle se rapproche du centre en approchant ; anneaux 7, 30 et 90 jours, balayage qui fait briller les points (animé dans la boucle unique sur PC, image fixe sur mobile). Anniversaires saisis à la main (« Maman 12/03 » ou « Maman 12/03/1960 » pour afficher l'âge), stockés dans kv (synchronisés et chiffrés). **Mode crépuscule** (`ui/dusk.js`) : voile ambré qui garde la lumière et change la teinte, levé au coucher du soleil (lu dans la météo, sinon 20 h 30) et retiré au lever (sinon 7 h) ; Diag : automatique, toujours ou jamais ; clic droit sur le fond pour basculer. Version `v7.2.0`. | (Boîte à idées) | Livrée |
 
+## Discussion « Noyau » · liaison de l'application IA autonome (branche `noyau`)
+
+Travail sur la branche `noyau` uniquement, fichiers propres (`js/noyau/…`, fenêtre « Noyau »). Fichiers partagés (index.html, main.js, sw.js, menus) : modifications minimales, listées ici, jamais poussées sur `main` sans validation de Lucien. Le moteur Gemini de l'orbe (`js/widgets/ai.js`) reste coupé.
+
+| Date | Étape | Ce qui a été fait | Étape du Suivi | Statut |
+| --- | --- | --- | --- | --- |
+| 24/10 | N1 Questions | Réponses de Lucien (voir décisions ci-dessous). Application encore en cours dans AI Studio : code non transmis. | — | Faite |
+
+Décisions (24/10) :
+- L'application est une app « Build » d'AI Studio, pas terminée. Lucien la finit dans AI Studio ; le hub reprendra ses **instructions et son catalogue d'actions**, pas forcément son code (à confirmer à l'étape 2).
+- Elle agit **sur demande** ; un **mode autonome activable** doit pouvoir agir **hub fermé** (implique un service extérieur gratuit : options et risques à présenter à l'étape 2).
+- Accès : **lire tout** le hub, **faire tout** ce que le hub sait faire, dans les limites des permissions.
+- Appareils : **PC et Android**.
+- Permissions « plus prudent » : LIBRE = lire, répondre, afficher ; CONFIRMATION = créer ou modifier ; INTERDIT = supprimer des données, envoyer un message au nom de Lucien, toucher à la sécurité (coffre, clés, synchro, verrouillage), **exporter les données**, **ouvrir des sites extérieurs**.
+- La fenêtre Noyau est **liée à l'orbe** (l'orbe réagit quand l'application travaille).
+
 ## Décisions prises
 
 - **Coffre du Hub** (24/10, ajouté depuis la discussion de cadrage) : `js/ui/coffre.js`, version 7.1.1. Bouton Diag « Importer le Coffre du Hub » et ligne du menu « Mes données » : lit `coffre-hub.json` (artifact Coffre du Hub) et ajoute sans effacer (sites → Favoris, radios → Musique, vidéos YouTube → À suivre, autres vidéos et playlists → Favoris, musique / autres / sources de veille → notes). Le lecteur vidéo « à part entière » reste à concevoir avec Lucien.
