@@ -105,7 +105,8 @@ export function initWeather() {
     return dl.time.slice(0, 7).map((k, i) => {
       const [y, mo, da] = k.split("-").map(Number), wd = i === 0 ? "auj" : JOURS[new Date(y, mo - 1, da).getDay()].slice(0, 3);
       const h = 4 + 30 * (dl.temperature_2m_max[i] - lo) / Math.max(hi - lo, 1), s = sky(dl.weather_code[i]);
-      const rain = dl.precipitation_probability_max && dl.precipitation_probability_max[i] != null ? " · pluie " + dl.precipitation_probability_max[i] + " %" : "";
+      const pp = dl.precipitation_probability_max ? dl.precipitation_probability_max[i] : null;      // nombre seulement : ce texte part dans du HTML
+      const rain = pp != null && Number.isFinite(+pp) ? " · pluie " + Math.round(+pp) + " %" : "";
       return `<div title="${wd} : ${s[0]}, ${T(dl.temperature_2m_min[i])}${deg()} / ${T(dl.temperature_2m_max[i])}${deg()}${rain}"><span class="di">${icon(s[1], 13)}</span>${T(dl.temperature_2m_max[i])}°<u style="height:${h.toFixed(0)}px"></u>${wd}</div>`;
     }).join("");
   }
