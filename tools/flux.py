@@ -50,7 +50,8 @@ def parse_feed(data):
             vid = e.findtext("yt:videoId", namespaces=NS)
             out.append({"titre": clean(e.findtext("a:title", namespaces=NS)), "lien": link.get("href") if link is not None else "", "date": iso(e.findtext("a:published", namespaces=NS) or e.findtext("a:updated", namespaces=NS)),
                         "image": th.get("url") if th is not None else None, "video": vid, "auteur": clean(e.findtext("a:author/a:name", namespaces=NS), 80)})
-    return [x for x in out if x["titre"] and x["lien"]]
+    # Seuls les liens web : un flux hostile ne doit pas glisser un lien javascript: ou data: dans le hub
+    return [x for x in out if x["titre"] and x["lien"] and re.match(r"https?://", x["lien"], re.I)]
 
 def source_name(url):
     return re.sub(r"^www\.", "", urllib.request.urlparse(url).hostname or url)

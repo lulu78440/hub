@@ -118,7 +118,7 @@ export function initMail() {
       li.innerHTML = '<span class="src"></span><div><b></b><span></span></div><em></em>';
       li.querySelector(".src").textContent = m.src === "Gmail" ? "G" : "O"; li.querySelector(".src").classList.add(m.src.toLowerCase());
       li.querySelector("b").textContent = m.from; li.querySelector("div span").textContent = m.subject; li.querySelector("em").textContent = (m.important ? "★ " : "") + fmt(m.date);
-      const go = () => { const a = document.createElement("a"); a.href = m.lien; a.target = "_blank"; a.rel = "noopener"; a.click(); };
+      const go = () => { if (!/^https:\/\//i.test(m.lien || "")) return; const a = document.createElement("a"); a.href = m.lien; a.target = "_blank"; a.rel = "noopener"; a.click(); };
       li.addEventListener("click", go); li.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
       ul.append(li);
     });

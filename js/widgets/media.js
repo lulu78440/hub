@@ -9,7 +9,8 @@ import { state, pulse } from "../state.js";
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
 const readJ = (k, d) => { try { const v = JSON.parse(prefs.get(k, "null")); return v ?? d; } catch (e) { return d; } };
-const openUrl = (u) => { const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
+const webUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");   // seuls les liens web (jamais javascript: ni data:)
+const openUrl = (u) => { u = webUrl(u); if (!u) return; const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
 
 /** Identifiant de vidéo ou de playlist dans un lien YouTube (watch, youtu.be, shorts, embed, playlist). */
 export function parseYouTube(s) {

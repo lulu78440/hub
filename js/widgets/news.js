@@ -7,7 +7,8 @@ import { sound } from "../device/sound.js";
 import { notify } from "../device/notify.js";
 import { state, pulse } from "../state.js";
 
-const openUrl = (u) => { const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
+const webUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");   // seuls les liens web (jamais javascript: ni data:)
+const openUrl = (u) => { u = webUrl(u); if (!u) return; const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
 
 export function initNews() {
   // ---------- Bandeau (PC) ----------
@@ -21,7 +22,7 @@ export function initNews() {
     run.innerHTML = "";
     if (!items.length) { run.innerHTML = '<span class="it">En attente des premiers titres (tâche programmée GitHub)…</span>'; return; }
     const make = () => items.map((it) => {
-      const a = document.createElement("a"); a.className = "it"; a.href = it.lien; a.target = "_blank"; a.rel = "noopener"; a.style.setProperty("--c", it.couleur || "var(--cyan)");
+      const a = document.createElement("a"); a.className = "it"; if (webUrl(it.lien)) a.href = webUrl(it.lien); a.target = "_blank"; a.rel = "noopener"; a.style.setProperty("--c", it.couleur || "var(--cyan)");
       a.title = it.source + (it.date ? " · " + ago(it.date) : "");
       const b = document.createElement("b"); b.textContent = it.cat; a.append(b, document.createTextNode(it.titre)); return a;
     });
@@ -56,7 +57,7 @@ export function initNews() {
     });
     const news = sites.flatMap((s) => (s.articles || []).map((a) => ({ ...a, site: s.nom }))).sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 5);
     arts.innerHTML = "";
-    news.forEach((a) => { const l = document.createElement("a"); l.href = a.lien; l.target = "_blank"; l.rel = "noopener"; l.innerHTML = "<b></b><span></span>"; l.children[0].textContent = a.site; l.children[1].textContent = a.titre; arts.append(l); });
+    news.forEach((a) => { const l = document.createElement("a"); if (webUrl(a.lien)) l.href = webUrl(a.lien); l.target = "_blank"; l.rel = "noopener"; l.innerHTML = "<b></b><span></span>"; l.children[0].textContent = a.site; l.children[1].textContent = a.titre; arts.append(l); });
     const down = sites.filter((s) => !s.ok).length;
     tag.textContent = down ? down + " EN PANNE" : sites.length ? "TOUT EST EN LIGNE" : "VEILLE";
     win.classList.toggle("alarm", !!down);
