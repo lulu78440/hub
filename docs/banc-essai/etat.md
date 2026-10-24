@@ -6,7 +6,7 @@ Reprise programmée : une seule en attente (voir fin de fichier).
 
 ## Cycle en cours
 
-Cycle 3 · Sécurité (cycles 1 et 2 terminés : 11/11)
+Cycle 4 · Cas limites et charge (cycles 1 à 3 terminés : 19/19 après corrections)
 
 ## Tests
 
@@ -23,14 +23,19 @@ Cycle 3 · Sécurité (cycles 1 et 2 terminés : 11/11)
 | 2 | Recette mobile simulé (390×844, tactile) | réussi | pas de défilement horizontal |
 | 2 | Hors ligne + mise à jour du service worker | réussi | nouvelle version annoncée, ancien cache retiré, données gardées |
 | 2 | Deux onglets (ajout, suppression vus dans l'autre) | réussi | |
-| 3 | Sécurité | à faire | |
+| 3 | Aucun secret ni donnée personnelle dans le dépôt | réussi | seule « maman@gmail.com » (exemple d'interface) |
+| 3 | Textes piégés : notes, tâches, agenda, favoris, groupes | réussi | rien ne s'exécute, aucune balise insérée |
+| 3 | Liens javascript:/data: : flux RSS, export trafiqué (favoris, page en direct, radios) | corrigé | B3, B4, B5 |
+| 3 | Verrouillage : illisible au repos, mauvaise phrase, vieil onglet, verrouillage auto 5 min | réussi | |
+| 3 | Jetons mails, clé Gemini, jeton et phrase de synchro : ni exportés ni synchronisés | réussi | |
+| 3 | Liens externes noopener ; page en direct isolée | corrigé | B5 |
 | 4 | Cas limites et charge | à faire | |
 | 5 | Performance et confort | à faire | |
 | 6 | Suite automatique `tools/tests/` | en cours | écrite au fil des cycles : `python3 tools/tests/run.py` |
 
 ## Prochaine action
 
-Cycle 3 : injections (flux RSS avec lien javascript:, notes, favoris, Coffre), verrouillage, secrets ; relecture statique en cours par un second agent.
+Cycle 4 : 1 000 notes/tâches, 2 000 favoris, stockage plein, coupure réseau en pleine synchro, horloge et fuseau, textes longs. Intégrer les constats de la relecture statique (second agent) dès son retour.
 
 ## Reprise programmée
 
