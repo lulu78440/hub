@@ -28,10 +28,11 @@ export function parseYouTube(s) {
     return { v, list };
   } catch (e) { return /^[\w-]{11}$/.test(s) ? { v: s, list: null } : null; }
 }
-const embed = (y, autoplay = 1) => y.v
-  ? `https://www.youtube-nocookie.com/embed/${y.v}?autoplay=${autoplay}&rel=0&playsinline=1${y.list ? "&list=" + y.list : ""}`
-  : `https://www.youtube-nocookie.com/embed/videoseries?list=${y.list}&autoplay=${autoplay}&rel=0&playsinline=1`;
-const thumb = (v) => `https://i.ytimg.com/vi/${v}/hqdefault.jpg`;
+// Identifiants revérifiés (ils peuvent venir d'un import ou du flux) : jamais de paramètre glissé dans l'adresse du lecteur
+const embed = (y, autoplay = 1) => y.v && /^[\w-]{11}$/.test(y.v)
+  ? `https://www.youtube-nocookie.com/embed/${y.v}?autoplay=${autoplay}&rel=0&playsinline=1${y.list ? "&list=" + encodeURIComponent(y.list) : ""}`
+  : `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(y.list)}&autoplay=${autoplay}&rel=0&playsinline=1`;
+const thumb = (v) => `https://i.ytimg.com/vi/${encodeURIComponent(v)}/hqdefault.jpg`;
 
 // Radios web (flux directs, sans compte). On peut en ajouter depuis le menu de la fenêtre Musique.
 // Anciennes adresses qui ne répondent plus → nouvelles (appliqué aux radios déjà enregistrées par l'import du Coffre ou une ancienne version)
@@ -64,7 +65,7 @@ export function initMedia() {
   });
   function list() {
     const fromFlux = ((flux.data && flux.data.videos) || []).filter((x) => x.video).map((x) => ({ v: x.video, t: x.titre, a: x.auteur, d: x.date }));
-    const seen = new Set(); return queue.concat(fromFlux).filter((x) => x.v && !seen.has(x.v) && seen.add(x.v));
+    const seen = new Set(); return queue.concat(fromFlux).filter((x) => /^[\w-]{11}$/.test(x.v || "") && !seen.has(x.v) && seen.add(x.v));
   }
   function showPoster() {
     player.querySelector("iframe")?.remove(); poster.hidden = false;
