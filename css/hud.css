@@ -749,7 +749,7 @@ body.lite .mlist { max-height: 55vh; }
 
 /* ---------- Phase 6 · IA locale du noyau ---------- */
 .aip { position: fixed; z-index: 9; right: 24px; bottom: 70px; width: min(420px, calc(100vw - 32px)); height: min(460px, 60vh); display: flex; flex-direction: column; gap: 8px; padding: 12px 14px;
-  background: linear-gradient(160deg, rgba(14,18,46,.95), rgba(26,10,48,.95)); border: 1px solid rgba(155,114,255,.55); box-shadow: 0 0 40px rgba(155,114,255,.2);
+  background: linear-gradient(160deg, #0e122e, #1a0a30); border: 1px solid rgba(155,114,255,.55); box-shadow: 0 0 40px rgba(155,114,255,.2);
   clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
 .aip[hidden] { display: none; }
 .aih { display: flex; align-items: center; gap: 10px; }
@@ -788,3 +788,14 @@ body.locked > :not(.lock):not(script) { visibility: hidden !important; }
 .coffre .lp { margin: 0; font-size: 13px; color: var(--dim); }
 .coffre .erow { margin-top: 0; }
 .coffre select.inl { width: auto; margin-left: 6px; }
+
+/* ---------- 6.3 · Noyau IA avec Gemini ---------- */
+.aiform { display: grid; gap: 8px; }
+.aiform ol.sys { margin: 0; padding-left: 18px; font-family: inherit; font-size: 12px; line-height: 1.45; color: var(--ink); }
+.aiform p.sys { margin: 0; font-size: 11px; line-height: 1.4; }
+.aiform a { color: var(--cyan); }
+.aiform textarea.inl { resize: vertical; min-height: 70px; font: 13px/1.4 inherit; }
+.aiform .chkl { white-space: normal; font-size: 12px; }
+.aih .aicfg { padding: 3px 8px; }
+body.lite .aip { left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); width: auto; height: min(70vh, 560px); }
+.aimodels .btn { white-space: normal; line-height: 1.35; }

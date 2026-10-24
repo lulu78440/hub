@@ -22,10 +22,13 @@ POUR OUVRIR LE HUB DEPUIS CETTE ARCHIVE
 TES DONNÉES (notes, tâches, agenda, favoris, images, réglages)
 Elles ne sont pas dans cette archive : elles vivent sur chaque appareil. Garde tes fichiers « hub-donnees-AAAA-MM-JJ.json »
 (bouton Diag > Exporter, ou le rappel du dimanche) à côté de cette archive, puis Diag > Importer pour les remettre.
+Si le verrouillage de l'espace perso est actif, l'export s'appelle « hub-donnees-chiffre-AAAA-MM-JJ.json » : il est chiffré
+et ne s'ouvre qu'avec la phrase secrète (ou la clé de secours) EN VIGUEUR LE JOUR DE L'EXPORT. Sans elles, il est illisible :
+garde la clé de secours sur papier ou dans un gestionnaire de mots de passe, jamais avec l'archive ni dans le dépôt.
    La recherche a évidemment besoin d'Internet pour ouvrir les sites.
 
 POUR RETROUVER LA VERSION EN LIGNE
-- Code complet et historique : https://github.com/lulu78440/hub (étiquette « {version} » dans Releases / Tags)
+- Code complet et historique : https://github.com/lulu78440/hub (branche « version-{version.lstrip('v')} »)
 - Hub en ligne : https://lulu78440.github.io/hub/
 
 CONTENU DE L'ARCHIVE
@@ -36,7 +39,7 @@ CONTENU DE L'ARCHIVE
 
 TES DONNÉES
 Notes, tâches, favoris et réglages ne sont PAS dans cette archive : ils restent sur chaque appareil
-(export / import en fichier à partir de la phase 2).
+(export / import en fichier, chiffré si le verrouillage est actif : voir plus haut).
 """
 out = ROOT / "dist" / f"hub-{version}.zip"
 out.parent.mkdir(exist_ok=True)
