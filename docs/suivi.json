@@ -113,7 +113,8 @@
   "p2-export",
   "p2-fav",
   "p2-focus",
-  "p2-geo",
+  "p2-lock",
+  "p2-plan2",
   "p2-lock",
   "p2-meteo",
   "p2-remind",
@@ -149,7 +150,7 @@
   "p2-focus",
   "p2-plan2"
  ],
- "maj": "2026-10-24T12:40:00+02:00",
+ "maj": "2026-10-24T16:00:00+02:00",
  "par": "Claude",
  "titres": {
   "p2-focus": "Ramener vers moi",
