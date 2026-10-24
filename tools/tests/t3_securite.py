@@ -1,6 +1,6 @@
 """Cycle 3 · Sécurité : secrets du dépôt, textes piégés, liens javascript:, verrouillage, secrets jamais exportés ni synchronisés,
 liens externes, page en direct isolée. Tout se passe sur le serveur local, avec des données factices."""
-import json, os, re, subprocess, datetime
+import json, os, re, subprocess, datetime, time
 from hubtest import ROOT, PHRASE, FAKE_TOKEN, ev, seed, counts, enable_vault, unlock_page, export_file, import_file, write_json
 from fakes import FakeGitHub
 from t2_fonctions import make_mock, FLUX
@@ -220,4 +220,29 @@ def test_securite_liens_externes_et_page_en_direct(h):
     _assert(not reach, f"la page en direct peut lire le hub (sandbox « {sandbox} »)")
     web.fill("javascript:" + PWN); web.press("Enter"); p.wait_for_timeout(500)
     _assert(not _pwned(p) and "javascript" not in (fr.get_attribute("src") or ""), "javascript: accepté dans la page en direct")
+    d.close()
+
+
+def test_securite_meteo_et_secrets_apres_desactivation(h):
+    """Cache météo piégé (export trafiqué) : rien ne s'exécute. Désactiver le verrouillage retire la clé Gemini au lieu de la laisser en clair."""
+    h.mock = make_mock()
+    d = h.device(); p = d.page()
+    days = [datetime.date.today().isoformat()] * 7
+    cache = {"at": int(time.time() * 1000), "lat": 44.8, "lon": -0.58, "name": "Ville factice",
+             "data": {"current": {"temperature_2m": 10, "relative_humidity_2m": 50, "apparent_temperature": 9, "weather_code": 1, "wind_speed_10m": 5, "is_day": 1},
+                      "daily": {"time": days, "weather_code": [1] * 7, "temperature_2m_max": [12] * 7, "temperature_2m_min": [5] * 7,
+                                "sunrise": [x + "T07:00" for x in days], "sunset": [x + "T18:00" for x in days],
+                                "precipitation_probability_max": ['"><img src=x onerror="' + PWN + '">'] * 7}}}
+    data = {"format": "hub-donnees", "formatVersion": 1, "data": {}, "prefs": {
+        "hub-meteo-cache": json.dumps(cache), "hub-meteo-lieu": json.dumps({"lat": 44.8, "lon": -0.58, "name": "Ville factice", "at": int(time.time() * 1000)})}}
+    import_file(p, write_json(h, "c3-meteo-piege.json", data))
+    p.wait_for_function("window.__hub && document.body.classList.contains('ready')", timeout=40000)
+    p.hover(".wxm"); p.wait_for_timeout(800)
+    _assert(not _pwned(p) and p.evaluate("document.querySelectorAll('img[src=x]').length") == 0, "cache météo piégé exécuté")
+    # Clé Gemini factice, verrouillage activé puis désactivé
+    enable_vault(p)
+    ev(p, "(await import('/js/store/vault.js')).vault.lsSet('hub-secret-ia', 'cle-gemini-factice-789'); await (await import('/js/store/vault.js')).vault.flush();")
+    ev(p, "const s = await import('/js/store/storage.js'); const { vault } = await import('/js/store/vault.js'); await s.migrate(async () => { await s.plainAll(); await vault.destroy(); });")
+    left = ev(p, "return localStorage.getItem('hub-secret-ia');")
+    _assert(left is None, "clé Gemini laissée en clair après désactivation : " + str(left))
     d.close()
