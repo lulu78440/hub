@@ -23,7 +23,7 @@ export function initWebview() {
     // Une page du même site que le hub (ex. une autre page de lulu78440.github.io) ne reçoit pas allow-same-origin :
     // sinon elle pourrait lire le hub et ses données déverrouillées.
     const same = new URL(url).origin === location.origin;
-    f.setAttribute("sandbox", "allow-scripts " + (same ? "" : "allow-same-origin ") + "allow-popups allow-forms allow-popups-to-escape-sandbox");
+    f.setAttribute("sandbox", same ? "allow-scripts allow-forms" : "allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox");
     vp.append(f); open.href = url; inp.value = url.replace(/^https:\/\//, "").replace(/\/$/, "");
     const hint = document.createElement("p"); hint.className = "whint"; hint.textContent = "Page vide ? Ce site refuse l'affichage ici : ↗ pour l'ouvrir."; vp.append(hint);
     loadedAt = Date.now(); tag.textContent = new URL(url).hostname.replace(/^www\./, "").toUpperCase(); stamp();
