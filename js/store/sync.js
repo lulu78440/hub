@@ -4,6 +4,7 @@
 // Il faut un jeton GitHub limité aux Gists (mode d'emploi dans Diag) ; jeton et phrase restent sur l'appareil, jamais exportés.
 // Les images ne sont pas synchronisées (trop lourdes) : elles passent par l'export.
 import { store, tombstones } from "./storage.js";
+import { vault } from "./vault.js";
 
 const KEY = "hub-synchro", DESC = "hub-synchro (données chiffrées du hub, ne pas modifier)", FILE = "hub-synchro.txt";
 const COLLS = ["notes", "tasks", "events", "favs", "kv"];
@@ -12,8 +13,9 @@ const enc = new TextEncoder(), dec = new TextDecoder();
 const b64 = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
 const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
-export function config() { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } }
-function saveConfig(c) { if (c) localStorage.setItem(KEY, JSON.stringify(c)); else localStorage.removeItem(KEY); }
+// Jeton et phrase de synchro : chiffrés par le coffre quand le verrouillage est actif.
+export function config() { try { return JSON.parse(vault.lsGet(KEY) || "null"); } catch (e) { return null; } }
+function saveConfig(c) { if (c) vault.lsSet(KEY, JSON.stringify(c)); else vault.lsRemove(KEY); }
 
 async function keyFrom(phrase, salt) {
   const base = await crypto.subtle.importKey("raw", enc.encode(phrase), "PBKDF2", false, ["deriveKey"]);

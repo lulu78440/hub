@@ -2,6 +2,9 @@
 // Chaque « collection » est une liste d'objets avec un champ id. Les changements sont annoncés aux widgets
 // de cet onglet et des autres onglets du hub ouverts (BroadcastChannel), pour que tout reste à jour.
 // Export / import : un seul fichier JSON avec toutes les collections et les réglages (clés hub-…).
+// Verrouillage (vault.js) : quand il est actif, chaque enregistrement est chiffré avant d'entrer dans IndexedDB
+// et déchiffré à la lecture ; les widgets ne voient aucune différence.
+import { vault } from "./vault.js";
 
 const DB_NAME = "hub", DB_VERSION = 2;
 export const COLLECTIONS = ["notes", "tasks", "events", "favs", "kv", "images"];    // kv : petites valeurs diverses ; images : champ blob
@@ -59,25 +62,29 @@ function tomb(coll, ids) {
 /** Nouvel identifiant court, unique sur l'appareil. */
 export const newId = (p = "") => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+const seal = (o) => (vault.on ? vault.seal(o) : o);
+const openAll = (list) => (list.some((r) => r && r._e) ? Promise.all(list.map((r) => vault.open(r))) : list);
+const SKIP = (k) => k.startsWith("hub-synchro") || k.startsWith("hub-secret") || k.startsWith("hub-coffre");   // jamais dans un fichier
+
 export const store = {
   /** Vrai si les données sont vraiment enregistrées (faux = secours en mémoire, perdu à la fermeture). */
   async durable() { return !!(await open()); },
   async all(coll) {
     const db = await open();
     if (!db) return [...memory[coll].values()];
-    return tx(db, coll, "readonly", (st) => st.getAll());
+    return openAll(await tx(db, coll, "readonly", (st) => st.getAll()));
   },
   async get(coll, id) {
     const db = await open();
     if (!db) return memory[coll].get(id);
-    return tx(db, coll, "readonly", (st) => st.get(id));
+    return vault.open(await tx(db, coll, "readonly", (st) => st.get(id)));
   },
   // Chaque écriture est datée (_m) et chaque suppression laisse une trace (pour la synchro entre appareils, 3.5).
   // sync = true : écriture venue de la synchro (on garde sa date, pas de nouvelle trace).
   async put(coll, obj, sync = false) {
     if (!sync) obj._m = Date.now();
     const db = await open();
-    if (!db) memory[coll].set(obj.id, obj); else await tx(db, coll, "readwrite", (st) => st.put(obj));
+    if (!db) memory[coll].set(obj.id, obj); else { const rec = await seal(obj); await tx(db, coll, "readwrite", (st) => st.put(rec)); }
     emit(coll, true, sync); return obj;
   },
   async del(coll, id, sync = false) {
@@ -91,7 +98,7 @@ export const store = {
     if (!sync) { const now = Date.now(); objs.forEach((o) => { o._m = now; }); }
     const db = await open();
     if (!db) objs.forEach((o) => memory[coll].set(o.id, o));
-    else await tx(db, coll, "readwrite", (st) => { objs.forEach((o) => st.put(o)); });
+    else { const recs = await Promise.all(objs.map(seal)); await tx(db, coll, "readwrite", (st) => { recs.forEach((o) => st.put(o)); }); }
     emit(coll, true, sync);
   },
   /** Plusieurs suppressions en une fois. */
@@ -116,7 +123,7 @@ export async function exportAll(version) {
   // Les images voyagent dans le fichier sous forme de texte (data:…)
   data.images = await Promise.all(data.images.map(async (im) => ({ ...im, blob: im.blob instanceof Blob ? await toDataURL(im.blob) : null })));
   const prefs = {};
-  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("hub-") && !k.startsWith("hub-synchro") && !k.startsWith("hub-secret")) prefs[k] = localStorage.getItem(k); /* jamais le jeton de synchro dans un fichier */ } } catch (e) { /* réglages indisponibles */ }
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("hub-") && !SKIP(k)) prefs[k] = vault.lsGet(k); /* jamais le jeton de synchro dans un fichier */ } } catch (e) { /* réglages indisponibles */ }
   return { format: FORMAT, formatVersion: FORMAT_VERSION, appVersion: version, exportedAt: new Date().toISOString(), data, prefs };
 }
 
@@ -138,10 +145,30 @@ export async function importAll(d) {
     let items = (Array.isArray(d.data[c]) ? d.data[c] : []).filter((x) => x && typeof x === "object" && typeof x.id === "string");
     if (c === "images") items = (await Promise.all(items.map(async (im) => ({ ...im, blob: typeof im.blob === "string" && im.blob.startsWith("data:image/") ? await fromDataURL(im.blob) : null })))).filter((im) => im.blob);
     if (!db) { memory[c] = new Map(items.map((x) => [x.id, x])); }
-    else await tx(db, c, "readwrite", (st) => { st.clear(); items.forEach((x) => st.put(x)); });
+    else { const recs = await Promise.all(items.map(seal)); await tx(db, c, "readwrite", (st) => { st.clear(); recs.forEach((x) => st.put(x)); }); }
   }
   if (d.prefs && typeof d.prefs === "object") {
-    try { Object.entries(d.prefs).forEach(([k, v]) => { if (k.startsWith("hub-") && !k.startsWith("hub-secret") && !k.startsWith("hub-synchro") && typeof v === "string") localStorage.setItem(k, v); }); } catch (e) { /* réglages non restaurés */ }
+    try { Object.entries(d.prefs).forEach(([k, v]) => { if (k.startsWith("hub-") && !SKIP(k) && typeof v === "string") vault.lsSet(k, v); }); } catch (e) { /* réglages non restaurés */ }
   }
+  await vault.flush();
   COLLECTIONS.forEach((c) => emit(c));
+}
+
+/** Réécrit toutes les collections selon l'état du coffre : chiffrées s'il est ouvert et actif, en clair sinon.
+ *  Lecture complète d'abord (déchiffrée), puis une écriture par collection : un enregistrement est toujours lisible. */
+export async function rewriteAll() {
+  const db = await open(); if (!db) return;
+  for (const c of COLLECTIONS) {
+    const plain = await openAll(await tx(db, c, "readonly", (st) => st.getAll()));
+    const recs = await Promise.all(plain.map(seal));
+    await tx(db, c, "readwrite", (st) => { recs.forEach((x) => st.put(x)); });
+  }
+}
+/** Déchiffre tout pour arrêter le verrouillage (à appeler AVANT vault.destroy()). */
+export async function plainAll() {
+  const db = await open(); if (!db) return;
+  for (const c of COLLECTIONS) {
+    const plain = await openAll(await tx(db, c, "readonly", (st) => st.getAll()));
+    await tx(db, c, "readwrite", (st) => { plain.forEach((x) => st.put(x)); });
+  }
 }

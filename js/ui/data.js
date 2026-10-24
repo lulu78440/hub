@@ -4,6 +4,8 @@ import { exportAll, readExport, importAll, store } from "../store/storage.js";
 import { prefs } from "../store/prefs.js";
 import { VERSION } from "../version.js";
 import { toast } from "./toast.js";
+import { vault } from "../store/vault.js";
+import { askSecret } from "./lockui.js";
 
 const pad = (n) => String(n).padStart(2, "0");
 const fmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -21,8 +23,10 @@ export function initData() {
   async function exportFile() {
     try {
       const d = await exportAll(VERSION), n = new Date();
-      const name = `hub-donnees-${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}.json`;
-      const url = URL.createObjectURL(new Blob([JSON.stringify(d, null, 1)], { type: "application/json" }));
+      // Verrouillage actif : le fichier est chiffré (il s'ouvre avec la phrase ou la clé de secours du moment)
+      const sealed = vault.active, file = sealed ? await vault.sealExport(d) : d;
+      const name = `hub-donnees-${sealed ? "chiffre-" : ""}${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}.json`;
+      const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, sealed ? 0 : 1)], { type: "application/json" }));
       const a = document.createElement("a"); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
       prefs.set("dernier-export", n.toISOString()); showLast();
@@ -34,14 +38,23 @@ export function initData() {
   input.addEventListener("change", async () => {
     const f = input.files && input.files[0]; input.value = "";
     if (!f) return;
-    let r;
-    try { r = readExport(await f.text()); } catch (e) { toast(e.message, { ms: 4500 }); return; }
+    let r, text = await f.text(), opened = null;
+    // Export chiffré : il faut la phrase (ou la clé de secours) de l'époque de l'export
+    let obj = null; try { obj = JSON.parse(text); } catch (e) { obj = null; }
+    if (vault.isSealed(obj)) {
+      opened = await askSecret("Export verrouillé", "Ce fichier est chiffré. Entre la phrase secrète (ou la clé de secours) en vigueur quand il a été exporté.", (v) => vault.openExport(obj, v));
+      if (!opened) { toast("Import annulé"); return; }
+      text = JSON.stringify(opened.d);
+    }
+    try { r = readExport(text); } catch (e) { toast(e.message, { ms: 4500 }); return; }
     const c = r.counts;
     const quand = r.date && !isNaN(r.date) ? " du " + fmt.format(r.date) : "";
     const ok = confirm(`Importer l'export${quand} ?\n\n${c.notes} note(s), ${c.tasks} tâche(s), ${c.events} événement(s), ${c.favs} favori(s), ${c.images} image(s).\n\nATTENTION : tout ce qui est actuellement dans le hub sur cet appareil sera remplacé.`);
     if (!ok) { toast("Import annulé"); return; }
     toast("Import en cours…", { ms: 10000 });
-    try { await importAll(r.d); toast("Import terminé : rechargement…"); setTimeout(() => location.reload(), 900); }
+    try {
+      if (opened && !vault.active) await vault.adopt(opened.bytes, opened.coffre);     // l'appareil reprend le verrouillage du fichier
+      await importAll(r.d); toast("Import terminé : rechargement…"); setTimeout(() => location.reload(), 900); }
     catch (e) { toast("Import impossible : " + e.message, { ms: 4500 }); }
   });
   const importFile = () => input.click();

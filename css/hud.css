@@ -765,3 +765,26 @@ body.lite .mlist { max-height: 55vh; }
 .aibar u { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--violet)); transition: width .3s; text-decoration: none; }
 .aimodels { display: flex; flex-direction: column; gap: 6px; }
 .aimodels .btn { text-align: left; text-transform: none; letter-spacing: .02em; }
+
+/* ---------- Verrouillage de l'espace perso ---------- */
+.lock { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: radial-gradient(ellipse at 50% 40%, #061a2e 0%, #02060d 70%); }
+.lock[hidden] { display: none; }
+.lock .lring { position: absolute; left: 50%; top: 50%; width: min(80vmin, 620px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: 1px dashed rgba(63,230,255,.25); box-shadow: 0 0 80px rgba(63,230,255,.08) inset; animation: lspin 60s linear infinite; pointer-events: none; }
+.lock .lring::after { content: ""; position: absolute; inset: 12%; border-radius: 50%; border: 1px solid rgba(155,114,255,.22); }
+@keyframes lspin { to { rotate: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .lock .lring { animation: none; } }
+.lcard { position: relative; width: min(440px, 100%); display: grid; gap: 10px; padding: 20px 22px; background: linear-gradient(160deg, rgba(10,30,52,.96), rgba(18,10,40,.96)); border: 1px solid rgba(63,230,255,.5);
+  box-shadow: 0 0 50px rgba(63,230,255,.15); clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); }
+.lcard .lh { font-family: var(--display); font-size: 16px; letter-spacing: .14em; color: var(--cyan); text-shadow: 0 0 14px rgba(63,230,255,.5); }
+.lcard .lp { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.lcard .lmsg { margin: 0; min-height: 1.2em; font-family: var(--mono); font-size: 11px; color: var(--amber); }
+.lcard .inl { font-size: 16px; padding: 10px 12px; }
+.lcard .erow { justify-content: flex-end; }
+.lcard .lnkb { margin-right: auto; border-color: transparent; background: none; color: var(--dim); text-transform: none; letter-spacing: .02em; }
+.lkey { display: block; padding: 12px; text-align: center; font: 600 18px var(--mono); letter-spacing: .08em; color: var(--amber); background: rgba(255,179,71,.08); border: 1px dashed rgba(255,179,71,.5); user-select: all; overflow-wrap: anywhere; }
+body.locked > :not(.lock):not(script) { visibility: hidden !important; }
+.coffre { display: grid; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(63,230,255,.18); }
+.coffre > b { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--violet); text-transform: uppercase; font-weight: 500; }
+.coffre .lp { margin: 0; font-size: 13px; color: var(--dim); }
+.coffre .erow { margin-top: 0; }
+.coffre select.inl { width: auto; margin-left: 6px; }

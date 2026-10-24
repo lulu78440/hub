@@ -28,6 +28,7 @@ import { initSyncUI } from "./ui/syncui.js";
 import { initSurprises } from "./widgets/surprises.js";
 import { initMail } from "./widgets/mail.js";
 import { initAI } from "./widgets/ai.js";
+import { gate, initLockUI } from "./ui/lockui.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
 import { initCursor } from "./fx/cursor.js";
@@ -74,6 +75,7 @@ async function start() {
   }
   const resetLayout = () => { if (state.lite) return; place(wins.reset()); plans.goPlan(1); toast("Disposition d'origine restaurée"); };
   $("b-layout").addEventListener("click", resetLayout);
+  initLockUI();
   const data = initData();
   initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data, test: () => window.__hub.reminders.test() });
   initNotes();
@@ -146,4 +148,5 @@ async function start() {
   fx = createPostFX(THREE, renderer, core.scene, core.camera, { lite });
   resize();
 }
-start();
+// Verrouillage actif : rien ne s'ouvre (ni les données, ni les widgets) avant la bonne phrase.
+gate().then(start);

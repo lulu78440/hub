@@ -9,14 +9,15 @@ import { prefs } from "../store/prefs.js";
 import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { pulse } from "../state.js";
+import { vault } from "../store/vault.js";
 
 const REDIRECT = new URL("oauth.html", location.href.split("#")[0].split("?")[0].replace(/[^/]*$/, "")).href;
 const SEC = "hub-secret-mails";                 // jetons : exclus de l'export et de la synchro
-const readJ = (k, d, store = localStorage) => { try { return JSON.parse(store.getItem(k)) ?? d; } catch (e) { return d; } };
+const readJ = (k, d) => { try { return JSON.parse(vault.lsGet(k)) ?? d; } catch (e) { return d; } };
 const cfg = () => { try { return JSON.parse(prefs.get("mails", "null")) || { gmail: "", outlook: "", from: [], mots: [] }; } catch (e) { return { gmail: "", outlook: "", from: [], mots: [] }; } };
 const saveCfg = (c) => prefs.set("mails", JSON.stringify(c));
 const tok = () => readJ(SEC, {});
-const saveTok = (t) => localStorage.setItem(SEC, JSON.stringify(t));
+const saveTok = (t) => vault.lsSet(SEC, JSON.stringify(t));      // chiffrés par le coffre si le verrouillage est actif
 const rnd = (n = 32) => { const a = crypto.getRandomValues(new Uint8Array(n)); return btoa(String.fromCharCode(...a)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
 async function sha256url(s) { const h = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))); return btoa(String.fromCharCode(...h)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
 
@@ -179,7 +180,7 @@ export function initMail() {
   }
   registerMenu("mails", () => [{ h: "Mails · lecture seule" }, { t: "Actualiser", fn: () => refresh(true) }, { t: "Règles de tri", fn: rules },
     { t: "Configurer Gmail", fn: () => setup("gmail") }, { t: "Configurer Outlook", fn: () => setup("outlook") },
-    { t: "Déconnecter (effacer les jetons de cet appareil)", fn: () => { localStorage.removeItem(SEC); mails = []; render(); toast("Jetons effacés"); } }]);
+    { t: "Déconnecter (effacer les jetons de cet appareil)", fn: () => { vault.lsRemove(SEC); mails = []; render(); toast("Jetons effacés"); } }]);
   render(); refresh();
   setInterval(refresh, 10 * 60e3);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
