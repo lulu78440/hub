@@ -82,7 +82,7 @@ export function initMedia() {
     });
     upnext.classList.toggle("closed", !upOpen); vpb.querySelector(".vtog").textContent = upOpen ? "Masquer ▴" : "Afficher ▾";
     if (vpf) { vpf.firstElementChild.textContent = "Lecteur YouTube intégré"; vpf.lastElementChild.textContent = L.length ? L.length + " à suivre" : "—"; }
-    const strip = document.querySelector('.win[data-id="strip"] .pb'); if (strip && state.lite) { strip.className = "pb pb-strip"; strip.innerHTML = ""; strip.append(row.cloneNode(true)); strip.querySelectorAll(".thumb").forEach((b, i) => b.addEventListener("click", () => { play(L[i]); document.querySelector('.win[data-id="video"]').scrollIntoView({ block: "start", behavior: "smooth" }); })); }
+    const strip = document.querySelector('.win[data-id="strip"] .pb'); if (strip && state.lite) { strip.closest(".win").querySelector(".tag").textContent = L.length ? L.length + " À SUIVRE" : "À SUIVRE"; strip.className = "pb pb-strip"; strip.innerHTML = ""; strip.append(row.cloneNode(true)); strip.querySelectorAll(".thumb").forEach((b, i) => b.addEventListener("click", () => { play(L[i]); document.querySelector('.win[data-id="video"]').scrollIntoView({ block: "start", behavior: "smooth" }); })); }
   }
   vpb.querySelector(".vtog").addEventListener("click", () => { upOpen = !upOpen; prefs.set("video-suivre", upOpen ? "1" : "0"); renderRow(); });
   vpb.querySelector(".vlink").addEventListener("submit", (e) => {
@@ -198,7 +198,7 @@ export function initMedia() {
   });
   // Double-clic sur le lecteur ou sur « en écoute » : grand écran (comme la v8)
   mpb.querySelector(".np").addEventListener("dblclick", (e) => { e.stopPropagation(); openTh(); });
+  ui();
   if (src) { mt.textContent = src.n; ms.textContent = "Clique « Lecture » pour reprendre"; }
-  renderStations();
   return { play, parseYouTube };
 }

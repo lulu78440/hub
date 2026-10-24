@@ -72,6 +72,7 @@ export function initWeather() {
     const pb = win.querySelector(".pb"); pb.className = "pb pb-meteo";
     pb.innerHTML = '<div class="wx-top"><div class="deg">--<sup>°C</sup></div><p><b class="wl">Météo…</b><span class="wd"></span></p></div>' + SUN_SVG + '<div class="days"></div><div class="wpick"></div><button type="button" class="btn wchg">Changer de ville</button>';
     mob = { pb, tag: win.querySelector(".tag"), pf: win.querySelector(".pf") };
+    mob.tag.textContent = "MÉTÉO";
     pb.querySelector(".wchg").addEventListener("click", () => openPicker(pb.querySelector(".wpick")));
   }
 
