@@ -145,6 +145,7 @@ Travail sur la branche `noyau` uniquement, fichiers propres (`js/noyau/…`, fen
 | --- | --- | --- | --- | --- |
 | 24/10 | N1 Questions | Réponses de Lucien (voir décisions ci-dessous). Application encore en cours dans AI Studio : code non transmis. | — | Faite |
 | 24/10 | N2 Façons de relier | Trois options comparées (app hébergée en fenêtre, cerveau importé, app séparée). Choix : **cerveau importé** (option B). Sauvegarde JSON de l'app lue sur place (données seulement, aucune clé ; non versionnée). | — | Faite |
+| 24/10 | N3 Contrat de liaison | Code de l'app v3.8 reçu (.zip, gardé hors du dépôt, aucune clé ni adresse dedans) et audité par deux agents en lecture seule. Contrat rédigé : `docs/noyau-contrat.md` (principes, ce qui est repris ou écarté, architecture `js/noyau/`, messages, catalogue de 32 outils (16 LIBRE, 16 CONFIRMATION) et 6 familles d’actions INTERDIT, données sortantes, import de la mémoire, réflexion, journal, recette). Cerveau v0 (instructions privées) rangé dans le Projet : `noyau/cerveau.md`, jamais dans le dépôt. | ns-pont (livré) | Livrée, en attente de validation |
 
 Décisions (24/10) :
 - L'application est une app « Build » d'AI Studio, pas terminée. Lucien la finit dans AI Studio ; le hub reprendra ses **instructions et son catalogue d'actions**, pas forcément son code (à confirmer à l'étape 2).
@@ -164,6 +165,10 @@ Décisions (24/10) :
 - **Sources** : les 11 sources de connaissances de l'app en lecture LIBRE (liste fixe) ; tout autre site en CONFIRMATION ; ouvrir un onglet vers un site reste INTERDIT.
 - **Méthode** : l'app AI Studio est terminée par Lucien puis **gelée** comme référence (v3.7). Conception ici (Opus), construction dans une discussion « Noyau · construction » (Sonnet), sur la branche `noyau`.
 - **Consigne de Lucien (24/10)** : l'app AI Studio sert **uniquement d'exemple**. Son visuel n'est **pas reproduit** : interface conçue pour le hub (Hologramme, fenêtre au plan 1 liée à l'orbe), rendu professionnel et futuriste. Le **modèle de réflexion est repris et amélioré**, la **mémoire accumulée est conservée intégralement**. Claude est autonome sur la conception ; objectif : les réponses les plus réalistes possible.
+- **Audit de la v3.8 (24/10)** : l'intelligence réelle de l'app = un appel Gemini (+1 après un outil) ; le reste est un routeur de mots-clés, des gabarits et des scores fixes (« 97 % », cohérence, naturel). Repris : barrière et journal (corrigée : refus par défaut), catalogue d'outils, boucle d'outils (3 tours), recherche locale (corrigée en vrai BM25), relance contextuelle, blocage local des interdits, synthèse vocale, sources réellement interrogées. Écartés : scores, émotions fixes, fausses actualités, boucles d'apprentissage infinies, coffre de l'app, clé dans l'URL, doubles essais.
+- **Mémoire (24/10)** : 10 souvenirs, 468 connaissances, 14 articles locaux, tout importé ; 213 fiches vérifiées, 48 non vérifiées, 203 fiches « Exploration autonome » sans contenu et 4 fausses actualités **archivées** (gardées, non utilisées pour répondre ; suppression par Lucien seulement). 2 identifiants en double renumérotés.
+- **Réalisme (24/10)** : citations des extraits [n], « je ne sais pas » plutôt qu'inventer, émotions remplacées par un « ton » montré par l'orbe (réversible). « J'insiste » ne lève jamais un interdit ni une confirmation.
+- **Budget (24/10)** : Flash-Lite par défaut, 40 requêtes par jour (réglable), pas de bascule silencieuse de modèle. Mode autonome : 1 recherche / 30 min, 20 / jour, sans Gemini, fiches « À valider ».
 
 ## Décisions prises
 
