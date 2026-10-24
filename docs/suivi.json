@@ -1,6 +1,6 @@
 {
  "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
- "releve": "2026-10-24T15:20:00+02:00",
+ "releve": "2026-10-24T15:40:00+02:00",
  "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
  "phases": [
   {
@@ -43,7 +43,8 @@
     "p2-lock",
     "p2-coffre",
     "p2-geo",
-    "p2-focus"
+    "p2-focus",
+    "p2-plan2"
    ]
   },
   {
@@ -147,5 +148,21 @@
   "p2-focus"
  ],
  "maj": "2026-10-24T12:40:00+02:00",
- "par": "Claude"
+ "par": "Claude",
+ "titres": {
+  "p2-focus": "Ramener vers moi",
+  "p2-plan2": "Plan 2 plus vaste",
+  "p3-media": "Radio, playlist et MP3",
+  "p3-sync": "Synchro PC / téléphone",
+  "p4-ok": "Surprises",
+  "p4-perf": "Fluidité avec les surprises",
+  "p5-read": "Mails : lecture",
+  "p5-rules": "Mails : règles",
+  "p6-orbe": "Orbe de l'assistant",
+  "p6-ent-vis": "Entité : apparence",
+  "p6-ent-ia": "Entité : intelligence",
+  "p7-1": "Rituels",
+  "p7-2": "Radar des dates",
+  "p7-voix": "Recherche vocale"
+ }
 }
