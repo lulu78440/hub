@@ -19,10 +19,11 @@ export const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
 
 // Réglages personnels (clés de localStorage) : chiffrés quand le verrouillage est actif.
-const PRIVATE = new Set(["constellation", "meteo-cache", "meteo-lieu", "mails", "web-url", "video-suivre", "video-courante", "musique-yt", "ia-instructions"].map((k) => "hub-" + k));
+const PRIVATE = new Set(["constellation", "meteo-cache", "meteo-lieu", "mails", "web-url", "video-suivre", "video-courante", "musique-yt", "ia-instructions", "radios", "video-file"].map((k) => "hub-" + k));
 const isPrivate = (k) => PRIVATE.has(k) || k.startsWith("hub-secret") || k === "hub-synchro";
 
 let dek = null;              // CryptoKey de la clé de données (en mémoire seulement)
+let prevKey = null;          // ancienne clé pendant un changement de clé (rotation inachevée)
 let raw = null;              // ses octets, gardés pour pouvoir la ranger de nouveau (changement de phrase)
 const cache = new Map();     // réglages et secrets déchiffrés (en mémoire seulement)
 let writes = Promise.resolve();
@@ -43,7 +44,11 @@ async function unwrap(w, secret) {
   try { return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(w.iv) }, await kek(secret, unb64(w.salt), w.iter), unb64(w.ct))); }
   catch (e) { return null; }
 }
-async function setKey(bytes) { raw = bytes; dek = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt", "decrypt"]); }
+async function setKey(bytes) {
+  raw = bytes; dek = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt", "decrypt"]); prevKey = null;
+  const m = readMeta();
+  if (m && m.prev) { try { prevKey = await crypto.subtle.importKey("raw", await decBytes(unb64(m.prev)), "AES-GCM", false, ["decrypt"]); } catch (e) { prevKey = null; } }
+}
 
 /** Clé de secours : 24 caractères lisibles (sans 0/O ni 1/I), groupés par 4. ~120 bits de hasard. */
 function newRescue() {
@@ -56,7 +61,8 @@ const normRescue = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "").repl
 async function encBytes(u8) { const iv = rand(12); const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, dek, u8)); const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12); return out; }
 async function decBytes(u8, key = dek) { return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: u8.subarray(0, 12) }, key, u8.subarray(12))); }
 const encStr = async (s) => TAG + b64(await encBytes(enc.encode(s)));
-const decStr = async (s) => dec.decode(await decBytes(unb64(s.slice(TAG.length))));
+const decStr = async (s) => { const u = unb64(s.slice(TAG.length)); try { return dec.decode(await decBytes(u)); } catch (e) { if (prevKey) return dec.decode(await decBytes(u, prevKey)); throw e; } };
+const decAny = async (u8) => { try { return await decBytes(u8); } catch (e) { if (prevKey) return decBytes(u8, prevKey); throw e; } };
 
 // ---------- Cache des réglages et secrets ----------
 async function loadCache() {
@@ -72,11 +78,13 @@ async function loadCache() {
 
 const chan = (() => { try { return new BroadcastChannel("hub-coffre"); } catch (e) { return null; } })();
 if (chan) chan.onmessage = (e) => { if (e.data === "change") location.reload(); };   // activé / désactivé dans un autre onglet
+addEventListener("storage", (e) => { if (e.key === META && !!e.newValue !== !!e.oldValue) location.reload(); });   // secours sans BroadcastChannel
 const tellOthers = () => { if (chan) chan.postMessage("change"); };
 
 export const vault = {
   get active() { return !!readMeta(); },
   get unlocked() { return !!dek; },
+  get rotating() { const m = readMeta(); return !!(m && m.prev); },
   /** Le stockage doit-il chiffrer maintenant ? */
   get on() { return !!dek && !!readMeta(); },
   isPrivate,
@@ -90,7 +98,7 @@ export const vault = {
   async unlockRescue(code) {
     const m = readMeta(); if (!m) return true;
     const b = await unwrap(m.rescue, normRescue(code)); if (!b) return false;
-    await setKey(b); await loadCache(); return true;
+    await writes; await setKey(b); await loadCache(); return true;
   },
   /** Vérifie la phrase sans rien changer (déverrouillage après une mise en veille de l'écran). */
   async check(phrase) { const m = readMeta(); return !!(m && await unwrap(m.pass, phrase)); },
@@ -102,12 +110,27 @@ export const vault = {
     await setKey(rand(32));
     const rescue = newRescue();
     writeMeta({ v: 1, created: new Date().toISOString(), pass: await wrap(phrase, ITER), rescue: await wrap(rescue, ITER_RESCUE) });
+    tellOthers();                                        // les autres onglets se rechargent et demandent la phrase
     // Réglages et secrets : copiés dans le cache puis chiffrés
     cache.clear();
     for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && isPrivate(k)) cache.set(k, localStorage.getItem(k)); }
     for (const [k, v] of cache) localStorage.setItem(k, await encStr(v));
     return rescue;
   },
+  /** Change de clé de données (phrase + nouvelle clé de secours) : les anciens exports et l'ancienne clé de secours
+   *  n'ouvrent plus les données actuelles. Les enregistrements sont rechiffrés ensuite par storage.rewriteAll(),
+   *  puis vault.endRotation(). Tant que ce n'est pas fini, l'ancienne clé (rangée chiffrée par la nouvelle) reste lisible. */
+  async rotate(phrase) {
+    if (!raw) throw new Error("Coffre fermé");
+    await writes;
+    const old = raw, oldKey = dek, fresh = rand(32);
+    raw = fresh; dek = await crypto.subtle.importKey("raw", fresh, "AES-GCM", false, ["encrypt", "decrypt"]); prevKey = oldKey;
+    const rescue = newRescue();
+    writeMeta({ v: 1, created: (readMeta() || {}).created, changed: new Date().toISOString(), pass: await wrap(phrase, ITER), rescue: await wrap(rescue, ITER_RESCUE), prev: b64(await encBytes(old)) });
+    for (const [k, v] of cache) localStorage.setItem(k, await encStr(v));
+    return rescue;
+  },
+  endRotation() { const m = readMeta(); if (m && m.prev) { delete m.prev; writeMeta(m); } prevKey = null; },
   async changePhrase(phrase) { const m = readMeta(); if (!m || !raw) throw new Error("Coffre fermé"); m.pass = await wrap(phrase, ITER); m.changed = new Date().toISOString(); writeMeta(m); },
   async renewRescue() { const m = readMeta(); if (!m || !raw) throw new Error("Coffre fermé"); const r = newRescue(); m.rescue = await wrap(r, ITER_RESCUE); writeMeta(m); return r; },
   /** Remet les réglages et secrets en clair et oublie la clé (les données sont remises en clair par storage.unlockAll()). */
@@ -147,8 +170,8 @@ export const vault = {
   async open(rec) {
     if (!rec || !rec._e) return rec;
     if (!dek) throw new Error("Coffre fermé");
-    const o = JSON.parse(dec.decode(await decBytes(new Uint8Array(rec._e))));
-    if (rec._b) { o.blob = new Blob([await decBytes(new Uint8Array(rec._b))], { type: o._type || "" }); delete o._type; }
+    const o = JSON.parse(dec.decode(await decAny(new Uint8Array(rec._e))));
+    if (rec._b) { o.blob = new Blob([await decAny(new Uint8Array(rec._b))], { type: o._type || "" }); delete o._type; }
     return { id: rec.id, _m: rec._m, ...o };
   },
 
@@ -163,6 +186,8 @@ export const vault = {
   /** Ouvre un export chiffré avec la phrase ou la clé de secours. Renvoie { d, bytes } ou null si le secret est faux. */
   async openExport(file, secret) {
     const c = file.coffre || {};
+    // Un fichier trafiqué ne doit pas installer une protection affaiblie
+    if (!c.pass || !c.rescue || !(c.pass.iter >= 300000) || !(c.rescue.iter >= 100000)) throw new Error("Export chiffré non reconnu");
     const bytes = (c.pass && await unwrap(c.pass, secret)) || (c.rescue && await unwrap(c.rescue, normRescue(secret)));
     if (!bytes) return null;
     const key = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["decrypt"]);

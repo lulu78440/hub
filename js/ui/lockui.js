@@ -1,7 +1,7 @@
 // Verrouillage de l'espace perso : écran de déverrouillage, verrouillage automatique, réglages dans Diag.
 // La sécurité elle-même est dans store/vault.js ; ici, seulement l'interface.
 import { vault } from "../store/vault.js";
-import { rewriteAll, plainAll } from "../store/storage.js";
+import { rewriteAll, plainAll, migrate } from "../store/storage.js";
 import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
 import { extendMenu } from "./menus.js";
@@ -84,10 +84,9 @@ function askUnlock(mode) {
         if (!good) { fails++; if (fails >= 5) { waitUntil = Date.now() + 30000 * (fails - 4); } msg.textContent = rescue ? "Clé de secours incorrecte." : "Phrase incorrecte."; i.select(); return; }
         fails = 0;
         if (rescue) {
-          if (mode === "screen") await vault.unlockRescue(v);
           const p = await askNew(card, "Nouvelle phrase secrète", "La clé de secours a servi : choisis une nouvelle phrase. Une nouvelle clé de secours sera ensuite créée (l'ancienne ne marchera plus).", false);
-          await vault.changePhrase(p);
-          await showRescue(card, await vault.renewRescue());
+          card.innerHTML = ""; card.append(el("b", "lh", "Nouvelle clé…"), el("p", "lp", "Tes données sont rechiffrées. Ne ferme pas l'onglet."));
+          await showRescue(card, await rotate(p));
         }
         res();
       };
@@ -102,6 +101,13 @@ export async function gate() {
   if (!vault.active) return;
   await askUnlock("start");
   closeSheet();
+  // Ménage : un changement de clé interrompu est terminé, un élément resté en clair est chiffré.
+  try { await migrate(async () => { if (vault.rotating) { await rewriteAll(); vault.endRotation(); } else await rewriteAll(true); }); } catch (e) { console.warn("coffre : ménage reporté", e); }
+}
+
+/** Nouvelle clé de données + nouvelle phrase + nouvelle clé de secours (renvoyée), données rechiffrées. */
+async function rotate(phrase) {
+  return migrate(async () => { const code = await vault.rotate(phrase); await rewriteAll(); await vault.flush(); vault.endRotation(); return code; });
 }
 
 export async function lockNow() {
@@ -167,7 +173,7 @@ export function initLockUI() {
     row.append(no, ok); card.append(i, msg, row); setTimeout(() => i.focus(), 30);
     return new Promise((res) => {
       no.addEventListener("click", () => res(false));
-      card.onsubmit = async (e) => { e.preventDefault(); msg.textContent = "Vérification…"; if (await vault.check(i.value)) res(true); else { msg.textContent = "Phrase incorrecte."; i.select(); } };
+      card.onsubmit = async (e) => { e.preventDefault(); msg.textContent = "Vérification…"; if (await vault.check(i.value)) res(i.value); else { msg.textContent = "Phrase incorrecte."; i.select(); } };
     });
   }
   async function enable() {
@@ -175,31 +181,43 @@ export function initLockUI() {
     const p = await askNew(card, "Activer le verrouillage", "Choisis une phrase secrète : elle sera demandée à chaque ouverture du hub (et après le verrouillage automatique). Sans elle ni la clé de secours, tes données sont perdues : personne ne peut les récupérer.");
     if (!p) { closeSheet(); return; }
     card.innerHTML = ""; card.append(el("b", "lh", "Chiffrement…"), el("p", "lp", "Tes données sont chiffrées sur l'appareil. Ne ferme pas l'onglet."));
+    let code = null;
     try {
-      const code = await vault.create(p);
-      await rewriteAll(); await vault.flush();
-      await showRescue(card, code);
-      closeSheet(); vault.announce(); draw(); toast("Verrouillage actif : tes données sont chiffrées sur cet appareil", { ms: 4500 });
-    } catch (e) { closeSheet(); toast("Activation impossible : " + e.message, { ms: 5000 }); }
+      code = await migrate(async () => {
+        if (vault.active) return null;                       // déjà activé dans un autre onglet
+        const c = await vault.create(p);
+        try { await rewriteAll(); await vault.flush(); }
+        catch (e) { try { await plainAll(); await vault.destroy(); } catch (e2) { /* rien de plus à faire */ } throw e; }   // retour en arrière
+        return c;
+      });
+    } catch (e) { closeSheet(); draw(); toast("Activation impossible : " + e.message, { ms: 5000 }); return; }
+    if (!code) { location.reload(); return; }
+    await showRescue(card, code);
+    closeSheet(); draw(); toast("Verrouillage actif : tes données sont chiffrées sur cet appareil", { ms: 4500 });
   }
   async function change() {
     const card = sheet();
     if (!await confirmPhrase(card, "Changer la phrase")) { closeSheet(); return; }
-    const p = await askNew(card, "Nouvelle phrase", "Les exports déjà faits s'ouvriront toujours avec l'ancienne phrase (ou la clé de secours de l'époque).");
-    if (p) { await vault.changePhrase(p); toast("Nouvelle phrase enregistrée"); }
+    const p = await askNew(card, "Nouvelle phrase", "Le hub change aussi sa clé interne et te donne une nouvelle clé de secours : l'ancienne phrase et l'ancienne clé de secours n'ouvriront plus que les exports faits avant.");
+    if (!p) { closeSheet(); return; }
+    card.innerHTML = ""; card.append(el("b", "lh", "Nouvelle clé…"), el("p", "lp", "Tes données sont rechiffrées. Ne ferme pas l'onglet."));
+    try { await showRescue(card, await rotate(p)); toast("Nouvelle phrase enregistrée"); }
+    catch (e) { toast("Changement impossible : " + e.message, { ms: 5000 }); }
     closeSheet();
   }
   async function renew() {
     const card = sheet();
-    if (!await confirmPhrase(card, "Nouvelle clé de secours")) { closeSheet(); return; }
-    await showRescue(card, await vault.renewRescue(), "L'ancienne clé de secours ne marche plus sur cet appareil (elle ouvre encore les exports faits avant). Note la nouvelle hors du hub.");
-    closeSheet(); toast("Nouvelle clé de secours enregistrée");
+    const p = await confirmPhrase(card, "Nouvelle clé de secours"); if (!p) { closeSheet(); return; }
+    card.innerHTML = ""; card.append(el("b", "lh", "Nouvelle clé…"), el("p", "lp", "Tes données sont rechiffrées. Ne ferme pas l'onglet."));
+    try { await showRescue(card, await rotate(p), "L'ancienne clé de secours n'ouvre plus que les exports faits avant. Note la nouvelle hors du hub."); toast("Nouvelle clé de secours enregistrée"); }
+    catch (e) { toast("Échec : " + e.message, { ms: 5000 }); }
+    closeSheet();
   }
   async function disable() {
     const card = sheet();
     if (!await confirmPhrase(card, "Désactiver le verrouillage")) { closeSheet(); return; }
     card.innerHTML = ""; card.append(el("b", "lh", "Déchiffrement…"), el("p", "lp", "Tes données sont remises en clair sur l'appareil."));
-    try { await plainAll(); await vault.destroy(); closeSheet(); draw(); toast("Verrouillage désactivé : données en clair sur cet appareil", { ms: 4500 }); }
+    try { await migrate(async () => { await plainAll(); await vault.destroy(); }); closeSheet(); draw(); toast("Verrouillage désactivé : données en clair sur cet appareil", { ms: 4500 }); }
     catch (e) { closeSheet(); toast("Désactivation impossible : " + e.message, { ms: 5000 }); }
   }
   draw();

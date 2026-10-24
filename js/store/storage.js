@@ -62,8 +62,19 @@ function tomb(coll, ids) {
 /** Nouvel identifiant court, unique sur l'appareil. */
 export const newId = (p = "") => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-const seal = (o) => (vault.on ? vault.seal(o) : o);
-const openAll = (list) => (list.some((r) => r && r._e) ? Promise.all(list.map((r) => vault.open(r))) : list);
+// Verrouillage actif mais coffre fermé (vieil onglet) : on refuse d'écrire plutôt que d'écrire en clair.
+const seal = (o) => { if (vault.on) return vault.seal(o); if (vault.active) throw new Error("Hub verrouillé : recharge la page"); return o; };
+// Un enregistrement illisible n'empêche pas de lire les autres.
+const openAll = async (list) => (list.some((r) => r && r._e) ? (await Promise.all(list.map((r) => vault.open(r).catch(() => null)))).filter(Boolean) : list);
+// Verrou entre onglets (Web Locks) : les écritures se partagent le verrou, les migrations du coffre le prennent seules.
+let localMig = null;
+function writing(fn) { if (navigator.locks) return navigator.locks.request("hub-store", { mode: "shared" }, fn); return (localMig || Promise.resolve()).then(fn); }
+/** Exécute fn seul (aucune écriture d'aucun onglet pendant ce temps). fn ne doit pas appeler store.put/del. */
+export async function migrate(fn) {
+  if (navigator.locks) return navigator.locks.request("hub-store", { mode: "exclusive" }, fn);
+  let done; const prev = localMig; localMig = new Promise((r) => { done = r; });
+  try { await prev; return await fn(); } finally { done(); }
+}
 const SKIP = (k) => k.startsWith("hub-synchro") || k.startsWith("hub-secret") || k.startsWith("hub-coffre");   // jamais dans un fichier
 
 export const store = {
@@ -84,12 +95,12 @@ export const store = {
   async put(coll, obj, sync = false) {
     if (!sync) obj._m = Date.now();
     const db = await open();
-    if (!db) memory[coll].set(obj.id, obj); else { const rec = await seal(obj); await tx(db, coll, "readwrite", (st) => st.put(rec)); }
+    if (!db) memory[coll].set(obj.id, obj); else await writing(async () => { const rec = await seal(obj); await tx(db, coll, "readwrite", (st) => st.put(rec)); });
     emit(coll, true, sync); return obj;
   },
   async del(coll, id, sync = false) {
     const db = await open();
-    if (!db) memory[coll].delete(id); else await tx(db, coll, "readwrite", (st) => st.delete(id));
+    if (!db) memory[coll].delete(id); else await writing(() => tx(db, coll, "readwrite", (st) => st.delete(id)));
     if (!sync) tomb(coll, [id]);
     emit(coll, true, sync);
   },
@@ -98,14 +109,14 @@ export const store = {
     if (!sync) { const now = Date.now(); objs.forEach((o) => { o._m = now; }); }
     const db = await open();
     if (!db) objs.forEach((o) => memory[coll].set(o.id, o));
-    else { const recs = await Promise.all(objs.map(seal)); await tx(db, coll, "readwrite", (st) => { recs.forEach((o) => st.put(o)); }); }
+    else await writing(async () => { const recs = await Promise.all(objs.map(seal)); await tx(db, coll, "readwrite", (st) => { recs.forEach((o) => st.put(o)); }); });
     emit(coll, true, sync);
   },
   /** Plusieurs suppressions en une fois. */
   async delMany(coll, ids, sync = false) {
     const db = await open();
     if (!db) ids.forEach((id) => memory[coll].delete(id));
-    else await tx(db, coll, "readwrite", (st) => { ids.forEach((id) => st.delete(id)); });
+    else await writing(() => tx(db, coll, "readwrite", (st) => { ids.forEach((id) => st.delete(id)); }));
     if (!sync) tomb(coll, ids);
     emit(coll, true, sync);
   },
@@ -138,15 +149,24 @@ export function readExport(text) {
   return { d, counts, date: d.exportedAt ? new Date(d.exportedAt) : null };
 }
 
-/** Remplace toutes les données de l'appareil par celles de l'export (déjà lu avec readExport). */
+/** Remplace toutes les données de l'appareil par celles de l'export (déjà lu avec readExport).
+ *  Tout est préparé (et chiffré) d'abord, puis écrit en UNE transaction : en cas d'échec, rien n'est remplacé. */
 export async function importAll(d) {
-  const db = await open();
+  const db = await open(), all = {};
   for (const c of COLLECTIONS) {
     let items = (Array.isArray(d.data[c]) ? d.data[c] : []).filter((x) => x && typeof x === "object" && typeof x.id === "string");
     if (c === "images") items = (await Promise.all(items.map(async (im) => ({ ...im, blob: typeof im.blob === "string" && im.blob.startsWith("data:image/") ? await fromDataURL(im.blob) : null })))).filter((im) => im.blob);
-    if (!db) { memory[c] = new Map(items.map((x) => [x.id, x])); }
-    else { const recs = await Promise.all(items.map(seal)); await tx(db, c, "readwrite", (st) => { st.clear(); recs.forEach((x) => st.put(x)); }); }
+    all[c] = items;
   }
+  if (!db) COLLECTIONS.forEach((c) => { memory[c] = new Map(all[c].map((x) => [x.id, x])); });
+  else await writing(async () => {
+    const recs = {}; for (const c of COLLECTIONS) recs[c] = await Promise.all(all[c].map(seal));
+    await new Promise((res, rej) => {
+      const t = db.transaction(COLLECTIONS, "readwrite");
+      COLLECTIONS.forEach((c) => { const st = t.objectStore(c); st.clear(); recs[c].forEach((x) => st.put(x)); });
+      t.oncomplete = res; t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  });
   if (d.prefs && typeof d.prefs === "object") {
     try { Object.entries(d.prefs).forEach(([k, v]) => { if (k.startsWith("hub-") && !SKIP(k) && typeof v === "string") vault.lsSet(k, v); }); } catch (e) { /* réglages non restaurés */ }
   }
@@ -154,21 +174,24 @@ export async function importAll(d) {
   COLLECTIONS.forEach((c) => emit(c));
 }
 
-/** Réécrit toutes les collections selon l'état du coffre : chiffrées s'il est ouvert et actif, en clair sinon.
- *  Lecture complète d'abord (déchiffrée), puis une écriture par collection : un enregistrement est toujours lisible. */
-export async function rewriteAll() {
+/** Réécrit les collections selon l'état du coffre (chiffrées s'il est ouvert et actif, en clair sinon).
+ *  onlyPlain : seulement les enregistrements encore en clair (ménage après déverrouillage). À appeler dans migrate(). */
+export async function rewriteAll(onlyPlain = false) {
   const db = await open(); if (!db) return;
   for (const c of COLLECTIONS) {
-    const plain = await openAll(await tx(db, c, "readonly", (st) => st.getAll()));
-    const recs = await Promise.all(plain.map(seal));
+    let raw = await tx(db, c, "readonly", (st) => st.getAll());
+    if (onlyPlain) raw = raw.filter((r) => !r._e); if (!raw.length) continue;
+    const recs = await Promise.all((await openAll(raw)).map(seal));
     await tx(db, c, "readwrite", (st) => { recs.forEach((x) => st.put(x)); });
   }
 }
-/** Déchiffre tout pour arrêter le verrouillage (à appeler AVANT vault.destroy()). */
+/** Déchiffre tout pour arrêter le verrouillage (dans migrate(), AVANT vault.destroy()). Refuse s'il reste de l'illisible. */
 export async function plainAll() {
   const db = await open(); if (!db) return;
   for (const c of COLLECTIONS) {
-    const plain = await openAll(await tx(db, c, "readonly", (st) => st.getAll()));
+    const raw = await tx(db, c, "readonly", (st) => st.getAll());
+    const plain = await openAll(raw);
+    if (plain.length !== raw.length) throw new Error((raw.length - plain.length) + " élément(s) illisible(s) dans « " + c + " » : désactivation annulée");
     await tx(db, c, "readwrite", (st) => { plain.forEach((x) => st.put(x)); });
   }
 }
