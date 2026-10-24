@@ -43,6 +43,7 @@ class Server:
         self.port = free_port()
         handler = functools.partial(_Quiet, directory=root)
         self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", self.port), handler)
+        self.httpd.handle_error = lambda *a: None          # onglet fermé en plein transfert : pas de trace inutile
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
         self.thread.start()
         self.url = f"http://127.0.0.1:{self.port}/"

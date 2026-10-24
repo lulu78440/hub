@@ -6,7 +6,7 @@ Reprise programmée : une seule en attente (voir fin de fichier).
 
 ## Cycle en cours
 
-Cycle 4 · Cas limites et charge (cycles 1 à 3 terminés : 19/19 après corrections)
+Cycle 5 · Performance et confort (cycles 1 à 4 terminés : 23/23 après corrections)
 
 ## Tests
 
@@ -29,13 +29,17 @@ Cycle 4 · Cas limites et charge (cycles 1 à 3 terminés : 19/19 après correct
 | 3 | Verrouillage : illisible au repos, mauvaise phrase, vieil onglet, verrouillage auto 5 min | réussi | |
 | 3 | Jetons mails, clé Gemini, jeton et phrase de synchro : ni exportés ni synchronisés | réussi | |
 | 3 | Liens externes noopener ; page en direct isolée | corrigé | B5 |
-| 4 | Cas limites et charge | à faire | |
+| 4 | 1 000 notes, 1 000 tâches, 2 000 favoris (chargement, ajout, recherche, export, import) | réussi | chargement < 15 s en headless logiciel |
+| 4 | Stockage plein | corrigé | B6 |
+| 4 | Réseau coupé en pleine synchro (avant lecture, entre lecture et écriture) | réussi | rien de perdu, reprise au tour suivant |
+| 4 | Onglet fermé en plein import (50 à 1 200 ms) | réussi | toujours ancien OU nouvel état |
+| 4 | Fuseaux (Kiritimati, Los Angeles, Calcutta), horloge reculée/avancée, passage à l'heure d'hiver, textes de 100 000 caractères | réussi | |
 | 5 | Performance et confort | à faire | |
 | 6 | Suite automatique `tools/tests/` | en cours | écrite au fil des cycles : `python3 tools/tests/run.py` |
 
 ## Prochaine action
 
-Cycle 4 : 1 000 notes/tâches, 2 000 favoris, stockage plein, coupure réseau en pleine synchro, horloge et fuseau, textes longs. Intégrer les constats de la relecture statique (second agent) dès son retour.
+Cycle 5 : images/s PC et mobile, mémoire, chargement à froid, mouvement réduit, clavier, contrastes. Intégrer les constats de la relecture statique (second agent) dès son retour.
 
 ## Reprise programmée
 
