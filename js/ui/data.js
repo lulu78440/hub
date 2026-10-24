@@ -60,6 +60,14 @@ export function initData() {
   });
   const importFile = () => input.click();
 
+  // Écriture refusée par le stockage : on le dit tout de suite (sinon la modification serait perdue en silence)
+  let lastWarn = 0;
+  addEventListener("hub:store-error", (e) => {
+    if (Date.now() - lastWarn < 3000) return; lastWarn = Date.now();
+    const err = e.detail || {}, full = err.name === "QuotaExceededError" || /quota/i.test(err.message || "");
+    toast(full ? "Espace de stockage plein : la dernière modification n'est PAS enregistrée. Exporte tes données, puis retire des images."
+      : "Modification non enregistrée : " + (err.message || "erreur du stockage"), { ms: 9000 });
+  });
   $("b-export").addEventListener("click", exportFile);
   $("b-import").addEventListener("click", importFile);
   showLast();

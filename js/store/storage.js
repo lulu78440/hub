@@ -75,6 +75,8 @@ export async function migrate(fn) {
   let done; const prev = localMig; localMig = new Promise((r) => { done = r; });
   try { await prev; return await fn(); } finally { done(); }
 }
+// Écriture refusée (stockage plein, vieil onglet verrouillé…) : l'interface prévient (data.js), l'appelant reçoit l'erreur.
+function failed(e) { try { dispatchEvent(new CustomEvent("hub:store-error", { detail: e })); } catch (x) { /* rien */ } throw e; }
 const SKIP = (k) => k.startsWith("hub-synchro") || k.startsWith("hub-secret") || k.startsWith("hub-coffre");   // jamais dans un fichier
 
 export const store = {
@@ -95,12 +97,12 @@ export const store = {
   async put(coll, obj, sync = false) {
     if (!sync) obj._m = Date.now();
     const db = await open();
-    if (!db) memory[coll].set(obj.id, obj); else await writing(async () => { const rec = await seal(obj); await tx(db, coll, "readwrite", (st) => st.put(rec)); });
+    if (!db) memory[coll].set(obj.id, obj); else await writing(async () => { const rec = await seal(obj); await tx(db, coll, "readwrite", (st) => st.put(rec)); }).catch(failed);
     emit(coll, true, sync); return obj;
   },
   async del(coll, id, sync = false) {
     const db = await open();
-    if (!db) memory[coll].delete(id); else await writing(() => tx(db, coll, "readwrite", (st) => st.delete(id)));
+    if (!db) memory[coll].delete(id); else await writing(() => tx(db, coll, "readwrite", (st) => st.delete(id))).catch(failed);
     if (!sync) tomb(coll, [id]);
     emit(coll, true, sync);
   },
@@ -109,14 +111,14 @@ export const store = {
     if (!sync) { const now = Date.now(); objs.forEach((o) => { o._m = now; }); }
     const db = await open();
     if (!db) objs.forEach((o) => memory[coll].set(o.id, o));
-    else await writing(async () => { const recs = await Promise.all(objs.map(seal)); await tx(db, coll, "readwrite", (st) => { recs.forEach((o) => st.put(o)); }); });
+    else await writing(async () => { const recs = await Promise.all(objs.map(seal)); await tx(db, coll, "readwrite", (st) => { recs.forEach((o) => st.put(o)); }); }).catch(failed);
     emit(coll, true, sync);
   },
   /** Plusieurs suppressions en une fois. */
   async delMany(coll, ids, sync = false) {
     const db = await open();
     if (!db) ids.forEach((id) => memory[coll].delete(id));
-    else await writing(() => tx(db, coll, "readwrite", (st) => { ids.forEach((id) => st.delete(id)); }));
+    else await writing(() => tx(db, coll, "readwrite", (st) => { ids.forEach((id) => st.delete(id)); })).catch(failed);
     if (!sync) tomb(coll, ids);
     emit(coll, true, sync);
   },
