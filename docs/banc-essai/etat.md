@@ -6,7 +6,7 @@ Reprise programmée : une seule en attente (voir fin de fichier).
 
 ## Cycle en cours
 
-Mission terminée à 18 h 15 (cycles 1 à 6 + tour 2). Rien fusionné.
+25/10 : série « 1 000 cas précis » terminée (1 895 cas, B18 à B27 corrigés). Rien fusionné.
 
 ## Tests
 
@@ -44,10 +44,20 @@ Mission terminée à 18 h 15 (cycles 1 à 6 + tour 2). Rien fusionné.
 | 4 | Onglet fermé pendant un changement de phrase (5 à 800 ms) | réussi | données toujours lisibles avec l'ancienne ou la nouvelle phrase |
 | 2 | Médias (vidéo collée, lien piégé) et page en direct | réussi | |
 | 4 | Import d'un export abîmé (types inattendus) | corrigé | B17 |
+| 7 | Échéances @… (382 cas) | corrigé | B18 |
+| 7 | Heures (181 cas) | corrigé | B19 |
+| 7 | Recherche et voix (47 cas) | corrigé | B20 |
+| 7 | YouTube, coordonnées, anniversaires (74 cas) | corrigé | B21, B22 |
+| 7 | Fêtes 2015-2045 (304), rappel du dimanche (300), dates et lune (79) | réussi | |
+| 7 | XSS × 7 endroits (173), liens × 4 endroits (52) | réussi | |
+| 7 | Coffre : chiffrement, falsification, phrases, clé de secours (142) | corrigé | B24 |
+| 7 | Lecture des fichiers (53), import champ par champ (28) | corrigé | B25, B26, B27 |
+| 7 | Synchro, 40 situations × 2 (80) | corrigé | B23 |
+| 6 | Suite complète (46 tests, 1 928 cas) | réussi | ~17 min ; tests d'export chiffré adaptés au rendu logiciel lent après la feuille du coffre |
 
 ## Prochaine action
 
-Attendre Lucien. Au prochain banc : trouver le test qui bloque le passage complet final (lancer `HUB_TRACE=1 python3 tools/tests/run.py` test par test), puis décisions B2, B9, B14 à B16.
+Attendre Lucien : décisions B2, B9, B14 à B16 ; fusion de `banc-essai` (monter la version à 7.2.7).
 
 ## Reprise programmée
 
