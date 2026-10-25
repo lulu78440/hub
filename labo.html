@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Noyau · laboratoire</title>
+<link rel="stylesheet" href="css/noyau.css">
+<style>
+@font-face{font-family:Orbitron;font-weight:500;src:url(fonts/orbitron-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:Rajdhani;font-weight:500;src:url(fonts/rajdhani-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:Rajdhani;font-weight:600;src:url(fonts/rajdhani-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;src:url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2")}
+:root{--void:#02060d;--ink:#dff6fd;--dim:#7ea3b6;--cyan:#3fe6ff;--violet:#9b72ff;--amber:#ffb347;--red:#ff4d6a;--ok:#4fe3a8;--display:Orbitron,sans-serif;--ui:Rajdhani,system-ui,sans-serif;--mono:"IBM Plex Mono",monospace}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(1200px 700px at 30% -10%,#08202e 0,var(--void) 60%);color:var(--ink);font-family:var(--ui);font-size:15px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;padding:14px 18px;border-bottom:1px solid rgba(63,230,255,.18)}
+h1{margin:0;font-family:var(--display);font-weight:500;font-size:16px;letter-spacing:.1em;color:var(--cyan)}
+header p{margin:0;color:var(--dim);font-size:13px;flex:1 1 320px}
+main{display:grid;grid-template-columns:minmax(320px,520px) minmax(300px,1fr);gap:16px;padding:16px;align-items:start}
+.cadre{border:1px solid rgba(63,230,255,.22);background:rgba(4,16,25,.7);padding:12px 14px;min-width:0}
+.cadre>h2{margin:0 0 8px;font-family:var(--display);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--cyan)}
+#noyau-mount{height:min(78vh,720px);min-height:480px}
+.onglets{display:flex;gap:2px;border-bottom:1px solid rgba(63,230,255,.18);margin-bottom:10px}
+.onglets button{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);padding:8px 12px;font:inherit;cursor:pointer}
+.onglets button[aria-pressed=true]{color:var(--cyan);border-bottom-color:var(--cyan)}
+.panneau{display:none}.panneau.on{display:block}
+.lab-btn{min-height:38px;padding:0 14px;background:transparent;border:1px solid rgba(63,230,255,.3);color:var(--ink);font:inherit;cursor:pointer}
+.lab-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}.lab-btn:disabled{opacity:.4}
+.lab-champ{width:100%;padding:8px 10px;background:rgba(2,6,13,.6);border:1px solid rgba(63,230,255,.25);color:var(--ink);font:inherit}
+.lab-ligne{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.dim{color:var(--dim)}small.dim{font-size:12px}
+.res{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(63,230,255,.1);font-size:14px}
+.res .p{width:16px;flex:none;font-family:var(--mono)}.res.ok .p{color:var(--ok)}.res.ko .p{color:var(--red)}.res.sk .p{color:var(--dim)}
+.res .id{font-family:var(--mono);font-size:12px;color:var(--dim);flex:none;width:170px;overflow:hidden;text-overflow:ellipsis}
+.ecarts{margin:2px 0 6px 26px;color:var(--red);font-size:13px}
+.bilan{margin:10px 0;padding:8px 10px;border:1px solid rgba(63,230,255,.25)}
+pre.i{margin:6px 0;padding:8px;max-height:260px;overflow:auto;background:rgba(2,6,13,.7);border:1px solid rgba(63,230,255,.15);font:12px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+details{margin:8px 0}summary{cursor:pointer;color:var(--cyan)}
+.avert{padding:8px 10px;border:1px solid rgba(255,179,71,.4);color:var(--amber);font-size:13px;margin:8px 0}
+@media(max-width:860px){main{grid-template-columns:1fr;padding:10px}#noyau-mount{height:80vh}.res .id{display:none}}
+</style>
+</head>
+<body>
+<header><h1>NOYAU · LABORATOIRE</h1><p>Le Noyau sur un hub fictif : aucune donnée réelle, rien n'est enregistré. Les mêmes modules que dans le hub, la même barrière de permissions.</p></header>
+<main>
+  <section class="cadre"><h2>Le Noyau</h2><div id="noyau-mount"></div></section>
+  <section class="cadre">
+    <div class="onglets" role="tablist">
+      <button type="button" data-p="moteur" aria-pressed="true">Moteur</button>
+      <button type="button" data-p="banc" aria-pressed="false">Banc d'essai</button>
+      <button type="button" data-p="sources" aria-pressed="false">Sources</button>
+      <button type="button" data-p="inspect" aria-pressed="false">Inspecteur</button>
+      <button type="button" data-p="hub" aria-pressed="false">Hub fictif</button>
+    </div>
+    <div class="panneau on" id="p-moteur"></div>
+    <div class="panneau" id="p-banc"></div>
+    <div class="panneau" id="p-sources"></div>
+    <div class="panneau" id="p-inspect"></div>
+    <div class="panneau" id="p-hub"></div>
+  </section>
+</main>
+<script type="module" src="labo/labo.js"></script>
+</body>
+</html>
