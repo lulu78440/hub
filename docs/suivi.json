@@ -1,6 +1,6 @@
 {
   "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
-  "releve": "2026-10-25T14:27:00+01:00",
+  "releve": "2026-10-25T20:40:00+01:00",
   "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
   "phases": [
     {
@@ -101,11 +101,36 @@
         "ergo-visuel",
         "ergo-fusion",
         "ergo-outils",
-        "ergo-mobile"
+        "ergo-mobile",
+        "ergo-plan2-profondeur",
+        "ergo-palette",
+        "ergo-access",
+        "ergo-points"
+      ]
+    },
+    {
+      "cle": "PL3",
+      "nom": "Plan 3 · ordinateur futuriste",
+      "etapes": [
+        "p3-bureau",
+        "p3-applis",
+        "p3-direct",
+        "p3-ia",
+        "p3-mobile"
       ]
     }
   ],
   "faites": [
+    "ergo-audit",
+    "ergo-fusion",
+    "ergo-mobile",
+    "ergo-outils",
+    "ergo-plan",
+    "ergo-visuel",
+    "ns-branch",
+    "ns-int",
+    "ns-perm",
+    "ns-pont",
     "p0-backup",
     "p0-doc",
     "p0-gh",
@@ -125,35 +150,51 @@
     "p2-export",
     "p2-fav",
     "p2-focus",
-    "p2-lock",
-    "p2-plan2",
+    "p2-geo",
     "p2-lock",
     "p2-meteo",
+    "p2-plan2",
     "p2-remind",
     "p2-sunday",
     "p2-week",
-    "p3-down",
-    "p3-feeds",
     "p3-media",
-    "p3-news",
     "p3-sync",
+    "p4-noyau-fenetre",
     "p4-ok",
     "p4-perf",
-    "ergo-audit",
-    "ergo-plan",
-    "ergo-visuel",
-    "ergo-fusion",
-    "ergo-outils",
-    "ergo-mobile"
+    "p6-ent-ia",
+    "p6-ent-vis",
+    "p6-orbe",
+    "p7-1",
+    "p7-2"
   ],
   "prochaine": {
     "id": "ergo-recette",
-    "texte": "Recette de la refonte (Banc de test)"
+    "texte": "Recette de la refonte (Banc de test), après la fusion de banc-essai"
   },
   "built": [
+    "cons-banc",
+    "ergo-audit",
+    "ergo-fusion",
+    "ergo-mobile",
+    "ergo-outils",
+    "ergo-plan",
+    "ergo-points",
+    "ergo-visuel",
+    "ns-branch",
     "ns-int",
+    "ns-perm",
+    "ns-pont",
+    "p2-coffre",
+    "p2-focus",
+    "p2-geo",
+    "p2-lock",
+    "p2-plan2",
+    "p3-applis",
+    "p3-bureau",
     "p3-media",
     "p3-sync",
+    "p4-noyau-fenetre",
     "p4-ok",
     "p4-perf",
     "p5-read",
@@ -163,20 +204,9 @@
     "p6-orbe",
     "p7-1",
     "p7-2",
-    "p7-voix",
-    "p2-lock",
-    "p2-coffre",
-    "p2-geo",
-    "p2-focus",
-    "p2-plan2",
-    "ergo-audit",
-    "ergo-plan",
-    "ergo-visuel",
-    "ergo-fusion",
-    "ergo-outils",
-    "ergo-mobile"
+    "p7-voix"
   ],
-  "maj": "2026-10-25T18:03:00+01:00",
+  "maj": "2026-10-25T20:40:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",
@@ -194,6 +224,19 @@
     "p7-2": "Radar des dates",
     "p7-voix": "Recherche vocale",
     "ergo-audit": "Audit de l'interface",
-    "ergo-plan": "Plan de simplification"
+    "ergo-plan": "Plan de simplification",
+    "ergo-outils": "Fenêtre Outils",
+    "ergo-mobile": "Mobile simplifié",
+    "ergo-visuel": "Visuel allégé",
+    "ergo-fusion": "Fonctions fusionnées",
+    "ergo-plan2-profondeur": "Plan 2 en profondeur",
+    "ergo-palette": "Palette Ctrl+K",
+    "ergo-access": "Accessibilité",
+    "ergo-points": "Points de réglage",
+    "p3-bureau": "Bureau du plan 3",
+    "p3-applis": "Applis du bureau",
+    "p3-direct": "Écran du PC en direct",
+    "p3-ia": "Commandes pour l'orbe",
+    "p3-mobile": "Plan 3 sur téléphone"
   }
 }
