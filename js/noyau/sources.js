@@ -11,7 +11,7 @@ const enc = encodeURIComponent;
 const nettoyer = (s) => String(s == null ? "" : s).replace(/<[^>]+>/g, " ").replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
 const mediawiki = (hote, n = 3) => (q) => `https://${hote}/w/api.php?action=query&generator=search&gsrsearch=${enc(q)}&gsrlimit=${n}&prop=extracts|info&exintro=1&explaintext=1&exsentences=3&inprop=url&format=json&origin=*`;
 const pagesMW = (j) => Object.values((j.query && j.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0)).map((p) => ({ titre: p.title, extrait: coupe(p.extract), url: p.fullurl }));
-const S = (id, nom, hote, domaines, url, extraire) => ({ id, nom, hote, domaines, verifie: false, url, extraire });
+const S = (id, nom, hote, domaines, url, extraire, delai = 0) => ({ id, nom, hote, domaines, verifie: false, url, extraire, delai });
 
 /** Domaines : « general » est interrogé par défaut ; le modèle choisit les autres selon la question ; « tout » les interroge toutes. */
 export const DOMAINES = {
@@ -32,8 +32,6 @@ export const SOURCES = [
   S("wikibooks", "Wikibooks FR", "fr.wikibooks.org", ["science", "code", "langue"], mediawiki("fr.wikibooks.org", 2), pagesMW),
   S("crossref", "Crossref", "api.crossref.org", ["science"], (q) => `https://api.crossref.org/works?query=${enc(q)}&rows=3&select=title,issued,DOI,container-title`,
     (j) => ((j.message && j.message.items) || []).map((r) => ({ titre: (r.title || [])[0], extrait: coupe(`${(r["container-title"] || [])[0] || ""} ${r.issued && r.issued["date-parts"] && r.issued["date-parts"][0] ? r.issued["date-parts"][0][0] : ""}`), url: r.DOI ? "https://doi.org/" + r.DOI : null }))),
-  S("semanticscholar", "Semantic Scholar", "api.semanticscholar.org", ["science"], (q) => `https://api.semanticscholar.org/graph/v1/paper/search?query=${enc(q)}&limit=3&fields=title,year,abstract,url`,
-    (j) => (j.data || []).map((r) => ({ titre: r.title, extrait: coupe((r.year ? r.year + " · " : "") + (r.abstract || "")), url: r.url }))),
   S("europepmc", "Europe PMC", "www.ebi.ac.uk", ["science", "sante"], (q) => `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${enc(q)}&format=json&pageSize=3&resultType=lite`,
     (j) => ((j.resultList && j.resultList.result) || []).map((r) => ({ titre: r.title, extrait: coupe(`${r.authorString || ""} · ${r.journalTitle || ""} ${r.pubYear || ""}`), url: r.doi ? "https://doi.org/" + r.doi : null }))),
   S("doaj", "DOAJ", "doaj.org", ["science"], (q) => `https://doaj.org/api/search/articles/${enc(q)}?pageSize=3`,
@@ -47,13 +45,9 @@ export const SOURCES = [
   S("openlibrary", "Open Library", "openlibrary.org", ["livres"], (q) => `https://openlibrary.org/search.json?q=${enc(q)}&limit=3&fields=title,author_name,first_publish_year,key`,
     (j) => (j.docs || []).map((d) => ({ titre: d.title, extrait: `${(d.author_name || []).slice(0, 2).join(", ")} · ${d.first_publish_year || "?"}`, url: d.key ? "https://openlibrary.org" + d.key : null }))),
   S("gutendex", "Project Gutenberg", "gutendex.com", ["livres", "culture"], (q) => `https://gutendex.com/books/?search=${enc(q)}`,
-    (j) => (j.results || []).slice(0, 3).map((b) => ({ titre: b.title, extrait: `${((b.authors || [])[0] || {}).name || "auteur inconnu"} · texte libre de droits`, url: "https://www.gutenberg.org/ebooks/" + b.id }))),
+    (j) => (j.results || []).slice(0, 3).map((b) => ({ titre: b.title, extrait: `${((b.authors || [])[0] || {}).name || "auteur inconnu"} · texte libre de droits`, url: "https://www.gutenberg.org/ebooks/" + b.id })), 22000),
   S("archive-org", "Internet Archive", "archive.org", ["livres", "culture"], (q) => `https://archive.org/advancedsearch.php?q=${enc(q)}&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=year&rows=3&output=json`,
     (j) => ((j.response && j.response.docs) || []).map((d) => ({ titre: d.title, extrait: `Archive ${d.year || ""}`.trim(), url: "https://archive.org/details/" + d.identifier }))),
-  S("loc", "Bibliothèque du Congrès", "www.loc.gov", ["culture", "livres"], (q) => `https://www.loc.gov/search/?q=${enc(q)}&fo=json&c=3`,
-    (j) => (j.results || []).map((r) => ({ titre: r.title, extrait: coupe(Array.isArray(r.description) ? r.description[0] : r.description), url: r.url }))),
-  S("artic", "Art Institute of Chicago", "api.artic.edu", ["culture"], (q) => `https://api.artic.edu/api/v1/artworks/search?q=${enc(q)}&limit=3&fields=id,title,artist_display,date_display`,
-    (j) => (j.data || []).map((a) => ({ titre: a.title, extrait: coupe(`${a.artist_display || ""} · ${a.date_display || ""}`), url: "https://www.artic.edu/artworks/" + a.id }))),
   S("stackexchange", "Stack Overflow", "api.stackexchange.com", ["code"], (q) => `https://api.stackexchange.com/2.3/search/advanced?q=${enc(q)}&site=stackoverflow&pagesize=3&order=desc&sort=relevance`,
     (j) => (j.items || []).map((i) => ({ titre: nettoyer(i.title), extrait: `${i.score || 0} votes · ${i.is_answered ? "répondue" : "sans réponse acceptée"}`, url: i.link }))),
   S("github", "GitHub (dépôts)", "api.github.com", ["code"], (q) => `https://api.github.com/search/repositories?q=${enc(q)}&per_page=3`,
@@ -123,7 +117,7 @@ export async function interroger(requete, { ids = null, domaines = null, coupees
     sorties.push(s.hote);
     let t;
     try {
-      const j = await Promise.race([get(s.url(motsCles)), new Promise((_, no) => { t = setTimeout(() => no(new Error("délai dépassé")), delai); })]);
+      const j = await Promise.race([get(s.url(motsCles)), new Promise((_, no) => { t = setTimeout(() => no(new Error("délai dépassé")), s.delai || delai); })]);
       parSource.push({ s, items: s.extraire(j).filter((r) => r && r.titre).slice(0, 3) });
     } catch (e) { erreurs.push(s.nom + " : " + (e && e.message ? e.message : "indisponible")); }
     finally { clearTimeout(t); }

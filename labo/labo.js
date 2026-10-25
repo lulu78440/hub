@@ -126,7 +126,7 @@ function rendreSources() {
       const t0 = Date.now(); let cls = "ko", msg;
       try {
         const q = REQ[s.domaines[0]] || "thé";
-        const r = await interroger(q, { ids: [s.id], get: async (u) => { const x = await fetch(u, { headers: { Accept: "application/json" } }); if (!x.ok) throw new Error("HTTP " + x.status); return x.json(); }, delai: 12000 });
+        const r = await interroger(q, { ids: [s.id], get: async (u) => { const x = await fetch(u, { headers: { Accept: "application/json" } }); if (!x.ok) throw new Error("HTTP " + x.status); return x.json(); }, delai: 14000 });
         if (r.erreurs.length) msg = r.erreurs[0].replace(/^[^:]*: /, "");
         else if (!r.resultats.length) msg = "réponse reçue mais aucun résultat extrait (forme à revoir ?)";
         else { cls = "ok"; msg = `${r.resultats.length} résultat(s) · « ${r.resultats[0].titre.slice(0, 50)} » · ${Date.now() - t0} ms`; }
