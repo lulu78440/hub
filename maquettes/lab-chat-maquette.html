@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maquette · chat du Noyau (Labo)</title>
+<style>
+:root{--void:#02060d;--ink:#dff6fd;--dim:#7ea3b6;--cyan:#3fe6ff;--violet:#9b72ff;--amber:#ffb347;--red:#ff4d6a;--ok:#4fe3a8;--mono:ui-monospace,Consolas,monospace;--ui:"Segoe UI",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,#06233a,var(--void) 70%);color:var(--ink);font:15px/1.4 var(--ui);overflow:hidden}
+.note{position:fixed;left:16px;top:12px;right:16px;font:11px var(--mono);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.note b{color:var(--amber)}
+.ctl{position:fixed;left:16px;bottom:12px;right:16px;display:flex;flex-wrap:wrap;gap:6px;z-index:5}
+.ctl button{background:#06121d;color:var(--ink);border:1px solid #1d4256;padding:6px 10px;font:12px var(--mono);cursor:pointer}
+.ctl button:hover,.ctl button[aria-pressed=true]{border-color:var(--cyan);color:var(--cyan)}
+.win{position:fixed;left:max(16px,calc(50% - 230px));top:70px;width:min(460px,calc(100vw - 32px));height:min(560px,calc(100vh - 150px));display:flex;flex-direction:column;background:rgba(3,12,22,.92);border:1px solid #14394d;box-shadow:0 0 40px rgba(63,230,255,.08)}
+/* liseré qui pulse pendant une requête */
+.win::before{content:"";position:absolute;inset:-1px;border:1px solid transparent;pointer-events:none}
+.win.busy::before{border-color:var(--cyan);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(63,230,255,0);opacity:.35}50%{box-shadow:0 0 18px rgba(63,230,255,.6);opacity:1}}
+@media (prefers-reduced-motion:reduce){.win.busy::before{animation:none;opacity:1}}
+/* barre minimale : poignée de déplacement + badge honnête + réglages */
+.bar{display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:grab;border-bottom:1px solid #0e2a3a;user-select:none;touch-action:none}
+.bar:active{cursor:grabbing}.bar .grip{width:22px;height:6px;border-top:1px solid var(--dim);border-bottom:1px solid var(--dim);opacity:.6}
+.badge{font:11px var(--mono);letter-spacing:.06em;padding:2px 8px;border:1px solid var(--c,var(--cyan));color:var(--c,var(--cyan))}
+.badge.sans{--c:var(--amber)}.badge.web{--c:var(--violet)}.badge.hors{--c:var(--ok)}
+.sp{flex:1}.ib{background:none;border:1px solid transparent;color:var(--dim);font:14px var(--mono);cursor:pointer;padding:2px 6px}.ib:hover{color:var(--cyan);border-color:#1d4256}
+.log{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:92%;padding:8px 11px;border-left:2px solid var(--cyan);background:rgba(63,230,255,.05)}
+.m.moi{align-self:flex-end;border-left:0;border-right:2px solid var(--violet);background:rgba(155,114,255,.07)}
+.m .meta{margin-top:6px;font:11px var(--mono);color:var(--dim);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.src{color:var(--cyan);border:1px solid #1d4256;padding:0 5px;cursor:pointer;background:none;font:11px var(--mono)}
+.conf{padding:0 6px;border:1px solid var(--c)}.conf.haute{--c:var(--ok);color:var(--ok)}.conf.moyenne{--c:var(--amber);color:var(--amber)}.conf.basse{--c:var(--red);color:var(--red)}
+.mot{animation:ap .18s ease-out}@keyframes ap{from{opacity:0}to{opacity:1}}
+.card{border:1px solid var(--amber);padding:10px;background:rgba(255,179,71,.06)}
+.card h4{margin:0 0 6px;font:12px var(--mono);letter-spacing:.1em;color:var(--amber);text-transform:uppercase}
+.card .ligne{font:12px var(--mono);color:var(--dim);margin:2px 0}
+.card .rows{display:flex;gap:8px;margin-top:10px}
+.card button{padding:7px 14px;font:13px var(--ui);cursor:pointer;background:#06121d;color:var(--ink);border:1px solid #1d4256}
+.card button.refus{border-color:var(--amber);color:var(--amber);outline:2px solid transparent}
+.card button.refus:focus{outline-color:var(--amber)}
+.card .timer{height:2px;background:var(--amber);transform-origin:left;animation:t 60s linear forwards}@keyframes t{to{transform:scaleX(0)}}
+.compo{display:flex;gap:6px;padding:8px;border-top:1px solid #0e2a3a}
+.compo input{flex:1;background:#020a12;border:1px solid #14394d;color:var(--ink);padding:8px;font:inherit}
+.compo input:focus{outline:2px solid var(--cyan);outline-offset:0}.compo button{background:#06121d;border:1px solid var(--cyan);color:var(--cyan);padding:0 14px;cursor:pointer}
+.pan{position:absolute;left:0;right:0;top:36px;background:#04101a;border-bottom:1px solid #14394d;padding:10px 12px;font-size:13px;display:none;z-index:2}
+.pan.on{display:block}.pan label{display:block;margin:4px 0}.pan small{color:var(--dim)}
+@media (max-width:520px){.win{left:8px!important;top:50px!important;width:calc(100vw - 16px);height:calc(100vh - 150px)}}
+</style></head><body>
+<div class="note"><b>Maquette isolée</b> · Labo · rien n'est branché au hub · les réponses sont jouées d'avance, aucun modèle ni réseau · palette d'origine</div>
+
+<section class="win" id="win" aria-label="Chat du Noyau">
+  <div class="bar" id="bar"><span class="grip" aria-hidden="true"></span><span class="badge" id="badge">…</span><span class="sp"></span>
+    <button class="ib" id="bReg" aria-label="Réglages" title="Réglages">⚙</button></div>
+  <div class="pan" id="pan">
+    <label><input type="checkbox" id="cLocal"> Utiliser l'IA sur cet appareil <small>(modèle ~ 300 Mo, téléchargé seulement si tu dis oui)</small></label>
+    <label><input type="checkbox" id="cFig"> Figer la fenêtre <small>(plus de déplacement)</small></label>
+    <small id="etat"></small>
+  </div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <form class="compo" id="f"><input id="q" autocomplete="off" placeholder="Écris au Noyau…" aria-label="Message"><button>Envoyer</button></form>
+</section>
+
+<div class="ctl" role="group" aria-label="Situations à montrer">
+  <button data-s="web" aria-pressed="true">Mode : IA du web (Gemini)</button>
+  <button data-s="webgpu">Mode : IA locale (WebGPU)</button>
+  <button data-s="wasm">Mode : IA locale (lente, WASM)</button>
+  <button data-s="sans">Mode : sans IA (règles)</button>
+  <button data-s="hors">Hors ligne</button>
+  <span style="flex:1"></span>
+  <button id="demoQ">▶ Poser une question</button><button id="demoC">▶ Demander une action</button><button id="demoT">▶ Télécharger le modèle</button>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),win=$("#win"),log=$("#log"),badge=$("#badge");
+const MODES={
+ web:{t:"IA du web · Gemini",c:"web",note:"Le texte part chez Google. Dis-le : jamais « local »."},
+ webgpu:{t:"IA locale · rapide",c:"hors",note:"Calcul sur ton appareil (WebGPU), rien ne sort. Le hub ne se fige pas : calcul dans un worker."},
+ wasm:{t:"IA locale · lente",c:"hors",note:"Pas de WebGPU : calcul processeur, plus lent. Mots affichés un par un."},
+ sans:{t:"Sans IA · règles",c:"sans",note:"Fonctions de base uniquement : recherche, décisions, contradictions, routines. Tout marche sans IA."},
+ hors:{t:"Hors ligne · local",c:"hors",note:"Pas de réseau : seul le local répond, sinon les règles."}
+};
+let mode="web";
+function setMode(m){mode=m;const x=MODES[m];badge.textContent=x.t;badge.className="badge "+x.c;$("#etat").textContent=x.note;
+ document.querySelectorAll(".ctl [data-s]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.s===m))}
+document.querySelectorAll(".ctl [data-s]").forEach(b=>b.onclick=()=>{setMode(b.dataset.s);bulle("Noyau",`Mode changé : ${MODES[b.dataset.s].t}. ${MODES[b.dataset.s].note}`,{})});
+function bulle(qui,txt,o){const d=document.createElement("div");d.className="m"+(qui==="Moi"?" moi":"");d.textContent=txt;if(o&&o.meta)d.append(o.meta);log.append(d);log.scrollTop=1e9;return d}
+async function flux(d,txt,delai){for(const w of txt.split(" ")){const s=document.createElement("span");s.className="mot";s.textContent=w+" ";d.append(s);log.scrollTop=1e9;await new Promise(r=>setTimeout(r,delai))}}
+function meta(srcs,conf){const m=document.createElement("div");m.className="meta";for(const n of srcs){const b=document.createElement("button");b.className="src";b.textContent="["+n+"]";b.title="Voir l'extrait";m.append(b)}const c=document.createElement("span");c.className="conf "+conf;c.textContent={haute:"sûr",moyenne:"à vérifier",basse:"incertain"}[conf];m.append(c);return m}
+let occ=false;
+async function question(txt){if(occ)return;occ=true;bulle("Moi",txt);win.classList.add("busy");
+ const d=bulle("Noyau","");const delai={webgpu:35,wasm:160,web:45,hors:60,sans:0}[mode];
+ const rep=mode==="sans"?"Sans IA, je cherche par mots-clés. Dans le manuel : « Mode Focus » — se concentrer 25 ou 50 minutes, le reste du hub s'estompe. Je ne peux pas reformuler.":"Le mode Focus lance un minuteur de 25 ou 50 minutes et estompe le reste du hub. Tu le trouves dans le menu du fond.";
+ await new Promise(r=>setTimeout(r,mode==="wasm"?900:400));await flux(d,rep,delai);
+ d.append(meta(mode==="sans"?[1]:[1,2],mode==="sans"?"moyenne":"haute"));win.classList.remove("busy");occ=false}
+function action(){if(occ)return;bulle("Moi","Ajoute une tâche : appeler le dentiste.");
+ const c=document.createElement("div");c.className="card";c.innerHTML='<h4>Le Noyau demande ton accord</h4><div class="ligne">Action : ajouter_tache</div><div class="ligne">Texte : « appeler le dentiste »</div><div class="ligne">Sort de l\'appareil : rien</div><div class="rows"><button class="refus">Refuser</button><button class="oui">Autoriser</button></div><div class="timer"></div>';
+ log.append(c);log.scrollTop=1e9;const r=c.querySelector(".refus");r.focus();win.classList.add("busy");
+ const fin=t=>{c.remove();win.classList.remove("busy");bulle("Noyau",t)};
+ r.onclick=()=>fin("Refusé. Rien n'a été ajouté.");c.querySelector(".oui").onclick=()=>fin("C'est fait : tâche ajoutée. (Maquette : rien n'est écrit.)");
+ c.onkeydown=e=>{if(e.key==="Escape")r.click()}}
+async function telecharger(){if(occ)return;occ=true;const c=document.createElement("div");c.className="card";c.innerHTML='<h4>Télécharger le modèle ?</h4><div class="ligne">Taille : environ 300 Mo · une seule fois</div><div class="ligne">Place nécessaire sur l\'appareil : 400 Mo</div><div class="ligne">Après : fonctionne hors ligne, rien ne sort</div><div class="rows"><button class="refus">Pas maintenant</button><button class="oui">Télécharger</button></div>';
+ log.append(c);c.querySelector(".refus").focus();log.scrollTop=1e9;
+ c.querySelector(".refus").onclick=()=>{c.remove();bulle("Noyau","D'accord, rien n'est téléchargé. Les fonctions sans IA restent disponibles.");occ=false};
+ c.querySelector(".oui").onclick=async()=>{const rows=c.querySelector(".rows");rows.innerHTML='<progress max="100" value="0" style="flex:1"></progress><button class="refus">Annuler</button>';const p=rows.querySelector("progress");let stop=false;rows.querySelector("button").onclick=()=>{stop=true};
+  win.classList.add("busy");for(let i=0;i<=100&&!stop;i+=4){p.value=i;await new Promise(r=>setTimeout(r,60))}win.classList.remove("busy");c.remove();
+  bulle("Noyau",stop?"Téléchargement annulé, rien n'est gardé.":"Modèle prêt. Tu peux couper le réseau : je réponds sur l'appareil.");if(!stop)setMode("hors");occ=false}}
+$("#f").onsubmit=e=>{e.preventDefault();const v=$("#q").value.trim();if(v){$("#q").value="";question(v)}};
+$("#demoQ").onclick=()=>question("C'est quoi le mode Focus ?");$("#demoC").onclick=action;$("#demoT").onclick=telecharger;
+$("#bReg").onclick=()=>$("#pan").classList.toggle("on");
+$("#cLocal").onchange=e=>{if(e.target.checked){telecharger();e.target.checked=false}};
+// déplacement (souris, doigt, clavier : flèches quand la poignée a le focus)
+let fig=false;$("#cFig").onchange=e=>fig=e.target.checked;
+const bar=$("#bar");bar.tabIndex=0;bar.setAttribute("role","button");bar.setAttribute("aria-label","Déplacer la fenêtre (flèches du clavier)");
+let dx,dy,drag=false;
+bar.addEventListener("pointerdown",e=>{if(fig||e.target.closest("button"))return;drag=true;const r=win.getBoundingClientRect();dx=e.clientX-r.left;dy=e.clientY-r.top;bar.setPointerCapture(e.pointerId)});
+bar.addEventListener("pointermove",e=>{if(!drag)return;win.style.left=Math.max(0,Math.min(innerWidth-120,e.clientX-dx))+"px";win.style.top=Math.max(0,Math.min(innerHeight-60,e.clientY-dy))+"px"});
+bar.addEventListener("pointerup",()=>drag=false);
+bar.addEventListener("keydown",e=>{if(fig)return;const k={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-20],ArrowDown:[0,20]}[e.key];if(!k)return;e.preventDefault();const r=win.getBoundingClientRect();win.style.left=Math.max(0,r.left+k[0])+"px";win.style.top=Math.max(0,r.top+k[1])+"px"});
+setMode("web");bulle("Noyau","Bonjour Lucien. Choisis une situation en bas pour voir comment le chat réagit.");
+</script></body></html>

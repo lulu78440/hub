@@ -1,0 +1,23 @@
+# Labo · mission autonome n° 2 — décisions (branche `labo-auto2`)
+
+Chaque décision est prudente et réversible ; le retour arrière est indiqué. Rien n'a été fait sur `main`.
+
+| # | Décision | Pourquoi | Retour arrière |
+| --- | --- | --- | --- |
+| 1 | `labo-auto2` créée depuis `origin/main` (7.29.0), puis fusion de `origin/labo-auto` (`--no-ff`). Aucun conflit ; `apercu-labo.html` écarté (le générateur `labo/apercu.py` reste, sa sortie non). | Consigne de Lucien ; `origin/labo-auto` avait avancé (outils validés, worker durci, bibliothèques épinglées) : fusion de la branche distante, pas de ma copie locale. | Supprimer la branche `labo-auto2` ; `main` n'a pas bougé. |
+| 2 | 15 modules ajoutés à `PRECACHE` dans `sw.js` (manuel, socle, worker-ia, modeles, ia-regles, decisions, contradictions, passeport, voix-locale, perf, citations, routines, conseiller, passages, trieur). **Version non changée** (7.29.0 = `js/version.js`). | Seule exception hors de mes fichiers, demandée. Sans bump, le cache existant n'est pas renouvelé : les nouveaux modules entreront au prochain changement de version décidé par Commande. | Retirer la ligne ajoutée dans `sw.js` (1 ligne). |
+| 3 | Les 5 outils validés le 25/10 sont dans `creerCatalogue` : `consulter_manuel`, `chercher_decisions`, `lire_contradictions` (LIBRE), `proposer_decision`, `creer_routine` (CONFIRMATION). Même noms, mêmes niveaux, aucun autre outil. `OUTILS_A_BRANCHER` est maintenant vide. | Validation de Lucien. La règle `appliquerRegle` écarte tout écart de nom ou de niveau. | Retirer les 5 blocs en fin de `T` dans `outils.js` : la règle les laisserait « à brancher » (remettre la liste). |
+| 4 | Modules chargés **à la demande** (`import()` dans `exec`), pas au démarrage. | Évite un cycle d'imports (`routines.js` importe `outils.js`) et n'alourdit pas le démarrage du Noyau. | Passer en import statique si on préfère. |
+| 5 | `consulter_manuel` ne lit que `docs/manuel/index.json` et des chemins `docs/manuel/fiches/<id>.md` (liste stricte, tout autre chemin refusé) ; fiches altérées ignorées ; texte rendu comme DONNÉE, jamais comme instruction. | Savoir ≠ pouvoir. | — |
+| 6 | `proposer_decision` n'écrit qu'un ajout (collection `kv`, document `noyau-decisions`) ; jamais d'effacement. La barrière demande l'accord de Lucien avant l'exécution. | Niveau CONFIRMATION validé. | Les décisions se retirent à la main depuis le stockage ; aucun outil de suppression. |
+| 7 | `creer_routine` valide (`validerRoutine`), enregistre (`kv`/`noyau-routines`, 15 au plus) et **ne lance rien**. **Ajout de ma part, plus strict que la validation** : une routine ne peut pas contenir `creer_routine` ni `proposer_decision`. | Découvert par un essai : une routine pouvait créer d'autres routines. Interdire est le sens prudent ; l'autoriser exigerait l'accord de Lucien. | Retirer la ligne de garde dans `outils.js`. |
+| 8 | `lire_contradictions` n'alimente le moteur qu'avec décisions, tâches et rendez-vous (pas d'objectifs : le hub n'a pas encore de liste d'objectifs). Au plus 3 signaux, lecture seule. | On ne branche pas une source qui n'existe pas. | Ajouter les objectifs quand ils existeront. |
+| 9 | Maquette du chat : fichier isolé `maquettes/lab-chat-maquette.html`, sans réseau ni lien avec le hub, palette d'origine (le gris a été refusé). | Étape 5 de la mission. | Supprimer le fichier. |
+
+## À signaler à Lucien / Commande
+- **Heure** : mes messages d'avancement de cette mission affichaient des heures (22 h 05, 22 h 12, 22 h 24) en avance sur l'horloge réelle (~22 h 04 à la fin du travail). L'horloge du système fait foi ; le travail a été fini bien avant 22 h 57.
+- Le test Charte « fiche de manuel par fonction » indique 0/18 fiches : il cherche les fiches ailleurs que dans `docs/manuel/fiches/` (information seulement, non bloquant ; `HUB_MANUEL_STRICT=1` bloquerait). À régler par Commande (emplacement) avant la fusion.
+- Sans changement de version, le cache hors ligne existant ne contient pas les nouveaux modules : ils ne seront disponibles hors ligne qu'après le prochain bump de version par Commande.
+
+## Note sur `js/widgets/ai.js`
+Ce fichier (hors de mes fichiers) apparaît dans la différence avec `main` : c'est uniquement l'épinglage de la bibliothèque web-llm (`@0.2` → `@0.2.85`) déjà présent sur `labo-auto` (validé avant cette mission), arrivé par la fusion sans conflit. Retour arrière : remettre `@0.2` dans cette ligne.
