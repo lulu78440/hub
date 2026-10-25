@@ -3,7 +3,9 @@ règle 12 « fiche de manuel pour chaque fonction livrée », et B29 (clés IA l
 
 Conventions provisoires (prudentes, en attente de la Commande, voir docs/banc-essai/propositions.md) :
 - une « fonction livrée » = une fenêtre déclarée dans index.html (attribut data-id) ;
-- sa fiche = docs/manuel/<id>.md, ou tout fichier .md de docs/manuel/ qui contient la ligne « id: <id> » ;
+- sa fiche = docs/manuel/fiches/<id>.md (format proposé par labo-auto, docs/manuel/FORMAT.md), ou toute fiche de docs/manuel/
+  (sous-dossiers compris) dont l'en-tête porte « id: <id> » ;
+- chaque fiche présente est contrôlée : champs de l'en-tête présents, aucune adresse web ni balise de code (dossier public, lu par le Noyau) ;
 - le test du manuel LISTE les fiches manquantes sans faire échouer la suite ; HUB_MANUEL_STRICT=1 le rend bloquant.
 """
 import glob, os, re
@@ -74,13 +76,25 @@ def test_charte_fiche_de_manuel_par_fonction(h):
     ids = _window_ids()
     _assert(ids, "aucune fenêtre trouvée dans index.html (convention à revoir)")
     dossier = os.path.join(ROOT, "docs", "manuel")
-    fiches = glob.glob(os.path.join(dossier, "*.md"))
+    fiches = [f for f in glob.glob(os.path.join(dossier, "**", "*.md"), recursive=True) if os.path.basename(f) != "FORMAT.md"]
     noms = {os.path.splitext(os.path.basename(f))[0] for f in fiches}
     declares = set()
     for f in fiches:
         for m in re.finditer(r"^id:\s*([\w-]+)", open(f, encoding="utf-8").read(), re.M):
             declares.add(m.group(1))
     manque = [i for i in ids if i not in noms and i not in declares]
+    champs = ("id", "nom", "utilite", "emplacement", "limites", "poste", "maj")
+    abimees = []
+    for f in fiches:
+        t = open(f, encoding="utf-8").read()
+        m = re.match(r"---\n(.*?)\n---\n", t, re.S)
+        tete = dict(re.findall(r"^(\w+):\s*(.*)$", m.group(1), re.M)) if m else {}
+        pb = [c for c in champs if not tete.get(c)]
+        if re.search(r"https?://|<\s*script|javascript:", t, re.I):
+            pb.append("adresse ou code dans la fiche")
+        if pb:
+            abimees.append(os.path.relpath(f, ROOT) + " (" + ", ".join(pb) + ")")
+    _assert(not abimees, "fiches de manuel invalides : " + " ; ".join(abimees))
     print(f"        manuel : {len(ids) - len(manque)}/{len(ids)} fonctions ont leur fiche" +
           (f" ; manquantes : {', '.join(manque)}" if manque else ""))
     if manque and os.environ.get("HUB_MANUEL_STRICT") == "1":
