@@ -16,6 +16,8 @@ import { journalActions, journalMemoire } from "./journal.js";
 import * as imp from "./import38.js";
 import { creerSentinelle } from "./sentinelle.js";
 import { creerSavoir } from "./savoir.js";
+import { creerUsages } from "./usages.js";
+import { resumerLocalement } from "./recherche.js";
 
 export const VERSION_NOYAU = "noyau-1.0";
 
@@ -41,7 +43,8 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     return geminiCache.m;
   }
 
-  const cycle = creerCycle({ moteur, barriere, catalogue, memoire, perception, cerveau, etat, budget });
+  const usages = creerUsages({ barriere, memoire });
+  const cycle = creerCycle({ moteur, barriere, catalogue, memoire, perception, cerveau, etat, budget, usages });
   const initiative = creerInitiative({ memoire, actualite, etat, barriere });
   const sommeil = creerSommeil({ memoire, cerveau, etat, budget, moteur, emettre: cycle.emettre, phase: cycle.phase });
   await cycle.charger();
@@ -50,9 +53,20 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const demanderTexte = async (systeme, texte) => { const r = await moteur().generer({ systeme, messages: [{ role: "user", texte }], outils: [], temperature: 0.2 }); return String(r.texte || "").trim() || "(pas de réponse)"; };
   const sentinelle = creerSentinelle({ demander: demanderTexte });
   const noyau = {
-    sentinelle, demanderTexte, savoir: creerSavoir({ memoire, barriere }),
+    sentinelle, demanderTexte, usages, savoir: creerSavoir({ memoire, barriere }),
     /** Recommandation système de l'orbe : locale, sans requête ; montrée dans l'échange du Noyau. */
-    async recommander() { const r = await sentinelle.recommandation(); cycle.emettre({ type: "initiative", texte: r.texte, raison: "systeme", niveau: r.niveau }); if (r.niveau === "critique" || r.niveau === "alerte") hote.ui.toast("Sécurité : " + r.texte.slice(0, 90)); return r; },
+    async recommander() { const r = await sentinelle.recommandation(); cycle.emettre({ type: "initiative", texte: r.texte, raison: "systeme", niveau: r.niveau, action: r.id === "export" || r.id === "tip-export" ? "export" : null }); if (r.niveau === "critique" || r.niveau === "alerte") hote.ui.toast("Sécurité : " + r.texte.slice(0, 90)); return r; },
+    exporter: () => hote.ui.exporter && hote.ui.exporter(),
+    /** Résume ce qu'affiche une fenêtre (jamais les mails). Une requête Gemini si possible, sinon résumé local. */
+    async resumerFenetre(id) {
+      if (/^mails?$/i.test(String(id))) { const t = "Je ne résume pas les mails d'ici : leur contenu doit rester chez toi. Utilise la lecture des mails avec confirmation."; cycle.emettre({ type: "initiative", texte: t, raison: "resume" }); return { ok: false, texte: t }; }
+      const r = await barriere.executer({ outil: "lire_fenetre", params: { fenetre: id } }, { origine: "lucien" });
+      const texte = r.ok && r.donnees && r.donnees.texte ? r.donnees.texte : "";
+      if (!texte) { const t = "Cette fenêtre n'affiche rien que je puisse résumer."; cycle.emettre({ type: "initiative", texte: t, raison: "resume" }); return { ok: false, texte: t }; }
+      let res; try { if (!moteur().texteSeulement && budget.restant() > 0) res = await demanderTexte("Tu résumes pour Lucien le contenu d'une fenêtre de son hub, en français, en 3 phrases courtes au plus. N'invente rien, ne cite que ce qui est écrit.", texte); } catch (e) { res = null; }
+      if (!res) res = resumerLocalement(texte, "", 3);
+      const t = `Fenêtre « ${id} » : ${res}`; cycle.emettre({ type: "initiative", texte: t, raison: "resume" }); return { ok: true, texte: t };
+    },
     version: VERSION_NOYAU, memoire, cerveau, etat, budget, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
     /** Pose une question. origine : lucien, voix, initiative, autonome. */
     async poser(texte, origine = "lucien") { const r = await cycle.penser({ texte: String(texte).slice(0, 2000), origine }); signalerAValider(); return r; },
@@ -99,6 +113,8 @@ export async function initNoyau() {
   const zoneSav = document.querySelector('.win[data-id="savoir"] .pb');
   const sav = zoneSav ? monterSavoir(zoneSav, noyau) : null;
   hote.ui.ajouterMenuFond(() => [{ t: "Ouvrir le Noyau", fn: () => ui.ouvrir() }, ...(secu ? [{ t: "Ouvrir la sécurité", fn: () => secu.ouvrir() }] : []), ...(sav ? [{ t: "Ouvrir la carte du savoir", fn: () => sav.ouvrir() }] : [])]);
+  hote.ui.ajouterMenuFenetre && hote.ui.ajouterMenuFenetre((el) => /^(mails?|noyau|securite|savoir)$/.test(el.dataset.id) ? [] : [{ t: "Résumer avec le Noyau", fn: () => { ui.ouvrir(); noyau.resumerFenetre(el.dataset.id).catch(() => {}); } }]);
+  hote.ui.ajouterMenuFond(() => [{ t: "Capture rapide (note)", fn: () => { ui.ouvrir(); document.dispatchEvent(new CustomEvent("noyau:saisir", { detail: { texte: "Note : " } })); } }]);
   document.addEventListener("noyau:ouvrir-savoir", () => sav && sav.ouvrir());
   document.addEventListener("noyau:ouvrir", () => ui.ouvrir());                          // appui long sur l'orbe
   document.addEventListener("noyau:ouvrir-securite", () => secu && secu.ouvrir());

@@ -94,6 +94,8 @@ export async function brancherHub() {
         state.energyTarget = phase === "reflechit" || phase === "cherche" ? 0.6 : 0;
       },
       ajouterMenuFond: (fn) => menus.extendMenu("fond", fn),
+      ajouterMenuFenetre: (fn) => menus.extendMenu("fenetre", fn),
+      exporter: () => window.__hub && window.__hub.data && window.__hub.data.exportFile(),
       conteneur: () => document.querySelector('.win[data-id="noyau"] .pb')
     }
   });

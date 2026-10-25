@@ -38,7 +38,7 @@ export function resoudreRelance(texte, fil) {
 }
 
 export function creerCycle(deps) {
-  const { barriere, memoire, perception, cerveau, etat, budget } = deps;
+  const { barriere, memoire, perception, cerveau, etat, budget, usages } = deps;
   const moteur = () => deps.moteur();
   const ecouteurs = [];
   const emettre = (e) => { const m = { v: 2, id: hote.nouvelId("m"), quand: hote.maintenant().toISOString(), ...e }; ecouteurs.forEach((f) => { try { f(m); } catch (x) { console.error(x); } }); return m; };
@@ -130,6 +130,8 @@ export function creerCycle(deps) {
       }
       const local = reflexe(texte);
       if (local) { trace.reflexe = local.reflexe; return await terminer(trace, local, texte, tour, t0, false); }
+      const usage = usages ? await usages.essayer(texte).catch((e) => { console.error("usages", e); return null; }) : null;     // capture, rappels, briefing, revue, recherche : zéro requête
+      if (usage) { trace.reflexe = usage.reflexe; return await terminer(trace, usage, texte, tour, t0, false); }
 
       // 2) Rappel
       phase("se_souvient");

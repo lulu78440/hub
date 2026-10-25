@@ -36,7 +36,7 @@
 
 /* Messages : l'accent à gauche porte le ton */
 .nx-m{max-width:min(92%,68ch);padding:9px 12px;border:1px solid var(--n-line);background:var(--n-card);position:relative;overflow-wrap:anywhere}
-.nx-m p{margin:0 0 .6em}.nx-m p:last-child{margin-bottom:0}
+.nx-m p{margin:0 0 .6em;white-space:pre-line}.nx-m p:last-child{margin-bottom:0}
 .nx-lui{align-self:flex-end;border-color:rgba(155,114,255,.35);background:rgba(155,114,255,.07)}
 .nx-noyau{align-self:flex-start;border-left:3px solid var(--n-ton)}
 .nx-noyau[data-ton="curieux"]{--n-ton:var(--n-violet)}.nx-noyau[data-ton="enthousiaste"]{--n-ton:var(--n-ok)}
@@ -148,3 +148,8 @@
 .nx-sv-st.sel{background:rgba(63,230,255,.07)}
 .nx-sv-barre{display:block;height:5px;background:rgba(255,255,255,.08)}.nx-sv-barre i{display:block;height:100%}
 @media (max-width:520px){.nx-carte-cadre{height:300px}.nx-sv-st{grid-template-columns:1fr 50px 38px auto}}
+
+.nx-rapide{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 2px}
+.nx-raccourci{min-height:32px;background:transparent;color:var(--n-dim);cursor:pointer;font:inherit;font-size:13px}
+.nx-raccourci:hover{color:var(--n-cyan);border-color:var(--n-cyan)}
+.nx-horsligne{padding:0 8px;border:1px solid rgba(255,179,71,.5);color:var(--n-amber);font-size:12px;white-space:nowrap}

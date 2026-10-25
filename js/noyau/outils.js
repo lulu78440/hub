@@ -70,7 +70,7 @@ export function creerCatalogue(ctx = {}) {
   const st = () => hote.stockage;
   const now = () => hote.maintenant();
   const agir = async (nom, p) => { const r = await hote.hub.agir(nom, p); if (r && r.ok === false) throw new Error(r.erreur || "Action impossible"); return r; };
-  const ligneTache = (t) => ({ id: t.id, texte: t.text, faite: !!t.done, urgente: !!t.prio, echeance: t.due || null, rappel: t.remindAt || null });
+  const ligneTache = (t) => ({ id: t.id, texte: t.text, faite: !!t.done, urgente: !!t.prio, echeance: t.due || null, rappel: t.remindAt || null, faite_le: t.doneAt ? cleJour(new Date(t.doneAt)) : null });
   const ligneEvt = (e) => ({ id: e.id, titre: e.title, date: e.date, debut: e.start || null, fin: e.end || null });
 
   const T = [

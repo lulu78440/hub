@@ -35,7 +35,10 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   const pouls = h("div", { class: "nx-pouls", "aria-hidden": "true" }, Array.from({ length: 28 }, (_, i) => h("i", { style: `--i:${i}` })));
   const phaseTxt = h("span", { class: "nx-phase", role: "status" }, PHASES.repos);
   const budgetEl = h("span", { class: "nx-budget", role: "img" });
-  const etat = h("div", { class: "nx-etat" }, pouls, phaseTxt, budgetEl);
+  const horsLigne = h("span", { class: "nx-horsligne", role: "status", hidden: true, title: "Sans connexion, je réponds seulement avec ma mémoire." }, "Hors ligne · mémoire seule");
+  const etat = h("div", { class: "nx-etat" }, pouls, phaseTxt, horsLigne, budgetEl);
+  const majLigne = () => { const hors = !hote.enLigne(); horsLigne.hidden = !hors; racine.dataset.ligne = hors ? "hors" : "oui"; };
+  addEventListener("online", majLigne); addEventListener("offline", majLigne); majLigne();
   function majBudget() {
     const s = noyau.statut(), b = s.budget, n = 10, pleins = Math.round(Math.min(b.utilisees / b.plafond, 1) * n);
     budgetEl.textContent = ""; for (let i = 0; i < n; i++) budgetEl.append(h("u", { class: i < pleins ? "f" : "" }));
@@ -49,7 +52,11 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   const envoyer = h("button", { class: "nx-btn nx-primaire", type: "submit" }, "Envoyer");
   const micro = h("button", { class: "nx-btn nx-icone", type: "button", "aria-label": "Dicter", title: "Dicter (Brave bloque la dictée)", hidden: !dicteeDispo() }, "◉");
   const form = h("form", { class: "nx-form" }, saisie, micro, envoyer);
-  const chat = h("section", { class: "nx-vue nx-chat", "data-nom": "chat" }, fil, form);
+  const rapide = h("div", { class: "nx-rapide", role: "group", "aria-label": "Raccourcis" },
+    [["Briefing", "Briefing", true], ["Revue du soir", "Revue de fin de journée", true], ["Note…", "Note : ", false], ["Rappel…", "Rappelle-moi ", false], ["Chercher partout…", "Cherche partout ", false]]
+      .map(([nom, texte, direct]) => h("button", { class: "nx-puce nx-raccourci", type: "button", onclick: () => { if (direct) poser(texte); else { saisie.value = texte; ajuster(); saisie.focus(); saisie.setSelectionRange(texte.length, texte.length); } } }, nom)));
+  const chat = h("section", { class: "nx-vue nx-chat", "data-nom": "chat" }, fil, rapide, form);
+  document.addEventListener("noyau:saisir", (e) => { saisie.value = (e.detail && e.detail.texte) || ""; ajuster(); saisie.focus(); });
 
   function accueilVide() {
     if (fil.children.length) return;
@@ -332,7 +339,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     } else if (m.type === "erreur") { /* le texte de la réponse en mode réduit explique déjà */ }
     else if (m.type === "initiative") {
       fil.querySelector(".nx-vide")?.remove();
-      fil.append(h("article", { class: "nx-m nx-noyau nx-init", "data-ton": m.niveau === "critique" ? "preoccupe" : m.niveau === "alerte" ? "vigilant" : "curieux" }, h("p", { texte: m.texte }), h("div", { class: "nx-meta" }, h("span", { class: "nx-etiq" + (m.niveau === "critique" ? " bad" : m.niveau === "alerte" ? " warn" : ""), texte: m.raison === "accueil" ? "accueil" : m.raison === "systeme" ? "recommandation système" : "remarque" }), m.raison === "systeme" && m.niveau !== "ok" ? h("button", { class: "nx-lien", type: "button", onclick: () => document.dispatchEvent(new CustomEvent("noyau:ouvrir-securite")) }, "Ouvrir la sécurité") : null, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Ignorer"))));
+      fil.append(h("article", { class: "nx-m nx-noyau nx-init", "data-ton": m.niveau === "critique" ? "preoccupe" : m.niveau === "alerte" ? "vigilant" : "curieux" }, h("p", { texte: m.texte }), h("div", { class: "nx-meta" }, h("span", { class: "nx-etiq" + (m.niveau === "critique" ? " bad" : m.niveau === "alerte" ? " warn" : ""), texte: m.raison === "accueil" ? "accueil" : m.raison === "systeme" ? "recommandation système" : m.raison === "resume" ? "résumé" : "remarque" }), m.action === "export" ? h("button", { class: "nx-btn nx-primaire", type: "button", onclick: (e) => { noyau.exporter(); e.currentTarget.disabled = true; e.currentTarget.textContent = "Export lancé"; } }, "Exporter maintenant") : null, m.raison === "systeme" && m.niveau !== "ok" && m.action !== "export" ? h("button", { class: "nx-lien", type: "button", onclick: () => document.dispatchEvent(new CustomEvent("noyau:ouvrir-securite")) }, "Ouvrir la sécurité") : null, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Ignorer"))));
       fil.scrollTop = fil.scrollHeight;
     } else if (m.type === "a_valider") majNav();
   });
