@@ -148,21 +148,85 @@ export function initSurprises({ force, plans, wins }) {
   addEventListener("blur", releaseSpace);
   function hyper() {
     if (!ON("hyper") || state.lite || state.reduce) { if (state.reduce) toast("Hyperespace désactivé : « mouvement réduit » est demandé par Windows"); return; }
-    warp = 3.2; state.energyTarget = 1.6; state.accent = 0x9b72ff; sound.play("rappel", true); toast("Saut en hyperespace…");
+    warp = WARP; state.energyTarget = 1.6; state.accent = 0x9b72ff; sound.play("rappel", true); toast("Saut en hyperespace…");
+    sparks.length = 0; waves = [0, 0.45, 1.05, 1.75]; burst = 260;
+    document.body.classList.add("hyperon", "hypertr");
+    clearTimeout(hyper.t); hyper.t = setTimeout(() => { if (warp > 0) { warp = 0; sparks.length = 0; } endHyper(); }, WARP * 1000 + 400);   // garde-fou si le dessin s'arrête (onglet caché)
     setTimeout(() => { state.energyTarget = 0; state.accent = null; }, 3000);
   }
+  // Effets (demande de Lucien, 25/10) : tout l'écran vibre, l'interface se floute, l'orbe déverse de l'énergie
+  // (ondes de choc, éclairs, gerbes de particules), en plus des traits de vitesse lumière. Durée 3,2 s, PC seulement.
+  const WARP = 3.2;
+  const css = document.createElement("style");
+  css.textContent = `html { background: var(--void, #02070d); }
+body.hypertr .win .panel, body.hypertr header.top, body.hypertr .agband, body.hypertr .search, body.hypertr .ticker, body.hypertr .labels, body.hypertr .mthumbs { transition: filter .35s ease, opacity .35s ease; }
+body.hyperon .win .panel, body.hyperon header.top, body.hyperon .agband, body.hyperon .search, body.hyperon .ticker, body.hyperon .labels { filter: blur(5px) brightness(1.25) saturate(1.3); opacity: .7; }`;
+  document.head.append(css);
   const streaks = Array.from({ length: 160 }, () => ({ a: Math.random() * 6.283, d: Math.random(), s: 0.4 + Math.random() }));
+  const sparks = []; let waves = [], burst = 0, bolts = [], boltT = 0;
+  const COLS = ["190,248,255", "120,230,255", "200,180,255", "255,255,255"];
+  function spawn(c, n) {
+    for (let i = 0; i < n && sparks.length < 650; i++) {
+      const a = Math.random() * 6.283, v = 260 + Math.random() * 1100, r0 = c.R * (0.3 + Math.random() * 0.5);
+      sparks.push({ x: c.x + Math.cos(a) * r0, y: c.y + Math.sin(a) * r0, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7 + Math.random() * 1.1, age: 0, col: COLS[(Math.random() * COLS.length) | 0], w: 0.8 + Math.random() * 2.4 });
+    }
+  }
+  function makeBolt(c, maxR) {
+    const a = Math.random() * 6.283, len = maxR * (0.25 + Math.random() * 0.5), pts = [[c.x + Math.cos(a) * c.R * 0.4, c.y + Math.sin(a) * c.R * 0.4]];
+    const steps = 9 + ((Math.random() * 6) | 0);
+    for (let i = 1; i <= steps; i++) { const r = c.R * 0.4 + (len * i) / steps, j = (Math.random() - 0.5) * 0.35; pts.push([c.x + Math.cos(a + j) * r, c.y + Math.sin(a + j) * r]); }
+    return pts;
+  }
+  const endHyper = () => { document.body.classList.remove("hyperon"); document.body.style.translate = ""; setTimeout(() => document.body.classList.remove("hypertr"), 500); };
   force.addLayer((g, dt) => {
     if (warp <= 0) return; warp -= dt;
-    const c = core(), W = g.canvas.width, H = g.canvas.height, k = Math.min(1, warp / 0.6) * Math.min(1, (3.2 - warp) / 0.4), maxR = Math.hypot(W, H) * 0.6;
-    g.lineCap = "round";
+    if (warp <= 0) { endHyper(); sparks.length = 0; return; }
+    const c = core(), W = g.canvas.width, H = g.canvas.height, e = WARP - warp, k = Math.min(1, warp / 0.6) * Math.min(1, e / 0.4), maxR = Math.hypot(W, H) * 0.6;
+    if (warp < 0.45) document.body.classList.remove("hyperon");   // l'interface revient nette pendant la retombée
+    // Vibration de tout l'écran (forte au départ, puis grondement)
+    const amp = (e < 0.35 ? 14 : 6) * k;
+    document.body.style.translate = `${((Math.random() - 0.5) * 2 * amp).toFixed(1)}px ${((Math.random() - 0.5) * 2 * amp).toFixed(1)}px`;
+    g.save(); g.globalCompositeOperation = "lighter"; g.lineCap = "round";
+    // Cœur qui irradie
+    const glowR = c.R * (2.2 + 0.6 * Math.sin(e * 22)) * (0.6 + k);
+    let gr = g.createRadialGradient(c.x, c.y, 0, c.x, c.y, glowR);
+    gr.addColorStop(0, `rgba(235,250,255,${(0.55 * k).toFixed(2)})`); gr.addColorStop(0.35, `rgba(120,220,255,${(0.28 * k).toFixed(2)})`); gr.addColorStop(1, "rgba(155,114,255,0)");
+    g.fillStyle = gr; g.beginPath(); g.arc(c.x, c.y, glowR, 0, 6.283); g.fill();
+    // Ondes de choc
+    waves.forEach((t0, i) => {
+      const age = e - t0; if (age < 0 || age > 1.3) return;
+      const r = c.R * 0.6 + age * maxR * 0.95, al = (1 - age / 1.3) * 0.75;
+      g.lineWidth = 10 * (1 - age / 1.3) + 1.5; g.strokeStyle = `rgba(${i % 2 ? "190,170,255" : "150,240,255"},${al.toFixed(2)})`;
+      g.beginPath(); g.arc(c.x, c.y, r, 0, 6.283); g.stroke();
+      g.lineWidth = 2; g.strokeStyle = `rgba(255,255,255,${(al * 0.8).toFixed(2)})`; g.beginPath(); g.arc(c.x, c.y, r - 4, 0, 6.283); g.stroke();
+    });
+    // Gerbes de particules d'énergie
+    if (burst) { spawn(c, burst); burst = 0; }
+    if (warp > 0.6) spawn(c, Math.round(dt * 220));
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i]; s.age += dt; if (s.age > s.life) { sparks.splice(i, 1); continue; }
+      const px = s.x, py = s.y; s.vx *= 1 + dt * 0.6; s.vy *= 1 + dt * 0.6; s.x += s.vx * dt; s.y += s.vy * dt;
+      const al = (1 - s.age / s.life) * k;
+      g.strokeStyle = `rgba(${s.col},${al.toFixed(2)})`; g.lineWidth = s.w;
+      g.beginPath(); g.moveTo(px - s.vx * dt * 2, py - s.vy * dt * 2); g.lineTo(s.x, s.y); g.stroke();
+    }
+    // Éclairs qui jaillissent de l'orbe
+    boltT -= dt; if (boltT <= 0) { boltT = 0.07; bolts = Array.from({ length: e < 0.5 ? 7 : 4 }, () => makeBolt(c, maxR)); }
+    bolts.forEach((pts) => {
+      [[7, `rgba(140,200,255,${(0.22 * k).toFixed(2)})`], [2, `rgba(240,250,255,${(0.9 * k).toFixed(2)})`]].forEach(([w, col]) => {
+        g.lineWidth = w; g.strokeStyle = col; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); pts.forEach(([x, y]) => g.lineTo(x, y)); g.stroke();
+      });
+    });
+    // Traits de vitesse lumière
     streaks.forEach((s) => {
       s.d += dt * s.s * 1.6; if (s.d > 1) s.d -= 1;
       const r1 = s.d * s.d * maxR, r2 = r1 + (20 + s.d * 160) * k;
       g.strokeStyle = `rgba(${s.s > 1.1 ? "200,180,255" : "190,248,255"},${(0.75 * k * s.d + 0.05).toFixed(2)})`; g.lineWidth = 1 + s.d * 2.2;
       g.beginPath(); g.moveTo(c.x + Math.cos(s.a) * r1, c.y + Math.sin(s.a) * r1); g.lineTo(c.x + Math.cos(s.a) * r2, c.y + Math.sin(s.a) * r2); g.stroke();
     });
-    g.fillStyle = `rgba(220,240,255,${(0.12 * k).toFixed(3)})`; g.fillRect(0, 0, W, H);
+    g.restore();
+    // Éclair blanc au départ, voile lumineux ensuite
+    g.fillStyle = `rgba(220,240,255,${(e < 0.18 ? 0.45 * (1 - e / 0.18) + 0.12 * k : 0.12 * k).toFixed(3)})`; g.fillRect(0, 0, W, H);
   });
 
   // ---------- Menus et réglages ----------
