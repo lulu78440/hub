@@ -8,10 +8,11 @@ import { prefs } from "../store/prefs.js";
 import { sound } from "../device/sound.js";
 import { toast } from "./toast.js";
 import { PAR_DEFAUT } from "./reserve.js";
+import { LIBELLE } from "./qualite.js";
 
 const $ = (id) => document.getElementById(id);
 
-export function initOutils({ wins, entity, cursor, resetLayout, data, menus, test }) {
+export function initOutils({ wins, entity, cursor, resetLayout, data, menus, quality, test }) {
   const lite = state.lite, mob = menus && menus.mob;
   if (lite && !mob) return { open() {}, close() {} };
   const btn = $("b-outils");
@@ -95,22 +96,45 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, tes
     G.push({ h: "Affichage", tiles: [
       { t: "Compteur img/s", s: document.body.classList.contains("show-fps") ? "affiché" : "caché", keep: true, fn: () => { const on = !document.body.classList.contains("show-fps"); document.body.classList.toggle("show-fps", on); prefs.setOn("compteur-fps", on); } },
       { t: "Salle allégée", s: document.body.classList.contains("salle-light") ? "sans reflets" : "avec reflets", keep: true, fn: () => { const on = !document.body.classList.contains("salle-light"); document.body.classList.toggle("salle-light", on); prefs.setOn("salle-allegee", on); } } ] });
+    if (quality) G.push({ h: "Qualité du rendu", note: "Automatique : le hub baisse tout seul la qualité si les images par seconde chutent, sans jamais la remonter.", tiles: ["auto", "complet", "allege", "minimal"].map((m) => ({ t: LIBELLE[m], s: m === "auto" ? "actuel : " + LIBELLE[quality.name].toLowerCase() : "", on: quality.mode === m, keep: true, fn: () => quality.set(m) })) });
+    G.push({ h: "Palette", tiles: [{ t: "Raccourci Ctrl+K", s: prefs.get("palette-ctrlk", "1") !== "0" ? "actif" : "coupé", keep: true, on: prefs.get("palette-ctrlk", "1") !== "0", fn: () => { prefs.set("palette-ctrlk", prefs.get("palette-ctrlk", "1") !== "0" ? "0" : "1"); } }] });
     G.push({ h: "Réglages et diagnostic", tiles: [{ t: "Réglages et diagnostic…", s: "touche D", fn: () => $("b-diag").click() }] });
     const rest = cache.filter((l) => !used.has(l));
     if (rest.length) G.push({ h: "Autres actions", list: true, tiles: rest.map((l) => ({ t: l.t, s: l.k || "", fn: l.fn })) });
     return G;
   }
 
+  // Palette tapée : un champ en haut filtre les tuiles (titre, état, groupe) ; Entrée lance la première tuile visible, flèches haut/bas
+  // passent de l'une à l'autre. Ctrl+K ouvre Outils sur ce champ (réglage « palette-ctrlk », actif par défaut, coupable depuis la tuile).
+  const head = document.createElement("div"); head.className = "o-head";
+  const h = document.createElement("h2"); h.textContent = "Outils";
+  const x = document.createElement("button"); x.type = "button"; x.className = "o-x"; x.textContent = "×"; x.setAttribute("aria-label", "Fermer les outils"); x.addEventListener("click", close);
+  head.append(h, x);
+  const inp = document.createElement("input"); inp.type = "search"; inp.className = "o-q"; inp.placeholder = "Taper une action…"; inp.setAttribute("aria-label", "Chercher une action"); inp.autocomplete = "off"; inp.spellcheck = false;
+  const body = document.createElement("div"); body.className = "o-body";
+  box.append(head, inp, body);
+  const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const tilesOk = () => [...body.querySelectorAll(".o-tile:not(:disabled)")];
+  inp.addEventListener("input", render);
+  inp.addEventListener("keydown", (e) => {
+    const L = tilesOk();
+    if (e.key === "Enter") { e.preventDefault(); if (L[0]) L[0].click(); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); if (L[0]) L[0].focus(); }
+  });
+  body.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const L = tilesOk(), i = L.indexOf(document.activeElement); if (i < 0) return; e.preventDefault();
+    if (e.key === "ArrowUp" && i === 0) { inp.focus(); return; }
+    const n = L[i + (e.key === "ArrowDown" ? 1 : -1)]; if (n) n.focus();
+  });
+
   function render() {
-    box.innerHTML = "";
-    const head = document.createElement("div"); head.className = "o-head";
-    const h = document.createElement("h2"); h.textContent = "Outils";
-    const x = document.createElement("button"); x.type = "button"; x.className = "o-x"; x.textContent = "×"; x.setAttribute("aria-label", "Fermer les outils"); x.addEventListener("click", close);
-    head.append(h, x); box.append(head);
+    body.innerHTML = "";
+    const q = norm(inp.value).trim().split(/\s+/).filter(Boolean);
     groups().forEach((g) => {
-      const tiles = g.tiles.filter(Boolean); if (!tiles.length) return;
+      const tiles = g.tiles.filter(Boolean).filter((tl) => !q.length || q.every((w) => norm(tl.t + " " + (tl.s || "") + " " + g.h).includes(w))); if (!tiles.length) return;
       const sec = document.createElement("section"); const t = document.createElement("div"); t.className = "o-grp"; t.textContent = g.h; sec.append(t);
-      if (g.note) { const n = document.createElement("div"); n.className = "o-note"; n.textContent = g.note; sec.append(n); }
+      if (g.note && !q.length) { const n = document.createElement("div"); n.className = "o-note"; n.textContent = g.note; sec.append(n); }
       const grid = document.createElement("div"); grid.className = "o-grid" + (g.list ? " list" : "");
       tiles.forEach((tl) => {
         const b = document.createElement("button"); b.type = "button"; b.className = "o-tile" + (tl.on ? " on" : ""); b.disabled = !!tl.off;
@@ -120,23 +144,30 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, tes
         grid.append(b);
       });
       sec.append(grid);
-      if (g.h === "Fenêtres rangées" && showHidden) {
+      if (g.h === "Fenêtres rangées" && showHidden && !q.length) {
         const list = document.createElement("div"); list.className = "o-grid list";
         const hl = lite ? mob.list().filter((w) => w.hid).map((w) => ({ title: w.title, show: () => mob.setHidden(w.id, false) })) : wins.hiddenEls().map((el) => ({ title: wins.title(el), show: () => wins.setHidden(el, false) }));
         hl.forEach((h) => { const b = document.createElement("button"); b.type = "button"; b.className = "o-tile"; b.textContent = "Afficher « " + h.title + " »"; b.addEventListener("click", () => { h.show(); render(); }); list.append(b); });
         sec.append(list);
       }
-      box.append(sec);
+      body.append(sec);
     });
+    if (q.length && !body.children.length) { const n = document.createElement("div"); n.className = "o-note"; n.textContent = "Aucune action ne correspond."; body.append(n); }
   }
-  function open() { render(); box.hidden = false; if (btn) btn.setAttribute("aria-pressed", "true"); const f = box.querySelector(".o-tile:not(:disabled)"); if (f) f.focus({ preventScroll: true }); }
+  function open(typed) { inp.value = ""; render(); box.hidden = false; if (btn) btn.setAttribute("aria-pressed", "true"); if (typed) { inp.focus({ preventScroll: true }); return; } const f = box.querySelector(".o-tile:not(:disabled)"); if (f) f.focus({ preventScroll: true }); }
   function close() { box.hidden = true; if (btn) btn.setAttribute("aria-pressed", "false"); }
   const toggle = () => (box.hidden ? open() : close());
 
   if (btn) btn.addEventListener("click", toggle);
-  document.addEventListener("hub:outils", open);
+  document.addEventListener("hub:outils", () => open());
   addEventListener("pointerdown", (e) => { if (!box.hidden && !box.contains(e.target) && !(e.target.closest && e.target.closest("#b-outils, #ctx, .perso, .cat-ask"))) close(); }, true);
   addEventListener("keydown", (e) => {
+    // Ctrl+K : palette. On ne prend la touche que si le focus n'est pas dans un champ et que le réglage est actif ; Maj ou Alt la laissent au navigateur.
+    if ((e.key === "k" || e.key === "K") && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && prefs.get("palette-ctrlk", "1") !== "0") {
+      if (e.target.closest && e.target.closest("input, textarea, [contenteditable='true']") && !box.contains(e.target) && e.target.id !== "q") return;
+      e.preventDefault(); e.stopPropagation(); if (box.hidden) open(true); else { inp.focus(); inp.select(); } return;
+    }
+    if (e.key === "Escape" && !box.hidden && box.contains(e.target)) { e.stopPropagation(); close(); return; }
     if (e.target.closest && e.target.closest("input, textarea, [contenteditable='true']")) return;
     if (e.key === "Escape" && !box.hidden) { e.stopPropagation(); close(); return; }
     if ((e.key === "o" || e.key === "O") && !e.ctrlKey && !e.metaKey && !e.altKey && $("diag").hidden) toggle();

@@ -1170,3 +1170,28 @@ body.lite .bar-in { min-width: 0; padding-inline: 14px; } body.lite .bar input {
 
 /* Banc d'essai (B13) : contour de focus pour tout élément atteint au clavier qui n'a pas le sien (spécificité nulle : les styles existants gardent la main) */
 :where(a, button, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* Palette tapée d'Outils (ergo-palette) */
+.o-q { width: 100%; box-sizing: border-box; margin: 10px 0 4px; min-height: 40px; padding: 8px 12px; border: 1px solid rgba(63, 230, 255, .3); background: rgba(4, 16, 30, .8); color: #fff; font: 500 14px var(--ui); letter-spacing: .03em; }
+.o-q:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
+body.lite .o-q { min-height: 48px; font-size: 16px; }
+
+/* ergo-access : mouvement réduit et contraste pour les éléments d'Outils et du bureau */
+@media (prefers-reduced-motion: reduce) { .outils, .o-tile, .dwin, .bur-pop, .dico .hx { transition: none !important; animation: none !important; } }
+.o-q::placeholder { color: #8fb3c4; }
+.o-tile:focus-visible, .o-q:focus-visible, .dwin .dx:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* ---------- Refonte · ergo-perf-repos : niveaux de qualité (Allégé, Minimal) ---------- */
+body.q-allege:not(.lite) .win.p2, body.q-minimal:not(.lite) .win.p2 { -webkit-box-reflect: none !important; }
+body.q-allege:not(.lite) .dof, body.q-minimal:not(.lite) .dof { display: none !important; }
+body.q-minimal:not(.lite) .win.p2 .panel { box-shadow: none !important; }
+
+/* ---------- Refonte · ergo-plan2-salle : brume, profondeur de champ par fenêtre, entrée en travelling ---------- */
+.brume { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: calc(var(--cine, 0) * (.55 + .45 * var(--entree, 0)));
+  background: linear-gradient(to top, rgba(8, 34, 62, .55) 0, rgba(8, 34, 62, .22) 24%, transparent 50%), radial-gradient(ellipse 90% 30% at 50% 62%, rgba(20, 70, 110, .28), transparent 70%); }
+body.lite .brume, body.salle-light .brume, body.q-allege .brume, body.q-minimal .brume { display: none; }
+/* Flou : posé fenêtre par fenêtre sur le contenu (jamais sur le parent 3D). Le survol rend la fenêtre nette et adoucit les autres. */
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2 .panel { filter: blur(calc((var(--entree, 0) * 6px + var(--df, 0) * 2.4px) * var(--cine, 0))) brightness(calc(1 - var(--df, 0) * var(--cine, 0) * .3)); }
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2:hover .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.focus .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.dragging .panel { filter: none; }
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .win.p2:not(:hover) .panel { filter: brightness(.74) saturate(.85); }
+@media (prefers-reduced-motion: reduce) { .brume { opacity: calc(var(--cine, 0) * .55); } .win.p2 .panel { filter: none !important; } }

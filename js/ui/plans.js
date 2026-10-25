@@ -11,6 +11,9 @@ const nearestPlan = (z) => PLANS.reduce((a, b) => (Math.abs(b - z) < Math.abs(a 
 
 export function createPlans({ world, anchor, desk }) {
   let zoom = 1, zoomTarget = 1, snapT = 0, lastT = "";
+  // Entrée dans la salle : travelling de 2,4 s la première fois de la session, 0,8 s ensuite ; sans effet en mouvement réduit ou en qualité Minimal
+  let entry = null, prevCine = 0;
+  const brume = document.createElement("div"); brume.className = "brume"; brume.setAttribute("aria-hidden", "true"); if (!state.lite) document.body.append(brume);
   // Salle du plan 2 : on tourne la tête (yaw, en radians) devant le mur courbe de fenêtres (voir ui/windows.js)
   let yaw = 0, yawT = 0, yawLo = -1.05, yawHi = 1.05, persp = 1500;
   const setYaw = (v) => { yawT = clamp(v, yawLo, yawHi); };
@@ -63,17 +66,25 @@ export function createPlans({ world, anchor, desk }) {
     const d = clamp((0.5 - zoom) / 0.2, 0, 1);
     const cine = clamp((0.92 - zoom) / 0.3, 0, 1) * (1 - d);
     state.cine = cine;
+    if (cine > 0.02 && prevCine <= 0.02 && !state.reduce && state.qlevel < 2) {
+      let first = true; try { first = sessionStorage.getItem("hub-salle-vue") !== "1"; sessionStorage.setItem("hub-salle-vue", "1"); } catch (e) { /* stockage indisponible */ }
+      entry = { t: 0, d: first ? 2.4 : 0.8 };
+    }
+    prevCine = cine;
+    let entree = 0;
+    if (entry) { entry.t += dt; const u = Math.min(entry.t / entry.d, 1); entree = Math.pow(1 - u, 3); if (u >= 1 || state.reduce || state.qlevel > 1) { entry = null; entree = 0; } }
     // Tête qui tourne : souris près des bords gauche et droit, ou flèches, ou Maj + molette
     if (cine > 0.9 && !state.paused && Math.abs(state.mx) > 0.86 && state.my > -0.7) setYaw(yawT + Math.sign(state.mx) * (Math.abs(state.mx) - 0.86) / 0.14 * dt * 0.9);
     yaw += (yawT - yaw) * (state.reduce ? 1 : 1 - Math.exp(-dt * 6));
     if (Math.abs(yaw - yawT) < 0.0004) yaw = yawT;
     persp = 1500 - 420 * cine;
     // Grand angle au plan 2 : perspective plus serrée, inclinaison plus marquée, caméra un peu remontée
-    const tf = `perspective(${persp.toFixed(0)}px) rotateX(${(cine * 4).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
+    const tf = `perspective(${persp.toFixed(0)}px) translateZ(${(entree * cine * 260).toFixed(1)}px) rotateX(${(cine * 4).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
     if (tf !== lastT) {
       lastT = tf; world.style.transform = tf;
       const b = document.body;
       b.style.setProperty("--cine", cine.toFixed(3));
+      b.style.setProperty("--entree", entree.toFixed(3));
       b.classList.toggle("cine", cine > 0.45);
       b.classList.toggle("room", cine > 0.01);
       b.classList.toggle("zoomed", zoom < 0.99);

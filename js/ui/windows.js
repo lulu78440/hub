@@ -393,16 +393,18 @@ export function createWindows({ world, plans, force }) {
       s.ry += (ryT - s.ry) * kRot; s.rz += (rzT - s.rz) * kRot; s.vx *= 0.85;
       if (Math.abs(s.rz) < 0.005) s.rz = 0;
       const k = state.cine, fl = (s.drag ? 1.025 : 1) * s.fk;
-      let tf, op = "";
+      let tf, op = "", df = 0;
       if (k > 0.01 && s.isWall && !s.foc) {
         // Mur courbe : fenêtre à l'angle th autour du point de vue, à sa vraie taille (la mise à l'échelle du monde et la perspective sont compensées)
         const P = plans.persp, z = plans.zoom, th = (s.wa ?? s.waAuto) - plans.yaw, c = Math.cos(th), sn = Math.sin(th);
         const xw = core.x + P * sn / z - s.w / 2, yw = core.y + (s.wy || 0) * c / z - s.h / 2, fx0 = s.cx + s.fx, fy0 = s.cy + s.fy;
         const lx = fx0 + (xw - fx0) * k, ly = fy0 + (yw - fy0) * k, lz = k * (P - P * c), lr = s.ry + (-th * 57.2958 - s.ry) * k, ls = fl + (fl * c / z - fl) * k;
         tf = `translate3d(${lx.toFixed(1)}px, ${ly.toFixed(1)}px, ${lz.toFixed(1)}px) perspective(${k > 0.02 ? 100000 : 1200}px) rotateY(${lr.toFixed(2)}deg) rotateZ(${s.rz.toFixed(2)}deg) scale(${ls.toFixed(4)})`;
+        df = clamp((Math.abs(th) - 0.45) / 0.5, 0, 1);   // profondeur de champ : plus la fenêtre est sur le côté, plus elle s'adoucit (css, par fenêtre)
         const fade = clamp((1.4 - Math.abs(th)) / 0.25, 0, 1); op = fade >= 1 ? "" : fade.toFixed(2);
       } else tf = `translate3d(${(s.cx + s.fx).toFixed(1)}px, ${(s.cy + s.fy).toFixed(1)}px, 0) perspective(1200px) rotateY(${s.ry.toFixed(2)}deg) rotateZ(${s.rz.toFixed(2)}deg) scale(${fl.toFixed(4)})`;
       if (op !== s.lastOp) { s.lastOp = op; el.style.opacity = op; el.style.pointerEvents = op !== "" && +op < 0.05 ? "none" : ""; }
+      const dfs = df.toFixed(2); if (dfs !== s.lastDf) { s.lastDf = dfs; el.style.setProperty("--df", dfs); }
       if (tf !== s.last) { s.last = tf; el.style.transform = tf; }
       if (s.drag) {                                                               // le champ de force reçoit la place calculée (pas de relecture de la mise en page)
         const k = 1.025, ex = plans.zoom === 1 && state.cine < 0.01 && !s.foc;

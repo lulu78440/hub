@@ -7,6 +7,7 @@ export const state = {
   energyTarget: 0,      // intensité visée
   accent: null,
   mood: null,           // teinte du noyau selon la météo intérieure (7.1), si aucun accent temporaire         // couleur d'accent temporaire (ex. 0x9b72ff) ou null = cyan
+  qlevel: 0,            // niveau de qualité du rendu : 0 Complet, 1 Allégé, 2 Minimal (ui/qualite.js)
   cine: 0,              // 0..1 : mode cinéma du plan 2 (utilisé en 1.4)
   tilt: false,          // inclinaison du téléphone disponible (mobile)
   mx: 0, my: 0          // souris (PC) ou inclinaison (mobile), normalisées -1..1

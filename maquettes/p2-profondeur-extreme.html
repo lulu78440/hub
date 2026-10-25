@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan 2 · profondeur · Plan 2 · version extrême</title>
+<style>
+:root { --void:#030912; --ink:#d7ecf7; --dim:#8aa5b8; --cyan:#3fe6ff; --violet:#9b72ff; --amber:#ffb347; --line:#16314a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--void); color:var(--ink); font:15px/1.5 ui-sans-serif, system-ui, "Segoe UI", sans-serif; padding: 18px max(16px, env(safe-area-inset-left)) 40px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 14px; }
+.eyebrow { font: 11px ui-monospace, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); margin: 0; }
+h1 { margin: 2px 0 6px; font-size: clamp(24px, 4.5vw, 32px); line-height: 1.1; }
+.lead { margin: 0; color: var(--dim); max-width: 70ch; }
+nav.alt { display: flex; gap: 8px; flex-wrap: wrap; font: 12px ui-monospace, Consolas, monospace; }
+nav.alt a { color: var(--dim); border: 1px solid var(--line); padding: 7px 12px; text-decoration: none; border-radius: 6px; }
+nav.alt a[aria-current] { background: var(--cyan); color: var(--void); border-color: var(--cyan); }
+nav.alt a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 82vh; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; isolation: isolate; touch-action: none;
+  background: radial-gradient(ellipse 80% 40% at 50% 54%, rgba(63,230,255,.22), transparent 70%), linear-gradient(180deg, #02060d 0%, #05122a 46%, #07203a 54%, #030a15 56%, #02060d 100%); }
+.world, .rig, .wall, .grp { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+.l { position: absolute; backface-visibility: visible; }
+.win { width: 380px; height: 250px; margin: -125px 0 0 -190px; background: linear-gradient(180deg, rgba(13,29,49,.96), rgba(8,18,32,.96)); border: 1px solid rgba(63,230,255,.45); box-shadow: 0 0 40px rgba(63,230,255,.12), inset 0 0 0 1px rgba(255,255,255,.03); overflow: hidden; }
+.win.v { border-color: rgba(155,114,255,.55); } .win.a { border-color: rgba(255,179,71,.55); }
+.win .tb { font: 15px ui-monospace, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; padding: 10px 16px; border-bottom: 1px solid rgba(63,230,255,.25); color: var(--cyan); }
+.win.v .tb { color: var(--violet); } .win.a .tb { color: var(--amber); }
+.win .bd { padding: 16px; display: grid; gap: 11px; }
+.win .bd i { display: block; height: 11px; border-radius: 6px; background: rgba(138,165,184,.22); }
+.win .bd i:nth-child(2) { width: 72%; } .win .bd i:nth-child(3) { width: 88%; } .win .bd i:nth-child(4) { width: 46%; } .win .bd i:nth-child(5) { width: 64%; }
+.win.mir { pointer-events: none; opacity: var(--mo, .3); }
+.floor { width: 9000px; height: 9000px; margin: -4500px 0 0 -4500px; background:
+  linear-gradient(rgba(63,230,255,.35) 2px, transparent 2px) 0 0 / 180px 180px, linear-gradient(90deg, rgba(63,230,255,.28) 2px, transparent 2px) 0 0 / 180px 180px, rgba(4,14,26,.55);
+  -webkit-mask: radial-gradient(circle at 50% 50%, #000 0, #000 28%, transparent 62%); mask: radial-gradient(circle at 50% 50%, #000 0, #000 28%, transparent 62%); }
+.spot { width: 1500px; height: 1500px; margin: -750px 0 0 -750px; border-radius: 50%; background: radial-gradient(circle, rgba(63,230,255,.34), rgba(63,230,255,.08) 38%, transparent 66%); }
+.orb { width: 260px; height: 260px; margin: -130px 0 0 -130px; border-radius: 50%; background: radial-gradient(circle at 42% 36%, #eaffff 0, #8ef3ff 18%, #29c8ea 46%, rgba(20,110,170,.55) 70%, rgba(10,60,110,0) 74%); box-shadow: 0 0 90px 30px rgba(63,230,255,.45), 0 0 220px 80px rgba(63,230,255,.2); }
+.ring { width: 460px; height: 460px; margin: -230px 0 0 -230px; border-radius: 50%; border: 2px solid rgba(155,114,255,.7); box-shadow: 0 0 22px rgba(155,114,255,.5); transform: rotateX(72deg); }
+.pyl { background: linear-gradient(180deg, rgba(63,230,255,.9) 0, rgba(63,230,255,.25) 6%, rgba(14,40,66,.92) 7%, rgba(5,16,30,.97) 100%); border: 1px solid rgba(63,230,255,.35); box-shadow: 0 0 26px rgba(63,230,255,.25); }
+.pyl.v { background: linear-gradient(180deg, rgba(155,114,255,.95) 0, rgba(155,114,255,.25) 6%, rgba(24,22,60,.92) 7%, rgba(6,10,28,.97) 100%); border-color: rgba(155,114,255,.4); box-shadow: 0 0 26px rgba(155,114,255,.25); }
+.sky { background: linear-gradient(180deg, rgba(5,18,36,.0), rgba(10,34,60,.95)); border-top: 1px solid rgba(63,230,255,.18); }
+.mist { width: 9000px; height: 4200px; margin: -2300px 0 0 -4500px; background: radial-gradient(ellipse 52% 42% at 50% 60%, rgba(22,74,112,.9), rgba(22,74,112,0) 72%); pointer-events: none; }
+.bk { border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.7), rgba(63,230,255,.4) 40%, rgba(63,230,255,0) 70%); }
+.bars i { position: absolute; left: 0; right: 0; height: var(--bar, 0%); background: #000; z-index: 4; } .bars i:first-child { top: 0; } .bars i:last-child { bottom: 0; }
+.fx { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.vig { background: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(0,0,0,var(--vig,0))); }
+.grain { opacity: var(--grain, 0); mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2' seed='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E"); }
+.streak { top: 46%; height: 2px; background: linear-gradient(90deg, transparent, rgba(63,230,255,var(--streak,0)), rgba(255,255,255,var(--streak,0)), rgba(63,230,255,var(--streak,0)), transparent); filter: blur(1.5px); bottom: auto; }
+.abr { box-shadow: inset 26px 0 40px -20px rgba(255,40,90,var(--abr,0)), inset -26px 0 40px -20px rgba(40,120,255,var(--abr,0)); }
+.hud { position: absolute; left: 14px; bottom: 12px; z-index: 5; font: 11px ui-monospace, Consolas, monospace; letter-spacing: .1em; color: rgba(215,236,247,.75); text-shadow: 0 0 6px #000; text-transform: uppercase; }
+.ctl { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; font: 12px ui-monospace, Consolas, monospace; color: var(--dim); }
+.rg { display: inline-flex; gap: 8px; align-items: center; } .rg input { width: 130px; accent-color: var(--cyan); } .rg output { min-width: 3ch; color: var(--ink); }
+.btn { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 8px 13px; font: inherit; cursor: pointer; border-radius: 6px; } .btn:hover { border-color: var(--cyan); }
+.notes { display: grid; gap: 6px; color: var(--dim); font-size: 14px; } .notes b { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .bk { animation: none !important; } }
+</style></head>
+<body><div class="wrap">
+<header><p class="eyebrow">Maquette isolée · rien n'est branché dans le hub · plan 2 · profondeur</p><h1>Plan 2 · version extrême</h1><p class="lead">Le maximum : très grand angle qui déforme les bords, salle presque enveloppante, brume épaisse, reflets forts, structures très profondes, aberration colorée sur les bords, respiration lente de la caméra et entrée en plongée de 2,2 s.</p></header>
+<nav class="alt" aria-label="Les trois maquettes"><a href="p2-profondeur-sobre.html">Sobre</a><a href="p2-profondeur-cinema.html">Cinéma</a><a href="p2-profondeur-extreme.html" aria-current="page">Extrême</a><a href="p2-profondeur-mix.html">Mix</a></nav>
+<div class="stage" id="stage" aria-label="Salle du plan 2 en perspective" role="img">
+  <div class="world"><div class="rig" id="rig">
+    <div class="l sky" style="width:12000px;height:1800px;margin:-1500px 0 0 -6000px;transform:translate3d(0,0,-9000px)"></div>
+    <div class="grp" id="far"></div><div class="grp" id="mists"></div><div class="grp" id="pyl"></div>
+    <div class="l floor" id="floor"></div><div class="l spot" id="spot"></div>
+    <div class="wall" id="wall"></div><div class="wall mir" id="mir"></div>
+    <div class="l ring" id="ring"></div><div class="l orb" id="orb"></div>
+    <div class="grp" id="bok"></div>
+  </div></div>
+  <div class="fx abr"></div><div class="fx vig"></div><div class="fx grain"></div><div class="fx streak"></div>
+  <div class="bars"><i></i><i></i></div>
+  <div class="hud" id="hud"></div>
+</div>
+<div class="ctl">
+  <label class="rg">Grand angle <input type="range" id="r-persp" min="300" max="1800"><output id="o-persp"></output></label>
+  <label class="rg">Profondeur de champ <input type="range" id="r-dof" min="0" max="100"><output id="o-dof"></output></label>
+  <label class="rg">Brume <input type="range" id="r-fog" min="0" max="100"><output id="o-fog"></output></label>
+  <label class="rg">Reflet du sol <input type="range" id="r-mir" min="0" max="100"><output id="o-mir"></output></label>
+  <button class="btn" id="b-entry" type="button">Rejouer l'entrée</button>
+</div>
+<div class="notes"><div><b>À regarder :</b> les bords de l'écran (déformation et aberration), les fenêtres des extrémités qui se referment autour de toi, la brume épaisse au fond.</div><div><b>Coût :</b> élevé : à tester sur le PC et à baisser si l'image saccade (curseurs sous la scène).</div></div>
+</div>
+<script>
+const P = {"nom": "Extrême", "persp": 430, "R": 560, "n": 4, "step": 38, "mir": 0.5, "tow": 18, "tz": 420, "far": 9000, "mist": 7, "fog": 0.8, "blurFg": 15, "blurFar": 5, "par": 85, "yaw": 14, "entry": 2.2, "dolly": 760, "rise": -60, "tilt": -4, "breath": 24, "bars": 0.07, "vig": 0.85, "grain": 0.2, "streak": 0.7, "abr": 0.45};
+const $ = (s) => document.querySelector(s), RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FLOOR = 150, rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+const blurs = [];   // [élément, flou de base, luminosité de base]
+function mk(parent, cls, css, html) { const d = document.createElement("div"); d.className = "l " + cls; d.style.cssText = css; if (html) d.innerHTML = html; parent.append(d); return d; }
+function reg(d, blur, br) { blurs.push([d, blur, br || 1]); }
+// ---- mur de fenêtres en arc (le centre reste libre pour l'orbe) ----
+const T = [["Mon PC","c"],["Progression","c"],["Page en direct","v"],["Noyau","v"],["Vidéo","a"],["Notes","a"],["Favoris","c"],["Musique","v"],["Mails","a"],["Agenda","c"]];
+const half = Math.floor(P.n / 2), slots = []; for (let k = 1; k <= half; k++) slots.push(-k, k);
+slots.sort((a, b) => a - b).forEach((k, i) => {
+  const a = k * P.step, t = T[i % T.length], html = `<div class="tb">${t[0]}</div><div class="bd"><i></i><i></i><i></i><i></i><i></i></div>`;
+  const w = document.createElement("div"); w.className = "l win " + t[1]; w.style.transform = `rotateY(${a}deg) translateZ(${-P.R}px)`; w.innerHTML = html; $("#wall").append(w);
+  const m = document.createElement("div"); m.className = "l win mir " + t[1]; m.style.transform = `rotateY(${a}deg) translateZ(${-P.R}px)`; m.innerHTML = html; $("#mir").append(m); reg(m, 1.6);
+});
+$("#mir").style.transform = `translateY(${2 * FLOOR}px) scaleY(-1)`;
+$("#floor").style.transform = `translate3d(0,${FLOOR}px,${-P.R * 0.6}px) rotateX(90deg)`;
+$("#spot").style.transform = `translate3d(0,${FLOOR - 1}px,${-P.R * 0.55}px) rotateX(90deg)`;
+$("#orb").style.transform = `translate3d(0,-10px,${-P.R * 0.55}px)`; $("#ring").style.transform = `translate3d(0,-10px,${-P.R * 0.55}px) rotateX(74deg)`;
+// ---- structures qui rapetissent avec la distance (pylônes de part et d'autre du sol) ----
+for (let i = 0; i < P.tow; i++) for (const side of [-1, 1]) {
+  const d = i / P.tow, h = 380 + rnd() * 520, w = 40 + rnd() * 34, z = -(P.R + 260 + i * P.tz), x = side * (P.R * 0.55 + 200 + rnd() * 420);
+  const e = mk($("#pyl"), "pyl" + (rnd() > .7 ? " v" : ""), `width:${w}px;height:${h}px;margin:${-h / 2}px 0 0 ${-w / 2}px;transform:translate3d(${x}px,${FLOOR - h / 2}px,${z}px);opacity:${1 - d * 0.55}`);
+  reg(e, P.blurFar * d, 1 - d * 0.5);
+}
+// ---- horizon lointain ----
+for (let i = 0; i < 46; i++) {
+  const w = 60 + rnd() * 160, h = 160 + rnd() * 700, x = -4200 + i * 190 + rnd() * 60, e = mk($("#far"), "pyl", `width:${w}px;height:${h}px;margin:${-h / 2}px 0 0 ${-w / 2}px;transform:translate3d(${x}px,${FLOOR - h / 2}px,${-P.far}px);opacity:.55`);
+  reg(e, P.blurFar * 1.4, .55);
+}
+// ---- brume en couches : plus épaisse vers le fond ----
+const mists = [];
+for (let i = 0; i < P.mist; i++) {
+  const t = (i + 1) / P.mist, z = -(P.R + 300 + t * (P.far - P.R - 300)), e = mk($("#mists"), "mist", `transform:translate3d(0,${FLOOR - 140}px,${z}px)`);
+  e.dataset.t = t; mists.push(e);
+}
+// ---- avant-plan flou (bokeh) ----
+for (let i = 0; i < 16; i++) {
+  const s = 40 + rnd() * 120, x = (rnd() - .5) * 1500, y = (rnd() - .5) * 700, z = 80 + rnd() * 380;
+  const e = mk($("#bok"), "bk", `width:${s}px;height:${s}px;margin:${-s / 2}px 0 0 ${-s / 2}px;transform:translate3d(${x}px,${y}px,${z}px);opacity:${0.14 + rnd() * 0.22};animation:drift ${14 + rnd() * 14}s ease-in-out ${-rnd() * 20}s infinite alternate`);
+  reg(e, P.blurFg, 1);
+}
+document.head.insertAdjacentHTML("beforeend", "<style>@keyframes drift{from{translate:0 0}to{translate:30px -22px}}</style>");
+// ---- réglages ----
+const st = $("#stage"), S = { persp: P.persp, dof: 60, fog: 60, mir: Math.round(P.mir * 100) };
+function apply() {
+  st.style.perspective = S.persp + "px"; st.style.perspectiveOrigin = "50% 47%";
+  const m = S.dof / 60;
+  blurs.forEach(([e, b, br]) => { e.style.filter = `blur(${(b * m).toFixed(2)}px) brightness(${br})`; });
+  mists.forEach((e) => { e.style.opacity = Math.min(.95, P.fog * (0.06 + 0.94 * e.dataset.t * e.dataset.t) * (S.fog / 60)).toFixed(3); });
+  st.style.setProperty("--mo", (S.mir / 100).toFixed(2));
+  st.style.setProperty("--bar", P.bars * 100 + "%"); st.style.setProperty("--vig", P.vig); st.style.setProperty("--grain", P.grain); st.style.setProperty("--streak", P.streak); st.style.setProperty("--abr", P.abr);
+  $("#o-persp").textContent = S.persp; $("#o-dof").textContent = S.dof; $("#o-fog").textContent = S.fog; $("#o-mir").textContent = S.mir;
+  $("#hud").textContent = `${P.nom} · grand angle ${S.persp} px · profondeur ${S.dof} % · brume ${S.fog} %`;
+}
+[["persp", "persp"], ["dof", "dof"], ["fog", "fog"], ["mir", "mir"]].forEach(([id, k]) => { const r = $("#r-" + id); r.value = S[k]; r.addEventListener("input", () => { S[k] = +r.value; apply(); }); });
+apply();
+// ---- caméra : tête qui tourne avec la souris, entrée en travelling ----
+let tx = 0, ty = 0, cx = 0, cy = 0, t0 = performance.now();
+st.addEventListener("pointermove", (e) => { const r = st.getBoundingClientRect(); tx = ((e.clientX - r.left) / r.width - .5) * 2; ty = ((e.clientY - r.top) / r.height - .5) * 2; });
+st.addEventListener("pointerleave", () => { tx = 0; ty = 0; });
+addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") tx = Math.max(-1, tx - .25); if (e.key === "ArrowRight") tx = Math.min(1, tx + .25); });
+$("#b-entry").addEventListener("click", () => { t0 = performance.now(); });
+const ease = (t) => 1 - Math.pow(1 - t, 3);
+function frame(now) {
+  cx += (tx - cx) * .06; cy += (ty - cy) * .06;
+  const k = RM ? 1 : Math.min(1, (now - t0) / (P.entry * 1000)), e = ease(k);
+  const breath = RM ? 0 : Math.sin(now / 2400) * P.breath;
+  $("#rig").style.transform = `translate3d(${-cx * P.par}px,${-cy * P.par * .35 + P.rise * (1 - e)}px,${P.dolly * (1 - e) + breath}px) rotateY(${cx * P.yaw}deg) rotateX(${-cy * 1.4 + P.tilt * (1 - e)}deg)`;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script></body></html>
