@@ -80,7 +80,11 @@ async function mergeIn(remote) {
       if (localDeleted && localDeleted >= (r._m || 0)) continue;              // supprimé ici après la dernière modif là-bas
       if (!l || (r._m || 0) > (l._m || 0)) toPut.push(r);
     }
-    for (const [id, t] of Object.entries(rt)) { const l = local.get(id); if (l && t >= (l._m || 0)) toDel.push(id); }
+    // Suppression venue de l'autre appareil : comparée à la version retenue ICI après fusion (une note supprimée puis
+    // remise avec « Annuler » là-bas est plus récente que sa trace de suppression : elle doit rester).
+    const kept = new Map(toPut.map((x) => [x.id, x]));
+    for (const [id, t] of Object.entries(rt)) { const cur = kept.get(id) || local.get(id); if (cur && t >= (cur._m || 0)) { toDel.push(id); kept.delete(id); } }
+    toPut.length = 0; toPut.push(...kept.values());
     if (toPut.length) { await store.putMany(k, toPut, true); changes += toPut.length; }
     if (toDel.length) { await store.delMany(k, toDel, true); changes += toDel.length; }
     // On garde aussi les traces de suppression de l'autre appareil (pour les transmettre à un 3e)
