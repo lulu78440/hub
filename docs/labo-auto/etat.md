@@ -9,3 +9,4 @@ _Mis à jour après chaque étape. Résumé final en tête à 20 h 00._
 | 3 · lab-socle | Fait (détection, choix du mode, worker, mot par mot, annulation, garde-fous) ; bibliothèques réelles non essayées | `node labo/essais-socle.mjs` : tout est bon |
 | 4 · lab-modeles | Fait (catalogue, taille avant accord, état, suppression, progression) ; fenêtre « Gérer les modèles » à brancher par la Refonte | `node labo/essais-modeles.mjs` : tout est bon |
 | 5 · lab-badge, lab-verrou, lab-offline | Fait (`ia-regles.js`) ; affichage du badge à brancher dans le chat | `node labo/essais-ia-regles.mjs` : tout est bon |
+| 6 · lab-decisions, lab-contradictions, lab-passeport | Fait (moteurs à règles, sans IA) ; 3 outils proposés en attente, aucun outil pour le passeport (bouton de Lucien) | `node labo/essais-intelligence.mjs` : tout est bon (34 vérifications) |

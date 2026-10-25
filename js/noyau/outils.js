@@ -74,7 +74,10 @@ export const OUTILS_VALIDES = {
 };
 /** Outils proposés par les postes, EN ATTENTE de validation : ils ne sont pas actifs (voir docs/labo-auto/outils-propose.md). */
 export const OUTILS_PROPOSES = [
-  { nom: "consulter_manuel", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule du manuel public du hub ; ne donne aucun droit sur les fonctions décrites." }
+  { nom: "consulter_manuel", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule du manuel public du hub ; ne donne aucun droit sur les fonctions décrites." },
+  { nom: "chercher_decisions", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule des décisions déjà enregistrées par Lucien (décision, raison, conséquences)." },
+  { nom: "proposer_decision", niveau: "CONFIRMATION", poste: "Labo", pourquoi: "Écriture dans la mémoire des décisions : Lucien valide chaque enregistrement ; jamais d'effacement." },
+  { nom: "lire_contradictions", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule des signaux calculés par règles (au plus 3), sans rien modifier." }
 ];
 /** Ne garde que les outils validés au bon niveau. Renvoie { catalogue, ecartes } ; rien n'est jamais ajouté ni élevé de niveau. */
 export function appliquerRegle(outils, valides = OUTILS_VALIDES) {
