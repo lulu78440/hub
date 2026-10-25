@@ -61,7 +61,7 @@ export function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps
   }
   function make(i) {
     const it = info(i), sz = (SIZES.find((s) => s[0] === i.s) || SIZES[1])[1];
-    const b = document.createElement("button"); b.type = "button"; b.className = "dico" + (it.uri || it.act ? "" : " off"); b.dataset.id = i.id; b.dataset.menu = "dico";
+    const b = document.createElement("button"); b.type = "button"; b.className = "dico" + (it.uri || it.act ? "" : " off"); b.dataset.id = i.id; b.dataset.menu = "dico"; if (it.act) b.dataset.act = it.act;
     b.style.left = (i.x * 100).toFixed(3) + "%"; b.style.top = (i.y * 100).toFixed(3) + "%";
     b.style.setProperty("--sz", sz); b.dataset.a = i.a || "cyan";
     b.style.setProperty("--dl", (-(Math.abs(i.x * 7 + i.y * 11) % 1) * 7).toFixed(2) + "s");

@@ -1,11 +1,14 @@
 // Applis du bureau (plan 3, étape p3-applis) : les panneaux fixes du plan 3 deviennent des fenêtres qu'on ouvre à la demande
 // depuis les icônes du bureau : Fichiers (dossiers autorisés + fichiers récents), Ce PC (système + réglages rapides), Internet
 // (recherche simplifiée, favoris, vidéo), Mails (ouvre la fenêtre Mails du hub). Chaque fenêtre se déplace par sa barre de titre,
-// se réduit à son nom d'un clic sur ce titre, se redimensionne par le coin et se ferme par la croix. Position, taille et état
+// se réduit à son nom d'un clic sur ce titre, se redimensionne par le coin et se ferme par la croix.
+// p3-fenetres : pile de focus (une seule fenêtre active, les autres légèrement en retrait ; Échap réduit l'active), bouton « réduire »
+// qui envoie la fenêtre vers son icône du bureau (transform et opacité seulement, aucun effet en mouvement réduit) ; l'icône la rouvre,
+// ou la réduit si elle est déjà au premier plan. La fermeture s'envole aussi vers l'icône. Position, taille et état
 // sont gardés sur l'appareil (clé hub-bureau-fen-v1). Les contenus (dossiers, fichiers, réglages) restent ceux de widgets/mypc.js.
 import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
-import { pulse } from "../state.js";
+import { pulse, state } from "../state.js";
 import { parseQuery } from "./search.js";
 
 const KEY = "bureau-fen-v1";
@@ -29,6 +32,9 @@ export function initApps({ desk, panels: P, wins, plans }) {
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const open = {};   // k -> élément
   let zTop = 10;
+  const isMin = (el) => el.dataset.m === "1";   // réduite vers l'icône (dès le début du vol ; la classe .min la cache une fois arrivée)
+  const order = [];   // pile de focus : la dernière est au premier plan
+  const reduceMotion = () => state.reduce;
 
   // ---------- Contenus ----------
   const sub = (t) => { const s = document.createElement("div"); s.className = "dsec"; s.textContent = t; return s; };
@@ -82,22 +88,45 @@ export function initApps({ desk, panels: P, wins, plans }) {
     const y = clamp(Number.isFinite(s.y) ? s.y : 28 + slot * 24, 0, Math.max(0, d.h - 40));
     return { x, y, w, h };
   }
-  function front(el) { el.style.zIndex = String(++zTop); }
+  function paintFocus() {
+    const top = [...order].reverse().find((k) => open[k] && !isMin(open[k]));
+    Object.keys(open).forEach((k) => { const on = k === top; open[k].classList.toggle("actif", on); open[k].classList.toggle("inactif", !on && !isMin(open[k])); });
+    desk.querySelectorAll('.dico[data-act]').forEach((ic) => { const e = open[ic.dataset.act]; ic.classList.toggle("ouvert", !!e && !isMin(e)); });
+  }
+  function front(el) {
+    el.style.zIndex = String(++zTop);
+    const k = el.dataset.app, i = order.indexOf(k); if (i >= 0) order.splice(i, 1); order.push(k); paintFocus();
+  }
+  /** Vol de la fenêtre vers (ou depuis) son icône du bureau : un déplacement, un zoom et un fondu, rien d'autre. */
+  function fly(el, k, versIcone, fin) {
+    const ic = desk.querySelector('.dico[data-act="' + k + '"]');
+    if (reduceMotion() || !el.animate || !el.isConnected) { fin && fin(); return; }
+    const r = el.getBoundingClientRect(), t = ic ? ic.getBoundingClientRect() : { left: r.left + r.width / 2, top: r.top + r.height + 60, width: 0, height: 0 };
+    const dx = t.left + t.width / 2 - (r.left + r.width / 2), dy = t.top + t.height / 2 - (r.top + r.height / 2), sc = Math.max(0.05, Math.min(0.2, 60 / Math.max(r.width, 1)));
+    const away = { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${sc.toFixed(3)})`, opacity: 0 }, here = { transform: "none", opacity: 1 };
+    el.classList.add("vol");
+    const a = el.animate(versIcone ? [here, away] : [away, here], { duration: 260, easing: versIcone ? "cubic-bezier(.5, 0, .9, .6)" : "cubic-bezier(.1, .5, .3, 1)", fill: "none" });
+    const done = () => { el.classList.remove("vol"); fin && fin(); };
+    a.onfinish = done; a.oncancel = done;
+  }
   function build(k) {
     const sec = document.createElement("section"); sec.className = "panel dp dwin"; sec.dataset.app = k;
     const app = HUB_APPS.find((a) => a.k === k), acc = COL[app.a] || "cyan"; sec.dataset.accent = acc === "ok" ? "cyan" : acc; sec.style.setProperty("--a", `var(--${acc})`);
-    sec.innerHTML = '<div class="in"><div class="ph"><h2></h2><span class="hatch"></span><span class="tag"></span><button type="button" class="dx" aria-label="Fermer" title="Fermer">×</button></div><div class="dbody"></div></div><span class="dres" aria-hidden="true"></span>';
+    sec.innerHTML = '<div class="in"><div class="ph"><h2></h2><span class="hatch"></span><span class="tag"></span><button type="button" class="dm" aria-label="Réduire vers l’icône" title="Réduire vers l’icône (Échap)">–</button><button type="button" class="dx" aria-label="Fermer" title="Fermer">×</button></div><div class="dbody"></div></div><span class="dres" aria-hidden="true"></span>';
     sec.querySelector("h2").textContent = TITRE[k];
     const g = geom(k); Object.assign(sec.style, { left: g.x + "px", top: g.y + "px", width: g.w + "px", height: g.h + "px" });
     BUILD[k](sec.querySelector(".dbody"), sec.querySelector(".in"));
     if (st[k] && st[k].red) sec.classList.add("red");
-    layer.append(sec); front(sec); open[k] = sec; wire(sec, k);
+    layer.append(sec); open[k] = sec; wire(sec, k);
+    if (st[k] && st[k].min) { sec.dataset.m = "1"; sec.classList.add("min"); sec.hidden = true; order.unshift(k); paintFocus(); } else front(sec);
     return sec;
   }
   function wire(sec, k) {
     const ph = sec.querySelector(".ph"), rs = sec.querySelector(".dres");
     sec.addEventListener("pointerdown", () => front(sec), true);
     sec.querySelector(".dx").addEventListener("click", () => close(k));
+    sec.querySelector(".dm").addEventListener("click", () => minimize(k));
+    sec.addEventListener("keydown", (e) => { if (e.key === "Escape" && !e.defaultPrevented && !(e.target.closest && e.target.closest("input[type=search]") && e.target.value)) { e.preventDefault(); minimize(k); } });
     let d = null;
     ph.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || e.target.closest("button")) return;
@@ -124,6 +153,18 @@ export function initApps({ desk, panels: P, wins, plans }) {
   }
   function toggleRed(k) { const el = open[k]; if (!el) return; const on = !el.classList.contains("red"); el.classList.toggle("red", on); st[k] = { ...(st[k] || {}), red: on }; save(); }
 
+  function minimize(k) {
+    const el = open[k]; if (!el || isMin(el)) return;
+    el.dataset.m = "1"; st[k] = { ...(st[k] || {}), min: true }; save(); paintFocus();
+    const nx = [...order].reverse().find((j) => open[j] && !isMin(open[j])); if (nx) { const f = open[nx].querySelector(".dm"); f && f.focus({ preventScroll: true }); }
+    fly(el, k, true, () => { if (isMin(el)) { el.classList.add("min"); el.hidden = true; } });
+  }
+  function restore(k) {
+    const el = open[k]; if (!el || !isMin(el)) return false;
+    delete el.dataset.m; el.getAnimations && el.getAnimations().forEach((a) => a.cancel()); el.classList.remove("min"); el.hidden = false; st[k] = { ...(st[k] || {}), min: false, red: false }; el.classList.remove("red"); save();
+    front(el); fly(el, k, false); return true;
+  }
+
   // ---------- API ----------
   function openMails() {
     const el = wins && wins.elById("mails");
@@ -136,12 +177,18 @@ export function initApps({ desk, panels: P, wins, plans }) {
     pulse(0.7);
     if (k === "mails") { openMails(); return; }
     if (!BUILD[k]) return;
-    if (open[k]) { open[k].classList.remove("red"); st[k] = { ...(st[k] || {}), red: false }; front(open[k]); save(); return; }
+    if (open[k]) {
+      if (restore(k)) return;
+      if (open[k].classList.contains("actif") && !open[k].classList.contains("red") && !open[k].classList.contains("vol")) { minimize(k); return; }   // déjà au premier plan : l'icône la réduit
+      open[k].classList.remove("red"); st[k] = { ...(st[k] || {}), red: false }; front(open[k]); save(); return;
+    }
     build(k); st[k] = { ...(st[k] || {}), open: true }; save();
   }
   function close(k) {
     const el = open[k]; if (!el) return;
-    el.remove(); delete open[k]; st[k] = { ...(st[k] || {}), open: false }; save();
+    delete open[k]; const i = order.indexOf(k); if (i >= 0) order.splice(i, 1); st[k] = { ...(st[k] || {}), open: false, min: false }; save();
+    const fin = () => { el.remove(); paintFocus(); };
+    if (isMin(el)) fin(); else fly(el, k, true, fin);
   }
   // Fenêtres ouvertes la dernière fois : on les remet (le bureau est caché tant qu'on n'est pas en plan 3)
   Object.keys(BUILD).forEach((k) => { if (st[k] && st[k].open) build(k); });
