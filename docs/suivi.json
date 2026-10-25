@@ -1,6 +1,6 @@
 {
   "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
-  "releve": "2026-10-25T22:15:00+01:00",
+  "releve": "2026-10-25T22:40:00+01:00",
   "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
   "phases": [
     {
@@ -123,17 +123,42 @@
         "p3-ia",
         "p3-mobile"
       ]
+    },
+    {
+      "cle": "L",
+      "nom": "Labo · Cerveau IA",
+      "etapes": [
+        "lab-manuel",
+        "lab-outils-regle",
+        "lab-chat-maquette",
+        "lab-decisions",
+        "lab-contradictions",
+        "lab-n8n-routines",
+        "lab-offline",
+        "lab-socle",
+        "lab-modeles",
+        "lab-badge",
+        "lab-verrou",
+        "lab-voix"
+      ]
     }
   ],
   "faites": [
     "cons-banc",
+    "ergo-access",
     "ergo-audit",
     "ergo-fusion",
     "ergo-mobile",
     "ergo-outils",
+    "ergo-palette",
+    "ergo-perf-repos",
     "ergo-plan",
+    "ergo-plan2-maquette",
+    "ergo-plan2-salle",
     "ergo-points",
     "ergo-visuel",
+    "lab-chat-maquette",
+    "lab-outils-regle",
     "ns-branch",
     "ns-int",
     "ns-perm",
@@ -197,6 +222,11 @@
     "ergo-plan2-salle",
     "ergo-points",
     "ergo-visuel",
+    "lab-contradictions",
+    "lab-decisions",
+    "lab-manuel",
+    "lab-n8n-routines",
+    "lab-offline",
     "ns-branch",
     "ns-int",
     "ns-perm",
@@ -225,7 +255,7 @@
     "test-statuts",
     "test-suite"
   ],
-  "maj": "2026-10-25T22:15:00+01:00",
+  "maj": "2026-10-25T22:40:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",
@@ -261,6 +291,18 @@
     "ergo-plan2-salle": "Plan 2 : la salle",
     "ergo-perf-repos": "Qualité du rendu",
     "p3-fenetres": "Fenêtres du bureau",
-    "p3-lasso": "Lasso du bureau"
+    "p3-lasso": "Lasso du bureau",
+    "lab-manuel": "Manuel du hub",
+    "lab-outils-regle": "Règle des outils",
+    "lab-chat-maquette": "Maquette du chat",
+    "lab-decisions": "Mémoire des décisions",
+    "lab-contradictions": "Contradictions",
+    "lab-n8n-routines": "Routines",
+    "lab-offline": "IA hors ligne",
+    "lab-socle": "Socle d'IA locale",
+    "lab-modeles": "Gérer les modèles",
+    "lab-badge": "Badge honnête",
+    "lab-verrou": "IA et verrouillage",
+    "lab-voix": "Voix locale"
   }
 }
