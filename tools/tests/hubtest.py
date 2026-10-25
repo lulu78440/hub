@@ -11,7 +11,7 @@ PHRASE = "girafe tunnel citron 47"          # phrase factice des tests
 FAKE_TOKEN = "jeton-factice-0000"           # jeton factice (jamais un vrai)
 
 # Erreurs de console attendues dans le serveur de test (réseau extérieur bloqué volontairement)
-IGNORED = ("Failed to load resource", "net::ERR_", "ERR_FAILED", "ERR_BLOCKED")
+IGNORED = ("Failed to load resource", "net::ERR_", "ERR_FAILED", "ERR_BLOCKED", "Error creating WebGL context")   # dernier : 3D coupée exprès
 
 
 class _Quiet(http.server.SimpleHTTPRequestHandler):
@@ -55,7 +55,7 @@ class Server:
 class Device:
     """Un « appareil » = un contexte de navigateur neuf (stockage vierge)."""
 
-    def __init__(self, h, mobile=False, reduced=False, tz=None, sw=True):
+    def __init__(self, h, mobile=False, reduced=False, tz=None, sw=True, three=False):
         self.h = h
         opts = dict(accept_downloads=True, locale="fr-FR", timezone_id=tz or "Europe/Paris",
                     service_workers="allow" if sw else "block")
@@ -67,6 +67,11 @@ class Device:
             opts["reduced_motion"] = "reduce"
         self.ctx = h.browser.new_context(**opts)
         self.ctx.set_default_timeout(90000)          # rendu 3D logiciel lent : 90 s avant de déclarer un geste impossible
+        if not three:
+            # Sans carte graphique, la 3D se dessine en logiciel, de plus en plus lentement à chaque version (pleine lune, Noyau…) :
+            # les tests de fonctions la coupent (le hub est prévu pour rester utilisable sans 3D). Les tests de confort la gardent (three=True).
+            self.ctx.add_init_script("""(() => { const g = HTMLCanvasElement.prototype.getContext;
+              HTMLCanvasElement.prototype.getContext = function (t, ...a) { return /webgl/i.test(t) ? null : g.call(this, t, ...a); }; })()""")
         self.blocked = []
         self.ctx.route("**/*", self._route)
         self.errors = []

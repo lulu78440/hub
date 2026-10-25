@@ -17,7 +17,7 @@ FPS = """async (ms) => { let n = 0; const t0 = performance.now(); await new Prom
 def test_confort_chargement_a_froid_et_images_par_seconde(h):
     h.mock = make_mock()
     res = {}
-    for label, kw in (("PC", {}), ("mobile", {"mobile": True})):
+    for label, kw in (("PC", {"three": True}), ("mobile", {"mobile": True, "three": True})):
         d = h.device(**kw)
         p = d.ctx.new_page(); p.on("dialog", lambda x: x.accept())
         t0 = time.time()
@@ -37,7 +37,7 @@ def test_confort_chargement_a_froid_et_images_par_seconde(h):
 def test_confort_memoire_dans_la_duree(h):
     """Fuite de mémoire : le tas JavaScript ne doit pas grimper sans fin (version courte : 3 min, avec gestes)."""
     h.mock = make_mock()
-    d = h.device(); p = d.page(); seed(p, 50, 50, 50)
+    d = h.device(three=True); p = d.page(); seed(p, 50, 50, 50)
     cdp = d.ctx.new_cdp_session(p)
     cdp.send("HeapProfiler.enable")
     def heap():
