@@ -1,6 +1,6 @@
-# Outils proposés au Noyau · EN ATTENTE DE VALIDATION DE LUCIEN
+# Outils proposés au Noyau · VALIDÉS PAR LUCIEN LE 25/10 À 21 H 05
 
-Aucun de ces outils n'est dans le catalogue. Ils ne le seront qu'après un « validé » de Lucien (règle lab-outils-regle).
+Lucien a validé les cinq outils ci-dessous, avec leur niveau, le 25/10 à 21 h 05 (« je valide tout »). Ils sont dans `OUTILS_VALIDES` (`js/noyau/outils.js`) et listés dans `OUTILS_A_BRANCHER` : **validés mais pas encore actifs**, car leurs modules ne sont pas importés par le Noyau (le cache hors ligne `sw.js`, fichier partagé, sera mis à jour à la fusion de `labo-auto` dans `main`). Le jour du branchement, la règle les laissera entrer au niveau validé, et à aucun autre. Plus aucune proposition n'est en attente.
 
 | Outil proposé | Niveau | Pourquoi ce niveau | Lot | Où |
 | --- | --- | --- | --- | --- |

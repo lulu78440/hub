@@ -1,8 +1,10 @@
 // Laboratoire · essais de la règle « aucun outil sans validation » : `node labo/essais-outils-regle.mjs`
-import { creerCatalogue, appliquerRegle, listeOutils, OUTILS_VALIDES, OUTILS_PROPOSES } from "../js/noyau/outils.js";
+import { creerCatalogue, appliquerRegle, listeOutils, OUTILS_VALIDES, OUTILS_PROPOSES, OUTILS_A_BRANCHER } from "../js/noyau/outils.js";
 let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
 const cat = creerCatalogue({ raccourcis: () => ({}) });
-ok(cat.length === Object.keys(OUTILS_VALIDES).length, `le catalogue en service = la liste validée (${cat.length} outils)`);
+const aBrancher = new Set(OUTILS_A_BRANCHER.map((o) => o.nom));
+ok(cat.length === 34 && cat.length === Object.keys(OUTILS_VALIDES).length - aBrancher.size, `le catalogue en service = les 34 outils confirmés le 25/10 (${cat.length} outils)`);
+ok(Object.keys(OUTILS_VALIDES).every((n) => cat.some((o) => o.nom === n) || aBrancher.has(n)), "chaque outil validé est soit en service, soit listé « à brancher »");
 ok(cat.every((o) => OUTILS_VALIDES[o.nom] === o.niveau), "chaque outil a exactement le niveau validé");
 ok(cat.every((o) => o.niveau === "LIBRE" || o.niveau === "CONFIRMATION"), "aucun outil INTERDIT dans le catalogue (jamais présenté au modèle)");
 const faux = { nom: "supprimer_tout", niveau: "LIBRE", description: "x", params: { type: "object", properties: {} }, exec: async () => ({}) };
@@ -14,9 +16,18 @@ ok(r.catalogue.length === 0 && r.ecartes.length === 2, "un niveau modifié sans 
 const nouveau = { ...faux, nom: "nouvel_outil" };
 r = appliquerRegle([nouveau], { ...OUTILS_VALIDES, nouvel_outil: "LIBRE" });
 ok(r.catalogue.length === 1, "une fois validé (ajouté à la liste avec son niveau), l'outil entre");
+// Validation du 25/10 (21 h 05) : les 5 outils proposés sont validés avec leur niveau, mais pas actifs (modules non branchés, sw.js à la fusion).
+const attendus = { consulter_manuel: "LIBRE", chercher_decisions: "LIBRE", lire_contradictions: "LIBRE", proposer_decision: "CONFIRMATION", creer_routine: "CONFIRMATION" };
+ok(Object.entries(attendus).every(([n, niv]) => OUTILS_VALIDES[n] === niv), "les 5 outils validés le 25/10 sont dans la liste validée, au bon niveau");
+ok(OUTILS_A_BRANCHER.length === 5 && OUTILS_A_BRANCHER.every((o) => attendus[o.nom] === o.niveau && o.module && o.pourquoi), "ils sont listés « à brancher » avec leur module");
+ok(Object.keys(attendus).every((n) => !cat.some((o) => o.nom === n)), "aucun d'eux n'est actif dans le hub tant que son module n'est pas branché");
+ok(OUTILS_PROPOSES.length === 0, "plus aucune proposition en attente");
+const branche = { nom: "consulter_manuel", niveau: "LIBRE", description: "x", params: { type: "object", properties: {} }, exec: async () => ({}) };
+ok(appliquerRegle([branche]).catalogue.length === 1 && appliquerRegle([{ ...branche, niveau: "CONFIRMATION" }]).catalogue.length === 0, "le jour du branchement, consulter_manuel entre en LIBRE, jamais à un autre niveau");
+ok(appliquerRegle([{ ...branche, nom: "creer_routine", niveau: "LIBRE" }]).catalogue.length === 0, "creer_routine ne peut pas entrer en LIBRE (CONFIRMATION validée)");
 const liste = listeOutils(cat);
-ok(liste.length === cat.length + OUTILS_PROPOSES.length, "liste visible : outils actifs + propositions");
+ok(liste.length === cat.length + OUTILS_A_BRANCHER.length + OUTILS_PROPOSES.length, "liste visible : outils actifs + validés à brancher + propositions");
 ok(liste.filter((l) => l.statut === "validé").length === cat.length, "tous les outils actifs sont « validé »");
 const prop = liste.find((l) => l.nom === "consulter_manuel");
-ok(prop && /en attente/.test(prop.statut) && !cat.some((o) => o.nom === "consulter_manuel"), "consulter_manuel est proposé, pas actif");
+ok(prop && prop.statut === "validé · à brancher", "consulter_manuel apparaît « validé · à brancher »");
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);
