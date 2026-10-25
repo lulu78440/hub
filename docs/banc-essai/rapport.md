@@ -1,5 +1,15 @@
 # Banc d'essai · rapport
 
+## B15 · politique de sécurité du contenu (25/10, poste Banc de test) : préparé sur `banc-csp`
+
+1. Branche `banc-csp` depuis main 7.31.0 ; rien fusionné, version non montée. Détail complet : `csp.md`.
+2. CSP en `<meta>` + `referrer: no-referrer` dans `index.html` et `labo.html` ; `oauth.html` fermée (`default-src 'none'`, script et style par empreinte).
+3. Pas de `'unsafe-eval'` (aucun `eval` dans le hub ; l'IA locale n'a besoin que de `'wasm-unsafe-eval'`, à confirmer sur Brave). Élargis et justifiés : `connect-src https:`, `media-src https:`, `frame-src https:`, `style-src 'unsafe-inline'`.
+4. Nouveau test `t9_csp.py` (5 tests) : recettes PC et mobile, médias et page en direct sans violation ; sonde IA/WebAssembly/workers/radios/connexions ; témoins refusés ; labo et oauth.
+5. Le banc lui-même a dû être adapté : `Page.wait_for_function` de Playwright relance sa condition par `eval()` dans la page, ce que la CSP refuse. `hubtest.py` le remplace par une attente qui relance la condition depuis Python (même usage, aucun test affaibli).
+6. Résultats : suite complète 57/57 (2 026 cas, 799 s, contrastes compris) ; essais du Noyau tous verts (essais.mjs 44/59, 15 sautés faute de moteur réel). Groq, Mistral, OpenRouter nommés dans `connect-src` (demande de la Commande).
+7. À faire par Lucien avant fusion : les 11 essais Brave/Android de `csp.md` (IA locale, YouTube, radios, connexion Gmail/Outlook en tête).
+
 ## Résumé de la mission autonome du 25/10, 19 h 31 → 20 h 41 (poste Banc de test, 41 min de retard sur l'heure de fin)
 
 1. **Problèmes : 33** · critique 1 (B7) · importants 15 (B3-B6, B8, B9, B14, B18, B23-B25, B28, B29, L1, L2) · mineurs 17. Corrigés sur `banc-essai` (25) sauf B2, B14-B16 (décrits) et L1-L4 (branches des autres postes, décrits).
@@ -52,7 +62,7 @@
 | B12 | mineur | Verrouillage | `hub-musique-source` (radio écoutée) restait en clair avec le verrouillage actif. | Lecture du code. | Ajoutée à la liste des réglages chiffrés. | corrigé (banc-essai) |
 | B13 | mineur | Clavier | Une vingtaine d'éléments (bouton micro, radios, raccourcis de Mon PC) sans contour visible au clavier. | `test_confort_navigation_clavier`. | `hud.css` : contour cyan au `:focus-visible`, spécificité nulle (les styles existants priment). | corrigé (banc-essai) |
 | B14 | important | Origine partagée | Toutes les pages de `lulu78440.github.io` (autres dépôts, maquettes) partagent le stockage et le cache du hub ; WebLLM est chargé en `@0.2` (version flottante) depuis jsDelivr, les maquettes chargent three.js sans `integrity`. | Lecture du code. | Décision de Lucien : figer WebLLM sur une version exacte testée (ou la copier dans `vendor/`) ; à terme, domaine propre ou maquettes hors Pages. Non modifié. | décrit |
-| B15 | mineur | En-têtes | Aucune CSP ni `<meta name="referrer">` : une CSP aurait bloqué B8. | Lecture du code. | Proposer une CSP à tester d'abord (WebLLM, YouTube, radios, Open-Meteo), plus `referrer: no-referrer`. Non modifié (risque de casser des fonctions sans test sur Brave). | décrit |
+| B15 | mineur | En-têtes | Aucune CSP ni `<meta name="referrer">` : une CSP aurait bloqué B8. | Lecture du code. | Mission B15 du 25/10 : CSP en `<meta>` et `referrer: no-referrer` dans `index.html`, `labo.html`, `oauth.html` (empreintes) ; pas de `'unsafe-eval'`, `'wasm-unsafe-eval'` pour l'IA locale ; élargissements documentés (connexions, radios, cadres, styles en ligne). Test `t9_csp.py`. Politique et essais Brave/Android : `csp.md`. | préparé sur `banc-csp` (à essayer sur Brave avant fusion) |
 | B16 | mineur | Divers | `window.__hub` expose les modules (utile aux tests) ; le coffre accepte encore des valeurs en clair glissées par une page du même site (migration) ; workflow `actions/checkout@v4` non figé par SHA. | Lecture du code. | À décider plus tard. | décrit |
 | B17 | mineur | Import | Un export abîmé ou trafiqué (texte de tâche non textuel, date ou heure invalide, événement sans date…) faisait planter l'affichage des Tâches et de l'Agenda (6 erreurs), même si le hub restait utilisable. | `t4_limites.py · test_limites_import_malforme_ne_casse_pas_le_hub`. | `storage.js · importAll` : les champs connus des notes, tâches, événements et favoris reprennent le type attendu (dates `AAAA-MM-JJ`, heures `HH:MM`), les événements sans date valide et favoris sans adresse sont écartés ; les autres champs sont gardés tels quels. | corrigé (banc-essai) |
 

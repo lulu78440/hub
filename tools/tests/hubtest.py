@@ -4,7 +4,32 @@ Données factices uniquement. Toute requête vers un autre site que le serveur l
 pour ne jamais toucher un service extérieur pendant les tests.
 """
 import functools, http.server, json, os, socket, threading, time
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout, Error as PWError
+
+
+def _wait_for_function(self, expression, arg=None, timeout=None, polling=None, **_):
+    """Remplace Page.wait_for_function : même usage, mais la condition est relancée depuis Python (page.evaluate).
+    Le wait_for_function d'origine relance la condition avec globalThis.eval() depuis une tâche de la page :
+    la CSP du hub (sans 'unsafe-eval', B15) le refuse dès la deuxième tentative. page.evaluate passe par l'outil
+    de test et n'est pas soumis à la CSP : le hub est jugé avec sa vraie politique."""
+    limit = time.time() + (timeout if timeout is not None else 90000) / 1000
+    pause = (polling / 1000) if isinstance(polling, (int, float)) else 0.05
+    last = None
+    while True:
+        try:
+            r = self.evaluate(expression, arg)
+            if r:
+                return r
+        except PWError as e:          # page en cours de navigation (contexte détruit) : on réessaie
+            last = e
+            if self.is_closed():
+                raise
+        if time.time() > limit:
+            raise PWTimeout(f"Page.wait_for_function: délai de {timeout or 90000} ms dépassé : {expression[:200]}" + (f" ({last})" if last else ""))
+        time.sleep(pause)
+
+
+Page.wait_for_function = _wait_for_function
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PHRASE = "girafe tunnel citron 47"          # phrase factice des tests
