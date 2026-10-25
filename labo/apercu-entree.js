@@ -8,6 +8,12 @@ import { construirePasseport } from "../js/noyau/passeport.js";
 import { detecterContradictions } from "../js/noyau/contradictions.js";
 import { detecterDecision } from "../js/noyau/decisions.js";
 import { MODELES } from "../js/noyau/modeles.js";
+import { MODELES_ROUTINES, lancerRoutine } from "../js/noyau/routines.js";
+import { creerConseiller } from "../js/noyau/conseiller.js";
+import { analyserCitations } from "../js/noyau/citations.js";
+import { creerIndexPassages } from "../js/noyau/passages.js";
+import { reechantillonner, decouperAudio, estSilence } from "../js/noyau/voix-locale.js";
+import { creerMesures, conseil } from "../js/noyau/perf.js";
 
 const D = window.__APERCU, $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -36,4 +42,31 @@ const carte = (titre, html) => { const s = document.createElement("section"); s.
   carte("6 · Intelligence à règles (sans IA)", `<p>Contradictions : </p><ul>${sig.map((s) => `<li>${esc(s.message)}</li>`).join("")}</ul><p>Décision repérée (proposition, rien n'est enregistré) : <b>${esc(dec.decision)}</b> — raison : ${esc(dec.raison)}</p>`);
 
   carte("7 · Modèles (téléchargés seulement avec ton accord)", `<table>${MODELES.map((m) => `<tr><td>${esc(m.nom)}</td><td>≈ ${m.mo} Mo</td><td>${esc(m.mode)}</td></tr>`).join("")}</table><p>Hors ligne avec modèle : ${esc(planHorsLigne({ enLigne: false, mode: "webgpu", modeles: [{ id: "qwen-0.5b", usage: "chat", mode: "webgpu", telecharge: true }] }).raison)}</p>`);
+
+  // 8 · Routines : démonstration avec une barrière simulée (aucune action réelle)
+  const faux = { outil: (n) => ({ nom: n, niveau: ["ajouter_tache"].includes(n) ? "CONFIRMATION" : "LIBRE" }), async executer(a) { return a.outil === "ajouter_tache" ? { ok: false, refus: { raison: "refuse_par_lucien" }, erreur: "Lucien a refusé cette action." } : { ok: true }; } };
+  const essai = await lancerRoutine({ id: "demo", nom: "Démonstration", declencheur: { type: "phrase", phrase: "démonstration" }, etapes: [{ outil: "lire_taches" }, { outil: "ajouter_tache", params: { texte: "x" } }, { outil: "lire_agenda" }] }, { barriere: faux, validerEtapes: async () => true });
+  carte("8 · Routines (déclencheur → étapes → ta validation → historique)", `<table>${MODELES_ROUTINES.map((m) => `<tr><td>${esc(m.nom)}</td><td>${esc(m.declencheur.type)}</td><td>${esc(m.etapes.map((e) => e.outil).join(" → "))}</td></tr>`).join("")}</table><p>Essai simulé : issue <b>${esc(essai.issue)}</b> — ${esc(essai.raison)} (étapes : ${esc(essai.etapes.map((e) => e.outil + " " + e.statut).join(", "))}). Une étape refusée arrête la routine ; rien ne part sans ta validation.</p>`);
+
+  // 9 · Conseiller proactif
+  const memo = new Map(); const cons = creerConseiller({ stockage: { lire: async (c, id) => memo.get(id) || null, ecrire: async (c, o) => { memo.set(o.id, o); } }, maintenant: () => new Date(2026, 9, 26, 13, 30) });
+  const sug = await cons.quandUtile({ evenements: [{ id: "e", titre: "Réunion budget", date: "2026-10-26", debut: "14:30" }], taches: [{ id: "t", texte: "Préparer le budget", faite: false }] });
+  const deuxieme = await cons.quandUtile({ taches: [1, 2, 3].map((i) => ({ id: "x" + i, texte: "T", faite: false, echeance: "2026-10-01" })) });
+  carte("9 · Conseiller proactif (parle seulement quand c'est utile)", `<p>Suggestion : <b>${esc(sug.texte)}</b></p><p>Une deuxième tout de suite : <b>${deuxieme ? esc(deuxieme.texte) : "aucune (une toutes les 2 heures, 3 par jour au plus)"}</b></p>`);
+
+  // 10 · Citations phrase par phrase
+  const cit = analyserCitations("L'Everest est la plus haute montagne du monde [1]. Le Mont Blanc culmine à 4 806 mètres [1]. Le Kilimandjaro attire des milliers de randonneurs.", [{ n: 1, texte: "L'Everest est la plus haute montagne du monde avec 8 849 mètres d'altitude, dans l'Himalaya." }]);
+  carte("10 · Réponses qui citent leurs sources", `<ul>${cit.phrases.map((p) => `<li><b class="${p.statut === "appuyee" ? "ok" : ""}">${esc(p.statut)}</b> — ${esc(p.texte)}</li>`).join("")}</ul><p class="note">Contrôle local, sans requête : il repère les phrases sans appui, il ne prouve pas qu'une phrase est vraie.</p>`);
+
+  // 11 · Passages
+  const ip = creerIndexPassages({ mots: 30 }); ip.maj([{ id: "voyage", texte: "Kyoto est une ville du Japon. Le thé vert se prépare à 70 degrés pendant deux minutes. Prévoir un budget de 2500 euros pour la semaine." }, { id: "cuisine", texte: "Les crêpes se font avec de la farine, du lait et des oeufs." }]);
+  const pr = await ip.chercher("température du thé vert");
+  carte("11 · Recherche par passages", `<p>Question : « température du thé vert » → <b>${esc(pr[0].doc)}</b> : ${esc(pr[0].extrait)}</p>`);
+
+  // 12 · Dictée locale et performance (sans micro ni modèle)
+  const tone = Float32Array.from({ length: 48000 }, (_, i) => 0.4 * Math.sin(2 * Math.PI * 440 * i / 48000));
+  const r16 = reechantillonner(tone, 48000), morceaux = decouperAudio(new Float32Array(16000 * 60).fill(0.2));
+  let t = 0; const m = creerMesures({ maintenant: () => t }); const h = m.debut({ mode: "wasm" }); t = 900; h.mot(); t = 1900; h.mot(); t = 2400; h.fin();
+  carte("12 · Dictée locale et performance (parties sans micro ni modèle)", `<p>1 s à 48 kHz → ${r16.length} échantillons à 16 kHz · silence détecté : ${estSilence(new Float32Array(16000)) ? "oui" : "non"} · 60 s coupées en <b>${morceaux.length}</b> morceaux de 25 s au plus.</p><p>Mesure simulée : ${esc(JSON.stringify(m.resume()))}</p><p>${esc(conseil(m.resume(), { batterie_pct: null }).join(" "))}</p>`);
 })();
+

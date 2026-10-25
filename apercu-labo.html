@@ -1909,7 +1909,8 @@ const OUTILS_PROPOSES = [
   { nom: "consulter_manuel", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule du manuel public du hub ; ne donne aucun droit sur les fonctions décrites." },
   { nom: "chercher_decisions", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule des décisions déjà enregistrées par Lucien (décision, raison, conséquences)." },
   { nom: "proposer_decision", niveau: "CONFIRMATION", poste: "Labo", pourquoi: "Écriture dans la mémoire des décisions : Lucien valide chaque enregistrement ; jamais d'effacement." },
-  { nom: "lire_contradictions", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule des signaux calculés par règles (au plus 3), sans rien modifier." }
+  { nom: "lire_contradictions", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule des signaux calculés par règles (au plus 3), sans rien modifier." },
+  { nom: "creer_routine", niveau: "CONFIRMATION", poste: "Labo", pourquoi: "Écriture : crée ou modifie une routine ; Lucien valide la liste des étapes ; ne lance rien." }
 ];
 /** Ne garde que les outils validés au bon niveau. Renvoie { catalogue, ecartes } ; rien n'est jamais ajouté ni élevé de niveau. */
 function appliquerRegle(outils, valides = OUTILS_VALIDES) {
@@ -2640,6 +2641,437 @@ async function placeSuffisante(mo, { storage = typeof navigator !== "undefined" 
 
 return { MODELES, CACHES_BIBLIOTHEQUES, formaterTaille, etatModeles, supprimerModele, telechargerModele, placeSuffisante };
 })();
+__M['js/noyau/raccourcis.js'] = (() => {
+const { hote } = __M['js/noyau/hote.js'];
+const { normaliser } = __M['js/noyau/recherche.js'];
+// Noyau · raccourcis : une phrase de Lucien qui déclenche une suite d'actions déjà autorisées (« mode soirée » = Focus + afficher la météo…).
+//  - Ce ne sont pas des programmes : seulement des appels d'outils du catalogue, rejoués un par un par la barrière, donc chacun garde son
+//    niveau (une action à confirmer redemande toujours ton accord). Au plus 20 raccourcis, 5 étapes chacun.
+//  - Exclus : tout ce qui touche au cerveau, à la mémoire, à la personnalisation elle-même ou à un autre raccourci.
+//  - Le raccourci ne se déclenche que si TA phrase correspond exactement (jamais sur du texte venu d'une page, d'une source ou d'un mail).
+
+
+
+const EXCLUS = new Set(["memoriser", "apprendre", "personnaliser_hub", "creer_raccourci", "repondre", "lire_mails", "lire_page"]);
+const cle = (t) => normaliser(String(t || "")).replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+
+function creerRaccourcis({ barriere }) {
+  const lire = () => { try { const r = JSON.parse(hote.reglage.lire("noyau-raccourcis", "{}")); return r && typeof r === "object" ? r : {}; } catch (e) { return {}; } };
+  const ecrire = (r) => hote.reglage.ecrire("noyau-raccourcis", JSON.stringify(r));
+  function verifier(etapes) {
+    if (!Array.isArray(etapes) || !etapes.length || etapes.length > 5) throw new Error("1 à 5 étapes");
+    return etapes.map((e) => {
+      const o = barriere.outil(e && e.outil); if (!o || (o.niveau !== "LIBRE" && o.niveau !== "CONFIRMATION")) throw new Error("Outil inconnu ou interdit : " + (e && e.outil));
+      if (EXCLUS.has(o.nom)) throw new Error("L'outil « " + o.nom + " » ne peut pas entrer dans un raccourci.");
+      let params = {}; if (e.params_json) { try { params = JSON.parse(e.params_json); } catch (x) { throw new Error("params_json : JSON invalide"); } } else if (e.params && typeof e.params === "object") params = JSON.parse(JSON.stringify(e.params));
+      if (!params || typeof params !== "object" || Array.isArray(params)) throw new Error("Paramètres : un objet JSON");
+      return { outil: o.nom, params };
+    });
+  }
+  const api = {
+    liste: () => Object.values(lire()).map((r) => ({ nom: r.nom, phrase: r.phrase, etapes: r.etapes.map((e) => e.outil) })),
+    resume(p) { if (p.action === "supprimer") return `Supprimer le raccourci « ${p.phrase} »`; if (p.action === "lister") return "Lister mes raccourcis"; return `Créer le raccourci « ${p.phrase} » : ${verifier(p.etapes).map((e) => e.outil).join(" → ")}`; },
+    executerOutil(p) {
+      const r = lire();
+      if (p.action === "lister") return { raccourcis: api.liste() };
+      const k = cle(p.phrase); if (!k || k.length < 4) throw new Error("Phrase trop courte");
+      if (p.action === "supprimer") { if (!r[k]) throw new Error("Raccourci introuvable"); delete r[k]; ecrire(r); return { supprime: p.phrase }; }
+      if (!r[k] && Object.keys(r).length >= 20) throw new Error("20 raccourcis au maximum");
+      r[k] = { nom: String(p.nom || p.phrase).slice(0, 60), phrase: String(p.phrase).slice(0, 80), etapes: verifier(p.etapes) }; ecrire(r);
+      return { cree: r[k].phrase, etapes: r[k].etapes.map((e) => e.outil) };
+    },
+    /** Si le texte de Lucien est exactement un raccourci, le rejoue. Renvoie la réponse, ou null. */
+    async tenter(texte, origine) {
+      if (origine !== "lucien" && origine !== "voix") return null;
+      const r = lire()[cle(texte)]; if (!r) return null;
+      const lignes = [];
+      for (const e of r.etapes) { const x = await barriere.executer({ outil: e.outil, params: e.params }, { origine: "lucien" }); lignes.push(`${e.outil} : ${x.ok ? "fait" : (x.erreur || x.statut || "refusé")}`); }
+      return { texte: `Raccourci « ${r.nom} » joué (${lignes.join(" ; ")}).`, ton: "calme", confiance: "haute", sources: [], raccourci: true };
+    }
+  };
+  return api;
+}
+
+return { EXCLUS, creerRaccourcis };
+})();
+__M['js/noyau/routines.js'] = (() => {
+const { EXCLUS } = __M['js/noyau/raccourcis.js'];
+const { OUTILS_VALIDES } = __M['js/noyau/outils.js'];
+// Noyau · routines (lab-n8n-routines, lab-n8n-modeles). Idée reprise de n8n (déclencheur → étapes → validation de Lucien → historique), écrite
+// à la main, sans copier de code ni installer de serveur. Moteur à règles, SANS IA : l'IA peut proposer une routine, jamais la lancer seule.
+//  - Une routine = un déclencheur (heure, événement du hub, phrase exacte de Lucien) + 1 à 5 étapes (outils VALIDÉS du catalogue).
+//  - Avant de démarrer, Lucien voit la liste des étapes et valide (« validation globale ») ; ensuite CHAQUE étape garde son niveau :
+//    une étape CONFIRMATION redemande son accord par la barrière. Sans Lucien présent, rien d'autre qu'une lecture ne s'exécute.
+//  - Chaque passage laisse une ligne d'historique (ce qui a tourné, quand, pourquoi arrêté). Aucune étape ne simule une action.
+
+
+
+const EVENEMENTS = ["ouverture-du-jour", "fin-de-focus", "ecran-deverrouille", "tache-cochee"];
+const MAX = { routines: 15, etapes: 5, historique: 100 };
+const jours = ["dim", "lun", "mar", "mer", "jeu", "ven", "sam"];
+const cleLocale = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;   // jour local (pas UTC : une routine de 00 h 10 ne doit pas compter pour la veille)
+const heureOk = (h) => /^([01]\d|2[0-3]):[0-5]\d$/.test(h || "");
+
+/** Contrôle une routine. Renvoie la liste des problèmes (vide = valide). `barriere.outil(nom)` retrouve un outil du catalogue actif. */
+function validerRoutine(r, { barriere = null, valides = OUTILS_VALIDES } = {}) {
+  const p = [];
+  if (!r || typeof r !== "object") return ["routine illisible"];
+  if (!r.id || !/^[a-z0-9-]{2,40}$/.test(r.id)) p.push("id : minuscules, chiffres et tirets");
+  if (!r.nom || String(r.nom).length > 60) p.push("nom manquant ou trop long");
+  const d = r.declencheur || {};
+  if (d.type === "heure") { if (!heureOk(d.heure)) p.push("heure : HH:MM"); if (d.jours && !(Array.isArray(d.jours) && d.jours.every((j) => jours.includes(j)))) p.push("jours : lun, mar, mer, jeu, ven, sam, dim"); }
+  else if (d.type === "evenement") { if (!EVENEMENTS.includes(d.nom)) p.push("événement inconnu : " + d.nom); }
+  else if (d.type === "phrase") { if (!d.phrase || String(d.phrase).length < 4 || String(d.phrase).length > 80) p.push("phrase : 4 à 80 signes"); }
+  else p.push("déclencheur : heure, événement ou phrase");
+  if (!Array.isArray(r.etapes) || r.etapes.length < 1 || r.etapes.length > MAX.etapes) p.push(`1 à ${MAX.etapes} étapes`);
+  else for (const e of r.etapes) {
+    if (!e || typeof e.outil !== "string") { p.push("étape sans outil"); continue; }
+    if (!Object.prototype.hasOwnProperty.call(valides, e.outil)) p.push(`« ${e.outil} » n'est pas un outil validé par Lucien`);
+    else if (EXCLUS.has(e.outil)) p.push(`« ${e.outil} » ne peut pas entrer dans une routine`);
+    else if (barriere && !barriere.outil(e.outil)) p.push(`« ${e.outil} » est absent du catalogue actif`);
+    if (e.params !== undefined && (typeof e.params !== "object" || Array.isArray(e.params) || e.params === null)) p.push(`paramètres de « ${e.outil} » : un objet`);
+  }
+  return p;
+}
+
+/** Routines dues à l'instant `now` (déclencheur « heure » seulement). Une routine ne part qu'une fois par jour, et jamais plus d'1 h après son heure. */
+function routinesDues(routines, now, historique = []) {
+  const jour = cleLocale(now), min = now.getHours() * 60 + now.getMinutes();
+  return routines.filter((r) => r.actif !== false && r.declencheur && r.declencheur.type === "heure").filter((r) => {
+    const [h, m] = r.declencheur.heure.split(":").map(Number), cible = h * 60 + m;
+    if (r.declencheur.jours && !r.declencheur.jours.includes(jours[now.getDay()])) return false;
+    if (min < cible || min - cible > 60) return false;
+    return !historique.some((l) => l.routine === r.id && l.jour === jour);
+  });
+}
+const routinesPourEvenement = (routines, nom) => routines.filter((r) => r.actif !== false && r.declencheur && r.declencheur.type === "evenement" && r.declencheur.nom === nom);
+const routinePourPhrase = (routines, phrase) => { const c = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim(); return routines.find((r) => r.actif !== false && r.declencheur && r.declencheur.type === "phrase" && c(r.declencheur.phrase) === c(phrase)) || null; };
+
+/**
+ * Lance une routine. `validerEtapes(info)` est la fenêtre de Lucien (liste des étapes) : sans elle ou sur un refus, rien ne s'exécute.
+ * `barriere.executer({ outil, params }, { origine })` garde les niveaux : une étape CONFIRMATION redemande son accord.
+ * S'arrête à la première étape refusée ou en échec. Renvoie la ligne d'historique (déjà écrite via `ecrireHistorique`).
+ */
+async function lancerRoutine(routine, { barriere, validerEtapes, ecrireHistorique = async () => {}, maintenant = () => new Date(), declencheur = null, verrouille = () => false }) {
+  const t0 = maintenant(), ligne = { id: "run-" + t0.getTime().toString(36), routine: routine.id, nom: routine.nom, jour: cleLocale(t0), debut: t0.toISOString(), declencheur: declencheur || routine.declencheur.type, etapes: [], issue: "", raison: "" };
+  const finir = async (issue, raison = "") => { ligne.issue = issue; ligne.raison = raison; ligne.fin = maintenant().toISOString(); await ecrireHistorique(ligne); return ligne; };
+  const pb = validerRoutine(routine, { barriere }); if (pb.length) return finir("annulee", "routine invalide : " + pb[0]);
+  if (verrouille()) return finir("annulee", "écran verrouillé");
+  if (typeof validerEtapes !== "function") return finir("annulee", "aucune fenêtre de validation : rien ne s'exécute");
+  const ok = await validerEtapes({ routine: routine.nom, etapes: routine.etapes.map((e) => ({ outil: e.outil, niveau: barriere.outil(e.outil).niveau, params: e.params || {} })) });
+  if (ok !== true) return finir("refusee", "refusée par Lucien");
+  for (const e of routine.etapes) {
+    const r = await barriere.executer({ outil: e.outil, params: e.params || {} }, { origine: "lucien" });
+    ligne.etapes.push({ outil: e.outil, statut: r.ok ? "fait" : r.refus ? "refuse" : "erreur", detail: r.ok ? "" : String(r.erreur || "").slice(0, 120) });
+    if (!r.ok) return finir("interrompue", `étape « ${e.outil} » ${r.refus ? "refusée" : "en erreur"}`);
+  }
+  return finir("terminee");
+}
+
+/** Modèles prêts à l'emploi (proposés, jamais activés d'office). N'utilisent que des outils déjà validés. */
+const MODELES_ROUTINES = [
+  { id: "revue-du-soir", nom: "Revue du soir", declencheur: { type: "heure", heure: "20:30" }, etapes: [{ outil: "lire_taches", params: { filtre: "en_retard" } }, { outil: "lire_agenda" }, { outil: "afficher", params: { fenetre: "tasks" } }], pourquoi: "Voir les tâches en retard et l'agenda de demain, avec les tâches à l'écran." },
+  { id: "ouverture-du-jour", nom: "Ouverture du jour", declencheur: { type: "evenement", nom: "ouverture-du-jour" }, etapes: [{ outil: "lire_meteo" }, { outil: "lire_agenda" }, { outil: "lire_actus", params: { max: 3 } }], pourquoi: "Météo, rendez-vous et trois titres d'actualité à la première ouverture." },
+  { id: "mode-soiree", nom: "Mode soirée", declencheur: { type: "phrase", phrase: "mode soirée" }, etapes: [{ outil: "lancer_focus", params: { minutes: 25 } }, { outil: "afficher", params: { fenetre: "rituels" } }], pourquoi: "Un Focus de 25 minutes et les rituels à l'écran." },
+  { id: "point-veille", nom: "Point sur la veille", declencheur: { type: "heure", heure: "18:00", jours: ["ven"] }, etapes: [{ outil: "lire_veille" }, { outil: "lire_actus", params: { max: 5 } }], pourquoi: "Chaque vendredi : sites en ligne ou en panne et cinq titres." }
+];
+
+return { EVENEMENTS, MAX, cleLocale, validerRoutine, routinesDues, routinesPourEvenement, routinePourPhrase, lancerRoutine, MODELES_ROUTINES };
+})();
+__M['js/noyau/conseiller.js'] = (() => {
+const { jetons } = __M['js/noyau/recherche.js'];
+// Noyau · conseiller proactif (lab-proactif). Parle seulement quand c'est utile, jamais à heure fixe, jamais en boucle. Moteur à règles, SANS IA.
+// Garde-fous : au plus 3 suggestions par jour et une toutes les 2 h ; silence la nuit, en Focus, pendant un média, écran verrouillé ;
+// un « non » coupe la règle 30 jours, deux suggestions ignorées la coupent jusqu'à ce que Lucien la rallume ; « plus tard » = 4 h.
+// Le conseiller PROPOSE un texte ; il ne lance aucune action (agir passe par la barrière et la confirmation de Lucien).
+
+
+const LIMITES = { parJour: 3, ecartMin: 2 * 3600e3, nonJours: 30, ignoreesMax: 2, plusTardH: 4 };
+const cleJour = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const heureOk = (d) => d.getHours() >= 8 && d.getHours() < 22;
+
+/** Règles : chacune renvoie { cle, texte, priorite } ou null. `e` = état du hub : taches, evenements, dernierExport, decisionsARevoir. */
+const REGLES = [
+  (e, now) => {   // un rendez-vous approche alors qu'une tâche du même sujet n'est pas faite
+    for (const ev of e.evenements || []) {
+      if (!ev.debut || ev.date !== cleJour(now)) continue; const [h, m] = ev.debut.split(":").map(Number), ecart = (h * 60 + m) - (now.getHours() * 60 + now.getMinutes());
+      if (ecart < 15 || ecart > 90) continue; const mots = new Set(jetons(ev.titre));
+      const t = (e.taches || []).find((x) => !x.faite && jetons(x.texte).some((w) => mots.has(w)));
+      if (t) return { cle: "rdv-tache:" + ev.id + ":" + t.id, priorite: 3, texte: `« ${ev.titre} » commence à ${ev.debut} et la tâche « ${t.texte} » n'est pas faite. On la fait maintenant ?` };
+    } return null;
+  },
+  (e, now) => { const r = (e.taches || []).filter((t) => !t.faite && t.echeance && t.echeance < cleJour(now)); return r.length >= 3 ? { cle: "retard:" + cleJour(now), priorite: 2, texte: `${r.length} tâches sont en retard. Veux-tu les passer en revue (supprimer ou replanifier) ?` } : null; },
+  (e, now) => { if (!e.dernierExport) return null; const j = (now - new Date(e.dernierExport)) / 86400000; return j > 8 ? { cle: "export:" + cleJour(now).slice(0, 7), priorite: 1, texte: `Ta dernière sauvegarde date de ${Math.floor(j)} jours. Tu l'exportes maintenant ?` } : null; },
+  (e) => { const d = (e.decisionsARevoir || [])[0]; return d ? { cle: "decision:" + d.id, priorite: 1, texte: `Tu avais décidé « ${d.decision} » (dernière nouvelle : ${d.derniere_nouvelle}). Où en es-tu ?` } : null; }
+];
+
+function creerConseiller({ stockage, maintenant = () => new Date(), regles = REGLES } = {}) {
+  const DOC = "noyau-conseiller"; let doc = null;
+  const charger = async () => doc || (doc = (await stockage.lire("kv", DOC)) || { id: DOC, regles: {}, jour: "", n: 0, derniere: 0 });
+  const famille = (cle) => cle.split(":")[0];
+  return {
+    /** Renvoie UNE suggestion ou null. `calme` = { focus, media, verrouille }. */
+    async quandUtile(etat, calme = {}) {
+      const d = await charger(), now = maintenant();
+      if (!heureOk(now) || calme.focus || calme.media || calme.verrouille) return null;
+      if (d.jour !== cleJour(now)) { d.jour = cleJour(now); d.n = 0; }
+      if (d.n >= LIMITES.parJour || now - d.derniere < LIMITES.ecartMin) return null;
+      const cands = regles.map((r) => r(etat || {}, now)).filter(Boolean).sort((a, b) => b.priorite - a.priorite);
+      for (const c of cands) {
+        const f = d.regles[famille(c.cle)] || {};
+        if (f.coupee) continue; if (f.jusqu_a && now < new Date(f.jusqu_a)) continue; if ((f.vues || []).includes(c.cle)) continue;   // jamais deux fois la même suggestion
+        f.vues = [...(f.vues || []), c.cle].slice(-30); f.ignorees = (f.ignorees || 0) + 1;             // comptée « ignorée » tant que Lucien ne répond pas
+        if (f.ignorees > LIMITES.ignoreesMax) { f.coupee = true; d.regles[famille(c.cle)] = f; await stockage.ecrire("kv", d); continue; }
+        d.regles[famille(c.cle)] = f; d.n++; d.derniere = now.getTime(); await stockage.ecrire("kv", d); return c;
+      } return null;
+    },
+    /** Réponse de Lucien : "ok" (utile), "plus-tard" ou "non". */
+    async repondre(cle, reponse) {
+      const d = await charger(), now = maintenant(), f = d.regles[famille(cle)] || {};
+      if (reponse === "ok") f.ignorees = 0;
+      else if (reponse === "plus-tard") { f.ignorees = Math.max(0, (f.ignorees || 1) - 1); f.jusqu_a = new Date(now.getTime() + LIMITES.plusTardH * 3600e3).toISOString(); f.vues = (f.vues || []).filter((x) => x !== cle); }
+      else if (reponse === "non") { f.ignorees = 0; f.jusqu_a = new Date(now.getTime() + LIMITES.nonJours * 86400e3).toISOString(); }
+      else throw new Error("Réponse inconnue");
+      d.regles[famille(cle)] = f; await stockage.ecrire("kv", d);
+    },
+    /** Lucien rallume une règle coupée (réglage). */
+    async rallumer(famille_) { const d = await charger(); delete d.regles[famille_]; await stockage.ecrire("kv", d); },
+    async etat() { const d = await charger(); return { aujourdhui: d.n, regles: Object.fromEntries(Object.entries(d.regles).map(([k, v]) => [k, { coupee: !!v.coupee, jusqu_a: v.jusqu_a || null }])) }; }
+  };
+}
+
+return { LIMITES, REGLES, creerConseiller };
+})();
+__M['js/noyau/citations.js'] = (() => {
+const { jetons } = __M['js/noyau/recherche.js'];
+// Noyau · réponses qui citent leurs sources, phrase par phrase (lab-khoj-sources). Contrôle LOCAL, sans requête de plus, sans IA.
+// Idée reprise de Khoj (sans copier de code) : chaque phrase d'une réponse renvoie à son passage précis, et une phrase sans appui est dite telle quelle.
+// Le contrôle ne mesure que le recouvrement de mots entre la phrase et l'extrait cité : il repère les défauts grossiers, il ne prouve pas qu'une phrase est vraie.
+
+
+const SEUILS = { appuyee: 0.34, douteuse: 0.15, minMots: 2 };
+/** Coupe en phrases en gardant les marqueurs [n] attachés à leur phrase. */
+function decouperPhrases(texte) {
+  const t = String(texte == null ? "" : texte).replace(/\r/g, "").trim(); if (!t) return [];
+  return t.split(/(?<=[.!?…])\s+(?=[A-ZÀ-ÖØ-Þ0-9«"\[])|\n+/).map((s) => s.trim()).filter(Boolean);
+}
+const marqueurs = (s) => [...s.matchAll(/\[(\d{1,3})\]/g)].map((m) => +m[1]);
+const sansMarq = (s) => s.replace(/\[\d{1,3}\]/g, "").trim();
+const recouvre = (motsPhrase, motsExtrait) => { if (!motsPhrase.length) return { part: 0, communs: 0 }; const e = new Set(motsExtrait); const c = motsPhrase.filter((m) => e.has(m)).length; return { part: c / motsPhrase.length, communs: c }; };
+/** Une phrase « neutre » n'affirme rien de vérifiable : question, politesse, avis, aveu d'ignorance. */
+const neutre = (s, mots) => /\?\s*$/.test(s) || mots.length < 3 || /^(bonjour|salut|merci|voici|d'accord|oui|non|je ne sais pas|je n'ai pas|je ne trouve|je pense|à mon avis|selon moi)/i.test(s.trim());
+
+/**
+ * Analyse une réponse. `extraits` = [{ n, titre?, texte }] (les [n] donnés au modèle). Statuts par phrase :
+ *  - « appuyée » : cite [n] et recouvre assez l'extrait ;  - « douteuse » : cite [n] mais l'extrait parle d'autre chose ;
+ *  - « source-possible » : ne cite rien mais un extrait la recouvre ;  - « sans-source » : affirme sans appui ;  - « neutre » : n'affirme rien.
+ */
+function analyserCitations(texte, extraits = []) {
+  const par = new Map(extraits.map((e) => [e.n, { ...e, mots: jetons(e.texte) }]));
+  const phrases = decouperPhrases(texte).map((brut) => {
+    const cites = marqueurs(brut), propre = sansMarq(brut), mots = jetons(propre);
+    if (neutre(propre, mots) && !cites.length) return { texte: brut, statut: "neutre", sources: [] };
+    if (cites.length) {
+      const connues = cites.filter((n) => par.has(n)); if (!connues.length) return { texte: brut, statut: "douteuse", sources: cites, raison: "cite un extrait qui n'existe pas" };
+      const meilleur = connues.map((n) => ({ n, ...recouvre(mots, par.get(n).mots) })).sort((a, b) => b.part - a.part)[0];
+      if (meilleur.part >= SEUILS.appuyee && meilleur.communs >= SEUILS.minMots) return { texte: brut, statut: "appuyee", sources: [meilleur.n] };
+      return { texte: brut, statut: "douteuse", sources: connues, raison: "l'extrait cité ne parle pas vraiment de cela" };
+    }
+    const autre = [...par.values()].map((e) => ({ n: e.n, ...recouvre(mots, e.mots) })).sort((a, b) => b.part - a.part)[0];
+    if (autre && autre.part >= SEUILS.appuyee && autre.communs >= SEUILS.minMots) return { texte: brut, statut: "source-possible", sources: [autre.n] };
+    return { texte: brut, statut: "sans-source", sources: [] };
+  });
+  const c = (s) => phrases.filter((p) => p.statut === s).length;
+  const resume = { appuyees: c("appuyee"), douteuses: c("douteuse"), sources_possibles: c("source-possible"), sans_source: c("sans-source"), neutres: c("neutre") };
+  return { phrases, resume, aVerifier: resume.douteuses + resume.sans_source > 0 };
+}
+
+return { SEUILS, decouperPhrases, analyserCitations };
+})();
+__M['js/noyau/passages.js'] = (() => {
+const { Index, jetons } = __M['js/noyau/recherche.js'];
+// Noyau · recherche par passages (lab-khoj-sens, partie « mots » : prête avant le modèle de sens). Idées reprises de Khoj, code écrit à la main :
+//  1. découper les notes et fiches en petits passages (le Noyau ressort la phrase utile, pas la fiche entière) ;
+//  2. ne réindexer que ce qui a changé (empreinte) ;
+//  3. second tri des meilleurs résultats (termes de la question tous présents, proches les uns des autres).
+// Sans IA, sans requête. La recherche par le sens (`sens.js`) pourra se brancher sur `reclasser` une fois essayée en réel.
+
+
+function decouperPassages(texte, { mots = 60, chevauchement = 1 } = {}) {
+  const phrases = String(texte == null ? "" : texte).replace(/\r/g, "").split(/(?<=[.!?…])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
+  const out = []; let cur = [], n = 0;
+  const pousser = () => { if (cur.length) out.push(cur.join(" ")); };
+  for (const p of phrases) {
+    const k = p.split(/\s+/).length;
+    if (n + k > mots && cur.length) { pousser(); cur = cur.slice(-chevauchement); n = cur.reduce((s, x) => s + x.split(/\s+/).length, 0); }
+    cur.push(p); n += k;
+  }
+  pousser(); return out;
+}
+/** Empreinte rapide (FNV-1a 32 bits) : sert seulement à voir qu'un texte a changé. */
+function empreinte(s) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16); }
+
+/** Plus petite fenêtre (en mots) qui contient tous les termes trouvés ; Infinity s'il n'y en a aucun. */
+function fenetreMin(motsPassage, termes) {
+  const voulus = new Set(termes.filter((t) => motsPassage.includes(t))); if (!voulus.size) return Infinity;
+  const vus = new Map(); let g = 0, best = Infinity;
+  for (let d = 0; d < motsPassage.length; d++) {
+    if (voulus.has(motsPassage[d])) vus.set(motsPassage[d], (vus.get(motsPassage[d]) || 0) + 1);
+    while (vus.size === voulus.size) { best = Math.min(best, d - g + 1); const m = motsPassage[g]; if (voulus.has(m)) { vus.set(m, vus.get(m) - 1); if (!vus.get(m)) vus.delete(m); } g++; }
+  }
+  return best;
+}
+
+function creerIndexPassages({ mots = 60, reclasser = null } = {}) {
+  const ix = new Index(), docs = new Map(), passages = new Map();     // docs: id → { hash, ids[] }, passages: id → { doc, i, texte, mots[] }
+  const retirerDoc = (id) => { const d = docs.get(id); if (!d) return; for (const p of d.ids) { ix.retirer(p); passages.delete(p); } docs.delete(id); };
+  return {
+    get taille() { return passages.size; },
+    /** Met l'index à jour : seuls les documents nouveaux ou modifiés sont réindexés ; ceux qui ont disparu sont retirés. */
+    maj(documents) {
+      const bilan = { ajoutes: 0, modifies: 0, retires: 0, inchanges: 0 }, presents = new Set();
+      for (const { id, texte } of documents || []) {
+        presents.add(id); const h = empreinte(String(texte || "")), ancien = docs.get(id);
+        if (ancien && ancien.hash === h) { bilan.inchanges++; continue; }
+        if (ancien) { retirerDoc(id); bilan.modifies++; } else bilan.ajoutes++;
+        const ids = decouperPassages(texte, { mots }).map((t, i) => { const pid = id + "#" + i; passages.set(pid, { doc: id, i, texte: t, mots: jetons(t) }); ix.ajouter(pid, t); return pid; });
+        docs.set(id, { hash: h, ids });
+      }
+      for (const id of [...docs.keys()]) if (!presents.has(id)) { retirerDoc(id); bilan.retires++; }
+      return bilan;
+    },
+    /** Meilleurs passages (jamais plus d'un par document en tête de liste), avec second tri. */
+    async chercher(question, { limite = 5 } = {}) {
+      const termes = [...new Set(jetons(question))]; if (!termes.length) return [];
+      const brut = ix.chercher(question, { limite: limite * 4 });
+      let res = brut.map((r) => { const p = passages.get(r.id), trouves = termes.filter((t) => p.mots.includes(t)), part = trouves.length / termes.length, fen = fenetreMin(p.mots, termes), proche = fen === Infinity ? 0 : Math.min(1, trouves.length / fen);
+        return { doc: p.doc, passage: p.i, extrait: p.texte, score: r.score * (1 + 0.6 * part) * (1 + 0.4 * proche), termes_trouves: trouves.length }; });
+      res.sort((a, b) => b.score - a.score);
+      if (reclasser) { try { res = (await reclasser(question, res)) || res; } catch { /* retour au classement par mots */ } }
+      const vus = new Set(), tete = [], reste = [];
+      for (const r of res) (vus.has(r.doc) ? reste : tete).push(r), vus.add(r.doc);
+      return [...tete, ...reste].slice(0, limite);
+    }
+  };
+}
+
+return { decouperPassages, empreinte, creerIndexPassages };
+})();
+__M['js/noyau/voix-locale.js'] = (() => {
+// Noyau · dictée vocale locale (lab-voix) : Whisper dans le worker, à la place de la reconnaissance du navigateur (bloquée par Brave).
+// Ici, la partie SANS micro ni modèle, entièrement testable : rééchantillonnage à 16 kHz, découpe aux silences, fusion des morceaux.
+// Le micro ne démarre que sur un geste de Lucien (règle du navigateur) ; l'audio ne quitte jamais l'appareil ; le modèle (≈ 40 Mo) se télécharge
+// seulement avec son accord (modeles.js, « whisper-tiny »). Sans modèle ou sans worker : la dictée reste indisponible et le clavier marche.
+const FREQ_WHISPER = 16000;
+
+/** Rééchantillonne par interpolation linéaire (suffisant pour la parole). */
+function reechantillonner(donnees, freqSource, freqCible = FREQ_WHISPER) {
+  if (!donnees || !donnees.length) return new Float32Array(0);
+  if (freqSource === freqCible) return Float32Array.from(donnees);
+  const n = Math.max(1, Math.floor(donnees.length * freqCible / freqSource)), out = new Float32Array(n), pas = (donnees.length - 1) / Math.max(1, n - 1);
+  for (let i = 0; i < n; i++) { const x = i * pas, a = Math.floor(x), b = Math.min(a + 1, donnees.length - 1), f = x - a; out[i] = donnees[a] * (1 - f) + donnees[b] * f; }
+  return out;
+}
+
+/** Énergie moyenne (RMS) d'un morceau. */
+const rms = (d, a = 0, b = d.length) => { let s = 0; for (let i = a; i < b; i++) s += d[i] * d[i]; return Math.sqrt(s / Math.max(1, b - a)); };
+
+/**
+ * Coupe l'audio aux silences pour que chaque morceau reste court (Whisper traite ≈ 30 s au plus). Morceaux de `maxSec` secondes au plus ;
+ * une coupe tombe sur le moment le plus calme de la dernière seconde du morceau. Renvoie des tableaux Float32Array sans perdre un échantillon.
+ */
+function decouperAudio(donnees, freq = FREQ_WHISPER, { maxSec = 25, fenetreMs = 50 } = {}) {
+  const max = Math.floor(maxSec * freq), fen = Math.max(1, Math.floor(freq * fenetreMs / 1000)), morceaux = [];
+  let debut = 0;
+  while (donnees.length - debut > max) {
+    const finMax = debut + max, zone = Math.max(debut + fen, finMax - freq);          // dernière seconde permise
+    let meilleur = finMax, mini = Infinity;
+    for (let i = zone; i + fen <= finMax; i += fen) { const e = rms(donnees, i, i + fen); if (e < mini) { mini = e; meilleur = i + Math.floor(fen / 2); } }
+    morceaux.push(donnees.slice(debut, meilleur)); debut = meilleur;
+  }
+  if (donnees.length - debut > 0) morceaux.push(donnees.slice(debut));
+  return morceaux;
+}
+
+/** Vrai si l'enregistrement est presque muet (inutile de lancer le modèle : il inventerait du texte). */
+const estSilence = (donnees, seuil = 0.005) => !donnees || !donnees.length || rms(donnees) < seuil;
+
+/** Recolle les morceaux transcrits, sans doublon de mots aux jonctions ni espace en trop. */
+function fusionnerTextes(textes) {
+  let out = "";
+  for (const t of textes.map((x) => String(x || "").trim()).filter(Boolean)) {
+    const mots = t.split(/\s+/), fin = out.split(/\s+/).slice(-3);
+    let k = 0; for (let n = Math.min(3, mots.length, fin.length); n > 0; n--) if (fin.slice(-n).join(" ").toLowerCase() === mots.slice(0, n).join(" ").toLowerCase()) { k = n; break; }
+    out += (out ? " " : "") + mots.slice(k).join(" ");
+  }
+  return out;
+}
+
+/** Dicte un enregistrement : `transcrire(Float32Array 16 kHz)` est fourni par le worker (backend « whisper »). Renvoie { texte, silence }. */
+async function dicter({ donnees, freq, transcrire, signal = null, surPartiel = () => {} }) {
+  const audio = reechantillonner(donnees, freq);
+  if (estSilence(audio)) return { texte: "", silence: true };
+  const morceaux = []; const parts = decouperAudio(audio);
+  for (const p of parts) {
+    if (signal && signal.aborted) break;
+    morceaux.push(await transcrire(p)); surPartiel(fusionnerTextes(morceaux));
+  }
+  return { texte: fusionnerTextes(morceaux), silence: false };
+}
+
+return { FREQ_WHISPER, reechantillonner, rms, decouperAudio, estSilence, fusionnerTextes, dicter };
+})();
+__M['js/noyau/perf.js'] = (() => {
+// Noyau · tableau de performance de l'IA locale (lab-perf) : vitesse, mémoire, batterie si le navigateur la donne.
+// Honnête : une mesure absente est « non disponible », jamais inventée. Aucune donnée n'est envoyée. Les sources (navigator, performance) sont injectables.
+function creerMesures({ maintenant = () => performance.now(), max = 50 } = {}) {
+  const lignes = [];
+  return {
+    /** Démarre la mesure d'une réponse ; appeler `.mot()` à chaque mot reçu puis `.fin()`. */
+    debut({ mode, modele = null }) {
+      const t0 = maintenant(); let premier = null, mots = 0;
+      return {
+        mot() { if (premier === null) premier = maintenant(); mots++; },
+        fin({ erreur = null } = {}) {
+          const t1 = maintenant(), duree = t1 - t0, gen = premier === null ? null : t1 - premier;
+          const l = { mode, modele, mots, ms_total: Math.round(duree), ms_premier_mot: premier === null ? null : Math.round(premier - t0), mots_par_s: gen && gen > 0 && mots > 1 ? Math.round(((mots - 1) / (gen / 1000)) * 10) / 10 : null, erreur };
+          lignes.push(l); if (lignes.length > max) lignes.shift(); return l;
+        }
+      };
+    },
+    lignes: () => [...lignes],
+    /** Résumé par mode : médiane des délais et des vitesses. */
+    resume() {
+      const med = (a) => { const v = a.filter((x) => x != null).sort((x, y) => x - y); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; };
+      const parMode = {}; for (const l of lignes) (parMode[l.mode] = parMode[l.mode] || []).push(l);
+      return Object.fromEntries(Object.entries(parMode).map(([m, ls]) => [m, { reponses: ls.length, erreurs: ls.filter((l) => l.erreur).length, premier_mot_ms: med(ls.map((l) => l.ms_premier_mot)), mots_par_s: med(ls.map((l) => l.mots_par_s)) }]));
+    }
+  };
+}
+
+/** Mémoire et batterie, selon ce que le navigateur donne. */
+async function lireMateriel({ nav = typeof navigator !== "undefined" ? navigator : {}, perf = typeof performance !== "undefined" ? performance : {} } = {}) {
+  const r = { memoire_page_mo: null, memoire_appareil_go: typeof nav.deviceMemory === "number" ? nav.deviceMemory : null, batterie_pct: null, en_charge: null, stockage_utilise_mo: null, stockage_quota_mo: null };
+  try { if (perf.memory && perf.memory.usedJSHeapSize) r.memoire_page_mo = Math.round(perf.memory.usedJSHeapSize / 1048576); } catch { /* non disponible */ }
+  try { if (typeof nav.getBattery === "function") { const b = await nav.getBattery(); r.batterie_pct = Math.round(b.level * 100); r.en_charge = !!b.charging; } } catch { /* Brave et Firefox masquent la batterie */ }
+  try { if (nav.storage && nav.storage.estimate) { const e = await nav.storage.estimate(); r.stockage_utilise_mo = Math.round((e.usage || 0) / 1048576); r.stockage_quota_mo = Math.round((e.quota || 0) / 1048576); } } catch { /* non disponible */ }
+  return r;
+}
+
+/** Conseil en clair d'après les mesures (jamais d'action automatique). */
+function conseil(resume, materiel) {
+  const c = [];
+  for (const [mode, s] of Object.entries(resume)) {
+    if (s.mots_par_s !== null && s.mots_par_s < 2) c.push(`Mode ${mode} lent (${s.mots_par_s} mots/s) : un modèle plus petit ou le mode « sans IA » seraient plus confortables.`);
+    if (s.erreurs > 0 && s.erreurs >= s.reponses / 2) c.push(`Mode ${mode} : au moins la moitié des réponses ont échoué.`);
+  }
+  if (materiel.batterie_pct !== null && materiel.batterie_pct < 20 && materiel.en_charge === false) c.push("Batterie sous 20 % hors charge : l'IA locale devrait attendre.");
+  if (materiel.batterie_pct === null) c.push("Batterie : le navigateur ne la donne pas (non mesurée).");
+  return c;
+}
+
+return { creerMesures, lireMateriel, conseil };
+})();
 __M['labo/apercu-entree.js'] = (() => {
 const { detecterCapacites, choisirMode } = __M['js/noyau/socle.js'];
 const { badgeReponse, preparerContexteIA, planHorsLigne } = __M['js/noyau/ia-regles.js'];
@@ -2649,8 +3081,20 @@ const { construirePasseport } = __M['js/noyau/passeport.js'];
 const { detecterContradictions } = __M['js/noyau/contradictions.js'];
 const { detecterDecision } = __M['js/noyau/decisions.js'];
 const { MODELES } = __M['js/noyau/modeles.js'];
+const { MODELES_ROUTINES, lancerRoutine } = __M['js/noyau/routines.js'];
+const { creerConseiller } = __M['js/noyau/conseiller.js'];
+const { analyserCitations } = __M['js/noyau/citations.js'];
+const { creerIndexPassages } = __M['js/noyau/passages.js'];
+const { reechantillonner, decouperAudio, estSilence } = __M['js/noyau/voix-locale.js'];
+const { creerMesures, conseil } = __M['js/noyau/perf.js'];
 // Aperçu autonome du travail de la mission labo-auto : une seule page, ouverte par double-clic, qui montre les modules en action.
 // Aucune donnée personnelle : tout est fictif ou public. Aucun réseau. Générée par `python3 labo/apercu.py`.
+
+
+
+
+
+
 
 
 
@@ -2687,7 +3131,34 @@ const carte = (titre, html) => { const s = document.createElement("section"); s.
   carte("6 · Intelligence à règles (sans IA)", `<p>Contradictions : </p><ul>${sig.map((s) => `<li>${esc(s.message)}</li>`).join("")}</ul><p>Décision repérée (proposition, rien n'est enregistré) : <b>${esc(dec.decision)}</b> — raison : ${esc(dec.raison)}</p>`);
 
   carte("7 · Modèles (téléchargés seulement avec ton accord)", `<table>${MODELES.map((m) => `<tr><td>${esc(m.nom)}</td><td>≈ ${m.mo} Mo</td><td>${esc(m.mode)}</td></tr>`).join("")}</table><p>Hors ligne avec modèle : ${esc(planHorsLigne({ enLigne: false, mode: "webgpu", modeles: [{ id: "qwen-0.5b", usage: "chat", mode: "webgpu", telecharge: true }] }).raison)}</p>`);
+
+  // 8 · Routines : démonstration avec une barrière simulée (aucune action réelle)
+  const faux = { outil: (n) => ({ nom: n, niveau: ["ajouter_tache"].includes(n) ? "CONFIRMATION" : "LIBRE" }), async executer(a) { return a.outil === "ajouter_tache" ? { ok: false, refus: { raison: "refuse_par_lucien" }, erreur: "Lucien a refusé cette action." } : { ok: true }; } };
+  const essai = await lancerRoutine({ id: "demo", nom: "Démonstration", declencheur: { type: "phrase", phrase: "démonstration" }, etapes: [{ outil: "lire_taches" }, { outil: "ajouter_tache", params: { texte: "x" } }, { outil: "lire_agenda" }] }, { barriere: faux, validerEtapes: async () => true });
+  carte("8 · Routines (déclencheur → étapes → ta validation → historique)", `<table>${MODELES_ROUTINES.map((m) => `<tr><td>${esc(m.nom)}</td><td>${esc(m.declencheur.type)}</td><td>${esc(m.etapes.map((e) => e.outil).join(" → "))}</td></tr>`).join("")}</table><p>Essai simulé : issue <b>${esc(essai.issue)}</b> — ${esc(essai.raison)} (étapes : ${esc(essai.etapes.map((e) => e.outil + " " + e.statut).join(", "))}). Une étape refusée arrête la routine ; rien ne part sans ta validation.</p>`);
+
+  // 9 · Conseiller proactif
+  const memo = new Map(); const cons = creerConseiller({ stockage: { lire: async (c, id) => memo.get(id) || null, ecrire: async (c, o) => { memo.set(o.id, o); } }, maintenant: () => new Date(2026, 9, 26, 13, 30) });
+  const sug = await cons.quandUtile({ evenements: [{ id: "e", titre: "Réunion budget", date: "2026-10-26", debut: "14:30" }], taches: [{ id: "t", texte: "Préparer le budget", faite: false }] });
+  const deuxieme = await cons.quandUtile({ taches: [1, 2, 3].map((i) => ({ id: "x" + i, texte: "T", faite: false, echeance: "2026-10-01" })) });
+  carte("9 · Conseiller proactif (parle seulement quand c'est utile)", `<p>Suggestion : <b>${esc(sug.texte)}</b></p><p>Une deuxième tout de suite : <b>${deuxieme ? esc(deuxieme.texte) : "aucune (une toutes les 2 heures, 3 par jour au plus)"}</b></p>`);
+
+  // 10 · Citations phrase par phrase
+  const cit = analyserCitations("L'Everest est la plus haute montagne du monde [1]. Le Mont Blanc culmine à 4 806 mètres [1]. Le Kilimandjaro attire des milliers de randonneurs.", [{ n: 1, texte: "L'Everest est la plus haute montagne du monde avec 8 849 mètres d'altitude, dans l'Himalaya." }]);
+  carte("10 · Réponses qui citent leurs sources", `<ul>${cit.phrases.map((p) => `<li><b class="${p.statut === "appuyee" ? "ok" : ""}">${esc(p.statut)}</b> — ${esc(p.texte)}</li>`).join("")}</ul><p class="note">Contrôle local, sans requête : il repère les phrases sans appui, il ne prouve pas qu'une phrase est vraie.</p>`);
+
+  // 11 · Passages
+  const ip = creerIndexPassages({ mots: 30 }); ip.maj([{ id: "voyage", texte: "Kyoto est une ville du Japon. Le thé vert se prépare à 70 degrés pendant deux minutes. Prévoir un budget de 2500 euros pour la semaine." }, { id: "cuisine", texte: "Les crêpes se font avec de la farine, du lait et des oeufs." }]);
+  const pr = await ip.chercher("température du thé vert");
+  carte("11 · Recherche par passages", `<p>Question : « température du thé vert » → <b>${esc(pr[0].doc)}</b> : ${esc(pr[0].extrait)}</p>`);
+
+  // 12 · Dictée locale et performance (sans micro ni modèle)
+  const tone = Float32Array.from({ length: 48000 }, (_, i) => 0.4 * Math.sin(2 * Math.PI * 440 * i / 48000));
+  const r16 = reechantillonner(tone, 48000), morceaux = decouperAudio(new Float32Array(16000 * 60).fill(0.2));
+  let t = 0; const m = creerMesures({ maintenant: () => t }); const h = m.debut({ mode: "wasm" }); t = 900; h.mot(); t = 1900; h.mot(); t = 2400; h.fin();
+  carte("12 · Dictée locale et performance (parties sans micro ni modèle)", `<p>1 s à 48 kHz → ${r16.length} échantillons à 16 kHz · silence détecté : ${estSilence(new Float32Array(16000)) ? "oui" : "non"} · 60 s coupées en <b>${morceaux.length}</b> morceaux de 25 s au plus.</p><p>Mesure simulée : ${esc(JSON.stringify(m.resume()))}</p><p>${esc(conseil(m.resume(), { batterie_pct: null }).join(" "))}</p>`);
 })();
+
 
 return {  };
 })();</script></body></html>

@@ -1,11 +1,11 @@
 # État de la mission autonome (labo-auto) · résumé de 20 h 00
 
 1. **Fait** (branche `labo-auto`, rien sur `main`) : manuel du hub (format, lecteur, 3 fiches, 14 fiches à valider), règle « aucun outil sans validation » appliquée, socle d'IA locale (détection, worker, mot par mot), gestion des modèles, badge honnête, verrou, hors ligne, décisions, contradictions, passeport, voix locale (modules), performance, citations phrase par phrase, routines avec 4 modèles, conseiller proactif, recherche par passages, méthode de veille des briques libres.
-2. **Essais** : 28 suites dans `labo/` toutes bonnes (`node labo/essais*.mjs`), dont 12 nouvelles ; aperçu ouvert sans erreur dans un navigateur.
+2. **Essais** : 28 suites dans `labo/` toutes bonnes (`node labo/essais*.mjs`), dont 12 nouvelles ; aperçu de 12 sections ouvert sans erreur dans un navigateur (Chromium).
 3. **À tester en priorité** : ouvrir `apercu-labo.html` (double-clic) ; lire `docs/labo-auto/a-decider.md`.
 4. **Jamais essayé en réel** : WebLLM (WebGPU) et Transformers.js (WASM) dans le worker, tailles des modèles (estimations), licence de la voix Piper.
 5. **Décisions prises à ta place** : 22, listées dans `decisions.md` (la plus importante : la liste des 34 outils existants est tenue pour validée).
-6. **Outils proposés en attente** : `consulter_manuel`, `chercher_decisions`, `lire_contradictions` (LIBRE) ; `proposer_decision` et `creer_routine` (CONFIRMATION). Aucun actif ; aucun outil pour le passeport (bouton de Lucien).
+6. **Outils proposés en attente** : `consulter_manuel`, `chercher_decisions`, `lire_contradictions` (LIBRE) ; `proposer_decision` et `creer_routine` (CONFIRMATION, dont la liste visible `OUTILS_PROPOSES` est à jour). Aucun actif ; aucun outil pour le passeport (bouton de Lucien).
 7. **Rien n'est branché dans le hub** : les nouveaux modules ne sont pas importés par le Noyau (cache `sw.js` et interface = fichiers partagés).
 8. **Suivi du Hub** : non mis à jour (rien n'est livré au sens du Suivi tant que ce n'est pas branché et validé) ; à faire à ton retour.
 9. **Non fait volontairement** : fenêtre de chat, lab-perso-fixes, essais réels, branchement du micro et de l'affichage Outils.
