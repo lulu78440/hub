@@ -38,9 +38,11 @@ export function feteList(y) {
 }
 /** « Maman 12/03/1960 » → { name, md: "03-12", year: 1960 } ou null. Exporté pour les essais. */
 export function parseBirthday(text) {
-  const m = text.trim().match(/^(.+?)\s+(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/); if (!m) return null;
+  const m = text.trim().match(/^(.+?)\s+(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2}|\d{4}))?$/); if (!m) return null;
   const d = +m[2], mo = +m[3]; if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
   let year = m[4] ? +m[4] : null; if (year !== null && year < 100) year += year > 30 ? 1900 : 2000;
+  if (year !== null && year > new Date().getFullYear()) return null;                          // pas de naissance dans le futur
+  const real = new Date(year ?? 2000, mo - 1, d); if (real.getMonth() !== mo - 1) return null; // 31/02, 31/04… n'existent pas (29/02 sans année : oui)
   return { name: m[1].trim().slice(0, 40), md: pad(mo) + "-" + pad(d), year };
 }
 
