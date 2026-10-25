@@ -35,30 +35,14 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
   const level = (items) => menu.open(at.x, at.y, items);
   const lines = (arr) => (arr || []).filter((i) => i && i !== "-" && !i.h && !i.note);
   const FOND_TETE = [/^Focus 25/, /^Arrêter le Focus/, /^Revoir le briefing/, /image ici/i, /^Verrouiller maintenant/];
-  function bgMenu(t, x, y, back) {
+  function bgMenu(t, x, y) {
     const all = lines(hooks.fond ? hooks.fond(t, x, y) : []);
-    const head = all.filter((i) => FOND_TETE.some((r) => r.test(i.t))), rest = all.filter((i) => !head.includes(i));
+    const head = all.filter((i) => FOND_TETE.some((r) => r.test(i.t)));
     const hidden = wins.hiddenEls();
-    const plus = [...rest,
-      { t: entity.on ? "Masquer l'entité" : "Afficher l'entité", fn: () => entity.setOn(!entity.on) },
-      "-", { t: document.fullscreenElement ? "Quitter le plein écran" : "Plein écran", k: "F11", fn: () => $("fs").click() },
-      { t: cursor.forced ? "Curseur normal" : "Curseur HUD", fn: () => toast(cursor.toggle() ? "Curseur HUD activé" : (cursor.on ? "Curseur HUD : reste actif en plein écran" : "Curseur normal")) },
-      { t: "Réinitialiser la disposition", fn: resetLayout },
-      "-", { h: "Rappels" },
-      { t: sound.on ? "Couper le son des rappels" : "Activer le son des rappels", fn: () => { sound.set(!sound.on); toast(sound.on ? "Son des rappels activé" : "Son des rappels coupé"); } },
-      { t: "Tester un rappel", fn: test },
-      "-", { h: "Mes données" },
-      { t: "Exporter (fichier de sauvegarde)", fn: data.exportFile },
-      { t: "Importer un export…", fn: data.importFile },
-      { t: "Importer le Coffre du Hub (ajoute sans effacer)…", fn: data.importCoffre },
-      ...(wins.reservedEls().length ? ["-", { t: "Fonctions en réserve (" + wins.reservedEls().length + ")…", fn: () => level([{ h: "Fonctions en réserve" }, { note: "Rangées hors de la vue, code gardé" },
-        ...wins.reservedEls().map((el) => ({ t: "Remettre « " + wins.title(el) + " » dans le hub", fn: () => wins.setReserve(el, false) })), "-", { t: "‹ Retour", fn: () => level([{ h: "Hub · plus" }, ...bgMenu(t, x, y, true)]) }]) }] : []),
-      "-", { t: "‹ Retour", fn: () => level(bgMenu(t, x, y)) }];
-    if (back) return plus;
     const it = [{ h: "Hub" }, ...head];
     if (hidden.length) it.push({ t: "Fenêtres masquées (" + hidden.length + ")…", fn: () => level([{ h: "Fenêtres masquées" },
       ...hidden.map((el) => ({ t: "Afficher « " + wins.title(el) + " »", fn: () => wins.setHidden(el, false) })), "-", { t: "‹ Retour", fn: () => level(bgMenu(t, x, y)) }]) });
-    it.push("-", { t: "Plus…", fn: () => level([{ h: "Hub · plus" }, ...bgMenu(t, x, y, true)]) });
+    it.push("-", { t: "Outils…", k: "O", fn: () => document.dispatchEvent(new CustomEvent("hub:outils")) });   // tout le reste : plein écran, ambiance, données, réserve… (ui/outils.js)
     return it;
   }
   function winMenu(el, t, back) {
@@ -96,7 +80,8 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
   });
 
   // ---------- Mobile ----------
-  if (!state.lite) return { menu };
+  const fondLines = () => lines(hooks.fond ? hooks.fond(document.body, innerWidth / 2, innerHeight / 2) : []);   // pour la fenêtre Outils
+  if (!state.lite) return { menu, fondLines };
   const mwins = [...document.querySelectorAll("#world .win:not(.pc-only)")];
   const byId = (id) => mwins.find((w) => w.dataset.id === id);
   const original = mwins.map((w) => w.dataset.id).sort((a, b) => (+getComputedStyle(byId(a)).order || 0) - (+getComputedStyle(byId(b)).order || 0));

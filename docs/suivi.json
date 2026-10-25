@@ -141,11 +141,12 @@
     "p4-perf",
     "ergo-audit",
     "ergo-plan",
-    "ergo-visuel"
+    "ergo-visuel",
+    "ergo-fusion"
   ],
   "prochaine": {
-    "id": "ergo-outils",
-    "texte": "Fenêtre Outils et réglages"
+    "id": "ergo-mobile",
+    "texte": "Adaptation mobile"
   },
   "built": [
     "ns-int",
@@ -169,9 +170,10 @@
     "ergo-audit",
     "ergo-plan",
     "ergo-visuel",
-    "ergo-fusion"
+    "ergo-fusion",
+    "ergo-outils"
   ],
-  "maj": "2026-10-25T17:40:00+01:00",
+  "maj": "2026-10-25T17:45:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",

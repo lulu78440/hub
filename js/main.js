@@ -8,6 +8,7 @@ import { initTopbar } from "./ui/topbar.js";
 import { createPlans } from "./ui/plans.js";
 import { createWindows } from "./ui/windows.js";
 import { initMenus } from "./ui/menus.js";
+import { initOutils } from "./ui/outils.js";
 import { toast } from "./ui/toast.js";
 import { initData } from "./ui/data.js";
 import { initNotes } from "./widgets/notes.js";
@@ -81,7 +82,8 @@ async function start() {
   $("b-layout").addEventListener("click", resetLayout);
   initLockUI();
   const data = initData();
-  initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data, test: () => window.__hub.reminders.test() });
+  const menus = initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data, test: () => window.__hub.reminders.test() });
+  initOutils({ wins, entity: force.entity, cursor, resetLayout, data, menus, test: () => window.__hub.reminders.test() });
   initNotes();
   initTasks();
   initAgenda();
