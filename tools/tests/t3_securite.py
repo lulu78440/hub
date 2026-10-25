@@ -3,7 +3,7 @@ liens externes, page en direct isolée. Tout se passe sur le serveur local, avec
 import json, os, re, subprocess, datetime, time
 from hubtest import ROOT, PHRASE, FAKE_TOKEN, ev, seed, counts, enable_vault, unlock_page, export_file, import_file, write_json
 from fakes import FakeGitHub
-from t2_fonctions import make_mock, FLUX
+from t2_fonctions import make_mock, FLUX, sortir_de_reserve
 
 PWN = "window.__pwn = (window.__pwn || 0) + 1"
 TRAPS = [
@@ -54,6 +54,7 @@ def test_securite_textes_pieges_notes_taches_agenda_favoris(h):
     h.mock = make_mock()
     d = h.device(); p = d.page()
     p.evaluate("document.activeElement && document.activeElement.blur()"); p.keyboard.press("2"); p.wait_for_timeout(900)
+    sortir_de_reserve(p)          # Tâches en réserve depuis la refonte : remise par Outils, comme Lucien le ferait
     for t in TRAPS:
         for w in ("notes", "tasks"):
             inp = p.locator(f'.win[data-id="{w}"] form.addrow input'); inp.fill(t); inp.press("Enter")
@@ -66,6 +67,10 @@ def test_securite_textes_pieges_notes_taches_agenda_favoris(h):
     p.keyboard.press("2"); p.wait_for_timeout(1500)
     # ouvrir l'agenda complet et le briefing pour que tout soit affiché
     p.evaluate("document.getElementById('agband') && document.getElementById('agband').click()"); p.wait_for_timeout(500)
+    # Les textes piégés doivent être réellement affichés (en texte) dans Notes et Tâches, sinon le test ne prouve rien
+    for w in ("notes", "tasks"):
+        _assert(p.evaluate(f"getComputedStyle(document.querySelector('.win[data-id=\"{w}\"]')).display !== 'none'"), f"fenêtre {w} non affichée après rechargement")
+        _assert("onerror" in p.inner_text(f'.win[data-id="{w}"]'), f"textes piégés absents de la fenêtre {w}")
     _assert(not _pwned(p), "un texte piégé s'est exécuté")
     n = p.evaluate("document.querySelectorAll('.win img[src=x], .win svg[onload], .win script, .agdrawer img[src=x]').length")
     _assert(n == 0, f"{n} balise(s) piégée(s) insérée(s) dans la page")

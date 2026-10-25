@@ -52,6 +52,20 @@ def _ui_add(p, win, text):
     inp.fill(text); inp.press("Enter")
 
 
+def sortir_de_reserve(p, win="tasks", titre="Tâches"):
+    """Refonte (ergo-fusion) : sur PC, Tâches est « en réserve » par défaut (fenêtre masquée, code gardé).
+    On la remet comme Lucien le ferait : touche O → Outils → « Fonctions en réserve » → tuile de la fenêtre."""
+    _assert(p.evaluate(f"window.__hub.wins.S['{win}'] && window.__hub.wins.S['{win}'].res === true"), f"{titre} n'est plus en réserve par défaut")
+    p.evaluate("document.activeElement && document.activeElement.blur()")
+    p.keyboard.press("o")
+    p.wait_for_selector("#outils:not([hidden])", timeout=15000)
+    sec = p.locator("#outils section").filter(has=p.locator(".o-grp", has_text="Fonctions en réserve"))
+    sec.locator(".o-tile").filter(has_text=titre).first.click()
+    p.keyboard.press("Escape")
+    p.wait_for_function(f"!window.__hub.wins.S['{win}'].res && !document.querySelector('.win[data-id=\"{win}\"]').classList.contains('hid')", timeout=15000)
+    p.wait_for_timeout(600)
+
+
 def test_fonctions_recette_pc(h):
     h.mock = make_mock()
     d = h.device()
@@ -63,7 +77,8 @@ def test_fonctions_recette_pc(h):
         p.keyboard.press(k); p.wait_for_timeout(900)
         _assert(p.evaluate("window.__hub.plans.plan") == int(k), "plan " + k)
     p.keyboard.press("2"); p.wait_for_timeout(900)
-    # Notes, tâches, agenda par l'interface
+    # Notes, tâches, agenda par l'interface (Tâches est en réserve depuis la refonte : remise par Outils)
+    sortir_de_reserve(p)
     _ui_add(p, "notes", "Note de recette é à ç 😀")
     _ui_add(p, "tasks", "Acheter du pain ! @demain 18h")
     p.wait_for_timeout(300)
@@ -72,6 +87,7 @@ def test_fonctions_recette_pc(h):
     t = ev(p, "const s = await import('/js/store/storage.js'); return (await s.store.all('tasks'))[0];")
     _assert(t["prio"] == 1 and t["due"] == _today(1) and t["remindAt"] == _today(1) + "T18:00" and t["text"] == "Acheter du pain", "analyse de la tâche : " + str(t))
     _assert(p.locator('.win[data-id="notes"] .note').count() == 1, "note non affichée")
+    _assert("Acheter du pain" in p.inner_text('.win[data-id="tasks"]'), "tâche non affichée")
     # Favori ajouté par le formulaire : adresse complétée en https
     p.click('.win[data-id="favs"] .fadd')
     p.fill('.win[data-id="favs"] input[placeholder^="Adresse"]', "lemonde.fr")
@@ -92,9 +108,9 @@ def test_fonctions_recette_pc(h):
     # Rappel d'essai
     p.evaluate("window.__hub.reminders.test()"); p.wait_for_timeout(300)
     _assert(p.locator(".alert").count() >= 1, "rappel d'essai non affiché")
-    # Toutes les fenêtres PC présentes et visibles au plan 2
+    # Toutes les fenêtres PC présentes et visibles au plan 2, sauf celles rangées en réserve (masquées par conception, Tâches remise ci-dessus)
     p.keyboard.press("2"); p.wait_for_timeout(1000)
-    hidden = p.evaluate("[...document.querySelectorAll('.win:not(.mob-only)')].filter(w => getComputedStyle(w).display === 'none').map(w => w.dataset.id)")
+    hidden = p.evaluate("[...document.querySelectorAll('.win:not(.mob-only)')].filter(w => getComputedStyle(w).display === 'none' && !(window.__hub.wins.S[w.dataset.id] || {}).res).map(w => w.dataset.id)")
     _assert(not hidden, "fenêtres masquées au plan 2 : " + str(hidden))
     _assert(not d.errors, "erreurs console : " + str(d.errors))
     d.close()
