@@ -1,14 +1,14 @@
 # État de la mission autonome (labo-auto) · résumé de 20 h 00
 
-1. **Fait** (branche `labo-auto`, rien sur `main`) : manuel du hub (format, lecteur, 3 fiches, 14 fiches à valider), règle « aucun outil sans validation » appliquée, socle d'IA locale (détection, worker, mot par mot), gestion des modèles, badge honnête, verrou, hors ligne, décisions, contradictions, passeport.
-2. **Essais** : 22 suites dans `labo/` toutes bonnes (`node labo/essais*.mjs`), dont 8 nouvelles ; aperçu ouvert sans erreur dans un navigateur.
+1. **Fait** (branche `labo-auto`, rien sur `main`) : manuel du hub (format, lecteur, 3 fiches, 14 fiches à valider), règle « aucun outil sans validation » appliquée, socle d'IA locale (détection, worker, mot par mot), gestion des modèles, badge honnête, verrou, hors ligne, décisions, contradictions, passeport, voix locale (modules) et performance.
+2. **Essais** : 24 suites dans `labo/` toutes bonnes (`node labo/essais*.mjs`), dont 8 nouvelles ; aperçu ouvert sans erreur dans un navigateur.
 3. **À tester en priorité** : ouvrir `apercu-labo.html` (double-clic) ; lire `docs/labo-auto/a-decider.md`.
 4. **Jamais essayé en réel** : WebLLM (WebGPU) et Transformers.js (WASM) dans le worker, tailles des modèles (estimations), licence de la voix Piper.
-5. **Décisions prises à ta place** : 16, listées dans `decisions.md` (la plus importante : la liste des 34 outils existants est tenue pour validée).
+5. **Décisions prises à ta place** : 17, listées dans `decisions.md` (la plus importante : la liste des 34 outils existants est tenue pour validée).
 6. **Outils proposés en attente** : `consulter_manuel`, `chercher_decisions`, `lire_contradictions` (LIBRE) ; `proposer_decision` (CONFIRMATION). Aucun actif ; aucun outil pour le passeport (bouton de Lucien).
 7. **Rien n'est branché dans le hub** : les nouveaux modules ne sont pas importés par le Noyau (cache `sw.js` et interface = fichiers partagés).
 8. **Suivi du Hub** : non mis à jour (rien n'est livré au sens du Suivi tant que ce n'est pas branché et validé) ; à faire à ton retour.
-9. **Non fait volontairement** : fenêtre de chat, lab-perso-fixes, lab-voix, lab-perf, essais réels.
+9. **Non fait volontairement** : fenêtre de chat, lab-perso-fixes, essais réels, branchement du micro et de l'affichage Outils.
 10. **Pour annuler** : supprimer la branche `labo-auto`.
 
 
@@ -20,3 +20,6 @@
 | 4 · lab-modeles | Fait (catalogue, taille avant accord, état, suppression, progression) ; fenêtre « Gérer les modèles » à brancher par la Refonte | `node labo/essais-modeles.mjs` : tout est bon |
 | 5 · lab-badge, lab-verrou, lab-offline | Fait (`ia-regles.js`) ; affichage du badge à brancher dans le chat | `node labo/essais-ia-regles.mjs` : tout est bon |
 | 6 · lab-decisions, lab-contradictions, lab-passeport | Fait (moteurs à règles, sans IA) ; 3 outils proposés en attente, aucun outil pour le passeport (bouton de Lucien) | `node labo/essais-intelligence.mjs` : tout est bon (34 vérifications) |
+| 7 · Fiches de rattrapage | 14 fiches à valider dans `docs/labo-auto/manuel-a-valider/` (emplacement provisoire) | `node labo/essais-manuel-rattrapage.mjs` : tout est bon |
+| 8 · lab-voix (modules) et lab-perf | Fait : rééchantillonnage, découpe, dictée, backend Whisper du worker (jamais essayé en réel), mesures de vitesse, mémoire, batterie | `node labo/essais-voix-perf.mjs` : tout est bon |
+| 9 · Aperçu | `apercu-labo.html` (double-clic, sans réseau), généré par `python3 labo/apercu.py`, ouvert sans erreur dans Chromium | |

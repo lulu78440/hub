@@ -20,6 +20,12 @@ export const CHARGEURS = {
       return cumul;
     } };
   },
+  // Dictée : Whisper tiny (MIT) via Transformers.js, ≈ 40 Mo, téléchargé seulement avec l'accord de Lucien. Jamais essayé dans l'atelier.
+  async whisper({ modele, surProgres }) {
+    const lib = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0/+esm");
+    const pipe = await lib.pipeline("automatic-speech-recognition", modele || "onnx-community/whisper-tiny", { dtype: "q8", device: "wasm", progress_callback: (p) => surProgres(p.status || "", typeof p.progress === "number" ? p.progress / 100 : null) });
+    return { async transcrire(audio) { const r = await pipe(audio, { language: "french", task: "transcribe" }); return String((r && r.text) || "").trim(); } };
+  },
   // WASM : Transformers.js (Apache-2.0), petit modèle quantifié sur le processeur. Version à figer lors du premier essai réel.
   async wasm({ modele, surProgres }) {
     const lib = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0/+esm");
@@ -41,6 +47,14 @@ export const CHARGEURS = {
 export async function traiter(msg, { envoyer, etat, chargeurs = CHARGEURS, delaiMot = 18, attendre } = {}) {
   const { id } = msg;
   if (msg.type === "annuler") { etat.annules.add(id); return; }
+  if (msg.type === "transcrire") {          // dictée : audio 16 kHz (Float32Array) → texte, dans le worker
+    try {
+      if (!etat.backends.has("whisper")) etat.backends.set("whisper", await chargeurs.whisper({ modele: msg.modele, surProgres: (texte, part) => envoyer({ id, type: "progres", texte, part }) }));
+      const texte = await etat.backends.get("whisper").transcrire(msg.audio);
+      envoyer({ id, type: "fin", texte, interrompu: false });
+    } catch (e) { envoyer({ id, type: "erreur", message: e && e.message ? e.message : String(e) }); }
+    return;
+  }
   if (msg.type !== "generer") return;
   const signal = { get aborted() { return etat.annules.has(id); } };
   try {
