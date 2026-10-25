@@ -16,7 +16,7 @@
 - Fusion `origin/labo-auto` → `labo-auto2` : commit `f20d2e7`.
 - `sw.js` + 5 outils + essais : second commit.
 - Maquette + docs : dernier commit.
-- Heures : mes messages d'avancement portaient des heures erronées (voir `decisions.md`) ; fin réelle vers 22 h 20.
+- Heures : mes messages d'avancement portaient des heures erronées (voir `decisions.md`) ; fin réelle vers 22 h 10.
 
 ## Suivi (pour Commande, je n'y touche pas)
 `lab-outils-regle` et le branchement des 5 outils : livré sur `labo-auto2` (pas sur `main` : « construit » seulement après fusion). `lab-chat-maquette` : maquette prête, en attente de Lucien.

@@ -18,3 +18,6 @@ Chaque décision est prudente et réversible ; le retour arrière est indiqué. 
 - **Heure** : mes messages d'avancement de cette mission affichaient des heures (22 h 05, 22 h 12, 22 h 24) en avance sur l'horloge réelle (~22 h 04 à la fin du travail). L'horloge du système fait foi ; le travail a été fini bien avant 22 h 57.
 - Le test Charte « fiche de manuel par fonction » indique 0/18 fiches : il cherche les fiches ailleurs que dans `docs/manuel/fiches/` (information seulement, non bloquant ; `HUB_MANUEL_STRICT=1` bloquerait). À régler par Commande (emplacement) avant la fusion.
 - Sans changement de version, le cache hors ligne existant ne contient pas les nouveaux modules : ils ne seront disponibles hors ligne qu'après le prochain bump de version par Commande.
+
+## Note sur `js/widgets/ai.js`
+Ce fichier (hors de mes fichiers) apparaît dans la différence avec `main` : c'est uniquement l'épinglage de la bibliothèque web-llm (`@0.2` → `@0.2.85`) déjà présent sur `labo-auto` (validé avant cette mission), arrivé par la fusion sans conflit. Retour arrière : remettre `@0.2` dans cette ligne.
