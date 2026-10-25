@@ -1,0 +1,7 @@
+<!doctype html><body style="margin:0;background:#02060d"><canvas id=c style="width:900px;height:640px"></canvas><script type=module>
+import {monterCarte3d} from "./js/noyau/carte3d.js"; import {PROGRAMME} from "./js/noyau/curriculum.js";
+const c=monterCarte3d(document.getElementById("c"));
+const domaines=PROGRAMME.map((d,i)=>{const sts=d.sousThemes.map((s,j)=>({id:s.id,titre:s.titre,niveau:i<4?(j%3===0?1:j%3===1?0.5:0):0}));return {id:d.id,nom:d.nom,symbole:d.symbole,couleur:d.couleur,pct:Math.round(sts.reduce((a,s)=>a+s.niveau,0)/sts.length*100),sousThemes:sts}});
+const liens=[{a:PROGRAMME[0].sousThemes[0].id,b:PROGRAMME[1].sousThemes[0].id,force:.8},{a:PROGRAMME[2].sousThemes[3].id,b:PROGRAMME[3].sousThemes[3].id,force:.5}];
+c.definir({domaines,liens,global:10});window.__ok=1;
+</script>

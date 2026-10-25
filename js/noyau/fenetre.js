@@ -254,6 +254,23 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     return z;
   }
 
+  // ---------- Relais gratuit (Groq, Mistral, OpenRouter, Cerebras) ----------
+  function libreBloc(s) {
+    const l = s.libre, z = h("div", { class: "nx-claude" }), msg = h("span", { class: "nx-dim" });
+    const fo = h("select", { class: "nx-champ", "aria-label": "Fournisseur du relais" }, [["groq", "Groq"], ["mistral", "Mistral"], ["openrouter", "OpenRouter (modèles :free)"], ["cerebras", "Cerebras"]].map(([v, t]) => h("option", { value: v, texte: t })));
+    fo.value = l.fournisseur; fo.addEventListener("change", () => { noyau.reglage("libre-fournisseur", fo.value); noyau.reglage("libre-modele", ""); rendreReglages(); });
+    const mod = h("input", { class: "nx-champ", type: "text", placeholder: "Modèle (vide = celui par défaut du fournisseur)", value: noyau.reglage("libre-modele") || "", "aria-label": "Modèle du relais" }); mod.addEventListener("change", () => noyau.reglage("libre-modele", mod.value.trim()));
+    const cle = h("input", { class: "nx-champ", type: "password", autocomplete: "off", placeholder: l.cle ? "Clé du relais enregistrée (chiffrée). Colle-en une autre pour la remplacer." : "Clé API gratuite du fournisseur choisi", "aria-label": "Clé du relais gratuit" });
+    const req = h("input", { class: "nx-champ nx-court", type: "number", min: "1", max: "1500", value: String(l.plafondRequetes), "aria-label": "Plafond de requêtes du relais par jour" }); req.addEventListener("change", () => noyau.budgetLibre.definirPlafond(parseInt(req.value, 10) || 30));
+    z.append(h("p", { class: "nx-dim", texte: "Relais de durabilité : quand Gemini et Claude sont indisponibles (quota, réseau, crédit), ce fournisseur gratuit répond à leur place. Il n'est jamais utilisé avant eux. Les offres gratuites changent : si un modèle disparaît, change son nom ici. Le contenu de la conversation est envoyé à ce fournisseur, comme aux autres." }),
+      h("div", { class: "nx-grille" }, h("label", {}, "Fournisseur", fo), h("label", {}, "Modèle", mod), h("label", {}, "Requêtes par jour", req)),
+      h("label", { class: "nx-dim" }, "Clé du relais", cle),
+      h("div", { class: "nx-actions" }, h("button", { class: "nx-btn nx-primaire", type: "button", onclick: () => { try { if (!cle.value.trim()) { msg.textContent = "Colle d'abord la clé."; return; } noyau.definirCleLibre(cle.value.trim()); cle.value = ""; msg.textContent = "Clé enregistrée (chiffrée par le coffre)."; rendreReglages(); } catch (e) { msg.textContent = e.message; } } }, "Enregistrer la clé"),
+        l.cle ? h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.definirCleLibre(null); rendreReglages(); } }, "Retirer la clé") : null, msg),
+      h("p", { class: "nx-dim", texte: `Aujourd'hui : ${l.requetes}/${l.plafondRequetes} requêtes du relais.` }));
+    return z;
+  }
+
   // ---------- Sauvegarde dans un dossier du PC ----------
   function sauvegardeBloc() {
     const z = h("div", { class: "nx-sauv" });
@@ -282,7 +299,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     vueReglages.textContent = "";
     const s = noyau.statut();
     const moteur = h("select", { class: "nx-champ", "aria-label": "Moteur" }, h("option", { value: "auto", texte: "Auto : Gemini + Claude (recommandé avec les deux clés)" }), h("option", { value: "gemini", texte: "Gemini seul (gratuit, en ligne)" }), h("option", { value: "claude", texte: "Claude seul (API payante)" }), h("option", { value: "local", texte: "IA locale (PC, secours hors ligne)" }));
-    moteur.value = noyau.reglage("moteur") || (s.claude.cle ? "auto" : "gemini"); moteur.addEventListener("change", () => { noyau.reglage("moteur", moteur.value); majBudget(); });
+    moteur.value = noyau.reglage("moteur") || (s.claude.cle || s.libre.cle ? "auto" : "gemini"); moteur.addEventListener("change", () => { noyau.reglage("moteur", moteur.value); majBudget(); });
     const modele = h("select", { class: "nx-champ", "aria-label": "Modèle Gemini" }, h("option", { value: "gemini-flash-lite-latest", texte: "Flash-Lite (quota large, par défaut)" }), h("option", { value: "gemini-flash-latest", texte: "Flash (plus fin, quota plus serré)" }));
     modele.value = noyau.reglage("modele") || "gemini-flash-lite-latest"; modele.addEventListener("change", () => noyau.reglage("modele", modele.value));
     const plafond = h("input", { class: "nx-champ nx-court", type: "number", min: "1", max: "1500", value: String(s.budget.plafond), "aria-label": "Plafond de requêtes par jour" });
@@ -303,6 +320,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
         h("button", { class: "nx-btn", type: "button", onclick: async (e) => { e.currentTarget.disabled = true; const r = await noyau.dormir({ force: true }); note(r.fait ? `Sommeil terminé : ${r.propositions} proposition(s) à valider.` : "Sommeil : " + r.raison); majNav(); majBudget(); e.currentTarget.disabled = false; } }, "Dormir maintenant"),
         h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.cycle.oublierConversation(); fil.textContent = ""; accueilVide(); changerVue("chat"); } }, "Nouvelle conversation")),
       h("h4", { texte: "Claude (API payante) et choix automatique" }), claudeBloc(s),
+      h("h4", { texte: "Relais gratuit de secours" }), libreBloc(s),
       h("h4", { texte: "Sauvegarde automatique" }), sauvegardeBloc(),
       h("h4", { texte: "Références consultées" }), sourcesBloc(),
       h("h4", { texte: "Importer" }), imports);

@@ -181,7 +181,63 @@ export function moteurClaude({ cle = null, modele = MODELE_CLAUDE_DEFAUT, budget
   };
 }
 
-// ---------- Routage automatique : les deux moteurs sont actifs ----------
+
+// ---------- Fournisseurs gratuits compatibles OpenAI (relais de durabilité) ----------
+// Les offres gratuites changent : le modèle reste modifiable dans Réglages. Aucune clé n'est dans le code.
+export const FOURNISSEURS_LIBRES = {
+  groq: { nom: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", modele: "llama-3.3-70b-versatile", lien: "console.groq.com" },
+  mistral: { nom: "Mistral", url: "https://api.mistral.ai/v1/chat/completions", modele: "mistral-small-latest", lien: "console.mistral.ai" },
+  openrouter: { nom: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", modele: "meta-llama/llama-3.3-70b-instruct:free", lien: "openrouter.ai/keys" },
+  cerebras: { nom: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", modele: "llama-3.3-70b", lien: "cloud.cerebras.ai" }
+};
+export const PLAFOND_LIBRE_DEFAUT = 30;
+export function versOpenAI(outils) {
+  return outils.map((o) => ({ type: "function", function: { name: o.nom, description: o.description, parameters: schemaPropre(o.params && o.params.type ? o.params : { type: "object", properties: {} }) } }));
+}
+export function versMessagesOpenAI(messages, systeme) {
+  const out = [{ role: "system", content: String(systeme || "") }]; let ids = [], seq = 0;
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i];
+    if (m.role === "user") out.push({ role: "user", content: String(m.texte || "") });
+    else if (m.role === "assistant") {
+      const suiv = messages[i + 1], repondus = suiv && suiv.role === "outil" ? suiv.resultats.length : 0;
+      const appels = (m.appels || []).slice(0, repondus); ids = appels.map(() => "call_" + (++seq));
+      if (!m.texte && !appels.length) continue;
+      const o = { role: "assistant", content: m.texte || null }; if (appels.length) o.tool_calls = appels.map((a, k) => ({ id: ids[k], type: "function", function: { name: a.nom, arguments: JSON.stringify(a.params || {}) } }));
+      out.push(o);
+    } else if (m.role === "outil") m.resultats.forEach((r, k) => out.push({ role: "tool", tool_call_id: ids[k] || "call_0", content: String(r.contenu) }));
+  }
+  return out;
+}
+export function moteurLibre({ fournisseur = "groq", cle = null, modele = "", budget = null, delaiMax = 45000 } = {}) {
+  const f = FOURNISSEURS_LIBRES[fournisseur] || FOURNISSEURS_LIBRES.groq, mod = modele || f.modele;
+  if (!cle) return { nom: f.nom + " (sans clé)", type: "libre", coupe: true, async generer() { throw new ErreurNoyau("cle", "Aucune clé " + f.nom + "."); } };
+  return {
+    nom: f.nom + " · " + mod, modele: mod, type: "libre", versOpenAI,
+    async generer({ systeme, messages, outils = [], forcer = null, temperature = 0.6 }) {
+      const t0 = Date.now();
+      if (!hote.enLigne()) throw new ErreurNoyau("hors_ligne", "Hors ligne : " + f.nom + " n'est pas joignable.");
+      if (budget) budget.reserver();
+      const corps = { model: mod, max_tokens: 1800, temperature, messages: versMessagesOpenAI(messages, systeme) };
+      if (outils.length) { corps.tools = versOpenAI(outils); corps.tool_choice = forcer && forcer.length === 1 ? { type: "function", function: { name: forcer[0] } } : "required"; }
+      const ctl = typeof AbortController !== "undefined" ? new AbortController() : null, minuteur = ctl ? setTimeout(() => ctl.abort(), delaiMax) : 0; let r;
+      try { r = await hote.fetch(f.url, { method: "POST", headers: { authorization: "Bearer " + cle, "content-type": "application/json" }, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined }); }
+      catch (e) { throw new ErreurNoyau(e && e.name === "AbortError" ? "delai" : "reseau", f.nom + " n'a pas répondu."); }
+      finally { clearTimeout(minuteur); }
+      if (!r.ok) {
+        let msg = ""; try { msg = ((await r.json()).error || {}).message || ""; } catch (e) { msg = ""; }
+        if (r.status === 401 || r.status === 403) throw new ErreurNoyau("cle", "Clé " + f.nom + " refusée.");
+        if (r.status === 429 || r.status === 402) throw new ErreurNoyau("quota", "Limite " + f.nom + " atteinte.");
+        throw new ErreurNoyau("reseau", f.nom + " répond " + r.status + (msg ? " : " + String(msg).slice(0, 120) : ""));
+      }
+      const j = await r.json(), ch = (j.choices || [])[0], mess = ch && ch.message; if (!mess) throw new ErreurNoyau("refus_securite", f.nom + " n'a pas donné de réponse.");
+      const u = j.usage || {};
+      return { texte: mess.content || "", appels: (mess.tool_calls || []).map((c) => { let p = {}; try { p = JSON.parse(c.function.arguments || "{}"); } catch (e) { p = {}; } return { nom: c.function.name, params: p }; }), brut: null, usage: { entree: u.prompt_tokens || 0, sortie: u.completion_tokens || 0, total: u.total_tokens || 0 }, ms: Date.now() - t0 };
+    }
+  };
+}
+
+// ---------- Routage automatique : les moteurs sont actifs ensemble ----------
 const RAISONNEMENT = /\b(compare|compar|analyse|analyser|explique pourquoi|argument|strategie|decision|decider|arbitr|critique|relis|plan en|etapes|avantages|inconvenients|synthese|redige|code|algorithme|demonstr|pourquoi)\b/;
 /** Complexité estimée d'une demande, sans requête : 0 (simple) à 4 (exigeante). */
 export function complexite(texte) {
@@ -196,9 +252,9 @@ export function complexite(texte) {
  * Choisit pour chaque tour : Gemini (gratuit) pour le courant, Claude pour l'exigeant tant qu'il lui reste des jetons ;
  * si le moteur choisi échoue (quota, réseau, crédit), l'autre prend le relais. Le choix reste le même pendant tout un tour.
  */
-export function moteurAuto({ gemini, claude, jetons, preference = () => "auto", seuil = 2, surChoix = () => {} }) {
+export function moteurAuto({ gemini, claude, libre = null, jetons, preference = () => "auto", seuil = 2, surChoix = () => {} }) {
   let tour = null;                                        // { choix } pour le tour en cours
-  const G = () => (typeof gemini === "function" ? gemini() : gemini), C = () => (typeof claude === "function" ? claude() : claude);
+  const L = () => (typeof libre === "function" ? libre() : libre), G = () => (typeof gemini === "function" ? gemini() : gemini), C = () => (typeof claude === "function" ? claude() : claude);
   const dispo = (m) => m && !m.coupe;
   const claudeOk = () => dispo(C()) && (!jetons || jetons.restant() > 500);
   const ordre = (messages) => {
@@ -210,14 +266,15 @@ export function moteurAuto({ gemini, claude, jetons, preference = () => "auto", 
       const x = complexite(dernier ? dernier.texte : ""), serre = jetons && jetons.restant() < jetons.plafond() * 0.2;
       o = c && (x >= seuil + (serre ? 1 : 0) || !g) ? [cla, gem] : [gem, cla];
     }
+    const lib = L(); if (dispo(lib)) o.push(lib);
     tour = { ordre: o.filter(Boolean) }; return tour.ordre;
   };
   return {
-    nom: "Auto · Gemini + Claude", type: "auto", auto: true,
+    get nom() { const l = L(); return "Auto · Gemini + Claude" + (dispo(l) ? " + " + l.nom.split(" ·")[0] : ""); }, type: "auto", auto: true,
     async generer(entree) {
       const liste = ordre(entree.messages); let derniere = null;
       for (const m of liste.filter((x) => x && !x.coupe)) {
-        try { const r = await m.generer(entree); r.moteur = m.type === "claude" ? "Claude" : "Gemini"; if (tour) tour.ordre = [m, ...tour.ordre.filter((x) => x !== m)]; surChoix(r.moteur); return r; }
+        try { const r = await m.generer(entree); r.moteur = m.type === "claude" ? "Claude" : m.type === "libre" ? m.nom.split(" ·")[0] : "Gemini"; if (tour) tour.ordre = [m, ...tour.ordre.filter((x) => x !== m)]; surChoix(r.moteur); return r; }
         catch (e) { derniere = e; if (!(e instanceof ErreurNoyau) || !["quota", "reseau", "delai", "credit", "budget", "cle"].includes(e.code)) throw e; }
       }
       throw derniere || new ErreurNoyau("cle", "Aucun moteur disponible (ni clé Gemini, ni clé Claude).");

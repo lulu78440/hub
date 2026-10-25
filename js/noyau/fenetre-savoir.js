@@ -18,7 +18,7 @@ export function monterSavoir(conteneur, noyau) {
     h("details", { class: "nx-aide" }, h("summary", {}, "Comment ce pourcentage est calculé"),
       h("p", {}, "Chaque domaine est découpé en sous-thèmes (le programme). Un sous-thème est couvert à 100 % quand le Noyau a retenu, et que tu as validé, des fiches sourcées qui totalisent 2 points : une fiche vérifiée vaut 1, une fiche non vérifiée 0,5, un fait sur toi 0,5, un souvenir d'échange 0,25."),
       h("p", {}, "Le pourcentage d'un domaine est la moyenne de ses sous-thèmes. Il part de 0 % et ne monte que par ce que tu valides. Il mesure la couverture du programme, pas tout ce qui existe sur le sujet."),
-      h("p", {}, "Glisser pour tourner, molette pour zoomer, double-clic pour recentrer. Un trait lumineux relie un sous-thème appris à son domaine ; un trait blanc relie deux connaissances qui se recoupent.")));
+      h("p", {}, "Glisser pour tourner, molette pour zoomer, double-clic pour recentrer. Chaque point est un neurone. Un sous-thème en cours d'apprentissage est relié à son domaine par un axone qui crépite, avec des influx par salves ; un sous-thème validé a des influx réguliers et un cœur blanc ; un axone violet relie deux connaissances qui se recoupent.")));
   conteneur.append(racine);
 
   let choix = null, etudeEnCours = false;

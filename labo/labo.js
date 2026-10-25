@@ -4,6 +4,7 @@ import { creerHubSimule } from "./hub-simule.js";
 import { brancher } from "../js/noyau/hote.js";
 import { creerNoyau } from "../js/noyau/noyau.js";
 import { monterFenetre } from "../js/noyau/fenetre.js";
+import { rendreVisuel } from "./visuel.js";
 import { moteurGemini } from "../js/noyau/moteurs.js";
 import { moteurDemo } from "./moteur-demo.js";
 import { lancerBanc } from "./banc.js";
@@ -25,6 +26,7 @@ function majSante() {
 const labos = {};
 function rendrePanneau(n) {
   if (n === "progression") rendreProgression($("#p-progression"), ctx);
+  else if (n === "visuel") rendreVisuel($("#p-visuel"), ctx);
   else if (n === "idees") rendreIdees($("#p-idees"), ctx);
   else if (n === "social" || n === "reflexion") { if (!labos[n]) labos[n] = rendreLabo($("#p-" + n), n, ctx); else labos[n].rafraichir(); }
 }

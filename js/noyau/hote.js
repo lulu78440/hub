@@ -7,7 +7,7 @@
 //   nom, maintenant(), enLigne(), fetch(url, opts), nouvelId(prefixe)
 //   stockage : tout(coll), lire(coll, id), ecrire(coll, obj), ecrireMany(coll, objs), retirerMany(coll, ids) *, surChangement(coll, fn)
 //   reglage  : lire(cle, defaut), ecrire(cle, valeur)
-//   secret   : cle() -> clé Gemini ou null, cleClaude() -> clé Claude ou null, definirCleClaude(k), protege() -> vrai si le coffre est actif
+//   secret   : cle() -> clé Gemini ou null, cleClaude() -> clé Claude ou null, definirCleClaude(k), cleLibre()/definirCleLibre(k) (fournisseur gratuit de relais), protege() -> vrai si le coffre est actif
 //   hub      : actus() -> flux.json ou null, meteo() -> cache météo ou null, agir(nom, params) -> { ok, ... }
 //   sauvegarde (facultatif) : dispo(), dossier() -> {nom}|null, choisir(), droit() -> 'granted'|'prompt'|..., ecrire() -> {nom, octets}, retirer()
 //   ui       : toast(msg), orbe({ phase, humeur }), ajouterMenuFond(fn), conteneur() -> élément où monter la fenêtre
@@ -52,6 +52,8 @@ export async function brancherHub() {
     secret: {
       cle: () => vault.lsGet("hub-secret-ia") || null, protege: () => vault.active,
       cleClaude: () => vault.lsGet("hub-secret-claude") || null,
+      cleLibre: () => vault.lsGet("hub-secret-libre") || null,
+      definirCleLibre: (k) => { if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-libre", k); else vault.lsRemove("hub-secret-libre"); },
       definirCleClaude: (k) => { if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-claude", k); else vault.lsRemove("hub-secret-claude"); }
     },
     hub: {

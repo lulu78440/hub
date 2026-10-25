@@ -17,6 +17,10 @@ const fetchFictif = async (u, o) => {
     if (gemini429) return { ok: false, status: 429, json: async () => ({ error: { message: "quota" } }) };
     return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { role: "model", parts: [{ functionCall: { name: "repondre", args: { texte: "Réponse de Gemini.", ton: "calme", confiance: "moyenne", sources: [] } } }] } }], usageMetadata: { totalTokenCount: 50 } }) };
   }
+  if (u.includes("groq.com")) {
+    appels.push({ moteur: "libre", corps, h: o.headers });
+    return { ok: true, status: 200, json: async () => ({ choices: [{ message: { role: "assistant", content: null, tool_calls: [{ id: "c1", type: "function", function: { name: "repondre", arguments: JSON.stringify({ texte: "Réponse du relais.", ton: "calme", confiance: "moyenne", sources: [] }) } }] } }], usage: { prompt_tokens: 100, completion_tokens: 20, total_tokens: 120 } }) };
+  }
   return { ok: false, status: 404, json: async () => ({}), text: async () => "" };
 };
 const h = creerHubSimule({ vide: true, cle: "AIza-test", cleClaude: "sk-ant-test", fetch: fetchFictif });
@@ -47,4 +51,13 @@ r = await n.poser("Compare Python et Rust, analyse les avantages et inconvénien
 ok(/Gemini/.test(r.texte) && appels.length === nb + 1, "routage « toujours Gemini »");
 const sans = creerHubSimule({ vide: true, cle: "AIza-test", fetch: fetchFictif }); const n2 = await creerNoyau(); const avant2 = appels.length; r = await n2.poser("Compare Python et Rust, analyse les avantages et inconvénients, puis explique pourquoi ?");
 ok(/Gemini/.test(r.texte) && /Gemini/.test(n2.statut().moteur), "sans clé Claude : comportement inchangé, Gemini seul");
+// ----- relais gratuit -----
+const hL = creerHubSimule({ vide: true, cle: "AIza-test", cleLibre: "gsk-test", fetch: fetchFictif });
+const nL = await creerNoyau(); ok(/relais|Groq/i.test(nL.statut().moteur) && /Auto/.test(nL.statut().moteur), "clé de relais seule : mode Auto avec relais (" + nL.statut().moteur + ")");
+gemini429 = false; r = await nL.poser("Salut !"); ok(/Gemini/.test(r.texte), "le relais n'est jamais utilisé avant Gemini");
+gemini429 = true; r = await nL.poser("Dis bonjour."); ok(/relais/i.test(r.texte) && appels.at(-1).moteur === "libre", "Gemini en quota et pas de Claude → le relais gratuit répond");
+const L = appels.at(-1); ok(L.h.authorization === "Bearer gsk-test" && L.corps.tools[0].type === "function" && L.corps.messages[0].role === "system", "format OpenAI : en-tête Bearer, outils function, message système");
+const mo = (await import("../js/noyau/moteurs.js")).versMessagesOpenAI([{ role: "user", texte: "q" }, { role: "assistant", texte: "", appels: [{ nom: "lire_taches", params: {} }, { nom: "lire_notes", params: {} }] }, { role: "outil", resultats: [{ nom: "lire_taches", contenu: "A" }] }], "S");
+ok(mo[2].tool_calls.length === 1 && mo[3].role === "tool" && mo[3].tool_call_id === mo[2].tool_calls[0].id, "conversion OpenAI : appel sans résultat retiré, identifiants liés");
+gemini429 = false;
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

@@ -16,7 +16,7 @@ const plus = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); retu
  */
 export function creerHubSimule(o = {}) {
   let t = (o.maintenant || new Date(2026, 9, 26, 9, 0, 0)).getTime();
-  let nid = 0, enLigne = o.enLigne !== false, cle = o.cle || null, cleC = o.cleClaude || null;
+  let nid = 0, enLigne = o.enLigne !== false, cle = o.cle || null, cleC = o.cleClaude || null, cleL = o.cleLibre || null;
   const coll = { notes: new Map(), tasks: new Map(), events: new Map(), favs: new Map(), kv: new Map(), images: new Map() };
   const regl = new Map(), ecouteurs = {}, appels = [], toasts = [], orbe = [];
   let live = {}, dossierFictif = null, droitFictif = "granted"; const fichiers = [];
@@ -61,7 +61,7 @@ export function creerHubSimule(o = {}) {
       surChangement: (c, f) => { (ecouteurs[c] = ecouteurs[c] || []).push(f); return () => { ecouteurs[c] = ecouteurs[c].filter((g) => g !== f); }; }
     },
     reglage: { lire: (k, d) => (regl.has(k) ? regl.get(k) : d), ecrire: (k, v) => { regl.set(k, String(v)); } },
-    secret: { cle: () => cle, protege: () => true, cleClaude: () => cleC, definirCleClaude: (k) => { cleC = k || null; } },
+    secret: { cle: () => cle, protege: () => true, cleClaude: () => cleC, definirCleClaude: (k) => { cleC = k || null; }, cleLibre: () => cleL, definirCleLibre: (k) => { cleL = k || null; } },
     hub: {
       actus: () => actus, meteo: () => meteo, contexteLive: () => live,
       agir: async (nom, p = {}) => { appels.push({ agir: nom, p }); if (nom === "afficher") return { ok: true, resume: "Fenêtre « " + p.fenetre + " » ramenée (simulé)." }; if (nom === "lancer_focus") return { ok: true, resume: "Focus " + p.minutes + " min lancé (simulé)." }; if (nom === "lire_fenetre") return { ok: true, texte: "(contenu simulé de la fenêtre " + p.fenetre + ")" }; return { ok: false, erreur: "Action « " + nom + " » non simulée." }; }

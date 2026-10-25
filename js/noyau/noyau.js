@@ -3,7 +3,7 @@
 import { hote, brancherHub } from "./hote.js";
 import { creerCatalogue } from "./outils.js";
 import { creerBarriere } from "./barriere.js";
-import { creerBudget, creerBudgetJetons, moteurGemini, moteurLocal, moteurClaude, moteurAuto, ErreurNoyau, MODELE_DEFAUT, MODELE_CLAUDE_DEFAUT, PLAFOND_CLAUDE_DEFAUT } from "./moteurs.js";
+import { creerBudget, creerBudgetJetons, moteurGemini, moteurLocal, moteurClaude, moteurAuto, ErreurNoyau, MODELE_DEFAUT, MODELE_CLAUDE_DEFAUT, moteurLibre, FOURNISSEURS_LIBRES, PLAFOND_LIBRE_DEFAUT, PLAFOND_CLAUDE_DEFAUT } from "./moteurs.js";
 import { creerMemoire } from "./memoire.js";
 import { creerCerveau } from "./cerveau.js";
 import { creerEtat } from "./etat.js";
@@ -20,7 +20,7 @@ import { creerUsages } from "./usages.js";
 import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.4";
+export const VERSION_NOYAU = "noyau-1.5";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
@@ -30,11 +30,13 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const catalogue = creerCatalogue({ memoire, interdits: async () => memoire.motsPrives() });
   let confirmerUI = null, surcharge = moteurImpose, geminiCache = null, local = null, verrou = () => false;
   const budgetClaude = creerBudget({ cleReglage: "noyau-budget-claude", cleMax: "noyau-plafond-claude", plafondParDefaut: PLAFOND_CLAUDE_DEFAUT }), jetonsClaude = creerBudgetJetons();
+  const budgetLibre = creerBudget({ cleReglage: "noyau-budget-libre", cleMax: "noyau-plafond-libre", plafondParDefaut: PLAFOND_LIBRE_DEFAUT });
   /** Ce qui reste de requêtes, tous moteurs utilisables confondus : le cycle et le sommeil ne s'arrêtent que si plus aucun moteur n'est disponible. */
-  const budgetTotal = { restant: () => budget.restant() + (cleClaude() && jetonsClaude.restant() > 500 ? budgetClaude.restant() : 0), plafond: () => budget.plafond(), utilisees: () => budget.utilisees() };
+  const budgetTotal = { restant: () => budget.restant() + (cleLibre() ? budgetLibre.restant() : 0) + (cleClaude() && jetonsClaude.restant() > 500 ? budgetClaude.restant() : 0), plafond: () => budget.plafond(), utilisees: () => budget.utilisees() };
   const barriere = creerBarriere({ catalogue, confirmer: (d) => (confirmerUI ? confirmerUI(d) : false), delai: delaiConfirmation, verrouille: () => verrou() });
 
   let claudeCache = null, autoCache = null, dernierMoteur = "";
+  const cleLibre = () => (hote.secret.cleLibre ? hote.secret.cleLibre() : null);
   const cleClaude = () => (hote.secret.cleClaude ? hote.secret.cleClaude() : null);
   function geminiMoteur() {
     const cle = hote.secret.cle();
@@ -43,6 +45,14 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     const modele = hote.reglage.lire("noyau-modele", MODELE_DEFAUT);
     if (!geminiCache || geminiCache.cle !== cle || geminiCache.modele !== modele) geminiCache = { cle, modele, m: moteurGemini({ cle, modele, budget }) };
     return geminiCache.m;
+  }
+  let libreCache = null;
+  function libreMoteur() {
+    const cle = cleLibre(); const fo = hote.reglage.lire("noyau-libre-fournisseur", "groq");
+    if (!cle || !hote.secret.protege()) return { nom: "Relais libre (sans clé)", coupe: true, async generer() { throw new ErreurNoyau("cle", "Aucune clé de relais gratuit."); } };
+    const modele = hote.reglage.lire("noyau-libre-modele", "");
+    if (!libreCache || libreCache.cle !== cle || libreCache.fo !== fo || libreCache.modele !== modele) libreCache = { cle, fo, modele, m: moteurLibre({ fournisseur: fo, cle, modele, budget: budgetLibre }) };
+    return libreCache.m;
   }
   function claudeMoteur() {
     const cle = cleClaude();
@@ -54,10 +64,10 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   }
   function moteur() {
     if (surcharge) return surcharge;
-    const m = hote.reglage.lire("noyau-moteur", cleClaude() ? "auto" : "gemini");
+    const m = hote.reglage.lire("noyau-moteur", cleClaude() || cleLibre() ? "auto" : "gemini");
     if (m === "local") return local || (local = moteurLocal());
     if (m === "claude") return claudeMoteur();
-    if (m === "auto") return autoCache || (autoCache = moteurAuto({ gemini: geminiMoteur, claude: claudeMoteur, jetons: jetonsClaude, preference: () => hote.reglage.lire("noyau-routage", "auto"), seuil: parseInt(hote.reglage.lire("noyau-seuil-claude", "2"), 10) || 2, surChoix: (n) => { dernierMoteur = n; } }));
+    if (m === "auto") return autoCache || (autoCache = moteurAuto({ gemini: geminiMoteur, claude: claudeMoteur, libre: libreMoteur, jetons: jetonsClaude, preference: () => hote.reglage.lire("noyau-routage", "auto"), seuil: parseInt(hote.reglage.lire("noyau-seuil-claude", "2"), 10) || 2, surChoix: (n) => { dernierMoteur = n; } }));
     return geminiMoteur();
   }
 
@@ -83,6 +93,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
       hote.reglage.ecrire("noyau-revue-jour", j); cycle.emettre({ type: "initiative", raison: "soir", action: "revue", texte: "La journée touche à sa fin. Veux-tu que je fasse le point : ce qui est fait, ce qui reste, ce que j'ai retenu et ton agenda de demain ?" }); return true;
     },
     /** Bouton « Exporter maintenant » : dossier choisi s'il est autorisé, sinon l'export classique du hub. */
+    definirCleLibre: (k) => { hote.secret.definirCleLibre(k); libreCache = null; autoCache = null; },
     definirCleClaude: (k) => { hote.secret.definirCleClaude(k); claudeCache = null; autoCache = null; },
     async exporter() { try { const e = await noyau.sauvegarde.etat(); if (e.dossier) { const r = await noyau.sauvegarde.maintenant({ demander: true }); hote.ui.toast("Sauvegarde écrite : " + r.nom); return r; } } catch (x) { hote.ui.toast("Sauvegarde dans le dossier impossible : " + (x.message || x)); } return hote.ui.exporter && hote.ui.exporter(); },
     /** Résume ce qu'affiche une fenêtre (jamais les mails). Une requête Gemini si possible, sinon résumé local. */
@@ -95,7 +106,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
       if (!res) res = resumerLocalement(texte, "", 3);
       const t = `Fenêtre « ${id} » : ${res}`; cycle.emettre({ type: "initiative", texte: t, raison: "resume" }); return { ok: true, texte: t };
     },
-    version: VERSION_NOYAU, memoire, cerveau, etat, budget, budgetClaude, jetonsClaude, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
+    version: VERSION_NOYAU, memoire, cerveau, etat, budget, budgetClaude, budgetLibre, jetonsClaude, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
     /** Pose une question. origine : lucien, voix, initiative, autonome. */
     async poser(texte, origine = "lucien") { const r = await cycle.penser({ texte: String(texte).slice(0, 2000), origine }); signalerAValider(); return r; },
     avis: (a) => cycle.avis(a),
@@ -112,7 +123,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     async trier(id, action, texte) { const r = await memoire.trier(id, action, texte); signalerAValider(); return r; },
     reglage: (cle, valeur) => (valeur === undefined ? hote.reglage.lire("noyau-" + cle, "") : hote.reglage.ecrire("noyau-" + cle, valeur)),
     statut() {
-      return { version: VERSION_NOYAU, moteur: moteur().nom, budget: { utilisees: budget.utilisees(), plafond: budget.plafond(), restant: budgetTotal.restant() }, claude: { cle: !!cleClaude(), requetes: budgetClaude.utilisees(), plafondRequetes: budgetClaude.plafond(), jetons: jetonsClaude.utilises(), plafondJetons: jetonsClaude.plafond(), dernier: dernierMoteur }, memoire: memoire.stats(), cerveau: cerveau.resume(), humeur: etat.humeur(), sommeilFait: sommeil.faitAujourdhui(), hote: hote.nom };
+      return { version: VERSION_NOYAU, moteur: moteur().nom, budget: { utilisees: budget.utilisees(), plafond: budget.plafond(), restant: budgetTotal.restant() }, libre: { cle: !!cleLibre(), fournisseur: hote.reglage.lire("noyau-libre-fournisseur", "groq"), requetes: budgetLibre.utilisees(), plafondRequetes: budgetLibre.plafond() }, claude: { cle: !!cleClaude(), requetes: budgetClaude.utilisees(), plafondRequetes: budgetClaude.plafond(), jetons: jetonsClaude.utilises(), plafondJetons: jetonsClaude.plafond(), dernier: dernierMoteur }, memoire: memoire.stats(), cerveau: cerveau.resume(), humeur: etat.humeur(), sommeilFait: sommeil.faitAujourdhui(), hote: hote.nom };
     },
     // Import de la mémoire v3.8 et du cerveau (fichiers choisis par Lucien)
     apercu38: (texte) => imp.apercu(imp.lireSauvegarde(texte)),
