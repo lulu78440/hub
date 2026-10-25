@@ -13,7 +13,8 @@ import { toast } from "../ui/toast.js";
 import { extendMenu } from "../ui/menus.js";
 import { daysFrom, dayKey } from "./when.js";
 import { state, pulse } from "../state.js";
-import { flux } from "./flux.js";   // lecture seule : flux.json déjà gardé par la phase 3 (rien n'est modifié côté actualité)
+// Lecture seule : flux.json déjà gardé par la phase 3 (rien n'est modifié côté actualité)
+import { flux } from "./flux.js";
 
 const ON = (k) => prefs.on("surprise-" + k);
 const pad = (n) => String(n).padStart(2, "0");
