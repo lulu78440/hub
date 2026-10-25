@@ -1235,6 +1235,47 @@ body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2:hover .panel, body.r
 body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .win.p2:not(:hover) .panel { filter: brightness(.74) saturate(.85); }
 @media (prefers-reduced-motion: reduce) { .brume { opacity: calc(var(--cine, 0) * .55); } .win.p2 .panel { filter: none !important; } }
 
+/* ---------- Plan 3 · fenêtres (p3-fenetres) : pile de focus, réduction vers l'icône ---------- */
+.dwin .in { transition: opacity .2s ease; }
+.dwin.inactif .in { opacity: .78; }
+.dwin.actif { box-shadow: 0 0 0 1px color-mix(in srgb, var(--a) 55%, transparent), 0 10px 26px rgba(0, 0, 0, .45); }
+.dwin.min { display: none !important; }
+.dwin.vol { pointer-events: none; will-change: transform, opacity; animation: none; }
+.dwin .dm { align-self: center; width: 24px; height: 24px; margin: 0 0 0 4px; border: 1px solid rgba(63, 230, 255, .25); background: transparent; color: var(--ink); font-size: 17px; line-height: 1; cursor: pointer; }
+.dwin .dm:hover, .dwin .dm:focus-visible { border-color: var(--a); color: #fff; outline: 2px solid var(--cyan); outline-offset: 2px; }
+.dwin .dm + .dx { margin-left: 4px; }
+.dico.ouvert::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 14px; height: 2px; margin-left: -7px; background: var(--a); box-shadow: 0 0 6px var(--a); }
+@media (prefers-reduced-motion: reduce) { .dwin .in { transition: none; } }
+
+/* ---------- Plan 3 · lasso et sélection d'icônes (p3-lasso) ---------- */
+.lasso { position: absolute; z-index: 5; pointer-events: none; border: 1px solid var(--cyan); background: color-mix(in srgb, var(--cyan) 12%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 35%, transparent); }
+.dico.sel { filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .55)) drop-shadow(0 0 3px var(--a)) drop-shadow(0 0 16px var(--a)); }
+.dico.sel .dlb { color: #fff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--a); }
+.dico.sel .hx { transform: scale(1.06); }
+@media (prefers-reduced-motion: reduce) { .dico.sel .hx { transform: none; } }
+
+/* ---------- Plan 3 · écran en direct (p3-direct) ---------- */
+.btn.live-on { opacity: 1; border-style: solid; color: #ffd9b0; border-color: var(--amber); }
+.live-stop { position: fixed; z-index: 60; left: 50%; bottom: 62px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 7px 14px; background: rgba(24, 12, 3, .94); border: 1px solid var(--amber); color: #ffd9b0; font: 600 11px var(--mono); letter-spacing: .14em; cursor: pointer; box-shadow: 0 0 18px color-mix(in srgb, var(--amber) 40%, transparent); }
+.live-stop[hidden] { display: none; }
+.live-stop b { padding: 2px 8px; border: 1px solid var(--amber); color: #fff; font-weight: 700; }
+.live-stop .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5a3c; animation: livedot 1.4s ease-in-out infinite; }
+.live-stop:hover b, .live-stop:focus-visible b { background: var(--amber); color: #190d02; }
+.live-stop:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+@keyframes livedot { 50% { opacity: .35; } }
+.dwin .dbody video { flex: 1; min-height: 0; width: 100%; background: #000; object-fit: contain; }
+.dwin .dbody video[hidden] { display: none; }
+.dwin .dmsg { margin: 8px 12px 0; font-size: 12px; color: var(--dim); }
+.dwin .dbody .dnrow { margin: 8px 12px 12px; }
+@media (prefers-reduced-motion: reduce) { .live-stop .dot { animation: none; } }
+
+/* ---------- Plan 3 · demande de confirmation du Noyau (p3-ia) ---------- */
+.cmd-confirm { z-index: 70; width: min(440px, calc(100vw - 32px)); }
+.cmd-confirm .cc-t { margin: 12px 0 4px; font-size: 15px; color: var(--ink); }
+.cmd-confirm .cc-d { margin: 0 0 8px; font-size: 12px; color: var(--dim); }
+.cmd-confirm .bp-act { gap: 10px; }
+.cmd-confirm .cc-no:focus-visible, .cmd-confirm .cc-yes:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
 </style>
 <link rel="stylesheet" href="css/noyau.css">
 <style media="(max-width: 900px), (pointer: coarse)">
@@ -1467,7 +1508,7 @@ body.lite .win { pointer-events: auto; }
 <div class="desk pc-only" id="desk" aria-label="Bureau de ton ordinateur">
   <div class="dcol l"></div>
   <div class="dc">
-    <div class="dctop"><span class="flbl">HUB · PLANS 1 ET 2</span><button type="button" class="btn live-off" id="live-btn" aria-disabled="true" title="Prévu avec l'appli Windows">● Écran en direct · bientôt</button></div>
+    <div class="dctop"><span class="flbl">HUB · PLANS 1 ET 2</span><button type="button" class="btn live-off" id="live-btn" title="Affiche l'écran de ton PC dans une fenêtre (lecture seule, tu choisis l'écran)">● Écran en direct</button></div>
     <button type="button" class="btn" id="back-hub">Revenir au hub</button>
   </div>
   <div class="dcol r"></div>
@@ -2470,7 +2511,7 @@ return { state, pulse };
 })();
 __M['js/version.js'] = (() => {
 // Version du code. À garder identique à VERSION dans sw.js.
-const VERSION = "7.29.0";
+const VERSION = "7.33.0";
 
 return { VERSION };
 })();
@@ -3066,7 +3107,7 @@ function createPlans({ world, anchor, desk }) {
   });
   [1, 2, 3].forEach((n) => $("plan" + n).addEventListener("click", () => goPlan(n)));
   $("back-hub").addEventListener("click", () => goPlan(1));
-  $("live-btn").addEventListener("click", () => toast("Écran en direct : prévu plus tard, avec l'appli Windows."));
+  $("live-btn").addEventListener("click", () => document.dispatchEvent(new CustomEvent("hub:direct", { detail: "toggle" })));   // partage d'écran : ui/direct.js (p3-direct)
   addEventListener("keydown", (e) => {
     if (state.lite || e.ctrlKey || e.metaKey || e.altKey || e.target.isContentEditable || (e.target.closest && e.target.closest("input, textarea"))) return;
     if (e.key === "1" || e.key === "2" || e.key === "3") { goPlan(+e.key); if (e.key === "2") setYaw(0); }
@@ -3887,7 +3928,7 @@ function initMenus({ wins, plans, entity, cursor, resetLayout, data, test }) {
     return [{ h: "Plan 3 · bureau du PC" }, { note: "Dossiers, fichiers et applis : sous-étape 2.8" },
       { t: "Revenir au hub", k: "1", fn: () => plans.goPlan(1) },
       { t: "Aller au plan 2", k: "2", fn: () => plans.goPlan(2) },
-      { t: "Écran en direct · bientôt", off: true }, ...(hooks.bureau ? ["-", ...(hooks.bureau() || [])] : [])];
+      { t: document.body.classList.contains("direct-on") ? "Couper l'écran en direct" : "Écran en direct (lecture seule)", fn: () => document.dispatchEvent(new CustomEvent("hub:direct", { detail: "toggle" })) }, ...(hooks.bureau ? ["-", ...(hooks.bureau() || [])] : [])];
   }
   addEventListener("contextmenu", (e) => {
     if (state.lite || e.shiftKey) return;
@@ -4163,6 +4204,7 @@ function initOutils({ wins, entity, cursor, resetLayout, data, menus, quality, t
       { t: "Compteur img/s", s: document.body.classList.contains("show-fps") ? "affiché" : "caché", keep: true, fn: () => { const on = !document.body.classList.contains("show-fps"); document.body.classList.toggle("show-fps", on); prefs.setOn("compteur-fps", on); } },
       { t: "Salle allégée", s: document.body.classList.contains("salle-light") ? "sans reflets" : "avec reflets", keep: true, fn: () => { const on = !document.body.classList.contains("salle-light"); document.body.classList.toggle("salle-light", on); prefs.setOn("salle-allegee", on); } } ] });
     if (quality) G.push({ h: "Qualité du rendu", note: "Automatique : le hub baisse tout seul la qualité si les images par seconde chutent, sans jamais la remonter.", tiles: ["auto", "complet", "allege", "minimal"].map((m) => ({ t: LIBELLE[m], s: m === "auto" ? "actuel : " + LIBELLE[quality.name].toLowerCase() : "", on: quality.mode === m, keep: true, fn: () => quality.set(m) })) });
+    G.push({ h: "Plan 3", note: "Lecture seule : tu choisis l'écran à chaque fois, rien n'est enregistré ni envoyé.", tiles: [{ t: "Écran du PC en direct", s: document.body.classList.contains("direct-on") ? "actif · couper" : "coupé", keep: true, on: document.body.classList.contains("direct-on"), fn: () => { document.dispatchEvent(new CustomEvent("hub:direct", { detail: "toggle" })); setTimeout(render, 600); } }] });
     G.push({ h: "Palette", tiles: [{ t: "Raccourci Ctrl+K", s: prefs.get("palette-ctrlk", "1") !== "0" ? "actif" : "coupé", keep: true, on: prefs.get("palette-ctrlk", "1") !== "0", fn: () => { prefs.set("palette-ctrlk", prefs.get("palette-ctrlk", "1") !== "0" ? "0" : "1"); } }] });
     G.push({ h: "Réglages et diagnostic", tiles: [{ t: "Réglages et diagnostic…", s: "touche D", fn: () => $("b-diag").click() }] });
     const rest = cache.filter((l) => !used.has(l));
@@ -7125,6 +7167,7 @@ async function openFile(item) {
 return { persistentSupported, savedFolders, forgetFolder, pickFolder, permission, rootOf, fromFileList, recentFiles, openFile };
 })();
 __M['js/ui/bureau.js'] = (() => {
+const { onBackground } = __M['js/ui/dom.js'];
 const { prefs } = __M['js/store/prefs.js'];
 const { toast } = __M['js/ui/toast.js'];
 const { registerMenu, extendMenu } = __M['js/ui/menus.js'];
@@ -7138,19 +7181,21 @@ const { pulse } = __M['js/state.js'];
 
 
 
+
 const KEY = "bureau-v1";
 const GRID = 8;
 const SIZES = [["s", 44, "petite"], ["m", 56, "moyenne"], ["l", 72, "grande"]];
 const COULEURS = [["cyan", "cyan"], ["violet", "violet"], ["ambre", "ambre"], ["vert", "vert"]];
 const EXTRA = {
+  cast: "M3 5h18v14h-6M3 12a7 7 0 0 1 7 7M3 16a3 3 0 0 1 3 3M3 20h.01",
   globe: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18",
   link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
   mail: "M3 5h18v14H3zM3 6l9 7 9-7",
   star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"
 };
-const DEFAUT = [["hub:fichiers", "cyan"], ["hub:pc", "ambre"], ["hub:internet", "violet"], ["hub:mails", "vert"], ["app:Paramètres", "cyan"], ["app:Calculatrice", "vert"], ["app:Capture", "violet"], ["app:Brave", "ambre"]];
-const POS = [[0.365, 0.66], [0.455, 0.62], [0.545, 0.62], [0.635, 0.66], [0.365, 0.82], [0.455, 0.78], [0.545, 0.78], [0.635, 0.82]];
-const VERSION = 2;   // 2 : les applis du hub (Fichiers, Ce PC, Internet, Mails) s'ajoutent aux icônes déjà posées
+const DEFAUT = [["hub:fichiers", "cyan"], ["hub:pc", "ambre"], ["hub:internet", "violet"], ["hub:mails", "vert"], ["app:Paramètres", "cyan"], ["app:Calculatrice", "vert"], ["app:Capture", "violet"], ["app:Brave", "ambre"], ["hub:direct", "ambre"]];
+const POS = [[0.365, 0.66], [0.455, 0.62], [0.545, 0.62], [0.635, 0.66], [0.365, 0.82], [0.455, 0.78], [0.545, 0.78], [0.635, 0.82], [0.275, 0.72]];
+const VERSION = 3;   // 2 : les applis du hub (Fichiers, Ce PC, Internet, Mails) s'ajoutent aux icônes déjà posées ; 3 : + Écran en direct
 
 /** `apps` et `quick` : listes [nom, glyphe, adresse] de widgets/mypc.js ; `ico` : tracés des glyphes ; `openWindows` : ouvre une adresse Windows. */
 function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], openApp = () => {} }) {
@@ -7177,7 +7222,7 @@ function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], 
   try {   // migration v1 -> v2 : on garde les icônes posées et on ajoute les applis du hub sur une rangée libre
     const d = JSON.parse(prefs.get(KEY, "null"));
     if (d && d.v !== VERSION) {
-      DEFAUT.slice(0, 4).forEach(([k, a], n) => { if (find(k) && !icons.some((i) => i.k === k)) icons.push({ id: uid(), k, a, s: "m", x: POS[n][0], y: 0.5 }); });
+      DEFAUT.forEach(([k, a], n) => { if (k.startsWith("hub:") && find(k) && !icons.some((i) => i.k === k)) icons.push({ id: uid(), k, a, s: "m", x: POS[n][0], y: n < 4 ? 0.5 : POS[n][1] }); });
       save();
     }
   } catch (e) { /* rien à migrer */ }
@@ -7192,7 +7237,7 @@ function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], 
   }
   function make(i) {
     const it = info(i), sz = (SIZES.find((s) => s[0] === i.s) || SIZES[1])[1];
-    const b = document.createElement("button"); b.type = "button"; b.className = "dico" + (it.uri || it.act ? "" : " off"); b.dataset.id = i.id; b.dataset.menu = "dico";
+    const b = document.createElement("button"); b.type = "button"; b.className = "dico" + (it.uri || it.act ? "" : " off"); b.dataset.id = i.id; b.dataset.menu = "dico"; if (it.act) b.dataset.act = it.act;
     b.style.left = (i.x * 100).toFixed(3) + "%"; b.style.top = (i.y * 100).toFixed(3) + "%";
     b.style.setProperty("--sz", sz); b.dataset.a = i.a || "cyan";
     b.style.setProperty("--dl", (-(Math.abs(i.x * 7 + i.y * 11) % 1) * 7).toFixed(2) + "s");
@@ -7202,8 +7247,39 @@ function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], 
     if (!it.uri && !it.act) b.insertAdjacentHTML("beforeend", '<span class="mk" aria-hidden="true">◇</span>');
     return b;
   }
-  function render() { layer.innerHTML = ""; icons.forEach((i) => layer.append(make(i))); }
+  function render() { layer.innerHTML = ""; icons.forEach((i) => { const b = make(i); if (sel.has(i.id)) b.classList.add("sel"); layer.append(b); }); }
   const byId = (id) => icons.find((i) => i.id === id);
+
+  // ---------- Sélection (p3-lasso) : lasso sur le fond du bureau, Maj ou Ctrl + clic, Ctrl + A ; glisser une icône choisie déplace tout le groupe ----------
+  const sel = new Set();
+  const paintSel = () => { [...layer.querySelectorAll(".dico")].forEach((b) => b.classList.toggle("sel", sel.has(b.dataset.id))); };
+  const setSel = (ids) => { sel.clear(); ids.forEach((id) => sel.add(id)); paintSel(); };
+  const clearSel = () => { if (sel.size) { sel.clear(); paintSel(); } };
+  const toggleSel = (id) => { if (sel.has(id)) sel.delete(id); else sel.add(id); paintSel(); };
+  const selIcons = () => icons.filter((i) => sel.has(i.id));
+  let lasso = null;
+  addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || plans.plan !== 3 || !desk.classList.contains("on") || !onBackground(e.target) || e.target.closest(".desk, .bur-pop, .dico")) return;
+    const r = layer.getBoundingClientRect(), add = e.shiftKey || e.ctrlKey || e.metaKey;
+    lasso = { x0: e.clientX - r.left, y0: e.clientY - r.top, base: add ? [...sel] : [], moved: false, el: null, r };
+  });
+  addEventListener("pointermove", (e) => {
+    if (!lasso) return;
+    const x = e.clientX - lasso.r.left, y = e.clientY - lasso.r.top;
+    if (!lasso.moved && Math.hypot(x - lasso.x0, y - lasso.y0) < 6) return;
+    if (!lasso.moved) { lasso.moved = true; lasso.el = document.createElement("div"); lasso.el.className = "lasso"; lasso.el.setAttribute("aria-hidden", "true"); layer.append(lasso.el); }
+    const l = Math.min(x, lasso.x0), t = Math.min(y, lasso.y0), w = Math.abs(x - lasso.x0), h = Math.abs(y - lasso.y0);
+    Object.assign(lasso.el.style, { left: l + "px", top: t + "px", width: w + "px", height: h + "px" });
+    const hit = icons.filter((i) => { const cx = i.x * lasso.r.width, cy = i.y * lasso.r.height, m = 28; return cx + m > l && cx - m < l + w && cy + m > t && cy - m < t + h; }).map((i) => i.id);
+    setSel([...lasso.base, ...hit]);
+  });
+  const endLasso = () => {
+    if (!lasso) return; const d = lasso; lasso = null; if (d.el) d.el.remove();
+    if (!d.moved) { if (!d.base.length) clearSel(); return; }
+    if (sel.size) toast(sel.size + (sel.size > 1 ? " icônes sélectionnées" : " icône sélectionnée") + " · clic droit pour les actions");
+  };
+  addEventListener("pointerup", endLasso); addEventListener("pointercancel", endLasso);
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && sel.size && !pop && !e.defaultPrevented && !(e.target.closest && e.target.closest(".dwin"))) clearSel(); });
 
   function run(i) {
     const it = info(i);
@@ -7220,30 +7296,43 @@ function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], 
   layer.addEventListener("pointerdown", (e) => {
     const b = e.target.closest(".dico"); if (!b || e.button !== 0) return;
     const r = layer.getBoundingClientRect(), i = byId(b.dataset.id); if (!i) return;
-    drag = { b, i, x0: e.clientX, y0: e.clientY, moved: false, ox: i.x * r.width - (e.clientX - r.left), oy: i.y * r.height - (e.clientY - r.top) };
+    if ((e.shiftKey || e.ctrlKey || e.metaKey)) { drag = { b, i, x0: e.clientX, y0: e.clientY, moved: false, toggle: true, ox: 0, oy: 0 }; return; }
+    drag = { b, i, grp: sel.has(i.id) && sel.size > 1 ? selIcons().map((j) => ({ j, x: j.x, y: j.y, b: layer.querySelector('.dico[data-id="' + j.id + '"]') })) : null, ix: i.x, iy: i.y, x0: e.clientX, y0: e.clientY, moved: false, ox: i.x * r.width - (e.clientX - r.left), oy: i.y * r.height - (e.clientY - r.top) };
     try { b.setPointerCapture(e.pointerId); } catch (err) { /* sans capture : le glisser marche quand même dans la fenêtre */ }
   });
   layer.addEventListener("pointermove", (e) => {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 5) return;
-    if (!drag.moved) { drag.moved = true; drag.b.classList.add("dragging"); drag.b.classList.remove("settle"); }
+    if (drag.toggle) return;
+    if (!drag.moved) { drag.moved = true; drag.b.classList.add("dragging"); drag.b.classList.remove("settle"); if (!drag.grp) clearSel(); }
     const r = layer.getBoundingClientRect();
     drag.i.x = clamp((e.clientX - r.left + drag.ox) / r.width, 0.03, 0.97); drag.i.y = clamp((e.clientY - r.top + drag.oy) / r.height, 0.05, 0.95);
     drag.b.style.left = (drag.i.x * 100).toFixed(3) + "%"; drag.b.style.top = (drag.i.y * 100).toFixed(3) + "%";
+    if (drag.grp) {   // le groupe suit : même décalage, en gardant chaque icône dans le bureau
+      let dx = drag.i.x - drag.ix, dy = drag.i.y - drag.iy;
+      drag.grp.forEach((g) => { dx = clamp(dx, 0.03 - g.x, 0.97 - g.x); dy = clamp(dy, 0.05 - g.y, 0.95 - g.y); });
+      drag.grp.forEach((g) => { g.j.x = g.x + dx; g.j.y = g.y + dy; g.b.style.left = (g.j.x * 100).toFixed(3) + "%"; g.b.style.top = (g.j.y * 100).toFixed(3) + "%"; });
+    }
   });
   function end(e, cancel) {
     if (!drag) return; const d = drag; drag = null;
     d.b.classList.remove("dragging");
     if (d.moved) {
       const r = layer.getBoundingClientRect();
-      d.i.x = clamp(Math.round(d.i.x * r.width / GRID) * GRID / r.width, 0.03, 0.97); d.i.y = clamp(Math.round(d.i.y * r.height / GRID) * GRID / r.height, 0.05, 0.95);
-      d.b.classList.add("settle"); d.b.style.left = (d.i.x * 100).toFixed(3) + "%"; d.b.style.top = (d.i.y * 100).toFixed(3) + "%";
-      setTimeout(() => d.b.classList.remove("settle"), 360); save();
-    } else if (!cancel) run(d.i);
+      (d.grp ? d.grp.map((g) => ({ j: g.j, b: g.b })) : [{ j: d.i, b: d.b }]).forEach(({ j, b }) => {
+        j.x = clamp(Math.round(j.x * r.width / GRID) * GRID / r.width, 0.03, 0.97); j.y = clamp(Math.round(j.y * r.height / GRID) * GRID / r.height, 0.05, 0.95);
+        b.classList.add("settle"); b.style.left = (j.x * 100).toFixed(3) + "%"; b.style.top = (j.y * 100).toFixed(3) + "%";
+        setTimeout(() => b.classList.remove("settle"), 360);
+      });
+      save();
+    } else if (d.toggle) { if (!cancel) toggleSel(d.i.id); }
+    else if (!cancel) { clearSel(); run(d.i); }
   }
   layer.addEventListener("pointerup", (e) => end(e, false));
   layer.addEventListener("pointercancel", (e) => end(e, true));
-  layer.addEventListener("click", (e) => { const b = e.target.closest(".dico"); if (b && e.detail === 0) { const i = byId(b.dataset.id); if (i) run(i); } });   // clavier : Entrée ou Espace
+  layer.addEventListener("click", (e) => { const b = e.target.closest(".dico"); if (b && e.detail === 0) { const i = byId(b.dataset.id); if (!i) return; if (e.ctrlKey || e.shiftKey || e.metaKey) toggleSel(i.id); else run(i); } });
+  layer.addEventListener("contextmenu", (e) => { const b = e.target.closest(".dico"); if (b && !sel.has(b.dataset.id)) clearSel(); }, true);   // clavier : Entrée ou Espace
+  layer.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) { e.preventDefault(); setSel(icons.map((i) => i.id)); } });
   layer.addEventListener("keydown", (e) => {   // Maj + flèches : décale d'un cran (sans souris)
     const b = e.target.closest(".dico"); if (!b || !e.shiftKey || !e.key.startsWith("Arrow")) return;
     const i = byId(b.dataset.id), r = layer.getBoundingClientRect(); e.preventDefault();
@@ -7308,8 +7397,20 @@ function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], 
   }
 
   // ---------- Menus ----------
+  function groupe() {
+    const g = selIcons(), n = g.length, moy = (k) => g.reduce((a, i) => a + i[k], 0) / n;
+    const maj = (fn) => { g.forEach(fn); save(); render(); };
+    return [{ h: n + " icônes sélectionnées" },
+      { t: "Aligner en ligne", fn: () => { const y = moy("y"); maj((i) => { i.y = y; }); } },
+      { t: "Aligner en colonne", fn: () => { const x = moy("x"); maj((i) => { i.x = x; }); } },
+      { t: "Taille", k: (SIZES.find((s) => s[0] === g[0].s) || SIZES[1])[2], fn: () => { const t = cycle(SIZES, g[0].s)[0]; maj((i) => { i.s = t; }); } },
+      { t: "Couleur", k: g[0].a || "cyan", fn: () => { const c = cycle(COULEURS, g[0].a || "cyan")[0]; maj((i) => { i.a = c; }); } },
+      "-", { t: "Retirer du bureau (" + n + ")", fn: () => { const ids = new Set(g.map((i) => i.id)); icons = icons.filter((i) => !ids.has(i.id)); sel.clear(); save(); render(); toast(n + " icônes retirées (rien n'est supprimé sur le PC)"); } },
+      { t: "Désélectionner", fn: clearSel }];
+  }
   registerMenu("dico", (el) => {
     const i = byId(el.dataset.id); if (!i) return [];
+    if (sel.size > 1 && sel.has(i.id)) return groupe();
     const it = info(i), sz = SIZES.find((s) => s[0] === i.s) || SIZES[1];
     return [{ h: it.name },
       { t: "Ouvrir", fn: () => run(i) },
@@ -7318,12 +7419,12 @@ function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], 
       { t: "Couleur", k: i.a || "cyan", fn: () => { i.a = cycle(COULEURS, i.a || "cyan")[0]; save(); render(); } },
       "-", { t: "Retirer du bureau", fn: () => { remove(i.id); toast("Icône retirée (rien n'est supprimé sur le PC)"); } }];
   });
-  const lignes = () => [{ t: "Ajouter une icône…", fn: picker }, { t: "Ranger les icônes", fn: arrange }, { t: "Icônes d'origine", fn: reset }];
+  const lignes = () => [...(sel.size ? [{ t: "Désélectionner (" + sel.size + ")", fn: clearSel }] : []), { t: "Tout sélectionner", k: "Ctrl A", fn: () => setSel(icons.map((i) => i.id)) }, { t: "Ajouter une icône…", fn: picker }, { t: "Ranger les icônes", fn: arrange }, { t: "Icônes d'origine", fn: reset }];
   registerMenu("bureau", lignes);                          // clic droit sur le fond du plan 3 (lu par ui/menus.js)
   extendMenu("desk", () => ["-", ...lignes()]);           // clic droit sur un panneau du bureau
 
   render();
-  return { add, remove, list: () => icons.map((i) => ({ id: i.id, ...info(i) })), open: (id) => { const i = byId(id); if (i) run(i); }, picker, arrange, reset };
+  return { add, remove, catalogue: () => cat.map((c) => ({ k: c.k, name: c.name })), list: () => icons.map((i) => ({ id: i.id, k: i.k, ...info(i) })), open: (id) => { const i = byId(id); if (i) run(i); }, picker, arrange, reset };
 }
 
 return { initBureau };
@@ -7331,12 +7432,15 @@ return { initBureau };
 __M['js/ui/bureau-apps.js'] = (() => {
 const { prefs } = __M['js/store/prefs.js'];
 const { toast } = __M['js/ui/toast.js'];
-const { pulse } = __M['js/state.js'];
+const { pulse, state } = __M['js/state.js'];
 const { parseQuery } = __M['js/ui/search.js'];
 // Applis du bureau (plan 3, étape p3-applis) : les panneaux fixes du plan 3 deviennent des fenêtres qu'on ouvre à la demande
 // depuis les icônes du bureau : Fichiers (dossiers autorisés + fichiers récents), Ce PC (système + réglages rapides), Internet
 // (recherche simplifiée, favoris, vidéo), Mails (ouvre la fenêtre Mails du hub). Chaque fenêtre se déplace par sa barre de titre,
-// se réduit à son nom d'un clic sur ce titre, se redimensionne par le coin et se ferme par la croix. Position, taille et état
+// se réduit à son nom d'un clic sur ce titre, se redimensionne par le coin et se ferme par la croix.
+// p3-fenetres : pile de focus (une seule fenêtre active, les autres légèrement en retrait ; Échap réduit l'active), bouton « réduire »
+// qui envoie la fenêtre vers son icône du bureau (transform et opacité seulement, aucun effet en mouvement réduit) ; l'icône la rouvre,
+// ou la réduit si elle est déjà au premier plan. La fermeture s'envole aussi vers l'icône. Position, taille et état
 // sont gardés sur l'appareil (clé hub-bureau-fen-v1). Les contenus (dossiers, fichiers, réglages) restent ceux de widgets/mypc.js.
 
 
@@ -7351,12 +7455,13 @@ const HUB_APPS = [
   { k: "fichiers", name: "Fichiers", g: "folder", a: "cyan", fenetre: true },
   { k: "pc", name: "Ce PC", g: "desk", a: "ambre", fenetre: true },
   { k: "internet", name: "Internet", g: "globe", a: "violet", fenetre: true },
-  { k: "mails", name: "Mails", g: "mail", a: "vert", fenetre: false }
+  { k: "mails", name: "Mails", g: "mail", a: "vert", fenetre: false },
+  { k: "direct", name: "Écran", g: "cast", a: "ambre", fenetre: true }
 ];
-const SIZE = { fichiers: [480, 460], pc: [440, 500], internet: [480, 270] };
+const SIZE = { fichiers: [480, 460], pc: [440, 500], internet: [480, 270], direct: [560, 380] };
 const COL = { cyan: "cyan", ambre: "amber", violet: "violet", vert: "ok" };
 
-function initApps({ desk, panels: P, wins, plans }) {
+function initApps({ desk, panels: P, wins, plans, direct }) {
   const layer = document.createElement("div"); layer.className = "dwins"; layer.setAttribute("aria-label", "Fenêtres du bureau"); desk.append(layer);
   let st = {};
   try { const d = JSON.parse(prefs.get(KEY, "{}")); if (d && typeof d === "object") st = d; } catch (e) { st = {}; }
@@ -7364,6 +7469,9 @@ function initApps({ desk, panels: P, wins, plans }) {
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const open = {};   // k -> élément
   let zTop = 10;
+  const isMin = (el) => el.dataset.m === "1";   // réduite vers l'icône (dès le début du vol ; la classe .min la cache une fois arrivée)
+  const order = [];   // pile de focus : la dernière est au premier plan
+  const reduceMotion = () => state.reduce;
 
   // ---------- Contenus ----------
   const sub = (t) => { const s = document.createElement("div"); s.className = "dsec"; s.textContent = t; return s; };
@@ -7380,6 +7488,21 @@ function initApps({ desk, panels: P, wins, plans }) {
     pc(body, win) {
       body.append(sub("Système"), P.sys.pb, sub("Réglages rapides"), P.set.pb); win.append(P.set.pf);
       win.querySelector(".tag").textContent = "EN DIRECT";
+    },
+    direct(body, win) {
+      const v = document.createElement("video"); v.muted = true; v.autoplay = true; v.playsInline = true; v.disablePictureInPicture = true; v.setAttribute("aria-label", "Écran du PC en direct, lecture seule");
+      const msg = document.createElement("p"); msg.className = "dmsg";
+      const bar = document.createElement("div"); bar.className = "dnrow";
+      const go = document.createElement("button"); go.type = "button"; go.className = "btn"; const off = document.createElement("button"); off.type = "button"; off.className = "btn dstop"; off.textContent = "Couper";
+      bar.append(go, off); body.append(v, msg, bar);
+      go.addEventListener("click", () => direct.start()); off.addEventListener("click", () => direct.stop());
+      const sync = () => {
+        const on = direct.active; v.hidden = !on; off.hidden = !on; go.hidden = on;
+        go.textContent = "Choisir l'écran à afficher…"; win.querySelector(".tag").textContent = on ? "EN DIRECT · LECTURE SEULE" : "COUPÉ";
+        msg.textContent = on ? "Tu vois l'écran partagé, rien d'autre : il n'est ni enregistré ni envoyé. « Couper » reste visible partout." : direct.supported() ? "Coupé. Tu choisis l'écran à chaque fois ; le pilotage (clics, clavier) viendra avec l'appli Windows." : "Ce navigateur ne sait pas partager l'écran.";
+        go.disabled = !direct.supported();
+      };
+      direct.attach(v); sync(); document.addEventListener("hub:direct-state", sync); win.dataset.cleanup = "1"; win._clean = () => { document.removeEventListener("hub:direct-state", sync); direct.detach(v); };
     },
     internet(body, win) {
       const f = document.createElement("form"); f.className = "dnet"; f.setAttribute("role", "search");
@@ -7405,7 +7528,7 @@ function initApps({ desk, panels: P, wins, plans }) {
       setTimeout(() => inp.focus({ preventScroll: true }), 50);
     }
   };
-  const TITRE = { fichiers: "Fichiers", pc: "Ce PC", internet: "Internet" };
+  const TITRE = { fichiers: "Fichiers", pc: "Ce PC", internet: "Internet", direct: "Écran en direct" };
 
   // ---------- Fenêtre ----------
   const deskSize = () => ({ w: desk.clientWidth || innerWidth - 32, h: desk.clientHeight || innerHeight - 170 });
@@ -7417,22 +7540,45 @@ function initApps({ desk, panels: P, wins, plans }) {
     const y = clamp(Number.isFinite(s.y) ? s.y : 28 + slot * 24, 0, Math.max(0, d.h - 40));
     return { x, y, w, h };
   }
-  function front(el) { el.style.zIndex = String(++zTop); }
+  function paintFocus() {
+    const top = [...order].reverse().find((k) => open[k] && !isMin(open[k]));
+    Object.keys(open).forEach((k) => { const on = k === top; open[k].classList.toggle("actif", on); open[k].classList.toggle("inactif", !on && !isMin(open[k])); });
+    desk.querySelectorAll('.dico[data-act]').forEach((ic) => { const e = open[ic.dataset.act]; ic.classList.toggle("ouvert", !!e && !isMin(e)); });
+  }
+  function front(el) {
+    el.style.zIndex = String(++zTop);
+    const k = el.dataset.app, i = order.indexOf(k); if (i >= 0) order.splice(i, 1); order.push(k); paintFocus();
+  }
+  /** Vol de la fenêtre vers (ou depuis) son icône du bureau : un déplacement, un zoom et un fondu, rien d'autre. */
+  function fly(el, k, versIcone, fin) {
+    const ic = desk.querySelector('.dico[data-act="' + k + '"]');
+    if (reduceMotion() || !el.animate || !el.isConnected) { fin && fin(); return; }
+    const r = el.getBoundingClientRect(), t = ic ? ic.getBoundingClientRect() : { left: r.left + r.width / 2, top: r.top + r.height + 60, width: 0, height: 0 };
+    const dx = t.left + t.width / 2 - (r.left + r.width / 2), dy = t.top + t.height / 2 - (r.top + r.height / 2), sc = Math.max(0.05, Math.min(0.2, 60 / Math.max(r.width, 1)));
+    const away = { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${sc.toFixed(3)})`, opacity: 0 }, here = { transform: "none", opacity: 1 };
+    el.classList.add("vol");
+    const a = el.animate(versIcone ? [here, away] : [away, here], { duration: 260, easing: versIcone ? "cubic-bezier(.5, 0, .9, .6)" : "cubic-bezier(.1, .5, .3, 1)", fill: "none" });
+    const done = () => { el.classList.remove("vol"); fin && fin(); };
+    a.onfinish = done; a.oncancel = done;
+  }
   function build(k) {
     const sec = document.createElement("section"); sec.className = "panel dp dwin"; sec.dataset.app = k;
     const app = HUB_APPS.find((a) => a.k === k), acc = COL[app.a] || "cyan"; sec.dataset.accent = acc === "ok" ? "cyan" : acc; sec.style.setProperty("--a", `var(--${acc})`);
-    sec.innerHTML = '<div class="in"><div class="ph"><h2></h2><span class="hatch"></span><span class="tag"></span><button type="button" class="dx" aria-label="Fermer" title="Fermer">×</button></div><div class="dbody"></div></div><span class="dres" aria-hidden="true"></span>';
+    sec.innerHTML = '<div class="in"><div class="ph"><h2></h2><span class="hatch"></span><span class="tag"></span><button type="button" class="dm" aria-label="Réduire vers l’icône" title="Réduire vers l’icône (Échap)">–</button><button type="button" class="dx" aria-label="Fermer" title="Fermer">×</button></div><div class="dbody"></div></div><span class="dres" aria-hidden="true"></span>';
     sec.querySelector("h2").textContent = TITRE[k];
     const g = geom(k); Object.assign(sec.style, { left: g.x + "px", top: g.y + "px", width: g.w + "px", height: g.h + "px" });
     BUILD[k](sec.querySelector(".dbody"), sec.querySelector(".in"));
     if (st[k] && st[k].red) sec.classList.add("red");
-    layer.append(sec); front(sec); open[k] = sec; wire(sec, k);
+    layer.append(sec); open[k] = sec; wire(sec, k);
+    if (st[k] && st[k].min) { sec.dataset.m = "1"; sec.classList.add("min"); sec.hidden = true; order.unshift(k); paintFocus(); } else front(sec);
     return sec;
   }
   function wire(sec, k) {
     const ph = sec.querySelector(".ph"), rs = sec.querySelector(".dres");
     sec.addEventListener("pointerdown", () => front(sec), true);
     sec.querySelector(".dx").addEventListener("click", () => close(k));
+    sec.querySelector(".dm").addEventListener("click", () => minimize(k));
+    sec.addEventListener("keydown", (e) => { if (e.key === "Escape" && !e.defaultPrevented && !(e.target.closest && e.target.closest("input[type=search]") && e.target.value)) { e.preventDefault(); minimize(k); } });
     let d = null;
     ph.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || e.target.closest("button")) return;
@@ -7459,6 +7605,18 @@ function initApps({ desk, panels: P, wins, plans }) {
   }
   function toggleRed(k) { const el = open[k]; if (!el) return; const on = !el.classList.contains("red"); el.classList.toggle("red", on); st[k] = { ...(st[k] || {}), red: on }; save(); }
 
+  function minimize(k) {
+    const el = open[k]; if (!el || isMin(el)) return;
+    el.dataset.m = "1"; st[k] = { ...(st[k] || {}), min: true }; save(); paintFocus();
+    const nx = [...order].reverse().find((j) => open[j] && !isMin(open[j])); if (nx) { const f = open[nx].querySelector(".dm"); f && f.focus({ preventScroll: true }); }
+    fly(el, k, true, () => { if (isMin(el)) { el.classList.add("min"); el.hidden = true; } });
+  }
+  function restore(k) {
+    const el = open[k]; if (!el || !isMin(el)) return false;
+    delete el.dataset.m; el.getAnimations && el.getAnimations().forEach((a) => a.cancel()); el.classList.remove("min"); el.hidden = false; st[k] = { ...(st[k] || {}), min: false, red: false }; el.classList.remove("red"); save();
+    front(el); fly(el, k, false); return true;
+  }
+
   // ---------- API ----------
   function openMails() {
     const el = wins && wins.elById("mails");
@@ -7471,12 +7629,19 @@ function initApps({ desk, panels: P, wins, plans }) {
     pulse(0.7);
     if (k === "mails") { openMails(); return; }
     if (!BUILD[k]) return;
-    if (open[k]) { open[k].classList.remove("red"); st[k] = { ...(st[k] || {}), red: false }; front(open[k]); save(); return; }
+    if (open[k]) {
+      if (restore(k)) return;
+      if (open[k].classList.contains("actif") && !open[k].classList.contains("red") && !open[k].classList.contains("vol")) { minimize(k); return; }   // déjà au premier plan : l'icône la réduit
+      open[k].classList.remove("red"); st[k] = { ...(st[k] || {}), red: false }; front(open[k]); save(); return;
+    }
     build(k); st[k] = { ...(st[k] || {}), open: true }; save();
   }
   function close(k) {
     const el = open[k]; if (!el) return;
-    el.remove(); delete open[k]; st[k] = { ...(st[k] || {}), open: false }; save();
+    delete open[k]; const i = order.indexOf(k); if (i >= 0) order.splice(i, 1); st[k] = { ...(st[k] || {}), open: false, min: false }; save();
+    if (k === "direct") direct.stop(true);   // fermer la fenêtre coupe le partage
+    const fin = () => { if (el._clean) el._clean(); el.remove(); paintFocus(); };
+    if (isMin(el)) fin(); else fly(el, k, true, fin);
   }
   // Fenêtres ouvertes la dernière fois : on les remet (le bureau est caché tant qu'on n'est pas en plan 3)
   Object.keys(BUILD).forEach((k) => { if (st[k] && st[k].open) build(k); });
@@ -7484,6 +7649,160 @@ function initApps({ desk, panels: P, wins, plans }) {
 }
 
 return { HUB_APPS, initApps };
+})();
+__M['js/ui/direct.js'] = (() => {
+const { toast } = __M['js/ui/toast.js'];
+// Écran du PC en direct (plan 3, étape p3-direct) : partage d'écran du navigateur (getDisplayMedia), lecture seule.
+// Garde-fous : coupé par défaut, l'écran est choisi par Lucien à chaque démarrage (jamais mémorisé), le flux n'est ni enregistré ni envoyé
+// ni analysé (il ne va que dans un élément <video> de la fenêtre « Écran »), et une pastille « Couper » reste affichée sur tous les plans
+// tant que le partage est actif. Fermer la fenêtre « Écran » coupe le partage. Le pilotage (clics, clavier) attend l'appli Windows.
+
+
+function createDirect() {
+  let stream = null;
+  const videos = new Set();
+  const chip = document.createElement("button");
+  chip.type = "button"; chip.className = "live-stop"; chip.hidden = true;
+  chip.setAttribute("aria-label", "Couper l'écran en direct");
+  chip.innerHTML = '<span class="dot" aria-hidden="true"></span><span>ÉCRAN EN DIRECT · LECTURE SEULE</span><b>Couper</b>';
+  document.body.append(chip);
+  const supported = () => !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  const emit = () => document.dispatchEvent(new CustomEvent("hub:direct-state", { detail: { active: !!stream } }));
+  function paint() {
+    document.body.classList.toggle("direct-on", !!stream); chip.hidden = !stream;
+    const b = document.getElementById("live-btn");
+    if (b) { b.classList.toggle("live-off", !stream); b.classList.toggle("live-on", !!stream); b.setAttribute("aria-disabled", "false"); b.textContent = stream ? "● Couper l'écran en direct" : "● Écran en direct"; b.title = stream ? "Coupe le partage d'écran" : "Affiche l'écran de ton PC dans une fenêtre (lecture seule, tu choisis l'écran)"; }
+    videos.forEach((v) => { if (v.srcObject !== stream) v.srcObject = stream; });
+    emit();
+  }
+  function stop(silent) {
+    if (!stream) return false;
+    const s = stream; stream = null; s.getTracks().forEach((t) => { t.onended = null; try { t.stop(); } catch (e) { /* déjà arrêtée */ } });
+    paint(); if (!silent) toast("Écran en direct coupé"); return true;
+  }
+  async function start() {
+    if (stream) return { ok: true, deja: true };
+    if (!supported()) { toast("Écran en direct : ce navigateur ne sait pas partager l'écran."); return { ok: false, raison: "non pris en charge" }; }
+    try {
+      const s = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: false, selfBrowserSurface: "exclude" });
+      stream = s; const t = s.getVideoTracks()[0]; if (t) t.onended = () => stop();   // arrêt depuis la barre du navigateur
+      paint(); toast("Écran en direct : lecture seule, rien n'est enregistré"); return { ok: true };
+    } catch (e) {
+      const refus = e && (e.name === "NotAllowedError" || e.name === "AbortError");
+      if (!refus) toast("Écran en direct impossible : " + ((e && e.message) || "erreur"));
+      return { ok: false, raison: refus ? "refusé ou annulé" : "erreur" };
+    }
+  }
+  chip.addEventListener("click", () => stop());
+  document.addEventListener("hub:direct", (e) => { const a = e.detail; if (a === "stop") stop(); else if (a === "start") start(); else (stream ? stop() : start()); });
+  addEventListener("pagehide", () => stop(true));
+  return {
+    start, stop, supported, toggle: () => (stream ? (stop(), Promise.resolve({ ok: true })) : start()),
+    get active() { return !!stream; },
+    attach(v) { videos.add(v); v.srcObject = stream; }, detach(v) { videos.delete(v); v.srcObject = null; }
+  };
+}
+
+return { createDirect };
+})();
+__M['js/ui/commandes.js'] = (() => {
+const { toast } = __M['js/ui/toast.js'];
+// Points de commande pour l'orbe (plan 3, étape p3-ia). Liste fermée de commandes aux noms stables, avec paramètres bornés et un niveau
+// de permission. Le Noyau (via le Labo) les appelle avec executer(nom, params) ; il ne peut ni ajouter de commande ni faire exécuter du code.
+//   libre         : s'exécute tout de suite (réversible, sans effet hors du hub)
+//   confirmation  : une fenêtre demande l'accord de Lucien à chaque fois (jamais contournable par un paramètre)
+// Chaque appel est journalisé (100 derniers). Rien n'est écrit dans js/noyau/ : le Labo branche seulement ces noms.
+// Voir docs/refonte-auto2/commandes-orbe.md pour la liste et le contrat.
+
+
+const APPS = ["fichiers", "pc", "internet", "mails", "direct"];
+const APPS_FEN = ["fichiers", "pc", "internet", "direct"];
+
+function createCommandes({ appli, bureau, plans, direct }) {
+  const journal = [];
+  const log = (nom, params, res) => { journal.push({ t: new Date().toISOString(), nom, params, ok: res.ok, message: res.message || res.raison || "" }); if (journal.length > 100) journal.shift(); };
+  const cles = () => bureau.catalogue().map((c) => c.k).filter((k) => k !== "url");
+
+  // ---------- Demande de confirmation (fenêtre du hub, une seule à la fois, refus au bout de 60 s) ----------
+  let attente = null;
+  function confirmer(titre, detail) {
+    if (attente) return Promise.resolve(null);   // une seule demande à la fois
+    return new Promise((resolve) => {
+      const d = document.createElement("div"); d.className = "bur-pop cmd-confirm"; d.setAttribute("role", "alertdialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-label", "Demande du Noyau");
+      d.innerHTML = '<div class="bp-h"><h3>Le Noyau demande</h3></div><p class="cc-t"></p><p class="cc-d"></p><div class="bp-act"><button type="button" class="btn cc-no">Refuser</button><button type="button" class="btn cc-yes">Autoriser</button></div>';
+      d.querySelector(".cc-t").textContent = titre; d.querySelector(".cc-d").textContent = detail || "";
+      const fin = (v) => { clearTimeout(tm); removeEventListener("keydown", key, true); d.remove(); attente = null; resolve(v); };
+      const key = (e) => { if (e.key === "Escape") { e.stopPropagation(); fin(false); } };
+      const tm = setTimeout(() => fin(false), 60000);
+      d.querySelector(".cc-no").addEventListener("click", () => fin(false)); d.querySelector(".cc-yes").addEventListener("click", () => fin(true));
+      addEventListener("keydown", key, true); document.body.append(d); attente = d; d.querySelector(".cc-no").focus();
+    });
+  }
+
+  // ---------- Définitions ----------
+  const ok = (message, plus) => ({ ok: true, message, ...(plus || {}) });
+  const non = (raison) => ({ ok: false, raison });
+  const DEF = [
+    { nom: "ouvrir_appli", perm: "libre", desc: "Ouvre une appli du bureau (ou la fenêtre Mails).", params: { app: { enum: APPS } },
+      run: ({ app }) => { if (app !== "mails") plans.goPlan(3); appli.open(app); return ok("Appli ouverte : " + app); } },
+    { nom: "fermer_appli", perm: "libre", desc: "Ferme une fenêtre d'appli du bureau (fermer « direct » coupe le partage d'écran).", params: { app: { enum: APPS_FEN } },
+      run: ({ app }) => { if (!appli.isOpen(app)) return ok("Déjà fermée : " + app); appli.close(app); return ok("Appli fermée : " + app); } },
+    { nom: "aller_plan", perm: "libre", desc: "Change de plan (1 hub, 2 salle, 3 bureau).", params: { plan: { enum: [1, 2, 3] } },
+      run: ({ plan }) => { plans.goPlan(plan); return ok("Plan " + plan); } },
+    { nom: "poser_icone", perm: "libre", desc: "Pose une icône du catalogue sur le bureau (une seule par entrée).", params: { cle: { enum: cles } },
+      run: ({ cle }) => (bureau.list().some((i) => i.k === cle) ? ok("Déjà sur le bureau : " + cle) : (bureau.add(cle) ? ok("Icône posée : " + cle) : non("pose impossible"))) },
+    { nom: "ranger_icones", perm: "libre", desc: "Range les icônes du bureau en grille.", params: {}, run: () => { bureau.arrange(); return ok("Icônes rangées"); } },
+    { nom: "retirer_icone", perm: "confirmation", desc: "Retire une icône du bureau (rien n'est supprimé sur le PC).", params: { cle: { enum: cles } },
+      confirm: ({ cle }) => ["Retirer l'icône « " + cle + " » du bureau ?", "Rien n'est supprimé sur le PC."],
+      run: ({ cle }) => { const i = bureau.list().find((x) => x.k === cle); if (!i) return non("icône absente"); bureau.remove(i.id); return ok("Icône retirée : " + cle); } },
+    { nom: "ecran_direct_demarrer", perm: "confirmation", desc: "Démarre l'écran du PC en direct (lecture seule) : Lucien accepte ici, puis choisit lui-même l'écran. Le Noyau ne voit jamais l'image.", params: {},
+      confirm: () => ["Afficher l'écran de ton PC dans une fenêtre du hub ?", "Lecture seule. Tu choisis l'écran ensuite ; rien n'est enregistré, envoyé ni analysé."],
+      run: async () => { const r = await direct.start(); return r.ok ? ok(r.deja ? "Déjà actif" : "Écran en direct démarré") : non(r.raison); } },
+    { nom: "ecran_direct_couper", perm: "libre", desc: "Coupe l'écran en direct.", params: {}, run: () => (direct.stop() ? ok("Écran en direct coupé") : ok("Déjà coupé")) },
+    { nom: "etat_bureau", perm: "libre", desc: "Lit l'état du bureau : plan, applis ouvertes, icônes, écran en direct actif ou non (jamais son contenu).", params: {},
+      run: () => ok("État", { etat: { plan: plans.plan, applis_ouvertes: appli.list(), icones: bureau.list().map((i) => ({ cle: i.k, nom: i.name })), ecran_direct: direct.active } }) },
+    { nom: "catalogue_ouvrir", perm: "libre", dispo: false, raison: "catalogue de jeux pas encore disponible (poste Atelier)", desc: "Réservé : ouvre le catalogue de jeux.", params: {}, run: () => non("indisponible") },
+    { nom: "jeu_lancer", perm: "confirmation", dispo: false, raison: "catalogue de jeux pas encore disponible (poste Atelier)", desc: "Réservé : lance un jeu du catalogue (confirmation obligatoire).", params: { jeu: { texte: 60 } }, run: () => non("indisponible") }
+  ];
+
+  function valider(def, params) {
+    const p = params && typeof params === "object" && !Array.isArray(params) ? params : {}, out = {};
+    for (const k of Object.keys(p)) if (!def.params[k]) return { err: "paramètre inconnu : " + k };
+    for (const [k, r] of Object.entries(def.params)) {
+      const v = p[k];
+      if (r.enum) { const e = typeof r.enum === "function" ? r.enum() : r.enum; if (!e.includes(v)) return { err: "paramètre « " + k + " » invalide (attendu : " + e.join(", ") + ")" }; }
+      else if (r.texte) { if (typeof v !== "string" || !v.trim() || v.length > r.texte) return { err: "paramètre « " + k + " » invalide" }; }
+      out[k] = v;
+    }
+    return { v: out };
+  }
+
+  async function executer(nom, params) {
+    const def = DEF.find((d) => d.nom === nom);
+    let res;
+    if (!def) res = non("commande inconnue");
+    else if (def.dispo === false) res = non(def.raison);
+    else {
+      const c = valider(def, params);
+      if (c.err) res = non(c.err);
+      else {
+        let permis = true;
+        if (def.perm === "confirmation") { const [t, d] = def.confirm(c.v); permis = await confirmer(t, d); }
+        if (permis === null) res = non("une demande de confirmation est déjà en cours");
+        else if (!permis) res = { ok: false, refuse: true, raison: "refusé par Lucien" };
+        else { try { res = await def.run(c.v); } catch (e) { res = non("erreur : " + ((e && e.message) || e)); } }
+      }
+    }
+    log(nom, params, res); return { nom, ...res };
+  }
+  document.addEventListener("hub:commande", (e) => { const d = e.detail || {}; executer(d.nom, d.params).then((r) => { if (typeof d.repondre === "function") d.repondre(r); }); });
+  return {
+    executer, journal: () => journal.slice(),
+    liste: () => DEF.map((d) => ({ nom: d.nom, permission: d.perm, disponible: d.dispo !== false, description: d.desc, parametres: Object.fromEntries(Object.entries(d.params).map(([k, r]) => [k, r.enum ? (typeof r.enum === "function" ? r.enum() : r.enum) : "texte ≤ " + r.texte])) }))
+  };
+}
+
+return { createCommandes };
 })();
 __M['js/widgets/mypc.js'] = (() => {
 const { battery, network, screenInfo, openWindows } = __M['js/device/system.js'];
@@ -7493,10 +7812,14 @@ const { registerMenu } = __M['js/ui/menus.js'];
 const { pulse } = __M['js/state.js'];
 const { initBureau } = __M['js/ui/bureau.js'];
 const { initApps, HUB_APPS } = __M['js/ui/bureau-apps.js'];
+const { createDirect } = __M['js/ui/direct.js'];
+const { createCommandes } = __M['js/ui/commandes.js'];
 const { prefs } = __M['js/store/prefs.js'];
 // Mon PC (fenêtre du plan 1) et bureau du PC (plan 3), sous-étape 2.8.
 // ✓ = marche depuis le navigateur ; ◇ = demandera la petite appli Windows (V2), affiché mais inactif.
 // Dossiers : accès mémorisé si Brave l'autorise (brave://flags/#file-system-access-api), sinon dossier choisi pour la session.
+
+
 
 
 
@@ -7727,15 +8050,17 @@ function initMyPC({ plans, wins }) {
         } }, "-");
     }
     it.push({ h: "Plan 3 · bureau du PC" }, { t: "Ajouter un dossier", fn: addFolder }, { t: "Actualiser les fichiers récents", fn: refreshRecent },
-      { t: "Revenir au hub", k: "1", fn: () => plans.goPlan(1) }, { t: "Aller au plan 2", k: "2", fn: () => plans.goPlan(2) }, { t: "Écran en direct · bientôt", off: true });
+      { t: "Revenir au hub", k: "1", fn: () => plans.goPlan(1) }, { t: "Aller au plan 2", k: "2", fn: () => plans.goPlan(2) }, { t: document.body.classList.contains("direct-on") ? "Couper l'écran en direct" : "Écran en direct (lecture seule)", fn: () => document.dispatchEvent(new CustomEvent("hub:direct", { detail: "toggle" })) });
     return it;
   });
   desk.dataset.menu = "desk";
-  const appli = initApps({ desk, panels: P, wins, plans });
-  initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows, hubApps: HUB_APPS, openApp: appli.open });   // icônes flottantes (remplacent l'ancienne barre d'applis)
+  const direct = createDirect();
+  const appli = initApps({ desk, panels: P, wins, plans, direct });
+  const bureau = initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows, hubApps: HUB_APPS, openApp: appli.open });   // icônes flottantes (remplacent l'ancienne barre d'applis)
 
   renderDirs(); renderRecent(); reload();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshRecent(); });
+  return { direct, commandes: createCommandes({ appli, bureau, plans, direct }) };   // commandes pour l'orbe (ui/commandes.js, p3-ia)
 }
 
 return { initMyPC };
@@ -14700,7 +15025,7 @@ async function start() {
   initAlertsUI(reminders);
   const weather = initWeather();
   initFavs();
-  if (!state.lite) initMyPC({ plans, wins });
+  const pc = state.lite ? null : initMyPC({ plans, wins });
   const images = initImages({ world: $("world"), plans, force, wins });
   initProgress();
   document.addEventListener("hub:focus-win", (e) => { const w = wins.elById(e.detail); if (w && !state.lite) wins.focus(w); });
@@ -14757,7 +15082,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, quality, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
+  window.__hub = { state, quality, pc, commandes: pc && pc.commandes, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;
