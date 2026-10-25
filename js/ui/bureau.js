@@ -13,14 +13,15 @@ const GRID = 8;
 const SIZES = [["s", 44, "petite"], ["m", 56, "moyenne"], ["l", 72, "grande"]];
 const COULEURS = [["cyan", "cyan"], ["violet", "violet"], ["ambre", "ambre"], ["vert", "vert"]];
 const EXTRA = {
+  cast: "M3 5h18v14h-6M3 12a7 7 0 0 1 7 7M3 16a3 3 0 0 1 3 3M3 20h.01",
   globe: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18",
   link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
   mail: "M3 5h18v14H3zM3 6l9 7 9-7",
   star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"
 };
-const DEFAUT = [["hub:fichiers", "cyan"], ["hub:pc", "ambre"], ["hub:internet", "violet"], ["hub:mails", "vert"], ["app:Paramètres", "cyan"], ["app:Calculatrice", "vert"], ["app:Capture", "violet"], ["app:Brave", "ambre"]];
-const POS = [[0.365, 0.66], [0.455, 0.62], [0.545, 0.62], [0.635, 0.66], [0.365, 0.82], [0.455, 0.78], [0.545, 0.78], [0.635, 0.82]];
-const VERSION = 2;   // 2 : les applis du hub (Fichiers, Ce PC, Internet, Mails) s'ajoutent aux icônes déjà posées
+const DEFAUT = [["hub:fichiers", "cyan"], ["hub:pc", "ambre"], ["hub:internet", "violet"], ["hub:mails", "vert"], ["app:Paramètres", "cyan"], ["app:Calculatrice", "vert"], ["app:Capture", "violet"], ["app:Brave", "ambre"], ["hub:direct", "ambre"]];
+const POS = [[0.365, 0.66], [0.455, 0.62], [0.545, 0.62], [0.635, 0.66], [0.365, 0.82], [0.455, 0.78], [0.545, 0.78], [0.635, 0.82], [0.275, 0.72]];
+const VERSION = 3;   // 2 : les applis du hub (Fichiers, Ce PC, Internet, Mails) s'ajoutent aux icônes déjà posées ; 3 : + Écran en direct
 
 /** `apps` et `quick` : listes [nom, glyphe, adresse] de widgets/mypc.js ; `ico` : tracés des glyphes ; `openWindows` : ouvre une adresse Windows. */
 export function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], openApp = () => {} }) {
@@ -47,7 +48,7 @@ export function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps
   try {   // migration v1 -> v2 : on garde les icônes posées et on ajoute les applis du hub sur une rangée libre
     const d = JSON.parse(prefs.get(KEY, "null"));
     if (d && d.v !== VERSION) {
-      DEFAUT.slice(0, 4).forEach(([k, a], n) => { if (find(k) && !icons.some((i) => i.k === k)) icons.push({ id: uid(), k, a, s: "m", x: POS[n][0], y: 0.5 }); });
+      DEFAUT.forEach(([k, a], n) => { if (k.startsWith("hub:") && find(k) && !icons.some((i) => i.k === k)) icons.push({ id: uid(), k, a, s: "m", x: POS[n][0], y: n < 4 ? 0.5 : POS[n][1] }); });
       save();
     }
   } catch (e) { /* rien à migrer */ }

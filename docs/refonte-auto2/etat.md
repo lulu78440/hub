@@ -19,3 +19,6 @@ Pile de focus + réduction animée vers l'icône (bureau-apps.js). Testé : PC (
 
 ## 26/10 00:20 · 7.31.0 · p3-lasso (built)
 Lasso + sélection multiple + menu de groupe (bureau.js). Testé PC : lasso, déplacement de groupe, menu, alignement, Échap, Ctrl+A, Maj+clic, clic simple (ouvre et désélectionne), aucune erreur. Mobile : bureau réservé au PC. Suite : p3-direct, p3-ia, p3-mobile, puis lv-bus.
+
+## 26/10 00:50 · 7.32.0 · p3-direct (built)
+Écran en direct (direct.js). Testé PC avec faux écran : coupé par défaut, démarrage, vidéo reçue, pastille visible au plan 1, arrêt par la pastille, redémarrage, fermeture de la fenêtre coupe le partage, aucune erreur. Non testable ici : le vrai sélecteur d'écran de Brave (à essayer par Lucien).

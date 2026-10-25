@@ -8,6 +8,7 @@ import { registerMenu } from "../ui/menus.js";
 import { pulse } from "../state.js";
 import { initBureau } from "../ui/bureau.js";
 import { initApps, HUB_APPS } from "../ui/bureau-apps.js";
+import { createDirect } from "../ui/direct.js";
 import { prefs } from "../store/prefs.js";
 
 const ICO = {
@@ -231,11 +232,12 @@ export function initMyPC({ plans, wins }) {
         } }, "-");
     }
     it.push({ h: "Plan 3 · bureau du PC" }, { t: "Ajouter un dossier", fn: addFolder }, { t: "Actualiser les fichiers récents", fn: refreshRecent },
-      { t: "Revenir au hub", k: "1", fn: () => plans.goPlan(1) }, { t: "Aller au plan 2", k: "2", fn: () => plans.goPlan(2) }, { t: "Écran en direct · bientôt", off: true });
+      { t: "Revenir au hub", k: "1", fn: () => plans.goPlan(1) }, { t: "Aller au plan 2", k: "2", fn: () => plans.goPlan(2) }, { t: document.body.classList.contains("direct-on") ? "Couper l'écran en direct" : "Écran en direct (lecture seule)", fn: () => document.dispatchEvent(new CustomEvent("hub:direct", { detail: "toggle" })) });
     return it;
   });
   desk.dataset.menu = "desk";
-  const appli = initApps({ desk, panels: P, wins, plans });
+  const direct = createDirect();
+  const appli = initApps({ desk, panels: P, wins, plans, direct });
   initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows, hubApps: HUB_APPS, openApp: appli.open });   // icônes flottantes (remplacent l'ancienne barre d'applis)
 
   renderDirs(); renderRecent(); reload();

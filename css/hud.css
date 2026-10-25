@@ -1211,3 +1211,18 @@ body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .w
 .dico.sel .dlb { color: #fff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--a); }
 .dico.sel .hx { transform: scale(1.06); }
 @media (prefers-reduced-motion: reduce) { .dico.sel .hx { transform: none; } }
+
+/* ---------- Plan 3 · écran en direct (p3-direct) ---------- */
+.btn.live-on { opacity: 1; border-style: solid; color: #ffd9b0; border-color: var(--amber); }
+.live-stop { position: fixed; z-index: 60; left: 50%; bottom: 62px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 7px 14px; background: rgba(24, 12, 3, .94); border: 1px solid var(--amber); color: #ffd9b0; font: 600 11px var(--mono); letter-spacing: .14em; cursor: pointer; box-shadow: 0 0 18px color-mix(in srgb, var(--amber) 40%, transparent); }
+.live-stop[hidden] { display: none; }
+.live-stop b { padding: 2px 8px; border: 1px solid var(--amber); color: #fff; font-weight: 700; }
+.live-stop .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5a3c; animation: livedot 1.4s ease-in-out infinite; }
+.live-stop:hover b, .live-stop:focus-visible b { background: var(--amber); color: #190d02; }
+.live-stop:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+@keyframes livedot { 50% { opacity: .35; } }
+.dwin .dbody video { flex: 1; min-height: 0; width: 100%; background: #000; object-fit: contain; }
+.dwin .dbody video[hidden] { display: none; }
+.dwin .dmsg { margin: 8px 12px 0; font-size: 12px; color: var(--dim); }
+.dwin .dbody .dnrow { margin: 8px 12px 12px; }
+@media (prefers-reduced-motion: reduce) { .live-stop .dot { animation: none; } }

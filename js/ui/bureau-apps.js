@@ -19,12 +19,13 @@ export const HUB_APPS = [
   { k: "fichiers", name: "Fichiers", g: "folder", a: "cyan", fenetre: true },
   { k: "pc", name: "Ce PC", g: "desk", a: "ambre", fenetre: true },
   { k: "internet", name: "Internet", g: "globe", a: "violet", fenetre: true },
-  { k: "mails", name: "Mails", g: "mail", a: "vert", fenetre: false }
+  { k: "mails", name: "Mails", g: "mail", a: "vert", fenetre: false },
+  { k: "direct", name: "Écran", g: "cast", a: "ambre", fenetre: true }
 ];
-const SIZE = { fichiers: [480, 460], pc: [440, 500], internet: [480, 270] };
+const SIZE = { fichiers: [480, 460], pc: [440, 500], internet: [480, 270], direct: [560, 380] };
 const COL = { cyan: "cyan", ambre: "amber", violet: "violet", vert: "ok" };
 
-export function initApps({ desk, panels: P, wins, plans }) {
+export function initApps({ desk, panels: P, wins, plans, direct }) {
   const layer = document.createElement("div"); layer.className = "dwins"; layer.setAttribute("aria-label", "Fenêtres du bureau"); desk.append(layer);
   let st = {};
   try { const d = JSON.parse(prefs.get(KEY, "{}")); if (d && typeof d === "object") st = d; } catch (e) { st = {}; }
@@ -52,6 +53,21 @@ export function initApps({ desk, panels: P, wins, plans }) {
       body.append(sub("Système"), P.sys.pb, sub("Réglages rapides"), P.set.pb); win.append(P.set.pf);
       win.querySelector(".tag").textContent = "EN DIRECT";
     },
+    direct(body, win) {
+      const v = document.createElement("video"); v.muted = true; v.autoplay = true; v.playsInline = true; v.disablePictureInPicture = true; v.setAttribute("aria-label", "Écran du PC en direct, lecture seule");
+      const msg = document.createElement("p"); msg.className = "dmsg";
+      const bar = document.createElement("div"); bar.className = "dnrow";
+      const go = document.createElement("button"); go.type = "button"; go.className = "btn"; const off = document.createElement("button"); off.type = "button"; off.className = "btn dstop"; off.textContent = "Couper";
+      bar.append(go, off); body.append(v, msg, bar);
+      go.addEventListener("click", () => direct.start()); off.addEventListener("click", () => direct.stop());
+      const sync = () => {
+        const on = direct.active; v.hidden = !on; off.hidden = !on; go.hidden = on;
+        go.textContent = "Choisir l'écran à afficher…"; win.querySelector(".tag").textContent = on ? "EN DIRECT · LECTURE SEULE" : "COUPÉ";
+        msg.textContent = on ? "Tu vois l'écran partagé, rien d'autre : il n'est ni enregistré ni envoyé. « Couper » reste visible partout." : direct.supported() ? "Coupé. Tu choisis l'écran à chaque fois ; le pilotage (clics, clavier) viendra avec l'appli Windows." : "Ce navigateur ne sait pas partager l'écran.";
+        go.disabled = !direct.supported();
+      };
+      direct.attach(v); sync(); document.addEventListener("hub:direct-state", sync); win.dataset.cleanup = "1"; win._clean = () => { document.removeEventListener("hub:direct-state", sync); direct.detach(v); };
+    },
     internet(body, win) {
       const f = document.createElement("form"); f.className = "dnet"; f.setAttribute("role", "search");
       f.innerHTML = '<div class="dnrow"><input type="search" placeholder="Rechercher, ou !y pour YouTube…" aria-label="Recherche" autocomplete="off" enterkeyhint="search"><button type="submit" class="btn">Chercher</button></div><div class="dchips" role="group" aria-label="Moteur"></div><div class="dlinks"></div>';
@@ -76,7 +92,7 @@ export function initApps({ desk, panels: P, wins, plans }) {
       setTimeout(() => inp.focus({ preventScroll: true }), 50);
     }
   };
-  const TITRE = { fichiers: "Fichiers", pc: "Ce PC", internet: "Internet" };
+  const TITRE = { fichiers: "Fichiers", pc: "Ce PC", internet: "Internet", direct: "Écran en direct" };
 
   // ---------- Fenêtre ----------
   const deskSize = () => ({ w: desk.clientWidth || innerWidth - 32, h: desk.clientHeight || innerHeight - 170 });
@@ -187,7 +203,8 @@ export function initApps({ desk, panels: P, wins, plans }) {
   function close(k) {
     const el = open[k]; if (!el) return;
     delete open[k]; const i = order.indexOf(k); if (i >= 0) order.splice(i, 1); st[k] = { ...(st[k] || {}), open: false, min: false }; save();
-    const fin = () => { el.remove(); paintFocus(); };
+    if (k === "direct") direct.stop(true);   // fermer la fenêtre coupe le partage
+    const fin = () => { if (el._clean) el._clean(); el.remove(); paintFocus(); };
     if (isMin(el)) fin(); else fly(el, k, true, fin);
   }
   // Fenêtres ouvertes la dernière fois : on les remet (le bureau est caché tant qu'on n'est pas en plan 3)
