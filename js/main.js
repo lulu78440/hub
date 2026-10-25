@@ -9,6 +9,7 @@ import { createPlans } from "./ui/plans.js";
 import { createWindows } from "./ui/windows.js";
 import { initMenus } from "./ui/menus.js";
 import { initOutils } from "./ui/outils.js";
+import { createQuality } from "./ui/qualite.js";
 import { toast } from "./ui/toast.js";
 import { initData } from "./ui/data.js";
 import { initNotes } from "./widgets/notes.js";
@@ -83,7 +84,9 @@ async function start() {
   initLockUI();
   const data = initData();
   const menus = initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data, test: () => window.__hub.reminders.test() });
-  initOutils({ wins, entity: force.entity, cursor, resetLayout, data, menus, test: () => window.__hub.reminders.test() });
+  let core = null, fx = null;
+  const quality = createQuality({ onChange: () => resize() });
+  initOutils({ wins, entity: force.entity, cursor, resetLayout, data, menus, quality, test: () => window.__hub.reminders.test() });
   initNotes();
   initTasks();
   initAgenda();
@@ -109,20 +112,20 @@ async function start() {
   initDusk();
   $("b-backup").addEventListener("click", () => backup.test());
 
-  let core = null, fx = null;
   function resize() {
     RW = innerWidth; RH = innerHeight;
     if (state.lite) plans.layout(RW, RH); else place(wins.layout(RW, RH));
-    if (fx) { fx.resize(RW, RH, lite ? 1 : Math.min(devicePixelRatio || 1, 1.75)); core.resize(RW, RH); }
+    if (fx) { fx.resize(RW, RH, quality.dpr()); core.resize(RW, RH); }
   }
   resize(); addEventListener("resize", resize);
   addEventListener("pointermove", (e) => { if (e.pointerType === "touch") return; state.mx = e.clientX / RW * 2 - 1; state.my = e.clientY / RH * 2 - 1; });
 
   // 2) Une seule boucle d'animation, arrêtée quand l'onglet est caché.
   const fpsEl = $("fps");
-  let t = 0, frames = 0, fpsT = 0, raf = 0, last = 0;
+  let t = 0, frames = 0, fpsT = 0, raf = 0, last = 0, sceneDt = 0, sceneN = 0;
   function loop(now) {
     raf = requestAnimationFrame(loop);
+    quality.feed(now);
     const dt = Math.min((now - last) / 1000 || 0, 0.05); last = now;
     frames++; fpsT += dt;
     if (fpsT >= 0.5) { fpsEl.textContent = Math.round(frames / fpsT) + " img/s"; frames = 0; fpsT = 0; }
@@ -132,9 +135,11 @@ async function start() {
     wins.update(dt);
     if (images.update) images.update(dt);
     state.energy += (state.energyTarget - state.energy) * Math.min(dt * 3, 1);
-    if (core) {
+    sceneDt += dt; sceneN++;
+    if (core && sceneN % quality.sceneEvery() === 0) {   // au repos ou en qualité Minimal : une image de scène sur deux, temps cumulé
+      const sdt = sceneDt; sceneDt = 0;
       const c = core.frame(anchorEl.getBoundingClientRect(), RW, RH); if (c) fx.setCenter(c);
-      core.update({ t, dt, k, energy: state.energy, accent: state.accent ?? state.mood, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
+      core.update({ t, dt: sdt, k, energy: state.energy, accent: state.accent ?? state.mood, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
       updateLabels(core.project(RW, RH), state.lite ? 1 : plans.zoom);
       fx.update(t, state.energy, state.cine);
       fx.render();
@@ -146,7 +151,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
+  window.__hub = { state, quality, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;

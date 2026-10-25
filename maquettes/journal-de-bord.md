@@ -291,3 +291,5 @@ Charte des postes du 25/10 : ce poste est le seul à modifier l'interface (fichi
 
 **[25/10 19:46 · Refonte · ergonomie · branche refonte-auto, 7.27.0]** ergo-palette : champ de recherche en tête d'Outils (filtre titre/état/groupe, Entrée = 1re tuile, flèches), Ctrl+K ouvre Outils sur ce champ (réglage `palette-ctrlk`). Fichiers : js/ui/outils.js, css/hud.css (.o-q). Rien dans js/noyau/ ni labo/. Pas fusionné dans main.
 
+
+**[25/10 21:40 · Refonte · ergonomie · branche refonte-auto2, 7.28.0]** ergo-perf-repos : nouveau `js/ui/qualite.js` (niveaux Complet / Allégé / Minimal, automatique seulement vers le bas, scène 3D redessinée une image sur deux au repos ou en Minimal). **Fichiers partagés touchés** : `js/main.js` (boucle unique : `quality.feed`, scène une image sur deux, ratio de pixels via `quality.dpr()` ; aucun fichier de `js/scene/` modifié), `sw.js` (precache `qualite.js`), `js/version.js` (7.28.0), `js/ui/outils.js` et `css/hud.css` (poste Refonte). Rien dans `js/noyau/` ni `labo/`. Pas fusionné dans main.

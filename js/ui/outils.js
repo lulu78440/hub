@@ -8,10 +8,11 @@ import { prefs } from "../store/prefs.js";
 import { sound } from "../device/sound.js";
 import { toast } from "./toast.js";
 import { PAR_DEFAUT } from "./reserve.js";
+import { LIBELLE } from "./qualite.js";
 
 const $ = (id) => document.getElementById(id);
 
-export function initOutils({ wins, entity, cursor, resetLayout, data, menus, test }) {
+export function initOutils({ wins, entity, cursor, resetLayout, data, menus, quality, test }) {
   const lite = state.lite, mob = menus && menus.mob;
   if (lite && !mob) return { open() {}, close() {} };
   const btn = $("b-outils");
@@ -95,6 +96,7 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, tes
     G.push({ h: "Affichage", tiles: [
       { t: "Compteur img/s", s: document.body.classList.contains("show-fps") ? "affiché" : "caché", keep: true, fn: () => { const on = !document.body.classList.contains("show-fps"); document.body.classList.toggle("show-fps", on); prefs.setOn("compteur-fps", on); } },
       { t: "Salle allégée", s: document.body.classList.contains("salle-light") ? "sans reflets" : "avec reflets", keep: true, fn: () => { const on = !document.body.classList.contains("salle-light"); document.body.classList.toggle("salle-light", on); prefs.setOn("salle-allegee", on); } } ] });
+    if (quality) G.push({ h: "Qualité du rendu", note: "Automatique : le hub baisse tout seul la qualité si les images par seconde chutent, sans jamais la remonter.", tiles: ["auto", "complet", "allege", "minimal"].map((m) => ({ t: LIBELLE[m], s: m === "auto" ? "actuel : " + LIBELLE[quality.name].toLowerCase() : "", on: quality.mode === m, keep: true, fn: () => quality.set(m) })) });
     G.push({ h: "Palette", tiles: [{ t: "Raccourci Ctrl+K", s: prefs.get("palette-ctrlk", "1") !== "0" ? "actif" : "coupé", keep: true, on: prefs.get("palette-ctrlk", "1") !== "0", fn: () => { prefs.set("palette-ctrlk", prefs.get("palette-ctrlk", "1") !== "0" ? "0" : "1"); } }] });
     G.push({ h: "Réglages et diagnostic", tiles: [{ t: "Réglages et diagnostic…", s: "touche D", fn: () => $("b-diag").click() }] });
     const rest = cache.filter((l) => !used.has(l));

@@ -1177,3 +1177,8 @@ body.lite .o-q { min-height: 48px; font-size: 16px; }
 @media (prefers-reduced-motion: reduce) { .outils, .o-tile, .dwin, .bur-pop, .dico .hx { transition: none !important; animation: none !important; } }
 .o-q::placeholder { color: #8fb3c4; }
 .o-tile:focus-visible, .o-q:focus-visible, .dwin .dx:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* ---------- Refonte · ergo-perf-repos : niveaux de qualité (Allégé, Minimal) ---------- */
+body.q-allege:not(.lite) .win.p2, body.q-minimal:not(.lite) .win.p2 { -webkit-box-reflect: none !important; }
+body.q-allege:not(.lite) .dof, body.q-minimal:not(.lite) .dof { display: none !important; }
+body.q-minimal:not(.lite) .win.p2 .panel { box-shadow: none !important; }
