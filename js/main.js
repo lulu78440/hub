@@ -154,6 +154,7 @@ async function start() {
   try { renderer = new THREE.WebGLRenderer({ canvas: $("scene"), antialias: true, powerPreference: "high-performance" }); }
   catch (e) { showError("La 3D (WebGL) est désactivée. Active l'accélération matérielle dans les réglages de Brave."); return; }
   core = createCore(THREE, { lite });
+  document.dispatchEvent(new CustomEvent("hub:scene", { detail: { THREE, scene: core.scene, camera: core.camera, lite } }));   // surprises (lune)
   fx = createPostFX(THREE, renderer, core.scene, core.camera, { lite });
   resize();
 }

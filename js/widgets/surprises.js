@@ -2,7 +2,7 @@
 // 1. Briefing holographique : à la première ouverture du jour, le noyau te résume la journée (météo, tâches, rendez-vous, lune, sauvegarde).
 // 2. Constellation des exploits : chaque tâche cochée allume une étoile durable autour du noyau (survol = la tâche et sa date).
 // 3. Mode Focus : un minuteur de concentration (25 ou 50 min) dessiné en anneau autour de l'orbe ; tout le reste s'estompe.
-// 4. Hyperespace : tape ↑ ↑ ↓ ↓ ← → ← → B A (ou « hyper » au clavier) et le hub passe en vitesse lumière.
+// 4. Hyperespace : maintiens la barre Espace sur le fond (ou ↑ ↑ ↓ ↓ ← → ← → B A, ou « hyper ») et le hub passe en vitesse lumière.
 // 5. Phase de la lune, calculée sur l'appareil, dans le briefing et la météo.
 // Rien ne sort de l'appareil ; tout respecte « mouvement réduit ».
 import { store } from "../store/storage.js";
@@ -16,6 +16,7 @@ import { state, pulse } from "../state.js";
 
 const ON = (k) => prefs.on("surprise-" + k);
 const pad = (n) => String(n).padStart(2, "0");
+const mulberry = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 
 /** Phase de la lune (0 = nouvelle, 0.5 = pleine), à partir d'une nouvelle lune connue (6 janvier 2000 18:14 UTC). */
 export function moon(d = new Date()) {
@@ -123,45 +124,184 @@ export function initSurprises({ force, plans, wins }) {
   let warp = 0;
   const CODE = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
   let seq = [], typed = "";
+  // Déclencheur principal (demande de Lucien, 25/10) : maintenir la barre Espace 0,6 s sur le fond. Le noyau se charge pendant l'appui.
+  const HOLD_MS = 600;
+  let spaceT = null, spaceFired = false;
+  const canHyper = () => ON("hyper") && !state.lite && !state.reduce && warp <= 0;
+  const isSpace = (e) => e.code === "Space" || e.key === " ";
   addEventListener("keydown", (e) => {
-    if (e.target.closest && e.target.closest("input, textarea, [contenteditable='true']")) return;
+    if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable='true']")) return;
+    if (isSpace(e) && !(e.target.closest && e.target.closest("button, a, [role='button'], [tabindex]"))) {
+      e.preventDefault();
+      if (e.repeat || spaceT || spaceFired) return;
+      if (state.reduce && ON("hyper")) { hyper(); spaceFired = true; return; }   // affiche le message « mouvement réduit »
+      if (!canHyper()) return;
+      state.energyTarget = 0.9; pulse(0.5);
+      spaceT = setTimeout(() => { spaceT = null; spaceFired = true; hyper(); }, HOLD_MS);
+      return;
+    }
     seq = seq.concat(e.key.length === 1 ? e.key.toLowerCase() : e.key).slice(-CODE.length);
     typed = (typed + (e.key.length === 1 ? e.key.toLowerCase() : " ")).slice(-5);
     if (seq.join() === CODE.join() || typed === "hyper") { seq = []; typed = ""; hyper(); }
   });
+  const releaseSpace = () => { if (spaceT) { clearTimeout(spaceT); spaceT = null; state.energyTarget = 0; } spaceFired = false; };
+  addEventListener("keyup", (e) => { if (isSpace(e)) releaseSpace(); });
+  addEventListener("blur", releaseSpace);
   function hyper() {
     if (!ON("hyper") || state.lite || state.reduce) { if (state.reduce) toast("Hyperespace désactivé : « mouvement réduit » est demandé par Windows"); return; }
-    warp = 3.2; state.energyTarget = 1.6; state.accent = 0x9b72ff; sound.play("rappel", true); toast("Saut en hyperespace…");
+    warp = WARP; state.energyTarget = 1.6; state.accent = 0x9b72ff; sound.play("rappel", true); toast("Saut en hyperespace…");
+    sparks.length = 0; waves = [0, 0.45, 1.05, 1.75]; burst = 260;
+    document.body.classList.add("hyperon", "hypertr");
+    clearTimeout(hyper.t); hyper.t = setTimeout(() => { if (warp > 0) { warp = 0; sparks.length = 0; } endHyper(); }, WARP * 1000 + 400);   // garde-fou si le dessin s'arrête (onglet caché)
     setTimeout(() => { state.energyTarget = 0; state.accent = null; }, 3000);
   }
+  // Effets (demande de Lucien, 25/10) : tout l'écran vibre, l'interface se floute, l'orbe déverse de l'énergie
+  // (ondes de choc, éclairs, gerbes de particules), en plus des traits de vitesse lumière. Durée 3,2 s, PC seulement.
+  const WARP = 3.2;
+  const css = document.createElement("style");
+  css.textContent = `html { background: var(--void, #02070d); }
+body.hypertr .win .panel, body.hypertr header.top, body.hypertr .agband, body.hypertr .search, body.hypertr .ticker, body.hypertr .labels, body.hypertr .mthumbs { transition: filter .35s ease, opacity .35s ease; }
+body.hyperon .win .panel, body.hyperon header.top, body.hyperon .agband, body.hyperon .search, body.hyperon .ticker, body.hyperon .labels { filter: blur(5px) brightness(1.25) saturate(1.3); opacity: .7; }`;
+  document.head.append(css);
   const streaks = Array.from({ length: 160 }, () => ({ a: Math.random() * 6.283, d: Math.random(), s: 0.4 + Math.random() }));
+  const sparks = []; let waves = [], burst = 0, bolts = [], boltT = 0;
+  const COLS = ["190,248,255", "120,230,255", "200,180,255", "255,255,255"];
+  function spawn(c, n) {
+    for (let i = 0; i < n && sparks.length < 650; i++) {
+      const a = Math.random() * 6.283, v = 260 + Math.random() * 1100, r0 = c.R * (0.3 + Math.random() * 0.5);
+      sparks.push({ x: c.x + Math.cos(a) * r0, y: c.y + Math.sin(a) * r0, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7 + Math.random() * 1.1, age: 0, col: COLS[(Math.random() * COLS.length) | 0], w: 0.8 + Math.random() * 2.4 });
+    }
+  }
+  function makeBolt(c, maxR) {
+    const a = Math.random() * 6.283, len = maxR * (0.25 + Math.random() * 0.5), pts = [[c.x + Math.cos(a) * c.R * 0.4, c.y + Math.sin(a) * c.R * 0.4]];
+    const steps = 9 + ((Math.random() * 6) | 0);
+    for (let i = 1; i <= steps; i++) { const r = c.R * 0.4 + (len * i) / steps, j = (Math.random() - 0.5) * 0.35; pts.push([c.x + Math.cos(a + j) * r, c.y + Math.sin(a + j) * r]); }
+    return pts;
+  }
+  const endHyper = () => { document.body.classList.remove("hyperon"); document.body.style.translate = ""; setTimeout(() => document.body.classList.remove("hypertr"), 500); };
   force.addLayer((g, dt) => {
     if (warp <= 0) return; warp -= dt;
-    const c = core(), W = g.canvas.width, H = g.canvas.height, k = Math.min(1, warp / 0.6) * Math.min(1, (3.2 - warp) / 0.4), maxR = Math.hypot(W, H) * 0.6;
-    g.lineCap = "round";
+    if (warp <= 0) { endHyper(); sparks.length = 0; return; }
+    const c = core(), W = g.canvas.width, H = g.canvas.height, e = WARP - warp, k = Math.min(1, warp / 0.6) * Math.min(1, e / 0.4), maxR = Math.hypot(W, H) * 0.6;
+    if (warp < 0.45) document.body.classList.remove("hyperon");   // l'interface revient nette pendant la retombée
+    // Vibration de tout l'écran (forte au départ, puis grondement)
+    const amp = (e < 0.35 ? 14 : 6) * k;
+    document.body.style.translate = `${((Math.random() - 0.5) * 2 * amp).toFixed(1)}px ${((Math.random() - 0.5) * 2 * amp).toFixed(1)}px`;
+    g.save(); g.globalCompositeOperation = "lighter"; g.lineCap = "round";
+    // Cœur qui irradie
+    const glowR = c.R * (2.2 + 0.6 * Math.sin(e * 22)) * (0.6 + k);
+    let gr = g.createRadialGradient(c.x, c.y, 0, c.x, c.y, glowR);
+    gr.addColorStop(0, `rgba(235,250,255,${(0.55 * k).toFixed(2)})`); gr.addColorStop(0.35, `rgba(120,220,255,${(0.28 * k).toFixed(2)})`); gr.addColorStop(1, "rgba(155,114,255,0)");
+    g.fillStyle = gr; g.beginPath(); g.arc(c.x, c.y, glowR, 0, 6.283); g.fill();
+    // Ondes de choc
+    waves.forEach((t0, i) => {
+      const age = e - t0; if (age < 0 || age > 1.3) return;
+      const r = c.R * 0.6 + age * maxR * 0.95, al = (1 - age / 1.3) * 0.75;
+      g.lineWidth = 10 * (1 - age / 1.3) + 1.5; g.strokeStyle = `rgba(${i % 2 ? "190,170,255" : "150,240,255"},${al.toFixed(2)})`;
+      g.beginPath(); g.arc(c.x, c.y, r, 0, 6.283); g.stroke();
+      g.lineWidth = 2; g.strokeStyle = `rgba(255,255,255,${(al * 0.8).toFixed(2)})`; g.beginPath(); g.arc(c.x, c.y, r - 4, 0, 6.283); g.stroke();
+    });
+    // Gerbes de particules d'énergie
+    if (burst) { spawn(c, burst); burst = 0; }
+    if (warp > 0.6) spawn(c, Math.round(dt * 220));
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i]; s.age += dt; if (s.age > s.life) { sparks.splice(i, 1); continue; }
+      const px = s.x, py = s.y; s.vx *= 1 + dt * 0.6; s.vy *= 1 + dt * 0.6; s.x += s.vx * dt; s.y += s.vy * dt;
+      const al = (1 - s.age / s.life) * k;
+      g.strokeStyle = `rgba(${s.col},${al.toFixed(2)})`; g.lineWidth = s.w;
+      g.beginPath(); g.moveTo(px - s.vx * dt * 2, py - s.vy * dt * 2); g.lineTo(s.x, s.y); g.stroke();
+    }
+    // Éclairs qui jaillissent de l'orbe
+    boltT -= dt; if (boltT <= 0) { boltT = 0.07; bolts = Array.from({ length: e < 0.5 ? 7 : 4 }, () => makeBolt(c, maxR)); }
+    bolts.forEach((pts) => {
+      [[7, `rgba(140,200,255,${(0.22 * k).toFixed(2)})`], [2, `rgba(240,250,255,${(0.9 * k).toFixed(2)})`]].forEach(([w, col]) => {
+        g.lineWidth = w; g.strokeStyle = col; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); pts.forEach(([x, y]) => g.lineTo(x, y)); g.stroke();
+      });
+    });
+    // Traits de vitesse lumière
     streaks.forEach((s) => {
       s.d += dt * s.s * 1.6; if (s.d > 1) s.d -= 1;
       const r1 = s.d * s.d * maxR, r2 = r1 + (20 + s.d * 160) * k;
       g.strokeStyle = `rgba(${s.s > 1.1 ? "200,180,255" : "190,248,255"},${(0.75 * k * s.d + 0.05).toFixed(2)})`; g.lineWidth = 1 + s.d * 2.2;
       g.beginPath(); g.moveTo(c.x + Math.cos(s.a) * r1, c.y + Math.sin(s.a) * r1); g.lineTo(c.x + Math.cos(s.a) * r2, c.y + Math.sin(s.a) * r2); g.stroke();
     });
-    g.fillStyle = `rgba(220,240,255,${(0.12 * k).toFixed(3)})`; g.fillRect(0, 0, W, H);
+    g.restore();
+    // Éclair blanc au départ, voile lumineux ensuite
+    g.fillStyle = `rgba(220,240,255,${(e < 0.18 ? 0.45 * (1 - e / 0.18) + 0.12 * k : 0.12 * k).toFixed(3)})`; g.fillRect(0, 0, W, H);
   });
+
+  // ---------- 5b. Pleine lune dans le ciel 3D (demande de Lucien, 25/10) ----------
+  // Visible seulement les nuits de pleine lune (phase 0,47 → 0,53, environ 3 nuits par mois), dans le ciel derrière l'orbe.
+  let moon3d = null;
+  document.addEventListener("hub:scene", ({ detail: { THREE, scene, lite } }) => {
+    // Texture réaliste dessinée une seule fois : gris neutre, mers aux contours irréguliers, grain des hauts plateaux,
+    // cratères éclairés de côté (fond sombre, rebord clair), éjectas, Tycho et Copernic avec leurs rayons, bord assombri.
+    const c = document.createElement("canvas"); c.width = c.height = lite ? 384 : 1024;
+    const g = c.getContext("2d"), S = c.width, R = S / 2 - 2, rnd = mulberry(7), u = S / 1024;
+    g.save(); g.beginPath(); g.arc(S / 2, S / 2, R, 0, 6.283); g.clip();
+    g.fillStyle = "#bdbdb8"; g.fillRect(0, 0, S, S);
+    // Grain des hauts plateaux
+    for (let i = 0; i < (lite ? 2500 : 14000); i++) { const v = rnd() < 0.5 ? "255,255,250" : "60,60,62"; g.fillStyle = `rgba(${v},${(0.04 + rnd() * 0.08).toFixed(3)})`; g.fillRect(rnd() * S, rnd() * S, (1 + rnd() * 2) * u, (1 + rnd() * 2) * u); }
+    // Mers : chaque mer = un amas de taches qui se chevauchent (contours irréguliers)
+    g.filter = `blur(${3 * u}px)`;
+    [[0.40, 0.30, 0.13], [0.30, 0.42, 0.15], [0.55, 0.33, 0.09], [0.60, 0.47, 0.10], [0.40, 0.55, 0.09], [0.22, 0.30, 0.07], [0.70, 0.40, 0.05], [0.50, 0.62, 0.06]].forEach(([x, y, r]) => {
+      for (let k = 0; k < 18; k++) { const a = rnd() * 6.283, d = rnd() * r * 0.8, rr = r * (0.25 + rnd() * 0.45); g.fillStyle = `rgba(50,52,58,${(0.4 + rnd() * 0.2).toFixed(2)})`; g.beginPath(); g.arc((x + Math.cos(a) * d) * S, (y + Math.sin(a) * d) * S, rr * S, 0, 6.283); g.fill(); }
+    });
+    g.filter = "none";
+    // Cratères éclairés depuis la gauche
+    const crater = (x, y, r, ejecta) => {
+      if (ejecta) { const eg = g.createRadialGradient(x, y, r, x, y, r * 2.6); eg.addColorStop(0, "rgba(255,255,250,.22)"); eg.addColorStop(1, "rgba(255,255,250,0)"); g.fillStyle = eg; g.beginPath(); g.arc(x, y, r * 2.6, 0, 6.283); g.fill(); }
+      g.fillStyle = "rgba(25,25,30,.8)"; g.beginPath(); g.arc(x - r * 0.12, y, r * 0.92, 0, 6.283); g.fill();      // fond dans l'ombre
+      g.fillStyle = "rgba(170,170,165,.5)"; g.beginPath(); g.arc(x + r * 0.15, y, r * 0.6, 0, 6.283); g.fill();     // fond éclairé
+      g.strokeStyle = "rgba(255,255,248,.95)"; g.lineWidth = Math.max(1.5 * u, r * 0.22); g.beginPath(); g.arc(x, y, r, -1.2, 1.2); g.stroke();   // rebord éclairé (côté droit)
+      g.strokeStyle = "rgba(40,40,45,.45)"; g.lineWidth = Math.max(1, r * 0.12); g.beginPath(); g.arc(x, y, r, 1.9, 4.4); g.stroke();      // rebord dans l'ombre
+    };
+    for (let i = 0; i < (lite ? 70 : 170); i++) { const r = (3 + Math.pow(rnd(), 3) * 34) * u; crater(rnd() * S, rnd() * S, r, r > 18 * u && rnd() < 0.5); }
+    // Tycho (sud) et Copernic, avec leurs rayons clairs
+    [[0.46, 0.80, 16, 22], [0.37, 0.47, 14, 12]].forEach(([x, y, r, n]) => {
+      g.strokeStyle = "rgba(255,255,250,.13)";
+      for (let i = 0; i < n; i++) { const a = rnd() * 6.283, l = (0.1 + rnd() * 0.32) * S; g.lineWidth = (1 + rnd() * 3) * u; g.beginPath(); g.moveTo(x * S, y * S); g.lineTo(x * S + Math.cos(a) * l, y * S + Math.sin(a) * l); g.stroke(); }
+      crater(x * S, y * S, r * u, true);
+    });
+    // Assombrissement du bord
+    const gr = g.createRadialGradient(S / 2, S / 2, R * 0.55, S / 2, S / 2, R); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(8,12,20,.6)");
+    g.fillStyle = gr; g.fillRect(0, 0, S, S); g.restore();
+    const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4;
+    // Teinte sombre : la lueur de la scène (bloom sans seuil) éclaircit tout ; plus clair, les cratères disparaissent.
+    const disc = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0x2e3338, fog: false, depthWrite: false, transparent: true }));
+    // Halo bleuté autour
+    const hc = document.createElement("canvas"); hc.width = hc.height = 128; const hg = hc.getContext("2d");
+    const hr = hg.createRadialGradient(64, 64, 20, 64, 64, 64); hr.addColorStop(0, "rgba(190,215,255,.55)"); hr.addColorStop(0.45, "rgba(150,190,255,.14)"); hr.addColorStop(1, "rgba(150,190,255,0)");
+    hg.fillStyle = hr; hg.fillRect(0, 0, 128, 128);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(hc), fog: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.12 }));
+    const grp = new THREE.Group(); grp.add(glow, disc); grp.renderOrder = -10; disc.renderOrder = glow.renderOrder = -10;
+    scene.add(grp);
+    // Place choisie par Lucien (A) : dans le ciel libre, en haut à gauche de l'orbe, entre les deux colonnes de fenêtres.
+    const D = 10; grp.position.set(-7.5, 7.2, -45); disc.scale.set(D, D, 1); glow.scale.set(D * 2.4, D * 2.4, 1);
+    moon3d = { grp };
+    showMoon();
+  });
+  function showMoon(forceOn) {
+    if (!moon3d) return;
+    const p = moon().phase;
+    moon3d.grp.visible = forceOn ?? (ON("lune") && p >= 0.47 && p < 0.53);
+  }
+  setInterval(() => showMoon(), 30 * 60e3);
 
   // ---------- Menus et réglages ----------
   extendMenu("fond", () => (focus ? [{ t: "Arrêter le Focus", fn: () => stopFocus(false) }] : [{ t: "Focus 25 min", fn: () => startFocus(25) }, { t: "Focus 50 min", fn: () => startFocus(50) }])
     .concat([{ t: "Revoir le briefing du jour", fn: () => briefing(true) }]));
   extendMenu("fenetre", (el) => focus ? [] : [{ t: "Focus 25 min sur cette fenêtre", fn: () => startFocus(25, el) }]);
-  const list = [["briefing", "Briefing holographique du matin"], ["constellation", "Constellation des tâches accomplies"], ["focus", "Mode Focus autour de l'orbe"], ["hyper", "Hyperespace (code secret)"]];
+  const list = [["briefing", "Briefing holographique du matin"], ["constellation", "Constellation des tâches accomplies"], ["focus", "Mode Focus autour de l'orbe"], ["hyper", "Hyperespace (maintenir la barre Espace)"], ["lune", "Pleine lune dans le ciel 3D"]];
   const box = document.getElementById("surprises");
   if (box) {
     list.forEach(([k, label]) => {
       const lab = document.createElement("label"); lab.className = "chkl";
       const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = ON(k);
-      cb.addEventListener("change", () => { prefs.setOn("surprise-" + k, cb.checked); if (k === "constellation") pulse(0.6); });
+      cb.addEventListener("change", () => { prefs.setOn("surprise-" + k, cb.checked); if (k === "constellation") pulse(0.6); if (k === "lune") showMoon(); });
       lab.append(cb, document.createTextNode(" " + label)); box.append(lab);
     });
   }
   setTimeout(() => briefing(false), 2500);
-  return { briefing, startFocus, stopFocus, hyper, moon };
+  return { briefing, startFocus, stopFocus, hyper, moon, moonPreview: (on = true) => showMoon(on) };
 }
