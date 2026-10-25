@@ -144,8 +144,8 @@
     "ergo-visuel"
   ],
   "prochaine": {
-    "id": "ergo-fusion",
-    "texte": "Menus raccourcis, navigation à la molette, fonctions en réserve"
+    "id": "ergo-outils",
+    "texte": "Fenêtre Outils et réglages"
   },
   "built": [
     "ns-int",
@@ -168,9 +168,10 @@
     "p2-plan2",
     "ergo-audit",
     "ergo-plan",
-    "ergo-visuel"
+    "ergo-visuel",
+    "ergo-fusion"
   ],
-  "maj": "2026-10-25T17:25:00+01:00",
+  "maj": "2026-10-25T17:40:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",
