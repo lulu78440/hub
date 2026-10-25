@@ -1,0 +1,26 @@
+// Laboratoire · essais des citations phrase par phrase : `node labo/essais-citations.mjs`
+import { decouperPhrases, analyserCitations } from "../js/noyau/citations.js";
+let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
+const ext = [{ n: 1, titre: "Everest", texte: "L'Everest est la plus haute montagne du monde avec 8 849 mètres d'altitude, située dans l'Himalaya entre le Népal et la Chine." }, { n: 2, titre: "Thé vert", texte: "Le thé vert est riche en antioxydants et contient de la caféine en quantité modérée." }];
+ok(decouperPhrases("Un. Deux ! Trois ? Quatre").length === 4 && decouperPhrases("").length === 0 && decouperPhrases(null).length === 0, "découpe en phrases (et texte vide sans plantage)");
+ok(decouperPhrases("Voir [1]. Suite [2].").length === 2 && /\[1\]/.test(decouperPhrases("Voir [1]. Suite [2].")[0]), "les marqueurs restent attachés à leur phrase");
+let r = analyserCitations("L'Everest est la plus haute montagne du monde, à 8 849 mètres [1]. Le thé vert contient de la caféine [2].", ext);
+ok(r.phrases.length === 2 && r.phrases.every((p) => p.statut === "appuyee") && !r.aVerifier, "phrases bien citées : appuyées, rien à vérifier");
+r = analyserCitations("L'Everest est situé dans l'Himalaya entre le Népal et la Chine [2].", ext);
+ok(r.phrases[0].statut === "douteuse" && r.aVerifier && /ne parle pas/.test(r.phrases[0].raison), "citation du mauvais extrait : douteuse");
+r = analyserCitations("Le Mont Blanc culmine à 4 806 mètres [1].", ext);
+ok(r.phrases[0].statut === "douteuse", "citation d'un extrait qui ne contient pas l'affirmation : douteuse");
+r = analyserCitations("L'Everest est la plus haute montagne du monde avec 8 849 mètres d'altitude.", ext);
+ok(r.phrases[0].statut === "source-possible" && r.phrases[0].sources[0] === 1 && !r.aVerifier, "phrase sans marqueur mais appuyée par l'extrait 1 : source possible");
+r = analyserCitations("Le Kilimandjaro se trouve en Tanzanie et attire des milliers de randonneurs.", ext);
+ok(r.phrases[0].statut === "sans-source" && r.aVerifier, "affirmation sans aucun appui : sans source, à vérifier");
+r = analyserCitations("Voici ce que j'ai trouvé. Je ne trouve rien de plus. Veux-tu que je cherche encore ?", ext);
+ok(r.phrases.every((p) => p.statut === "neutre") && !r.aVerifier, "politesse, aveu d'ignorance et question : neutres, jamais reprochés");
+r = analyserCitations("Le thé vert est riche en antioxydants [9].", ext);
+ok(r.phrases[0].statut === "douteuse" && /n'existe pas/.test(r.phrases[0].raison), "marqueur inventé [9] : douteuse");
+r = analyserCitations("Le thé vert est riche en antioxydants [1][2].", ext);
+ok(r.phrases[0].statut === "appuyee" && r.phrases[0].sources.join() === "2", "plusieurs marqueurs : on retient celui qui appuie vraiment");
+r = analyserCitations("Réponse sans aucun extrait de mémoire disponible pour la question posée aujourd'hui.", []);
+ok(r.phrases[0].statut === "sans-source" && r.aVerifier, "aucun extrait donné au modèle : une affirmation reste « sans source »");
+ok(r.resume.sans_source === 1 && analyserCitations("", ext).phrases.length === 0, "résumé chiffré, réponse vide sans plantage");
+console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

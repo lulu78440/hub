@@ -63,6 +63,51 @@ export function validerParams(params, schema) {
   return null;
 }
 
+// ---------- Règle « aucun outil sans validation de Lucien » (lab-outils-regle) ----------
+// Aucune nouvelle fonction du hub n'entre automatiquement dans les outils de l'IA. Un poste qui veut donner un outil au Noyau le PROPOSE
+// avec son niveau (LIBRE = lecture seule, CONFIRMATION = dès qu'il y a une écriture, INTERDIT = sensible : jamais présenté) ; Lucien valide ;
+// seulement alors le nom et le niveau sont ajoutés ci-dessous. Un outil absent de cette liste, ou dont le niveau diffère, est écarté du catalogue.
+// Liste de départ = les 34 outils déjà en service, confirmée par Lucien le 25/10 à 21 h 05 (« je valide tout »), plus les 5 outils proposés par le
+// Labo et validés le même jour avec leur niveau (voir docs/labo-auto/a-decider.md et decisions.md).
+export const OUTILS_VALIDES = {
+  heure: "LIBRE", calculer: "LIBRE", chercher_memoire: "LIBRE", lire_taches: "LIBRE", lire_agenda: "LIBRE", lire_notes: "LIBRE", lire_favoris: "LIBRE", lire_meteo: "LIBRE", lire_rituels: "LIBRE", lire_actus: "LIBRE", lire_veille: "LIBRE", lire_fenetre: "LIBRE", lire_journal: "LIBRE", chercher_sources: "LIBRE", afficher: "LIBRE", lancer_focus: "LIBRE",
+  ajouter_tache: "CONFIRMATION", modifier_tache: "CONFIRMATION", cocher_tache: "CONFIRMATION", ajouter_evenement: "CONFIRMATION", modifier_evenement: "CONFIRMATION", ajouter_note: "CONFIRMATION", modifier_note: "CONFIRMATION", ajouter_favori: "CONFIRMATION", modifier_favori: "CONFIRMATION", creer_rappel: "CONFIRMATION", memoriser: "CONFIRMATION", apprendre: "CONFIRMATION", lire_page: "CONFIRMATION", lire_mails: "CONFIRMATION", jouer_media: "CONFIRMATION", regler_rituel: "CONFIRMATION", personnaliser_hub: "CONFIRMATION", creer_raccourci: "CONFIRMATION",
+  // Validés le 25/10 (21 h 05), pas encore branchés : voir OUTILS_A_BRANCHER.
+  consulter_manuel: "LIBRE", chercher_decisions: "LIBRE", lire_contradictions: "LIBRE", proposer_decision: "CONFIRMATION", creer_routine: "CONFIRMATION"
+};
+/**
+ * Outils VALIDÉS par Lucien mais pas encore actifs : leur module (manuel.js, decisions.js, contradictions.js, routines.js) n'est pas importé par le
+ * Noyau tant qu'il n'est pas dans le cache hors ligne (`sw.js`, fichier partagé : se fera à la fusion de labo-auto dans main). Le jour du branchement,
+ * il suffit d'ajouter l'outil (même nom, même niveau) au catalogue ci-dessous : la règle le laissera entrer.
+ */
+export const OUTILS_A_BRANCHER = [
+  { nom: "consulter_manuel", niveau: "LIBRE", module: "js/noyau/manuel.js", fonction: "creerManuel().pourModele()", pourquoi: "Lecture seule du manuel public du hub ; ne donne aucun droit sur les fonctions décrites." },
+  { nom: "chercher_decisions", niveau: "LIBRE", module: "js/noyau/decisions.js", fonction: "creerDecisions().chercher()", pourquoi: "Lecture seule des décisions déjà enregistrées par Lucien (décision, raison, conséquences)." },
+  { nom: "lire_contradictions", niveau: "LIBRE", module: "js/noyau/contradictions.js", fonction: "detecterContradictions()", pourquoi: "Lecture seule des signaux calculés par règles (au plus 3), sans rien modifier." },
+  { nom: "proposer_decision", niveau: "CONFIRMATION", module: "js/noyau/decisions.js", fonction: "creerDecisions().enregistrer()", pourquoi: "Écriture dans la mémoire des décisions : Lucien valide chaque enregistrement ; jamais d'effacement." },
+  { nom: "creer_routine", niveau: "CONFIRMATION", module: "js/noyau/routines.js", fonction: "validerRoutine()", pourquoi: "Écriture : crée ou modifie une routine ; Lucien valide la liste des étapes ; ne lance rien." }
+];
+/** Outils proposés par les postes, EN ATTENTE de validation : aucun pour l'instant (voir docs/labo-auto/outils-propose.md). */
+export const OUTILS_PROPOSES = [];
+/** Ne garde que les outils validés au bon niveau. Renvoie { catalogue, ecartes } ; rien n'est jamais ajouté ni élevé de niveau. */
+export function appliquerRegle(outils, valides = OUTILS_VALIDES) {
+  const catalogue = [], ecartes = [];
+  for (const o of outils) {
+    if (!Object.prototype.hasOwnProperty.call(valides, o.nom)) ecartes.push({ nom: o.nom, raison: "non validé par Lucien" });
+    else if (valides[o.nom] !== o.niveau) ecartes.push({ nom: o.nom, raison: `niveau ${o.niveau} différent du niveau validé ${valides[o.nom]}` });
+    else catalogue.push(o);
+  }
+  return { catalogue, ecartes };
+}
+/** Liste visible (laboratoire) : chaque outil actif avec son niveau, puis les validés à brancher, puis les propositions en attente. */
+export function listeOutils(outils, valides = OUTILS_VALIDES, proposes = OUTILS_PROPOSES, aBrancher = OUTILS_A_BRANCHER) {
+  const actifs = outils.map((o) => ({ nom: o.nom, niveau: o.niveau, statut: valides[o.nom] === o.niveau ? "validé" : "écarté", description: String(o.description || "").slice(0, 120) }));
+  const absent = (p) => !outils.some((o) => o.nom === p.nom);
+  const prets = aBrancher.filter(absent).map((p) => ({ nom: p.nom, niveau: p.niveau, statut: valides[p.nom] === p.niveau ? "validé · à brancher" : "écarté", description: p.pourquoi }));
+  const nonActifs = proposes.filter(absent).map((p) => ({ nom: p.nom, niveau: p.niveau, statut: "proposé · en attente de Lucien", description: p.pourquoi }));
+  return [...actifs, ...prets, ...nonActifs];
+}
+
 const S = (description, extra = {}) => ({ type: "string", description, ...extra });
 const O = (properties = {}, required = []) => ({ type: "object", properties, required });
 
@@ -218,7 +263,9 @@ export function creerCatalogue(ctx = {}) {
       exec: async (p) => rac().executerOutil(p) }
   ];
   for (const o of T) o.params = o.params || O();
-  return T;
+  const { catalogue, ecartes } = appliquerRegle(T);
+  if (ecartes.length && typeof console !== "undefined") console.warn("[Noyau] outils écartés (règle de validation) :", ecartes.map((e) => `${e.nom} (${e.raison})`).join(", "));
+  return catalogue;
 }
 
 /** Outil interne : fin obligatoire de chaque tour (contrat 4.2). Il n'agit pas sur le hub. */

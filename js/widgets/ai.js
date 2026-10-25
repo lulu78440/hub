@@ -16,7 +16,7 @@ import { onBackground } from "../ui/dom.js";
 import { daysFrom, dayKey } from "./when.js";
 import { state, pulse } from "../state.js";
 
-const LIB = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2/+esm";
+const LIB = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm";
 const GAPI = "https://generativelanguage.googleapis.com/v1beta";
 const KEY = "hub-secret-ia";
 const MODELS = [
