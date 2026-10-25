@@ -91,7 +91,7 @@ async function start() {
   initAlertsUI(reminders);
   const weather = initWeather();
   initFavs();
-  if (!state.lite) initMyPC({ plans });
+  if (!state.lite) initMyPC({ plans, wins });
   const images = initImages({ world: $("world"), plans, force, wins });
   initProgress();
   document.addEventListener("hub:focus-win", (e) => { const w = wins.elById(e.detail); if (w && !state.lite) wins.focus(w); });

@@ -14,15 +14,18 @@ const COULEURS = [["cyan", "cyan"], ["violet", "violet"], ["ambre", "ambre"], ["
 const EXTRA = {
   globe: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18",
   link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
+  mail: "M3 5h18v14H3zM3 6l9 7 9-7",
   star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"
 };
-const DEFAUT = [["app:Paramètres", "cyan"], ["app:Calculatrice", "vert"], ["app:Capture", "violet"], ["app:Horloge", "cyan"], ["app:Photos", "violet"], ["app:Brave", "ambre"]];
-const POS = [[0.31, 0.8], [0.385, 0.76], [0.46, 0.73], [0.54, 0.73], [0.615, 0.76], [0.69, 0.8]];
+const DEFAUT = [["hub:fichiers", "cyan"], ["hub:pc", "ambre"], ["hub:internet", "violet"], ["hub:mails", "vert"], ["app:Paramètres", "cyan"], ["app:Calculatrice", "vert"], ["app:Capture", "violet"], ["app:Brave", "ambre"]];
+const POS = [[0.365, 0.66], [0.455, 0.62], [0.545, 0.62], [0.635, 0.66], [0.365, 0.82], [0.455, 0.78], [0.545, 0.78], [0.635, 0.82]];
+const VERSION = 2;   // 2 : les applis du hub (Fichiers, Ce PC, Internet, Mails) s'ajoutent aux icônes déjà posées
 
 /** `apps` et `quick` : listes [nom, glyphe, adresse] de widgets/mypc.js ; `ico` : tracés des glyphes ; `openWindows` : ouvre une adresse Windows. */
-export function initBureau({ desk, plans, apps, quick, ico, openWindows }) {
+export function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps = [], openApp = () => {} }) {
   const G = { ...ico, ...EXTRA };
   const cat = [];
+  hubApps.forEach((a) => cat.push({ k: "hub:" + a.k, name: a.name, g: a.g, act: a.k, a: a.a }));
   apps.forEach(([name, g, uri]) => cat.push({ k: "app:" + name, name, g, uri }));
   quick.forEach(([name, g, uri]) => cat.push({ k: "q:" + name, name, g, uri }));
   const find = (k) => cat.find((c) => c.k === k);
@@ -39,7 +42,14 @@ export function initBureau({ desk, plans, apps, quick, ico, openWindows }) {
     if (d && Array.isArray(d.icons)) icons = d.icons.filter((i) => i && typeof i.id === "string" && Number.isFinite(i.x) && Number.isFinite(i.y) && (i.k === "url" ? /^https:\/\//.test(i.u || "") : find(i.k)));
     else icons = defaults();
   } catch (e) { icons = defaults(); }
-  const save = () => prefs.set(KEY, JSON.stringify({ v: 1, icons }));
+  const save = () => prefs.set(KEY, JSON.stringify({ v: VERSION, icons }));
+  try {   // migration v1 -> v2 : on garde les icônes posées et on ajoute les applis du hub sur une rangée libre
+    const d = JSON.parse(prefs.get(KEY, "null"));
+    if (d && d.v !== VERSION) {
+      DEFAUT.slice(0, 4).forEach(([k, a], n) => { if (find(k) && !icons.some((i) => i.k === k)) icons.push({ id: uid(), k, a, s: "m", x: POS[n][0], y: 0.5 }); });
+      save();
+    }
+  } catch (e) { /* rien à migrer */ }
   const info = (i) => (i.k === "url" ? { name: i.n || "Lien", g: i.g || "globe", uri: i.u } : { ...find(i.k), name: i.n || find(i.k).name });
 
   // ---------- Calque ----------
@@ -51,14 +61,14 @@ export function initBureau({ desk, plans, apps, quick, ico, openWindows }) {
   }
   function make(i) {
     const it = info(i), sz = (SIZES.find((s) => s[0] === i.s) || SIZES[1])[1];
-    const b = document.createElement("button"); b.type = "button"; b.className = "dico" + (it.uri ? "" : " off"); b.dataset.id = i.id; b.dataset.menu = "dico";
+    const b = document.createElement("button"); b.type = "button"; b.className = "dico" + (it.uri || it.act ? "" : " off"); b.dataset.id = i.id; b.dataset.menu = "dico";
     b.style.left = (i.x * 100).toFixed(3) + "%"; b.style.top = (i.y * 100).toFixed(3) + "%";
     b.style.setProperty("--sz", sz); b.dataset.a = i.a || "cyan";
     b.style.setProperty("--dl", (-(Math.abs(i.x * 7 + i.y * 11) % 1) * 7).toFixed(2) + "s");
     b.innerHTML = hexHTML(it, i.a, sz) + `<span class="dlb"></span>`;
     b.querySelector(".dlb").textContent = it.name;
-    b.title = it.uri ? it.name + (it.uri === "ici" ? "" : " · clic pour ouvrir, glisser pour déplacer") : it.name + " : demandera la petite appli Windows (V2)";
-    if (!it.uri) b.insertAdjacentHTML("beforeend", '<span class="mk" aria-hidden="true">◇</span>');
+    b.title = it.uri || it.act ? it.name + (it.uri === "ici" ? "" : " · clic pour ouvrir, glisser pour déplacer") : it.name + " : demandera la petite appli Windows (V2)";
+    if (!it.uri && !it.act) b.insertAdjacentHTML("beforeend", '<span class="mk" aria-hidden="true">◇</span>');
     return b;
   }
   function render() { layer.innerHTML = ""; icons.forEach((i) => layer.append(make(i))); }
@@ -67,6 +77,7 @@ export function initBureau({ desk, plans, apps, quick, ico, openWindows }) {
   function run(i) {
     const it = info(i);
     pulse(0.7);
+    if (it.act) { openApp(it.act); return; }
     if (it.uri === "ici") { toast("Brave : tu y es déjà"); return; }
     if (!it.uri) { toast(it.name + " : prévu avec la petite appli Windows (V2)"); return; }
     if (i.k === "url") { window.open(it.uri, "_blank", "noopener,noreferrer"); return; }
@@ -146,7 +157,7 @@ export function initBureau({ desk, plans, apps, quick, ico, openWindows }) {
     const d = shell("Ajouter une icône"), grid = document.createElement("div"); grid.className = "bp-grid";
     const used = new Set(icons.map((i) => i.k));
     cat.forEach((c) => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "dico mini" + (c.uri ? "" : " off") + (used.has(c.k) ? " used" : ""); b.style.setProperty("--sz", 44); b.dataset.a = c.k.startsWith("q:") ? "violet" : c.uri ? "cyan" : "ambre";
+      const b = document.createElement("button"); b.type = "button"; b.className = "dico mini" + (c.uri || c.act ? "" : " off") + (used.has(c.k) ? " used" : ""); b.style.setProperty("--sz", 44); b.dataset.a = c.a || (c.k.startsWith("q:") ? "violet" : c.uri ? "cyan" : "ambre");
       b.innerHTML = hexHTML(c, "cyan", 44) + '<span class="dlb"></span>'; b.querySelector(".dlb").textContent = c.name;
       b.title = used.has(c.k) ? "Déjà sur le bureau" : "Poser « " + c.name + " » sur le bureau";
       b.addEventListener("click", () => { if (used.has(c.k)) { toast("Cette icône est déjà sur le bureau"); return; } add(c.k, { a: b.dataset.a }); closePop(); toast("« " + c.name + " » posée sur le bureau · glisse-la où tu veux"); });

@@ -7,6 +7,7 @@ import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { pulse } from "../state.js";
 import { initBureau } from "../ui/bureau.js";
+import { initApps, HUB_APPS } from "../ui/bureau-apps.js";
 import { prefs } from "../store/prefs.js";
 
 const ICO = {
@@ -49,7 +50,7 @@ function makePanel(title, accent, tag) {
   return { sec, pb: sec.querySelector(".pb"), pf: sec.querySelector(".pf"), tag: sec.querySelector(".tag") };
 }
 
-export function initMyPC({ plans }) {
+export function initMyPC({ plans, wins }) {
   const desk = document.getElementById("desk"), win = document.querySelector('.win[data-id="pc"]');
   if (!desk || !win) return;
   let folders = [], session = [], recent = [];   // folders : mémorisés ; session : choisis pour cette visite
@@ -58,7 +59,7 @@ export function initMyPC({ plans }) {
   const L = desk.querySelector(".dcol.l"), R = desk.querySelector(".dcol.r");
   L.innerHTML = ""; R.innerHTML = "";
   const P = { dirs: makePanel("Dossiers", "cyan", persistentSupported ? "ACCÈS MÉMORISÉ" : "SESSION"), rec: makePanel("Fichiers récents", "violet", "LECTURE SEULE"), sys: makePanel("Système", "amber", "EN DIRECT"), set: makePanel("Réglages rapides", "cyan", "WINDOWS") };
-  L.append(P.dirs.sec, P.rec.sec); R.append(P.sys.sec, P.set.sec);
+  // Les panneaux ne sont plus fixes : ils s'ouvrent en fenêtres depuis les icônes du bureau (ui/bureau-apps.js).
 
   // Système
   P.sys.pb.innerHTML = '<div class="chips"><span>Batterie <b class="s-batt">…</b></span><span>Réseau <b class="s-net">…</b></span><span>Écran <b class="s-scr">…</b></span></div><p class="dnote">◇ Processeur, mémoire et disques s\'afficheront avec la petite appli Windows (V2) : un navigateur n\'y a pas accès.</p>';
@@ -234,7 +235,8 @@ export function initMyPC({ plans }) {
     return it;
   });
   desk.dataset.menu = "desk";
-  initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows });   // icônes flottantes (remplacent l'ancienne barre d'applis)
+  const appli = initApps({ desk, panels: P, wins, plans });
+  initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows, hubApps: HUB_APPS, openApp: appli.open });   // icônes flottantes (remplacent l'ancienne barre d'applis)
 
   renderDirs(); renderRecent(); reload();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshRecent(); });
