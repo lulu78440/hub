@@ -275,6 +275,21 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     return z;
   }
 
+  // ---------- Recherche par le sens, voix naturelle, interruption à la voix ----------
+  function avancesBloc() {
+    const z = h("div", { class: "nx-claude" }), msg = h("p", { class: "nx-dim" });
+    const sens = noyau.sens.statut(), pip = noyau.piper.statut();
+    const bSens = h("button", { class: "nx-btn", type: "button", onclick: async () => { bSens.disabled = true; msg.textContent = sens.actif ? "Désactivation…" : "Téléchargement du modèle (environ 120 Mo, une seule fois)…"; if (sens.actif) await noyau.sens.desactiver(); else await noyau.sens.activer(); rendreReglages(); } }, sens.actif ? "Désactiver" : "Activer la recherche par le sens");
+    const bPip = h("button", { class: "nx-btn", type: "button", onclick: async () => { bPip.disabled = true; msg.textContent = noyau.reglage("voix-piper") === "on" ? "Désactivation…" : "Téléchargement de la voix (environ 60 Mo, une seule fois)…"; await noyau.activerVoixNaturelle(noyau.reglage("voix-piper") !== "on"); rendreReglages(); } }, noyau.reglage("voix-piper") === "on" ? "Désactiver" : "Activer la voix naturelle");
+    z.append(
+      h("p", { class: "nx-dim", texte: "Trois options facultatives, désactivées par défaut. Les deux premières téléchargent un modèle une seule fois (avec ton accord) puis tournent sur ton appareil. Non testées sur un vrai navigateur par Claude : à essayer chez toi, le Noyau continue normalement si elles échouent." }),
+      h("div", { class: "nx-av" }, h("b", { texte: "Recherche par le sens" }), h("p", { class: "nx-dim", texte: `Retrouve une fiche même sans mot commun avec ta question. ${sens.webgpu ? "WebGPU disponible." : "WebGPU absent : calcul plus lent (WebAssembly)."} État : ${sens.etat}${sens.etat === "telechargement" ? " " + sens.progres + " %" : ""}${sens.erreur ? " (" + sens.erreur + ")" : ""} · ${sens.vecteurs} fiche(s) vectorisée(s).` }), bSens),
+      h("div", { class: "nx-av" }, h("b", { texte: "Voix naturelle (Piper)" }), h("p", { class: "nx-dim", texte: `Voix française neuronale pour la lecture à voix haute et la vue vocale. État : ${pip.etat}${pip.erreur ? " (" + pip.erreur + ")" : ""}. En cas d'échec, la voix du système reprend.` }), bPip),
+      bascule("Interruption à la voix (vue vocale)", "duplex", false, "Le micro reste ouvert quand l'orbe parle : si tu parles, elle se tait et t'écoute. Mieux avec un casque (sinon l'écho peut la couper)."),
+      msg);
+    return z;
+  }
+
   // ---------- Sauvegarde dans un dossier du PC ----------
   function sauvegardeBloc() {
     const z = h("div", { class: "nx-sauv" });
@@ -326,6 +341,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
         h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.cycle.oublierConversation(); fil.textContent = ""; accueilVide(); changerVue("chat"); } }, "Nouvelle conversation")),
       h("h4", { texte: "Claude (API payante) et choix automatique" }), claudeBloc(s),
       h("h4", { texte: "Relais gratuit de secours" }), libreBloc(s),
+      h("h4", { texte: "Sens, voix naturelle, interruption" }), avancesBloc(),
       h("h4", { texte: "Sauvegarde automatique" }), sauvegardeBloc(),
       h("h4", { texte: "Références consultées" }), sourcesBloc(),
       h("h4", { texte: "Importer" }), imports);

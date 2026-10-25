@@ -37,8 +37,15 @@ export function creerMemoire() {
   }
 
   /** Score de rappel = 3 × pertinence + 2 × importance + 0,5 × récence (chaque terme entre 0 et 1), comme Generative Agents. */
-  function classer(requete, { limite = 6, lointain = false, archive = false, diversite = 3 } = {}) {
-    const trouves = index.chercher(requete, { limite: 60, filtre: (id) => { const it = items.get(id); return it && (archive || !it.archive) && (lointain || !estLointain(it)); } });
+  let sens = null;
+  function classer(requete, { limite = 6, lointain = false, archive = false, diversite = 3, vecteur = null } = {}) {
+    const bon = (id) => { const it = items.get(id); return it && (archive || !it.archive) && (lointain || !estLointain(it)); };
+    const trouves = index.chercher(requete, { limite: 60, filtre: bon });
+    if (vecteur && sens) {                                            // recherche par le sens : ajoute les fiches proches même sans mot commun
+      const deja = new Map(trouves.map((r) => [r.id, r]));
+      for (const p of sens.plusProches(vecteur, 15, bon)) if (!deja.has(p.id)) { const r = { id: p.id, score: 0, pertinence: 0 }; trouves.push(r); deja.set(p.id, r); }
+      for (const r of trouves) { const prox = sens.proximite(vecteur, r.id); if (prox != null) r.pertinence = Math.max(0, Math.min(1, 0.6 * r.pertinence + 0.4 * prox + (r.pertinence === 0 ? 0.1 * prox : 0))); }
+    }
     const notes = trouves.map((r) => {
       const it = items.get(r.id), imp = Math.min(Math.max(it.importance || IMPORTANCE[it.type] || 5, 1), 10) / 10;
       return { it, s: 3 * r.pertinence + 2 * imp + 0.5 * recence(it) };
@@ -75,6 +82,9 @@ export function creerMemoire() {
     tous: ({ archive = true } = {}) => [...items.values()].filter((it) => archive || !it.archive),
     lire: (id) => items.get(id) || null,
     texteDe: (type) => [...items.values()].filter((it) => it.type === type && !it.archive).map((it) => it.texte),
+    definirSens: (x) => { sens = x; },
+    /** Vecteur de la question pour la recherche par le sens (null si inactive). */
+    preparer: async (requete) => (sens && sens.pret() ? sens.vecteurRequete(requete) : null),
     rappeler: (requete, opt) => (charge ? classer(requete, opt) : []),
     chercher: (requete, opt) => classer(requete, { archive: false, ...opt }),
     /** Mots tirés des souvenirs qu'il ne faut jamais envoyer à un site (prénoms, noms propres cités dans les faits). */

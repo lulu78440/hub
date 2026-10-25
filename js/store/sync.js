@@ -5,6 +5,7 @@
 // Les images ne sont pas synchronisées (trop lourdes) : elles passent par l'export.
 import { store, tombstones } from "./storage.js";
 import { vault } from "./vault.js";
+import { fusionnerLignes } from "./fusion.js";
 
 const KEY = "hub-synchro", DESC = "hub-synchro (données chiffrées du hub, ne pas modifier)", FILE = "hub-synchro.txt";
 const COLLS = ["notes", "tasks", "events", "favs", "kv"];
@@ -78,6 +79,8 @@ async function mergeIn(remote) {
       if (!r || typeof r.id !== "string") continue;
       const l = local.get(r.id), localDeleted = lt[k] && lt[k][r.id];
       if (localDeleted && localDeleted >= (r._m || 0)) continue;              // supprimé ici après la dernière modif là-bas
+      const uni = l ? fusionnerLignes(l, r) : null;                     // journaux : union des lignes des deux appareils, rien n'est écrasé
+      if (uni) { uni._m = Math.max(Date.now(), l._m || 0, r._m || 0); toPut.push(uni); continue; }
       if (!l || (r._m || 0) > (l._m || 0)) toPut.push(r);
     }
     for (const [id, t] of Object.entries(rt)) { const l = local.get(id); if (l && t >= (l._m || 0)) toDel.push(id); }

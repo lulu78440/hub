@@ -17,8 +17,19 @@ function choisirVoix() {
   return voixFr;
 }
 
+let moteurVoix = null;     // voix naturelle facultative (Piper) ; la voix du système reste le secours
+export const definirMoteurVoix = (m) => { moteurVoix = m; };
+
 /** Lit un texte. `ton` règle légèrement hauteur et débit (pas d'émotion jouée). */
 export function lire(texte, { ton = "calme", fin = () => {} } = {}) {
+  if (moteurVoix && moteurVoix.pret()) {
+    arreter(); let fini = false; const unefois = () => { if (!fini) { fini = true; fin(); } };
+    moteurVoix.dire(nettoyerPourOral(texte)).then(unefois, () => { if (!fini) { fini = true; lireSysteme(texte, ton, fin); } });       // échec : voix du système
+    return true;
+  }
+  return lireSysteme(texte, ton, fin);
+}
+function lireSysteme(texte, ton, fin) {
   if (!lectureDispo()) { fin(); return false; }
   arreter();
   const u = new SpeechSynthesisUtterance(nettoyerPourOral(texte)); u.lang = "fr-FR";
@@ -28,7 +39,7 @@ export function lire(texte, { ton = "calme", fin = () => {} } = {}) {
   u.onend = u.onerror = () => fin();
   speechSynthesis.speak(u); return true;
 }
-export function arreter() { if (lectureDispo()) speechSynthesis.cancel(); }
+export function arreter() { if (moteurVoix) moteurVoix.arreter(); if (lectureDispo()) speechSynthesis.cancel(); }
 if (lectureDispo()) { speechSynthesis.onvoiceschanged = () => { voixFr = null; choisirVoix(); }; }
 
 /** Dictée : renvoie { arreter }. Erreurs lisibles (Brave bloque la reconnaissance vocale). */

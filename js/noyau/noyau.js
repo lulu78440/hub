@@ -1,6 +1,9 @@
 // Noyau · point d'entrée (contrat, section 3). Assemble le cerveau, les mémoires, la barrière, les moteurs et le cycle de pensée.
 // `creerNoyau()` ne dépend que de l'hôte branché (hub réel ou hub simulé du laboratoire) ; `initNoyau()` est l'appel unique de js/main.js.
 import { pont } from "./pont.js";
+import { creerSens } from "./sens.js";
+import { creerPiper } from "./piper.js";
+import { definirMoteurVoix } from "./voix.js";
 import { hote, brancherHub } from "./hote.js";
 import { creerCatalogue } from "./outils.js";
 import { creerBarriere } from "./barriere.js";
@@ -21,9 +24,9 @@ import { creerUsages } from "./usages.js";
 import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.8";
+export const VERSION_NOYAU = "noyau-1.9";
 
-export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation } = {}) {
+export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation, sens: sensImpose = null } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
   const memoire = creerMemoire(), cerveau = creerCerveau(), etat = creerEtat(), budget = creerBudget();
   await Promise.all([memoire.charger(), cerveau.charger()]);
@@ -72,6 +75,8 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     return geminiMoteur();
   }
 
+  const piper = creerPiper();
+  const sens = sensImpose || creerSens({ memoire }); memoire.definirSens(sens);
   const usages = creerUsages({ barriere, memoire });
   const cycle = creerCycle({ moteur, barriere, catalogue, memoire, perception, cerveau, etat, budget: budgetTotal, usages });
   const savoir = creerSavoir({ memoire, barriere, juge: async (sys, txt) => { if (budgetTotal.restant() <= 0) throw new Error("budget du jour épuisé"); return demanderTexte(sys, txt); }, strict: () => hote.reglage.lire("noyau-test-strict", "on") !== "off" });
@@ -83,7 +88,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const demanderTexte = async (systeme, texte) => { const r = await moteur().generer({ systeme, messages: [{ role: "user", texte }], outils: [], temperature: 0.2 }); return String(r.texte || "").trim() || "(pas de réponse)"; };
   const sentinelle = creerSentinelle({ demander: demanderTexte });
   const noyau = {
-    sentinelle, demanderTexte, usages, savoir,
+    sentinelle, demanderTexte, usages, savoir, sens, piper,
     /** Recommandation système de l'orbe : locale, sans requête ; montrée dans l'échange du Noyau. */
     async recommander() { const r = await sentinelle.recommandation(); cycle.emettre({ type: "initiative", texte: r.texte, raison: "systeme", niveau: r.niveau, action: r.id === "export" || r.id === "tip-export" ? "export" : null }); if (r.niveau === "critique" || r.niveau === "alerte") hote.ui.toast("Sécurité : " + r.texte.slice(0, 90)); return r; },
     sauvegarde: creerSauvegarde(),
@@ -94,6 +99,8 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
       hote.reglage.ecrire("noyau-revue-jour", j); cycle.emettre({ type: "initiative", raison: "soir", action: "revue", texte: "La journée touche à sa fin. Veux-tu que je fasse le point : ce qui est fait, ce qui reste, ce que j'ai retenu et ton agenda de demain ?" }); return true;
     },
     /** Bouton « Exporter maintenant » : dossier choisi s'il est autorisé, sinon l'export classique du hub. */
+    /** Voix naturelle : accord de Lucien, téléchargement, branchement sur la lecture à voix haute. */
+    async activerVoixNaturelle(on) { noyau.reglage("voix-piper", on ? "on" : "off"); if (!on) { definirMoteurVoix(null); piper.desactiver(); return piper.statut(); } const st = await piper.preparer(); if (piper.pret()) definirMoteurVoix(piper); return st; },
     definirCleLibre: (k) => { hote.secret.definirCleLibre(k); libreCache = null; autoCache = null; },
     definirCleClaude: (k) => { hote.secret.definirCleClaude(k); claudeCache = null; autoCache = null; },
     async exporter() { try { const e = await noyau.sauvegarde.etat(); if (e.dossier) { const r = await noyau.sauvegarde.maintenant({ demander: true }); hote.ui.toast("Sauvegarde écrite : " + r.nom); return r; } } catch (x) { hote.ui.toast("Sauvegarde dans le dossier impossible : " + (x.message || x)); } return hote.ui.exporter && hote.ui.exporter(); },
@@ -166,6 +173,8 @@ export async function initNoyau() {
   document.addEventListener("noyau:ouvrir-securite", () => secu && secu.ouvrir());
   // Sentinelle : capteurs, analyse locale toutes les 5 min (sans requête), recommandation de l'orbe toutes les 30 min
   noyau.sentinelle.surveiller();
+  setTimeout(async () => { if (noyau.reglage("voix-piper") === "on") { await noyau.piper.preparer(); if (noyau.piper.pret()) definirMoteurVoix(noyau.piper); } }, 8000);
+  setTimeout(() => noyau.sens.demarrer(), 15000); document.addEventListener("noyau:memoire", () => noyau.sens.nouveau());        // recherche par le sens : seulement si Lucien l'a acceptée
   const sauvegardeAuto = async () => { if (document.hidden || document.body.classList.contains("locked")) return; const r = await noyau.sauvegarde.auto().catch(() => ({ fait: false })); if (r.fait) hote.ui.toast("Sauvegarde automatique écrite : " + r.nom); else if (r.reautoriser && hote.reglage.lire("noyau-sauv-rappel", "") !== new Date().toDateString()) { hote.reglage.ecrire("noyau-sauv-rappel", new Date().toDateString()); document.dispatchEvent(new CustomEvent("noyau:initiative", { detail: { texte: "Le navigateur demande de réautoriser le dossier de sauvegarde. Ouvre Réglages → Sauvegarde, puis « Sauvegarder maintenant ».", raison: "systeme", niveau: "alerte" } })); } };
   setTimeout(sauvegardeAuto, 20000); setInterval(sauvegardeAuto, 30 * 60e3);
   const calme = () => !document.hidden && !document.body.classList.contains("locked") && !document.body.classList.contains("focus") && (() => { const h = new Date().getHours(); return h >= 7 && h < 23; })();

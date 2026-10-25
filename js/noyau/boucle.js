@@ -144,7 +144,7 @@ export function creerCycle(deps) {
       phase("se_souvient");
       if (etat && etat.rafraichir) await etat.rafraichir();
       const requete = resoudreRelance(texte, travail.fil);
-      const extraits = memoire ? memoire.rappeler(requete, { limite: 6 }) : [];
+      const extraits = memoire ? memoire.rappeler(requete, { limite: 6, vecteur: memoire.preparer ? await memoire.preparer(requete) : null }) : [];
       const etatMonde = perception ? await perception.contexte(texte) : [];
       trace.extraits = extraits.map((x, i) => ({ n: i + 1, id: x.id, type: x.type, titre: x.titre, texte: x.texte.slice(0, 200), score: x.score })); trace.etatMonde = etatMonde;
       const systeme = construireSysteme(extraits, etatMonde);
@@ -195,7 +195,7 @@ export function creerCycle(deps) {
       const code = e instanceof ErreurNoyau ? e.code : "erreur";
       if (code === "budget") await journalActions.ecrire({ outil: "(requête au modèle)", niveau: "—", params: "budget du jour atteint", statut: "BUDGET_ATTEINT", origine, sortie: [] });
       else if (!(e instanceof ErreurNoyau)) console.error(e);
-      const extraits = memoire ? memoire.rappeler(resoudreRelance(texte, travail.fil), { limite: 3 }) : [];
+      const extraits = memoire ? memoire.rappeler(resoudreRelance(texte, travail.fil), { limite: 3, vecteur: memoire.preparer ? await memoire.preparer(resoudreRelance(texte, travail.fil)) : null }) : [];
       const raison = (MESSAGES_ERREUR[code] || "Une erreur est survenue.") + " ";
       reponse = repondreSansModele(texte, raison.trim(), extraits);
       reponse.erreur = e && e.message ? e.message : String(e); reponse.code = code;
