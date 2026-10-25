@@ -57,14 +57,23 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
   const hash = (str) => { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967295; };
   const alea = (id, k) => hash(id + "#" + k);
   const dendrites = new Map();      // id -> segments 3D relatifs au corps
+  /** Arborescence du neurone : des fibres qui partent du corps, serpentent et se divisent (croissance par marche aléatoire, déterministe). */
   function dendritesDe(id, hub) {
     if (dendrites.has(id)) return dendrites.get(id);
-    const n = hub ? 8 : 5, L = hub ? 0.14 : 0.075, segs = [];
-    for (let i = 0; i < n; i++) {
-      const th = alea(id, "t" + i) * TAU, ph = Math.acos(2 * alea(id, "p" + i) - 1), len = L * (0.7 + alea(id, "l" + i) * 0.7);
-      const e = [Math.sin(ph) * Math.cos(th) * len, Math.cos(ph) * len, Math.sin(ph) * Math.sin(th) * len]; segs.push([[0, 0, 0], e]);
-      for (let k = 0; k < 2; k++) segs.push([e, [e[0] + (alea(id, "a" + i + k) - 0.5) * len, e[1] + (alea(id, "b" + i + k) - 0.5) * len, e[2] + (alea(id, "c" + i + k) - 0.5) * len]]);
-    }
+    const prim = hub ? 9 : 5, pas = hub ? 0.05 : 0.03, vie = hub ? 8 : 5, segs = []; let c = 0;
+    const R = () => alea(id, "w" + (c++));
+    const norm = (v) => { const L = Math.hypot(...v) || 1; return [v[0] / L, v[1] / L, v[2] / L]; };
+    const pousser = (o, dir, vieRest, prof) => {
+      let p = o, d = dir;
+      for (let k = 0; k < vieRest; k++) {
+        d = norm([d[0] + (R() - 0.5) * 0.9, d[1] + (R() - 0.5) * 0.9, d[2] + (R() - 0.5) * 0.9]);
+        const l = pas * (0.7 + R() * 0.6) * (1 - prof * 0.12), q = [p[0] + d[0] * l, p[1] + d[1] * l, p[2] + d[2] * l];
+        segs.push([p, q, prof]);
+        if (prof < 3 && vieRest - k > 2 && R() < (hub ? 0.4 : 0.34)) pousser(q, norm([d[0] + (R() - 0.5) * 1.6, d[1] + (R() - 0.5) * 1.6, d[2] + (R() - 0.5) * 1.6]), Math.max(2, vieRest - k - 2), prof + 1);
+        p = q;
+      }
+    };
+    for (let i = 0; i < prim; i++) { const th = alea(id, "t" + i) * TAU, ph = Math.acos(2 * alea(id, "p" + i) - 1); pousser([0, 0, 0], [Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th)], vie + Math.floor(R() * 3), 0); }
     dendrites.set(id, segs); return segs;
   }
   const controles = new Map();
@@ -84,6 +93,8 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
     const pts = []; for (let i = 0; i <= N; i++) pts.push(bez(a, c, b, i / N));
     // halo
     ctx.lineWidth = 0.8 + niv * 1.6; ctx.strokeStyle = blanc ? `rgba(220,200,255,${0.12 + niv * 0.25})` : hex(col, 0.14 + niv * 0.3); ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke();
+    // faisceau : deux fibres fines qui ondulent autour de l'axone, comme les fibres d'un nerf
+    ctx.lineWidth = 0.5; for (let f = 0; f < 2; f++) { ctx.strokeStyle = blanc ? "rgba(210,195,255,.28)" : "rgba(190,225,255,.3)"; ctx.beginPath(); pts.forEach((q, i) => { const nx = pts[Math.min(N, i + 1)].y - pts[Math.max(0, i - 1)].y, ny = -(pts[Math.min(N, i + 1)].x - pts[Math.max(0, i - 1)].x), nl = Math.hypot(nx, ny) || 1, u = i / N, o = Math.sin(u * Math.PI) * (5 + 3 * f) * Math.sin(u * 9 + graine * 20 + f * 2.1); i ? ctx.lineTo(q.x + nx / nl * o, q.y + ny / nl * o) : ctx.moveTo(q.x, q.y); }); ctx.stroke(); }
     // crépitement : fil fin qui vibre (plus nerveux quand l'apprentissage est en cours)
     const amp = reduit ? 0 : (et === "cours" ? 3.4 : 1.2);
     ctx.lineWidth = 0.9; ctx.strokeStyle = blanc ? "rgba(235,225,255,.55)" : hex("#ffffff", et === "cours" ? 0.45 : 0.6); ctx.beginPath();
@@ -107,6 +118,8 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
   function orbe(p, t) {
     const g = carte.global || 0, r = (16 + g * 0.1) * p.k * zoom * 1.25, v = reduit ? 0.5 : 0.5 + 0.5 * Math.sin(t * 0.0026);
     ctx.globalCompositeOperation = "lighter";
+    const arbre = dendritesDe("orbe", true), O = [0, 0, 0];      // grande arborescence autour de l'orbe
+    for (let pr = 0; pr <= 3; pr++) { ctx.lineWidth = Math.max(0.4, 1.5 - pr * 0.35); ctx.strokeStyle = `rgba(${pr ? "170,215,255" : "235,247,255"},${0.5 - pr * 0.08})`; ctx.beginPath(); for (const [u, v, d] of arbre) { if (d !== pr) continue; const pu = projeter([u[0] * 2.2, u[1] * 2.2, u[2] * 2.2]), pv = projeter([v[0] * 2.2, v[1] * 2.2, v[2] * 2.2]); ctx.moveTo(pu.x, pu.y); ctx.lineTo(pv.x, pv.y); } ctx.stroke(); }
     const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.6); halo.addColorStop(0, `rgba(63,230,255,${0.35 + v * 0.15})`); halo.addColorStop(0.35, "rgba(63,230,255,.12)"); halo.addColorStop(1, "rgba(63,230,255,0)"); ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.6, 0, TAU); ctx.fill();
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = "rgba(2,14,24,.92)"; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fill();
@@ -151,12 +164,19 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
       if (n.orb) { orbe(proj.get("orbe"), t); continue; }
       const p = proj.get(n.id), col = PROGRAMME.find((x) => x.id === n.d.id).couleur, prof = Math.max(0.35, Math.min(1, p.k * 0.9)), estSel = selection === n.id, estSurvol = survol === n.id, dansSel = selD && selD.id === n.d.id;
       const niv = n.hub ? n.d.pct / 100 : n.s.niveau, et = n.hub ? (niv >= 1 ? "valide" : niv > 0 ? "cours" : "dormant") : etatDe(niv);
-      // dendrites : les ramifications du neurone (visibles surtout quand il est actif ou son domaine choisi)
-      const O = pos.get(n.id), alpha = et === "dormant" ? (dansSel ? 0.3 : 0.12) : 0.35 + niv * 0.45;
-      ctx.globalCompositeOperation = "lighter"; ctx.lineWidth = n.hub ? 1.1 : 0.8; ctx.strokeStyle = hex(col, alpha * prof); ctx.beginPath();
-      for (const [u, v] of dendritesDe(n.id, n.hub)) { const pu = projeter([O[0] + u[0], O[1] + u[1], O[2] + u[2]]), pv = projeter([O[0] + v[0], O[1] + v[1], O[2] + v[2]]); ctx.moveTo(pu.x, pu.y); ctx.lineTo(pv.x, pv.y); }
-      ctx.stroke();
-      if (et !== "dormant" && !reduit) { const sc = Math.sin(t * 0.006 + alea(n.id, "s") * 30); if (sc > (et === "valide" ? 0.2 : 0.55)) { const segs = dendritesDe(n.id, n.hub), sg = segs[Math.floor(alea(n.id, "q" + Math.floor(t / 400)) * segs.length)], pe = projeter([O[0] + sg[1][0], O[1] + sg[1][1], O[2] + sg[1][2]]); ctx.fillStyle = hex("#ffffff", 0.8 * prof); ctx.beginPath(); ctx.arc(pe.x, pe.y, 1.3, 0, TAU); ctx.fill(); } }
+      // arborescence : fibres fines blanc-bleu comme un vrai neurone ; plus vives quand le sous-thème est appris
+      const O = pos.get(n.id), segs = dendritesDe(n.id, n.hub), alpha = et === "dormant" ? (dansSel ? 0.32 : 0.1) : 0.3 + niv * 0.5;
+      ctx.globalCompositeOperation = "lighter";
+      for (let pr = 0; pr <= 3; pr++) {
+        if (et === "dormant" && !dansSel && pr > 1) break;
+        ctx.lineWidth = Math.max(0.35, (n.hub ? 1.3 : 0.95) - pr * 0.28); ctx.strokeStyle = et === "dormant" ? hex("#9fc7e6", alpha * prof * (1 - pr * 0.15)) : `rgba(${pr ? "190,225,255" : "225,242,255"},${(alpha * (1 - pr * 0.12)) * prof})`; ctx.beginPath();
+        for (const [u, v, d] of segs) { if (d !== pr) continue; const pu = projeter([O[0] + u[0], O[1] + u[1], O[2] + u[2]]), pv = projeter([O[0] + v[0], O[1] + v[1], O[2] + v[2]]); ctx.moveTo(pu.x, pu.y); ctx.lineTo(pv.x, pv.y); }
+        ctx.stroke();
+      }
+      if (et !== "dormant" && !reduit) {            // étincelles qui courent au bout des fibres actives
+        const sc = Math.sin(t * 0.006 + alea(n.id, "s") * 30);
+        if (sc > (et === "valide" ? 0.1 : 0.5)) for (let z = 0; z < (et === "valide" ? 3 : 1); z++) { const sg = segs[Math.floor(alea(n.id, "q" + z + Math.floor(t / 350)) * segs.length)], pe = projeter([O[0] + sg[1][0], O[1] + sg[1][1], O[2] + sg[1][2]]); ctx.fillStyle = `rgba(255,255,255,${0.85 * prof})`; ctx.beginPath(); ctx.arc(pe.x, pe.y, 1.4, 0, TAU); ctx.fill(); }
+      }
       ctx.globalCompositeOperation = "source-over";
       if (n.hub) {
         const r = (13 + n.d.pct * 0.06) * p.k * zoom * 1.1, pulse = et === "dormant" || reduit ? 0 : Math.sin(t * 0.004 + alea(n.id, "h") * 9) * 0.5 + 0.5;

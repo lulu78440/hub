@@ -28,6 +28,10 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   conteneur.textContent = "";
   const racine = h("div", { class: "nx", "data-phase": "repos", "data-vue": "chat" });
   conteneur.append(racine);
+  // Barre de titre de la fenêtre du hub : une ligne fine (point d'état, NOYAU, état à droite) ; la fenêtre reste déplaçable par cette barre (js/ui/windows.js).
+  const BARRE = { repos: "prêt", reflechit: "réfléchit…", se_souvient: "se souvient…", cherche: "cherche…", parle: "répond…", attend: "attend ton accord", dort: "consolide…", horsligne: "hors ligne" };
+  const win = conteneur.closest ? conteneur.closest('.win[data-id="noyau"]') : null; let majBarre = () => {};
+  if (win) { win.classList.add("nx-win"); const ph = win.querySelector(".ph"), e = h("span", { class: "nx-ph-etat", role: "status", "aria-live": "polite" }, BARRE.repos); if (ph) ph.append(e); win.dataset.nxPhase = "repos"; majBarre = (phase) => { e.textContent = BARRE[phase] || phase; win.dataset.nxPhase = phase; }; }
   let tourActif = null, enLecture = null, dictee = null;
   const attente = new Map();       // tour -> élément « je réfléchis »
 
@@ -387,7 +391,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
 
   // ---------- Messages du Noyau ----------
   noyau.surMessage((m) => {
-    if (m.type === "etat") { racine.dataset.phase = m.phase; phaseTxt.textContent = PHASES[m.phase] || m.phase; if (m.budget != null) majBudget(); }
+    if (m.type === "etat") { racine.dataset.phase = m.phase; majBarre(m.phase); phaseTxt.textContent = PHASES[m.phase] || m.phase; if (m.budget != null) majBudget(); }
     else if (m.type === "reponse") {
       if (m.refaite) { majReponse(m); return; }
       majReponse(m); tourActif = m.tour; majNav(); majBudget();

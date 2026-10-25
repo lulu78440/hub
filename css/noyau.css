@@ -153,3 +153,15 @@
 .nx-raccourci{min-height:32px;background:transparent;color:var(--n-dim);cursor:pointer;font:inherit;font-size:13px}
 .nx-raccourci:hover{color:var(--n-cyan);border-color:var(--n-cyan)}
 .nx-horsligne{padding:0 8px;border:1px solid rgba(255,179,71,.5);color:var(--n-amber);font-size:12px;white-space:nowrap}
+
+/* ----- Fenêtre du hub : barre fine et liseré qui pulse pendant le traitement ----- */
+.win.nx-win .ph{height:30px;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid rgba(63,230,255,.15);cursor:grab}
+.win.nx-win .ph .hatch,.win.nx-win .ph .tag{display:none}
+.win.nx-win .ph h2{margin:0;padding:0;background:none;clip-path:none;color:var(--ink,#dff6fd);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:lowercase;font-variant:small-caps;gap:8px}
+.win.nx-win .ph h2::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--cyan,#3fe6ff);box-shadow:0 0 6px var(--cyan,#3fe6ff);opacity:.45;transition:opacity .4s}
+.win.nx-win[data-nx-phase="reflechit"] .ph h2::before,.win.nx-win[data-nx-phase="se_souvient"] .ph h2::before,.win.nx-win[data-nx-phase="cherche"] .ph h2::before,.win.nx-win[data-nx-phase="parle"] .ph h2::before,.win.nx-win[data-nx-phase="attend"] .ph h2::before{opacity:1}
+.nx-ph-etat{margin-left:auto;font-size:12px;color:var(--dim,#7ea3b6);white-space:nowrap}
+.win.nx-win[data-nx-phase="reflechit"],.win.nx-win[data-nx-phase="cherche"],.win.nx-win[data-nx-phase="parle"]{animation:nx-lisere 2.4s ease-in-out infinite}
+@keyframes nx-lisere{0%,100%{filter:drop-shadow(0 0 1px rgba(63,230,255,.35)) drop-shadow(0 0 3px rgba(63,230,255,.15))}50%{filter:drop-shadow(0 0 2px rgba(63,230,255,.9)) drop-shadow(0 0 10px rgba(63,230,255,.45))}}
+@media (prefers-reduced-motion:reduce){.win.nx-win[data-nx-phase="reflechit"],.win.nx-win[data-nx-phase="cherche"],.win.nx-win[data-nx-phase="parle"]{animation:none;filter:drop-shadow(0 0 2px rgba(63,230,255,.8)) drop-shadow(0 0 6px rgba(63,230,255,.35))}}
+body.lite .win.nx-win .ph{cursor:default}

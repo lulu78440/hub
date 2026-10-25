@@ -20,7 +20,7 @@ import { creerUsages } from "./usages.js";
 import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.6";
+export const VERSION_NOYAU = "noyau-1.7";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
