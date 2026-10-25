@@ -41,7 +41,7 @@ export function initData() {
     if (!f) return;
     let r, text = await f.text(), opened = null;
     // Export chiffré : il faut la phrase (ou la clé de secours) de l'époque de l'export
-    let obj = null; try { obj = JSON.parse(text); } catch (e) { obj = null; }
+    let obj = null; try { obj = JSON.parse(text.replace(/^\uFEFF/, "")); } catch (e) { obj = null; }
     if (vault.isSealed(obj)) {
       opened = await askSecret("Export verrouillé", "Ce fichier est chiffré. Entre la phrase secrète (ou la clé de secours) en vigueur quand il a été exporté.", (v) => vault.openExport(obj, v));
       if (!opened) { toast("Import annulé"); return; }

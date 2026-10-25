@@ -17,8 +17,8 @@ const clip = (s, n) => String(s || "").trim().slice(0, n);
 
 /** Lit le fichier et vérifie qu'il vient bien du Coffre. */
 export function readCoffre(text) {
-  let j = null; try { j = JSON.parse(text); } catch (e) { j = null; }
-  if (!j || (j.format !== "coffre-hub" && !(j.format === "hub-donnees" && j.sections)) || typeof j.sections !== "object") {
+  let j = null; try { j = JSON.parse(String(text).replace(/^\uFEFF/, "")); } catch (e) { j = null; }
+  if (!j || (j.format !== "coffre-hub" && !(j.format === "hub-donnees" && j.sections)) || !j.sections || typeof j.sections !== "object") {
     throw new Error("Ce fichier n'est pas un export du Coffre du Hub (coffre-hub.json).");
   }
   const s = {};
