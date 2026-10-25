@@ -182,6 +182,9 @@ def test_fonctions_deux_onglets(h):
     a = d.page(); b = d.page()
     for x in (a, b): x.evaluate("document.activeElement && document.activeElement.blur()")
     a.keyboard.press("2"); b.keyboard.press("2")
+    sortir_de_reserve(b)          # Tâches en réserve depuis la refonte : remise par Outils dans B (réglage partagé, vu aussi dans A au rechargement)
+    if a.evaluate("window.__hub.wins.S.tasks.res"):
+        sortir_de_reserve(a)
     _ui_add(a, "notes", "Écrite dans l'onglet A")
     b.wait_for_function("[...document.querySelectorAll('.win[data-id=\"notes\"] .note')].some(n => n.textContent.includes(\"onglet A\"))", timeout=60000)
     _ui_add(b, "tasks", "Écrite dans l'onglet B")

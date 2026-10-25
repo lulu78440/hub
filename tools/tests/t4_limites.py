@@ -2,7 +2,7 @@
 import json, time, datetime
 from hubtest import FAKE_TOKEN, ev, seed, counts, export_file, import_file, write_json
 from fakes import FakeGitHub
-from t2_fonctions import make_mock
+from t2_fonctions import make_mock, sortir_de_reserve
 
 
 def _assert(c, msg):
@@ -132,6 +132,7 @@ def test_limites_fuseaux_horloge_textes_longs(h):
     for tz in ("Pacific/Kiritimati", "America/Los_Angeles", "Asia/Kolkata"):
         d = h.device(tz=tz); p = d.page()
         p.evaluate("document.activeElement && document.activeElement.blur()"); p.keyboard.press("2"); p.wait_for_timeout(700)
+        sortir_de_reserve(p)          # Tâches en réserve depuis la refonte : remise par Outils
         inp = p.locator('.win[data-id="tasks"] form.addrow input'); inp.fill("Tâche fuseau @demain 9h"); inp.press("Enter"); p.wait_for_timeout(300)
         t = ev(p, "const s = await import('/js/store/storage.js'); const t = (await s.store.all('tasks'))[0]; const d = new Date(); d.setDate(d.getDate() + 1); return [t.due, d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')];")
         _assert(t[0] == t[1], f"« @demain » faux dans le fuseau {tz} : {t}")
