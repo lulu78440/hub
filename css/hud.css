@@ -589,7 +589,7 @@ body.lite .gchip { padding: 7px 10px; font-size: 11px; }
 .ticker .it b { font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: .12em; padding: 2px 7px; color: var(--void); background: var(--c, var(--cyan)); }
 @keyframes tick { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .ticker .run { animation: none; } }
-body.cine:not(.lite) .ticker { opacity: .35; }
+body.cine:not(.lite) .ticker { opacity: .7; border-top-color: rgba(63,230,255,.15); }   /* cinéma : bandeau discret (bordure atténuée), textes à 4,5:1 au moins (ACTU, TECH, « à l'instant » ≈ 6,6:1) */
 body.cine:not(.lite) .ticker:hover { opacity: 1; }
 body:not(.lite) .fps { bottom: 48px; }
 .desk { bottom: 52px; }
@@ -1195,3 +1195,15 @@ body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2 .panel { filter: blu
 body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2:hover .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.focus .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.dragging .panel { filter: none; }
 body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .win.p2:not(:hover) .panel { filter: brightness(.74) saturate(.85); }
 @media (prefers-reduced-motion: reduce) { .brume { opacity: calc(var(--cine, 0) * .55); } .win.p2 .panel { filter: none !important; } }
+
+/* ---------- Plan 3 · fenêtres (p3-fenetres) : pile de focus, réduction vers l'icône ---------- */
+.dwin .in { transition: opacity .2s ease; }
+.dwin.inactif .in { opacity: .78; }
+.dwin.actif { box-shadow: 0 0 0 1px color-mix(in srgb, var(--a) 55%, transparent), 0 10px 26px rgba(0, 0, 0, .45); }
+.dwin.min { display: none !important; }
+.dwin.vol { pointer-events: none; will-change: transform, opacity; animation: none; }
+.dwin .dm { align-self: center; width: 24px; height: 24px; margin: 0 0 0 4px; border: 1px solid rgba(63, 230, 255, .25); background: transparent; color: var(--ink); font-size: 17px; line-height: 1; cursor: pointer; }
+.dwin .dm:hover, .dwin .dm:focus-visible { border-color: var(--a); color: #fff; outline: 2px solid var(--cyan); outline-offset: 2px; }
+.dwin .dm + .dx { margin-left: 4px; }
+.dico.ouvert::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 14px; height: 2px; margin-left: -7px; background: var(--a); box-shadow: 0 0 6px var(--a); }
+@media (prefers-reduced-motion: reduce) { .dwin .in { transition: none; } }
