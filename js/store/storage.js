@@ -75,6 +75,8 @@ export async function migrate(fn) {
   let done; const prev = localMig; localMig = new Promise((r) => { done = r; });
   try { await prev; return await fn(); } finally { done(); }
 }
+// Écriture refusée (stockage plein, vieil onglet verrouillé…) : l'interface prévient (data.js), l'appelant reçoit l'erreur.
+function failed(e) { try { dispatchEvent(new CustomEvent("hub:store-error", { detail: e })); } catch (x) { /* rien */ } throw e; }
 const SKIP = (k) => k.startsWith("hub-synchro") || k.startsWith("hub-secret") || k.startsWith("hub-coffre");   // jamais dans un fichier
 
 export const store = {
@@ -95,12 +97,12 @@ export const store = {
   async put(coll, obj, sync = false) {
     if (!sync) obj._m = Date.now();
     const db = await open();
-    if (!db) memory[coll].set(obj.id, obj); else await writing(async () => { const rec = await seal(obj); await tx(db, coll, "readwrite", (st) => st.put(rec)); });
+    if (!db) memory[coll].set(obj.id, obj); else await writing(async () => { const rec = await seal(obj); await tx(db, coll, "readwrite", (st) => st.put(rec)); }).catch(failed);
     emit(coll, true, sync); return obj;
   },
   async del(coll, id, sync = false) {
     const db = await open();
-    if (!db) memory[coll].delete(id); else await writing(() => tx(db, coll, "readwrite", (st) => st.delete(id)));
+    if (!db) memory[coll].delete(id); else await writing(() => tx(db, coll, "readwrite", (st) => st.delete(id))).catch(failed);
     if (!sync) tomb(coll, [id]);
     emit(coll, true, sync);
   },
@@ -109,14 +111,14 @@ export const store = {
     if (!sync) { const now = Date.now(); objs.forEach((o) => { o._m = now; }); }
     const db = await open();
     if (!db) objs.forEach((o) => memory[coll].set(o.id, o));
-    else await writing(async () => { const recs = await Promise.all(objs.map(seal)); await tx(db, coll, "readwrite", (st) => { recs.forEach((o) => st.put(o)); }); });
+    else await writing(async () => { const recs = await Promise.all(objs.map(seal)); await tx(db, coll, "readwrite", (st) => { recs.forEach((o) => st.put(o)); }); }).catch(failed);
     emit(coll, true, sync);
   },
   /** Plusieurs suppressions en une fois. */
   async delMany(coll, ids, sync = false) {
     const db = await open();
     if (!db) ids.forEach((id) => memory[coll].delete(id));
-    else await writing(() => tx(db, coll, "readwrite", (st) => { ids.forEach((id) => st.delete(id)); }));
+    else await writing(() => tx(db, coll, "readwrite", (st) => { ids.forEach((id) => st.delete(id)); })).catch(failed);
     if (!sync) tomb(coll, ids);
     emit(coll, true, sync);
   },
@@ -141,12 +143,27 @@ export async function exportAll(version) {
 /** Lit un fichier d'export et renvoie un résumé (sans rien modifier), ou lève une erreur lisible. */
 export function readExport(text) {
   let d;
-  try { d = JSON.parse(text); } catch (e) { throw new Error("Ce fichier n'est pas un export du hub (illisible)."); }
-  if (!d || d.format !== FORMAT || typeof d.data !== "object") throw new Error("Ce fichier n'est pas un export du hub.");
+  try { d = JSON.parse(String(text).replace(/^\uFEFF/, "")); } catch (e) { throw new Error("Ce fichier n'est pas un export du hub (illisible)."); }   // BOM : fichier enregistré par le Bloc-notes
+  if (!d || d.format !== FORMAT || !d.data || typeof d.data !== "object" || Array.isArray(d.data)) throw new Error("Ce fichier n'est pas un export du hub.");
   if (d.formatVersion > FORMAT_VERSION) throw new Error("Cet export vient d'une version plus récente du hub : mets d'abord le hub à jour.");
   const counts = {};
   COLLECTIONS.forEach((c) => { counts[c] = Array.isArray(d.data[c]) ? d.data[c].length : 0; });
   return { d, counts, date: d.exportedAt ? new Date(d.exportedAt) : null };
+}
+
+// Fichier abîmé ou trafiqué : les champs connus reprennent un type attendu (sinon les fenêtres plantent à l'affichage).
+const str = (v, d = "") => (typeof v === "string" ? v : v == null ? d : String(v));
+const opt = (v, re) => (typeof v === "string" && re.test(v) ? v : null);
+const realDay = (s) => { if (typeof s !== "string") return false; const [y, m, d] = s.slice(0, 10).split("-").map(Number), x = new Date(y, m - 1, d); return x.getMonth() === m - 1 && x.getDate() === d; };
+const dayOk = (v, re) => { const s = opt(v, re); return s && realDay(s) ? s : null; };          // 30 février : refusé
+const DAY_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/, AT_RE = /^\d{4}-\d\d-\d\dT([01]\d|2[0-3]):[0-5]\d$/;
+const num = (v) => (Number.isFinite(+v) && v !== null && v !== "" ? +v : 0);
+function cleanItem(c, x) {
+  if (c === "notes") return { ...x, text: str(x.text), pinned: x.pinned === true, created: num(x.created), updated: num(x.updated) };
+  if (c === "tasks") return { ...x, text: str(x.text), done: x.done === true, prio: x.prio ? 1 : 0, due: dayOk(x.due, DAY_RE), remindAt: dayOk(x.remindAt, AT_RE), created: num(x.created), doneAt: x.doneAt == null ? null : num(x.doneAt) };
+  if (c === "events") { const date = dayOk(x.date, DAY_RE); return date ? { ...x, title: str(x.title), date, start: opt(x.start, HM_RE), end: opt(x.end, HM_RE), created: num(x.created) } : null; }
+  if (c === "favs") return typeof x.url === "string" && /^https?:\/\//i.test(x.url.trim()) ? { ...x, url: x.url.trim(), title: str(x.title, x.url), group: str(x.group, "Favoris"), created: num(x.created) } : null;   // liens web seulement
+  return x;
 }
 
 /** Remplace toutes les données de l'appareil par celles de l'export (déjà lu avec readExport).
@@ -155,6 +172,7 @@ export async function importAll(d) {
   const db = await open(), all = {};
   for (const c of COLLECTIONS) {
     let items = (Array.isArray(d.data[c]) ? d.data[c] : []).filter((x) => x && typeof x === "object" && typeof x.id === "string");
+    items = items.map((x) => cleanItem(c, x)).filter(Boolean);
     if (c === "images") items = (await Promise.all(items.map(async (im) => ({ ...im, blob: typeof im.blob === "string" && im.blob.startsWith("data:image/") ? await fromDataURL(im.blob) : null })))).filter((im) => im.blob);
     all[c] = items;
   }

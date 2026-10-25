@@ -6,7 +6,7 @@
 import { prefs } from "../store/prefs.js";
 import { pulse } from "../state.js";
 
-const norm = (s) => s.toLowerCase().normalize("NFC").replace(/[.,!?;:]+$/g, "").replace(/\s+/g, " ").trim();
+const norm = (s) => s.toLowerCase().normalize("NFC").replace(/[.,!?;:]+$/g, "").replace(/[,;]/g, " ").replace(/\s+/g, " ").trim();   // la reconnaissance ajoute des virgules (« Hub, youtube… »)
 const cut = (q) => q.replace(/^(?:de |du |des |sur |d['’]|la |le |les )/, "").trim();
 
 /** Phrase dite → texte de la barre de recherche (« !y chat »). Exporté pour les essais. */

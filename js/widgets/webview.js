@@ -13,13 +13,17 @@ export function initWebview() {
   pb.className = "pb pb-web";
   pb.innerHTML = '<div class="web"><form class="url" autocomplete="off"><i></i><input type="text" aria-label="Adresse de la page" placeholder="Adresse d\'une page, ex. fr.wikipedia.org"><a class="wopen" target="_blank" rel="noopener" title="Ouvrir dans un onglet">↗</a></form><div class="vp"><p class="wempty">Entre une adresse ci-dessus. Certains sites refusent d\'être affichés ici : utilise alors ↗.</p></div></div>';
   const form = pb.querySelector(".url"), inp = form.querySelector("input"), vp = pb.querySelector(".vp"), open = form.querySelector(".wopen");
-  let url = prefs.get("web-url", ""), every = +prefs.get("web-auto", "0"), timer = 0, loadedAt = 0;
+  let url = "", every = +prefs.get("web-auto", "0"), timer = 0, loadedAt = 0;
   const norm = (s) => { s = s.trim(); if (!s) return ""; if (!/^https?:\/\//i.test(s)) s = "https://" + s; try { return new URL(s).href; } catch (e) { return ""; } };
+  url = norm(prefs.get("web-url", ""));        // adresse mémorisée (ou importée) revérifiée : jamais javascript: ni data:
   function load() {
     vp.innerHTML = "";
     if (!url) { vp.innerHTML = '<p class="wempty">Entre une adresse ci-dessus. Certains sites refusent d\'être affichés ici : utilise alors ↗.</p>'; open.removeAttribute("href"); tag.textContent = "PAGE EN DIRECT"; return; }
     const f = document.createElement("iframe"); f.src = url; f.title = "Page en direct"; f.loading = "lazy"; f.referrerPolicy = "no-referrer";
-    f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox");
+    // Une page du même site que le hub (ex. une autre page de lulu78440.github.io) ne reçoit pas allow-same-origin :
+    // sinon elle pourrait lire le hub et ses données déverrouillées.
+    const same = new URL(url).origin === location.origin;
+    f.setAttribute("sandbox", same ? "allow-scripts allow-forms" : "allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox");
     vp.append(f); open.href = url; inp.value = url.replace(/^https:\/\//, "").replace(/\/$/, "");
     const hint = document.createElement("p"); hint.className = "whint"; hint.textContent = "Page vide ? Ce site refuse l'affichage ici : ↗ pour l'ouvrir."; vp.append(hint);
     loadedAt = Date.now(); tag.textContent = new URL(url).hostname.replace(/^www\./, "").toUpperCase(); stamp();

@@ -9,14 +9,16 @@ import { state, pulse } from "../state.js";
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
 const readJ = (k, d) => { try { const v = JSON.parse(prefs.get(k, "null")); return v ?? d; } catch (e) { return d; } };
-const openUrl = (u) => { const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
+const webUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");   // seuls les liens web (jamais javascript: ni data:)
+const openUrl = (u) => { u = webUrl(u); if (!u) return; const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener"; document.body.append(a); a.click(); a.remove(); };
 
 /** Identifiant de vidéo ou de playlist dans un lien YouTube (watch, youtu.be, shorts, embed, playlist). */
 export function parseYouTube(s) {
   s = (s || "").trim();
+  if (/^[\w-]{11}$/.test(s)) return { v: s, list: null };                 // identifiant seul, collé tel quel
   try {
-    const u = new URL(/^https?:/.test(s) ? s : "https://" + s), h = u.hostname.replace(/^www\.|^m\.|^music\./, "");
-    const list = u.searchParams.get("list");
+    const u = new URL(/^https?:/i.test(s) ? s : "https://" + s), h = u.hostname.replace(/^www\.|^m\.|^music\./, "");
+    let list = u.searchParams.get("list"); if (list && !/^[\w-]+$/.test(list)) list = null;     // identifiant de playlist propre ou rien
     let v = null;
     if (h === "youtu.be") v = u.pathname.slice(1).split("/")[0];
     else if (h === "youtube.com" || h === "youtube-nocookie.com") {
@@ -27,10 +29,11 @@ export function parseYouTube(s) {
     return { v, list };
   } catch (e) { return /^[\w-]{11}$/.test(s) ? { v: s, list: null } : null; }
 }
-const embed = (y, autoplay = 1) => y.v
-  ? `https://www.youtube-nocookie.com/embed/${y.v}?autoplay=${autoplay}&rel=0&playsinline=1${y.list ? "&list=" + y.list : ""}`
-  : `https://www.youtube-nocookie.com/embed/videoseries?list=${y.list}&autoplay=${autoplay}&rel=0&playsinline=1`;
-const thumb = (v) => `https://i.ytimg.com/vi/${v}/hqdefault.jpg`;
+// Identifiants revérifiés (ils peuvent venir d'un import ou du flux) : jamais de paramètre glissé dans l'adresse du lecteur
+const embed = (y, autoplay = 1) => y.v && /^[\w-]{11}$/.test(y.v)
+  ? `https://www.youtube-nocookie.com/embed/${y.v}?autoplay=${autoplay}&rel=0&playsinline=1${y.list ? "&list=" + encodeURIComponent(y.list) : ""}`
+  : `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(y.list)}&autoplay=${autoplay}&rel=0&playsinline=1`;
+const thumb = (v) => `https://i.ytimg.com/vi/${encodeURIComponent(v)}/hqdefault.jpg`;
 
 // Radios web (flux directs, sans compte). On peut en ajouter depuis le menu de la fenêtre Musique.
 // Anciennes adresses qui ne répondent plus → nouvelles (appliqué aux radios déjà enregistrées par l'import du Coffre ou une ancienne version)
@@ -63,7 +66,7 @@ export function initMedia() {
   });
   function list() {
     const fromFlux = ((flux.data && flux.data.videos) || []).filter((x) => x.video).map((x) => ({ v: x.video, t: x.titre, a: x.auteur, d: x.date }));
-    const seen = new Set(); return queue.concat(fromFlux).filter((x) => x.v && !seen.has(x.v) && seen.add(x.v));
+    const seen = new Set(); return queue.concat(fromFlux).filter((x) => /^[\w-]{11}$/.test(x.v || "") && !seen.has(x.v) && seen.add(x.v));
   }
   function showPoster() {
     player.querySelector("iframe")?.remove(); poster.hidden = false;

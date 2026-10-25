@@ -19,7 +19,7 @@ export const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
 
 // Réglages personnels (clés de localStorage) : chiffrés quand le verrouillage est actif.
-const PRIVATE = new Set(["constellation", "meteo-cache", "meteo-lieu", "mails", "web-url", "video-suivre", "video-courante", "musique-yt", "ia-instructions", "radios", "video-file"].map((k) => "hub-" + k));
+const PRIVATE = new Set(["constellation", "meteo-cache", "meteo-lieu", "mails", "web-url", "video-suivre", "video-courante", "musique-yt", "ia-instructions", "radios", "video-file", "musique-source"].map((k) => "hub-" + k));
 const isPrivate = (k) => PRIVATE.has(k) || k.startsWith("hub-secret") || k === "hub-synchro";
 
 let dek = null;              // CryptoKey de la clé de données (en mémoire seulement)
@@ -41,8 +41,12 @@ async function wrap(secret, iterations) {
   return { salt: b64(salt), iter: iterations, iv: b64(iv), ct: b64(ct) };
 }
 async function unwrap(w, secret) {
-  try { return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(w.iv) }, await kek(secret, unb64(w.salt), w.iter), unb64(w.ct))); }
-  catch (e) { return null; }
+  // « é » peut arriver composé (NFC) ou en deux signes (NFD) selon le clavier : on essaie la phrase telle quelle, puis ses deux formes
+  for (const s of new Set([secret, secret.normalize("NFC"), secret.normalize("NFD")])) {
+    try { return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(w.iv) }, await kek(s, unb64(w.salt), w.iter), unb64(w.ct))); }
+    catch (e) { /* forme suivante */ }
+  }
+  return null;
 }
 async function setKey(bytes) {
   raw = bytes; dek = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt", "decrypt"]); prevKey = null;
@@ -109,7 +113,7 @@ export const vault = {
   async create(phrase) {
     await setKey(rand(32));
     const rescue = newRescue();
-    writeMeta({ v: 1, created: new Date().toISOString(), pass: await wrap(phrase, ITER), rescue: await wrap(rescue, ITER_RESCUE) });
+    writeMeta({ v: 1, created: new Date().toISOString(), pass: await wrap(phrase.normalize("NFC"), ITER), rescue: await wrap(rescue, ITER_RESCUE) });
     tellOthers();                                        // les autres onglets se rechargent et demandent la phrase
     // Réglages et secrets : copiés dans le cache puis chiffrés
     cache.clear();
@@ -126,17 +130,20 @@ export const vault = {
     const old = raw, oldKey = dek, fresh = rand(32);
     raw = fresh; dek = await crypto.subtle.importKey("raw", fresh, "AES-GCM", false, ["encrypt", "decrypt"]); prevKey = oldKey;
     const rescue = newRescue();
-    writeMeta({ v: 1, created: (readMeta() || {}).created, changed: new Date().toISOString(), pass: await wrap(phrase, ITER), rescue: await wrap(rescue, ITER_RESCUE), prev: b64(await encBytes(old)) });
+    writeMeta({ v: 1, created: (readMeta() || {}).created, changed: new Date().toISOString(), pass: await wrap(phrase.normalize("NFC"), ITER), rescue: await wrap(rescue, ITER_RESCUE), prev: b64(await encBytes(old)) });
     for (const [k, v] of cache) localStorage.setItem(k, await encStr(v));
     return rescue;
   },
   endRotation() { const m = readMeta(); if (m && m.prev) { delete m.prev; writeMeta(m); } prevKey = null; },
-  async changePhrase(phrase) { const m = readMeta(); if (!m || !raw) throw new Error("Coffre fermé"); m.pass = await wrap(phrase, ITER); m.changed = new Date().toISOString(); writeMeta(m); },
+  async changePhrase(phrase) { const m = readMeta(); if (!m || !raw) throw new Error("Coffre fermé"); m.pass = await wrap(phrase.normalize("NFC"), ITER); m.changed = new Date().toISOString(); writeMeta(m); },
   async renewRescue() { const m = readMeta(); if (!m || !raw) throw new Error("Coffre fermé"); const r = newRescue(); m.rescue = await wrap(r, ITER_RESCUE); writeMeta(m); return r; },
   /** Remet les réglages et secrets en clair et oublie la clé (les données sont remises en clair par storage.unlockAll()). */
   async destroy() {
     await writes;
-    for (const [k, v] of cache) localStorage.setItem(k, v);
+    // Les clés d'IA (Gemini, Claude, relais…) exigent le verrouillage : elles partent avec lui, au lieu de rester en clair sur l'appareil (B9, B29)
+    const iaKey = (k) => k === "hub-secret-ia" || k === "hub-secret-claude" || k === "hub-secret-libre";
+    for (const [k, v] of cache) if (!iaKey(k)) localStorage.setItem(k, v);
+    for (const k of Object.keys(localStorage)) if (iaKey(k)) localStorage.removeItem(k);
     writeMeta(null); dek = null; raw = null; cache.clear(); tellOthers();
   },
   announce: tellOthers,
