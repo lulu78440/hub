@@ -2,7 +2,7 @@
 // 1. Briefing holographique : à la première ouverture du jour, le noyau te résume la journée (météo, tâches, rendez-vous, lune, sauvegarde).
 // 2. Constellation des exploits : chaque tâche cochée allume une étoile durable autour du noyau (survol = la tâche et sa date).
 // 3. Mode Focus : un minuteur de concentration (25 ou 50 min) dessiné en anneau autour de l'orbe ; tout le reste s'estompe.
-// 4. Hyperespace : tape ↑ ↑ ↓ ↓ ← → ← → B A (ou « hyper » au clavier) et le hub passe en vitesse lumière.
+// 4. Hyperespace : maintiens la barre Espace sur le fond (ou ↑ ↑ ↓ ↓ ← → ← → B A, ou « hyper ») et le hub passe en vitesse lumière.
 // 5. Phase de la lune, calculée sur l'appareil, dans le briefing et la météo.
 // Rien ne sort de l'appareil ; tout respecte « mouvement réduit ».
 import { store } from "../store/storage.js";
@@ -123,12 +123,29 @@ export function initSurprises({ force, plans, wins }) {
   let warp = 0;
   const CODE = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
   let seq = [], typed = "";
+  // Déclencheur principal (demande de Lucien, 25/10) : maintenir la barre Espace 0,6 s sur le fond. Le noyau se charge pendant l'appui.
+  const HOLD_MS = 600;
+  let spaceT = null, spaceFired = false;
+  const canHyper = () => ON("hyper") && !state.lite && !state.reduce && warp <= 0;
+  const isSpace = (e) => e.code === "Space" || e.key === " ";
   addEventListener("keydown", (e) => {
-    if (e.target.closest && e.target.closest("input, textarea, [contenteditable='true']")) return;
+    if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable='true']")) return;
+    if (isSpace(e) && !(e.target.closest && e.target.closest("button, a, [role='button'], [tabindex]"))) {
+      e.preventDefault();
+      if (e.repeat || spaceT || spaceFired) return;
+      if (state.reduce && ON("hyper")) { hyper(); spaceFired = true; return; }   // affiche le message « mouvement réduit »
+      if (!canHyper()) return;
+      state.energyTarget = 0.9; pulse(0.5);
+      spaceT = setTimeout(() => { spaceT = null; spaceFired = true; hyper(); }, HOLD_MS);
+      return;
+    }
     seq = seq.concat(e.key.length === 1 ? e.key.toLowerCase() : e.key).slice(-CODE.length);
     typed = (typed + (e.key.length === 1 ? e.key.toLowerCase() : " ")).slice(-5);
     if (seq.join() === CODE.join() || typed === "hyper") { seq = []; typed = ""; hyper(); }
   });
+  const releaseSpace = () => { if (spaceT) { clearTimeout(spaceT); spaceT = null; state.energyTarget = 0; } spaceFired = false; };
+  addEventListener("keyup", (e) => { if (isSpace(e)) releaseSpace(); });
+  addEventListener("blur", releaseSpace);
   function hyper() {
     if (!ON("hyper") || state.lite || state.reduce) { if (state.reduce) toast("Hyperespace désactivé : « mouvement réduit » est demandé par Windows"); return; }
     warp = 3.2; state.energyTarget = 1.6; state.accent = 0x9b72ff; sound.play("rappel", true); toast("Saut en hyperespace…");
@@ -152,7 +169,7 @@ export function initSurprises({ force, plans, wins }) {
   extendMenu("fond", () => (focus ? [{ t: "Arrêter le Focus", fn: () => stopFocus(false) }] : [{ t: "Focus 25 min", fn: () => startFocus(25) }, { t: "Focus 50 min", fn: () => startFocus(50) }])
     .concat([{ t: "Revoir le briefing du jour", fn: () => briefing(true) }]));
   extendMenu("fenetre", (el) => focus ? [] : [{ t: "Focus 25 min sur cette fenêtre", fn: () => startFocus(25, el) }]);
-  const list = [["briefing", "Briefing holographique du matin"], ["constellation", "Constellation des tâches accomplies"], ["focus", "Mode Focus autour de l'orbe"], ["hyper", "Hyperespace (code secret)"]];
+  const list = [["briefing", "Briefing holographique du matin"], ["constellation", "Constellation des tâches accomplies"], ["focus", "Mode Focus autour de l'orbe"], ["hyper", "Hyperespace (maintenir la barre Espace)"]];
   const box = document.getElementById("surprises");
   if (box) {
     list.forEach(([k, label]) => {
