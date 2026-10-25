@@ -240,11 +240,10 @@ Décisions (24/10) :
 - **Phase 2 · dossiers du PC** (24/10) : les deux voies ; accès mémorisé si Lucien active `brave://flags/#file-system-access-api`, sinon dossier choisi à chaque visite. Lecture seule.
 - **Mod Abyss · direction (24/10)** : sérieux et réaliste, plus de cartoon. Normal = *Vingt mille lieues sous les mers* (Nautilus, hublots de laiton, cachalots, méduse réaliste, baudroie bleu électrique). Horreur abyssale = Lovecraft (R'lyeh, Cthulhu, pierre noire tenue par des tentacules noirs collants), vert visqueux et noir, rouge seulement pour le démoniaque, pas d'yeux flottants. *Abandonné le 24/10 (remise à zéro).*
 - **Mod Abyss · Horreur (24/10, v3)** : moins de vert, rendu de fonds marins réaliste. L'entité centrale est un Cthulhu réaliste (tête ridée bleu-vert sombre, regard pâle, barbe de tentacules, ailes) ; l'ancien Cthulhu en sphères lisses est abandonné. Tentacules plus gros, entrelacés, rampants. *Abandonné le 24/10 (remise à zéro).*
+- Mod Abyss abandonné le 25/10 (direction artistique non retenue), fichiers archivés, à refaire de zéro plus tard.
 
 ## À trancher plus tard
 
-- **Mod Abyss · après la v4** : faut-il un second visage (ex. un mode « minuit » plus inquiétant) ou le bestiaire suffit-il ? À décider avec Lucien après avoir vu la v4.
-- **Mod Abyss · combat de minuit** : à minuit, les cachalots du mode normal combattent des calmars géants (clin d'œil au chapitre des poulpes de Jules Verne). Idée notée par Lucien le 24/10, à construire plus tard.
 - **Sources d'actualité, chaînes YouTube et sites surveillés** : dans `flux/sources.json` (public). À compléter par Lucien (lien « Modifier les sources » dans le hub) ou en le demandant à Claude. « Ta ville » non ajoutée par défaut (le dépôt est public).
 - **IA de l'orbe** : avec la règle 0 €, une API payante est exclue. Options à étudier en phase 6 : le même type de modèle local (plus gros), ou une offre gratuite sans carte bancaire si elle existe à ce moment-là.
 - **Onglet « Nos projets »** à gauche, avec Mon PC : Suivi, journal, cahier des charges et maquettes lus depuis GitHub, liens vers le Projet Claude.
