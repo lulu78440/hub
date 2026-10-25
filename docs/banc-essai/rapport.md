@@ -1,5 +1,13 @@
 # Banc d'essai · rapport
 
+## ergo-recette · recette finale de la refonte (26/10, poste Banc de test) : faite sur `banc-recette`
+
+1. Main 7.35.0 (b774e1e), rien modifié dans `js/`, `css/`, `index.html` ; rien fusionné. Détail et liste des essais pour Lucien : `recette-refonte.md`, captures dans `recette/`.
+2. Suite complète **57/57** (2 026 cas, 593 s) ; 33 fichiers `labo/essais*.mjs` et `tools/tests/atelier/tout.mjs` tous verts (`essais.mjs` : 44 réussis, 0 raté, 15 sautés faute de moteur réel).
+3. Déroulé Playwright (PC 1440x900, mobile 390x844, plans 1/2/3, fenêtres, Outils, `?pc` `?mobile` `?auto`, hors ligne, réglages « IA de secours en ligne ») : **55 OK, 3 à corriger sur 58**, 0 erreur console, 0 violation CSP, 0 appel vers une IA réelle.
+4. À corriger : A1 contraste du bouton « Écran en direct · bientôt » (mineur), A2 mobile : 16 fenêtres et 7 599 px par défaut au lieu de 8 et environ 3 500 px (à décider ; 3 871 px une fois les fonctions rares masquées), A3 menu d'appui long mobile sans « Personnaliser… » et avec « Fermer » (mineur).
+5. Non vérifiable ici : lasso et autres étapes du plan 3 non construites (p3-lasso, p3-direct, p3-ia, p3-mobile), fond 3D et orbe, images par seconde, Brave et Android, vraies IA de secours.
+
 ## B15 · politique de sécurité du contenu (25/10, poste Banc de test) : préparé sur `banc-csp`
 
 1. Branche `banc-csp` depuis main 7.31.0 ; rien fusionné, version non montée. Détail complet : `csp.md`.
@@ -18,7 +26,7 @@
 4. **Journal** : statuts posés en un commit (e992be6) sur la base de main c611939, à fusionner vite (la Refonte y écrit souvent).
 5. **refonte-auto (ffa94c3)** et **labo-auto (546df41)** : aucune régression propre (17 tests ciblés, comparés à main ; détail `branches.md`). Relecture : L1 (WebLLM et Transformers.js non figés dans le worker de labo-auto) et L2 (fichiers `apercu-*.html` à ne pas fusionner dans main).
 6. **À décider par toi** : quelles corrections passent dans main (proposé : les 25 d'un bloc, avant que la Refonte touche `lockui.js`) ; B9 (clé d'IA retirée à la désactivation) ; conventions du manuel (`propositions.md`) ; ne pas fusionner les `apercu-*.html` (L2) ; figer les bibliothèques d'IA (B14, L1).
-7. **Essais réels à faire par toi** : `essais-reels.md` (20 points). Recette de la refonte prête : `recette-refonte.md`.
+7. **Essais réels à faire par toi** : `essais-reels.md` (20 points). Recette de la refonte (ergo-recette, 26/10, main 7.35.0) : faite, voir `recette-refonte.md` et l'entrée ci-dessus.
 8. Tests à adapter à la refonte : recette PC et textes piégés (fenêtre Tâches en réserve). Rien fusionné dans main ; aucune reprise programmée en attente.
 
 ## Résumé (clôture du 25/10/2026 · relais au poste « Banc de test »)
