@@ -1,6 +1,6 @@
 {
  "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
- "releve": "2026-10-24T15:30:00+02:00",
+ "releve": "2026-10-25T14:23:00+01:00",
  "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
  "phases": [
   {
@@ -124,11 +124,12 @@
   "p3-feeds",
   "p3-media",
   "p3-news",
-  "p3-sync"
+  "p3-sync",
+  "p4-ok"
  ],
  "prochaine": {
-  "id": "p3-media",
-  "texte": "Radio web, playlist YouTube et MP3 lus"
+  "id": "p4-perf",
+  "texte": "Fluidité avec les surprises"
  },
  "built": [
   "ns-int",
@@ -150,7 +151,7 @@
   "p2-focus",
   "p2-plan2"
  ],
- "maj": "2026-10-24T16:00:00+02:00",
+ "maj": "2026-10-25T14:23:00+01:00",
  "par": "Claude",
  "titres": {
   "p2-focus": "Ramener vers moi",
