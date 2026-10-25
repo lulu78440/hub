@@ -1,6 +1,7 @@
 // Laboratoire · essais du socle d'IA locale : `node labo/essais-socle.mjs` (aucun modèle, aucun réseau : worker et backend simulés)
 import { detecterCapacites, choisirMode, decouperMots, diffuserMots, creerClientIA, moteurSocle } from "../js/noyau/socle.js";
-import { traiter } from "../js/noyau/worker-ia.js";
+import { traiter, nettoyerDemande, verrouillerBases, LIB_WEBLLM, LIB_TRANSFORMERS, BORNES } from "../js/noyau/worker-ia.js";
+import { readFileSync, readdirSync } from "node:fs";
 import { ErreurNoyau } from "../js/noyau/moteurs.js";
 let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -88,5 +89,34 @@ ok(rep.texte === "Bonjour Lucien" && rep.appels.length === 0 && moteur.texteSeul
 const progres = []; w = faussesDeuxFaces(null, { chargeurs: { webgpu: async ({ surProgres }) => { surProgres("Téléchargement", 0.5); return brut; } } }); client = creerClientIA({ creerWorker: () => w, mode: "webgpu" });
 await client.generer({ systeme: "s", messages: [], surProgres: (t, p) => progres.push([t, p]) });
 ok(progres.length === 1 && progres[0][1] === 0.5, "la progression du chargement remonte à la page (taille et barre : lab-modeles)");
+
+// --- Bibliothèques figées et cloisonnement du worker (constats B14 et L1 du Banc, décision du 25/10) ---
+const exacte = /@\d+\.\d+\.\d+\/\+esm$/;
+ok(exacte.test(LIB_WEBLLM) && exacte.test(LIB_TRANSFORMERS), "worker : WebLLM et Transformers.js en version exacte (" + LIB_WEBLLM.match(/@[\d.]+/)[0] + ", " + LIB_TRANSFORMERS.match(/@[\d.]+/)[0] + ")");
+const flottantes = [];
+for (const dossier of ["js/noyau", "js/widgets"]) for (const f of readdirSync(new URL("../" + dossier, import.meta.url))) {
+  if (!f.endsWith(".js")) continue;
+  const src = readFileSync(new URL(`../${dossier}/${f}`, import.meta.url), "utf8");
+  for (const m of src.matchAll(/cdn\.jsdelivr\.net\/npm\/(@?[\w.\-]+(?:\/[\w.\-]+)?)@([^/"'\s]+)/g)) if (!/^\d+\.\d+\.\d+$/.test(m[2])) flottantes.push(`${dossier}/${f} : ${m[1]}@${m[2]}`);
+}
+ok(flottantes.length === 0, "aucune URL de bibliothèque à version flottante dans js/noyau et js/widgets" + (flottantes.length ? " : " + flottantes.join(", ") : ""));
+const sale = nettoyerDemande({ id: 7, type: "generer", mode: "webgpu", modele: "Qwen2.5-0.5B", systeme: "consigne", messages: [{ role: "user", content: "Bonjour" }, { role: "system", content: "pirate" }, { role: "assistant", content: { objet: 1 } }], cle: "sk-secret", base: { notes: [] }, stockage: () => {} });
+ok(JSON.stringify(Object.keys(sale).sort()) === JSON.stringify(["id", "messages", "mode", "modele", "systeme", "type"]) && !JSON.stringify(sale).includes("sk-secret"), "le worker ne garde que la consigne et le texte des messages (clé, base, fonctions jetées)");
+ok(sale.messages.length === 2 && sale.messages.every((m) => typeof m.content === "string") && !sale.messages.some((m) => m.role === "system"), "messages : rôles user/assistant seulement, contenu réduit à du texte");
+const long = nettoyerDemande({ id: 1, type: "generer", mode: "wasm", systeme: "x".repeat(99999), messages: Array.from({ length: 99 }, () => ({ role: "user", content: "y".repeat(99999) })) });
+ok(long.systeme.length === BORNES.systeme && long.messages.length === BORNES.messages && long.messages[0].content.length === BORNES.message, "textes et nombre de messages bornés");
+ok(nettoyerDemande({ id: 1, type: "generer", modele: "../../hub?x=<script>" }).modele === null && nettoyerDemande(null) === null && nettoyerDemande({ type: "lire_base" }) === null, "nom de modèle douteux et types inconnus refusés");
+let recuDuWorker = []; await traiter({ id: 9, type: "lire_base", nom: "hub" }, { envoyer: (m) => recuDuWorker.push(m), etat: { backends: new Map(), annules: new Set() } });
+ok(recuDuWorker.length === 0, "une demande d'un type inconnu est ignorée sans réponse");
+const ouvertes = []; const fauxGlob = Object.create({ indexedDB: { open: (n) => (ouvertes.push(n), { n }), deleteDatabase: (n) => n, databases: async () => [{ name: "hub" }], cmp: () => 0 } });
+ok(verrouillerBases(fauxGlob), "verrou des bases posé dans la portée du worker");
+const refuse = (n) => { try { fauxGlob.indexedDB.open(n); return false; } catch (e) { return e.name === "SecurityError"; } };
+ok(["hub", "hub-appareil", "noyau-sauvegarde", "noyau-sens"].every(refuse), "les bases du hub (hub, hub-appareil, noyau-…) sont fermées au worker");
+ok(fauxGlob.indexedDB.open("webllm/model") && ouvertes.join() === "webllm/model", "les caches des bibliothèques d'IA restent ouvrables");
+ok((await fauxGlob.indexedDB.databases()).length === 0, "le worker ne peut pas lister les bases du hub");
+let remplace = true; try { fauxGlob.indexedDB = { open: () => "contournement" }; } catch { remplace = false; }
+try { Object.defineProperty(fauxGlob, "indexedDB", { value: { open: () => "contournement" } }); } catch { /* refusé */ }
+ok(!remplace && refuse("hub"), "le verrou ne peut pas être remplacé ensuite");
+ok(verrouillerBases({}) === false, "sans indexedDB : rien à verrouiller, aucune erreur");
 
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

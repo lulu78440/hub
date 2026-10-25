@@ -1279,7 +1279,7 @@ function moteurLocal({ id = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", surProgres = ()
     async preparer() {
       if (mlc) return;
       if (typeof navigator === "undefined" || !navigator.gpu) throw new ErreurNoyau("local", "WebGPU indisponible : l'IA locale ne marche que sur le PC (Brave récent).");
-      const lib = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2/+esm");
+      const lib = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm");
       mlc = await lib.CreateMLCEngine(id, { initProgressCallback: (r) => surProgres(r.text) });
     },
     async generer({ systeme, messages }) {
