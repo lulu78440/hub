@@ -129,7 +129,7 @@ export function createForce({ canvas, anchor, logo }) {
   }
 
   // Champ de force autour de la fenêtre qu'on déplace : arcs reliés à la souris, étincelles qui courent sur le bord
-  let dragEl = null;
+  let dragEl = null, dragRect = null;     // dragRect : place calculée par windows.js (évite de relire la mise en page à chaque image)
   function perim(r, s) {
     const P = 2 * (r.width + r.height); let d = (((s % 1) + 1) % 1) * P;
     if (d < r.width) return [r.left + d, r.top]; d -= r.width;
@@ -175,9 +175,9 @@ export function createForce({ canvas, anchor, logo }) {
     if (F.fin && F.energyOn) { F.filaments(F.fmx, F.fmy, 210, 22, true); mouseAura(); }
     if (press) drawPress();
     entity.draw(dt);
-    if (F.fin && dragEl) forceWrap(dragEl.getBoundingClientRect());
+    if (F.fin && dragEl) forceWrap(dragRect || dragEl.getBoundingClientRect());
     layers.forEach((fn) => { try { fn(fg, dt, F); } catch (e) { console.error(e); } });
     fg.globalCompositeOperation = "source-over";
   }
-  return { draw, entity, clear, setDrag(el) { dragEl = el; }, addLayer(fn) { layers.push(fn); }, get F() { return F; } };
+  return { draw, entity, clear, setDrag(el) { dragEl = el; if (!el) dragRect = null; }, setDragRect(r) { dragRect = r; }, addLayer(fn) { layers.push(fn); }, get F() { return F; } };
 }

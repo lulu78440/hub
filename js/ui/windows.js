@@ -55,10 +55,28 @@ export function createWindows({ world, plans, force }) {
     const ph = el.querySelector(".ph"), title = el.querySelector("h2").textContent;
     const pin = document.createElement("button");
     pin.type = "button"; pin.className = "pin"; pin.innerHTML = PIN_SVG;
+    const h2 = el.querySelector("h2"); h2.title = "Clic : réduire ou rouvrir · glisser : déplacer"; h2.setAttribute("aria-expanded", "true");
     pin.setAttribute("aria-pressed", "false"); pin.setAttribute("aria-label", "Figer la fenêtre " + title); pin.title = "Figer / libérer";
     ph.append(pin);
     el.insertAdjacentHTML("beforeend", '<span class="badge" aria-hidden="true">◆ FIGÉE</span><span class="grip" aria-hidden="true"></span>');
   });
+
+  // ---------- Allègement : étiquettes qui répètent le titre, pieds fixes sans action ni chiffre ----------
+  const TAG_REDONDANT = new Set(["IA", "CARTE 3D", "SUIVI DU HUB", "LECTURE SEULE"]);
+  const norm = (t) => t.trim().toUpperCase();
+  const FOOT_FIXE = new Set(["LECTEUR YOUTUBE INTÉGRÉ", "STOCKÉES SUR L'APPAREIL", "RADIOS, YOUTUBE, MP3", "TOUT LE PC : TOUCHE 3 OU BOUTON PLAN 3", "RELEVÉ DU SUIVI DU HUB", "APERÇU ACTUALISÉ", "APERÇU", "STOCKÉS SUR L'APPAREIL", "VÉRIFICATION TOUTES LES 10 MIN", "LECTURE SEULE", "—"]);
+  function tidy(el) {
+    if (state.lite) return;
+    const tag = el.querySelector(".ph .tag"), t = tag ? norm(tag.textContent) : "";
+    if (tag) tag.classList.toggle("off", !t || t === norm(el.querySelector("h2").textContent) || /^PHASE \d/.test(t) || TAG_REDONDANT.has(t));
+    const pf = el.querySelector(".pf"); if (!pf) return;
+    let seen = 0;
+    [...pf.children].forEach((c) => { const off = c.tagName === "SPAN" && FOOT_FIXE.has(norm(c.textContent)) && !c.querySelector("button, a"); c.classList.toggle("off", off); if (!off) seen++; });
+    pf.classList.toggle("off", seen === 0);
+  }
+  let tidyQ = new Set(), tidyRaf = 0;
+  const tidyLater = (el) => { tidyQ.add(el); if (!tidyRaf) tidyRaf = requestAnimationFrame(() => { tidyRaf = 0; const q = tidyQ; tidyQ = new Set(); q.forEach(tidy); }); };
+  els.forEach((el) => { tidy(el); new MutationObserver(() => tidyLater(el)).observe(el, { subtree: true, childList: true, characterData: true }); });
 
   function load() {
     try {
@@ -69,7 +87,7 @@ export function createWindows({ world, plans, force }) {
   }
   function save() {
     const out = { _v: LAYOUT_V };
-    els.forEach((el) => { const s = S[el.dataset.id]; out[el.dataset.id] = { x: s.tx / W, y: s.ty / H, w: s.w / W, h: s.h / H, pin: s.pin, hid: !!s.hid }; });
+    els.forEach((el) => { const s = S[el.dataset.id]; out[el.dataset.id] = { x: s.tx / W, y: s.ty / H, w: s.w / W, h: s.h / H, pin: s.pin, hid: !!s.hid, red: !!s.red }; });
     prefs.set(STORE, JSON.stringify(out));
   }
   const applySize = (el, s) => { el.style.width = s.w + "px"; el.style.height = s.h + "px"; };
@@ -81,12 +99,12 @@ export function createWindows({ world, plans, force }) {
     const D = defaults(W, H), saved = reset ? null : load();
     els.forEach((el) => {
       const id = el.dataset.id, d = D.L[id] || { x: W / 2 - 150, y: H / 2 - 100, w: 300, h: 200 }, sv = saved && saved[id], prev = S[id];
-      const s = prev || { cx: 0, cy: 0, ry: 0, rz: 0, vx: 0, hover: false, drag: false, pin: PINNED_BY_DEFAULT.includes(id), hid: false, max: null, last: "", fx: 0, fy: 0, fk: 1, fxT: 0, fyT: 0, fkT: 1, foc: false };
-      if (sv) { s.tx = sv.x * W; s.ty = sv.y * H; s.w = Math.max(sv.w * W, MIN.w); s.h = Math.max(sv.h * H, MIN.h); s.pin = !!sv.pin; s.hid = !!sv.hid; }
-      else { s.tx = d.x; s.ty = d.y; s.w = d.w; s.h = d.h; if (reset) { s.pin = PINNED_BY_DEFAULT.includes(id); s.hid = false; s.max = null; } }
+      const s = prev || { cx: 0, cy: 0, ry: 0, rz: 0, vx: 0, hover: false, drag: false, pin: PINNED_BY_DEFAULT.includes(id), hid: false, max: null, last: "", fx: 0, fy: 0, fk: 1, fxT: 0, fyT: 0, fkT: 1, foc: false, red: false, bvx: 0, bvy: 0, settle: 0 };
+      if (sv) { s.tx = sv.x * W; s.ty = sv.y * H; s.w = Math.max(sv.w * W, MIN.w); s.h = Math.max(sv.h * H, MIN.h); s.pin = !!sv.pin; s.hid = !!sv.hid; s.red = !!sv.red; }
+      else { s.tx = d.x; s.ty = d.y; s.w = d.w; s.h = d.h; if (reset) { s.pin = PINNED_BY_DEFAULT.includes(id); s.hid = false; s.max = null; s.red = false; } }
       if (!prev) { s.cx = s.tx; s.cy = s.ty; }       // ensuite, chaque changement de place glisse en douceur
       S[id] = s;
-      el.classList.toggle("hid", s.hid);
+      el.classList.toggle("hid", s.hid); el.classList.toggle("reduced", s.red);
       applySize(el, s); applyPin(el, s);
     });
     core = { x: D.anchor.left + D.anchor.width / 2, y: D.anchor.top + D.anchor.height / 2 };
@@ -106,6 +124,15 @@ export function createWindows({ world, plans, force }) {
     toast(s.pin ? "Fenêtre figée : elle ne bouge plus" : "Fenêtre libérée"); pulse(0.8); save();
   }
   const title = (el) => el.querySelector("h2").textContent;
+  /** Réduire une fenêtre à son seul nom (clic sur le nom) ou la rouvrir. Elle continue de vivre (radio, rappels). */
+  function setReduced(el, red) {
+    const s = S[el.dataset.id]; if (!s || !!s.red === !!red) return;
+    s.red = !!red; el.classList.toggle("reduced", s.red);
+    el.querySelector("h2").setAttribute("aria-expanded", String(!s.red));
+    if (!s.red) bringFront(el);
+    pulse(0.5); save();
+  }
+  const toggleReduced = (el) => setReduced(el, !S[el.dataset.id].red);
   function bringFront(el) { el.style.zIndex = ++zTop; }
   /** Masquer ou réafficher une fenêtre (elle garde sa place et sa taille). */
   function setHidden(el, hid) {
@@ -126,6 +153,9 @@ export function createWindows({ world, plans, force }) {
   // ---------- Ramener vers moi (p2-focus) ----------
   // La fenêtre avance au centre et grandit ; un seul voile (assombri et flou) recule le reste. Calculé dans le repère du « monde » :
   // on retrouve par approches successives le point du monde qui tombe au centre de l'écran, même quand la caméra est au plan 2.
+  // Place aimantée (grille de 8 px) affichée en pointillé pendant le glisser
+  const ghost = document.createElement("div"); ghost.className = "snap-ghost"; ghost.setAttribute("aria-hidden", "true"); world.append(ghost);
+  const SNAP = 8, snap = (v) => Math.round(v / SNAP) * SNAP;
   const veil = document.createElement("div"); veil.className = "focus-veil"; veil.setAttribute("aria-hidden", "true"); world.prepend(veil);
   let focusEl = null, prevPlan = 1;
   function worldMap() {
@@ -146,6 +176,7 @@ export function createWindows({ world, plans, force }) {
     if (state.lite || !el || focusEl === el) return;
     const s = S[el.dataset.id]; if (!s || s.hid) return;
     if (focusEl) unfocus(true);
+    if (s.red) setReduced(el, false);
     focusEl = el; prevPlan = plans.plan; s.foc = true;
     el.classList.add("focus"); el.style.zIndex = FOCUS.z; world.classList.add("has-focus");
     if (prevPlan !== 1) plans.goPlan(1);          // la caméra revient au plan 1 pour une fenêtre nette et droite
@@ -168,33 +199,44 @@ export function createWindows({ world, plans, force }) {
 
   els.forEach((el) => {
     const id = el.dataset.id, ph = el.querySelector(".ph"), grip = el.querySelector(".grip"), pinBtn = el.querySelector(".pin");
-    let sx = 0, sy = 0, ox = 0, oy = 0, ow = 0, oh = 0, mode = null, lastX = 0;
+    let sx = 0, sy = 0, ox = 0, oy = 0, ow = 0, oh = 0, mode = null, lastX = 0, downTitle = false, moved = 0;
     el.addEventListener("pointerenter", () => { if (state.lite) return; S[id].hover = true; state.energyTarget = 0.6; state.accent = ACCENTS[el.dataset.accent] || ACCENTS.cyan; });
     el.addEventListener("pointerleave", () => { if (state.lite) return; S[id].hover = false; if (!mode) { state.energyTarget = 0; state.accent = null; } });
     pinBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
     pinBtn.addEventListener("dblclick", (e) => e.stopPropagation());
     pinBtn.addEventListener("click", () => togglePin(el));
+    function showGhost(s) {
+      ghost.style.transform = `translate3d(${snap(s.tx)}px, ${snap(s.ty)}px, 0)`; ghost.style.width = s.w + "px"; ghost.style.height = s.h + "px"; ghost.classList.add("on");
+    }
     function start(e, m) {
       if (state.lite || e.button !== 0) return;
       const s = S[id];
       el.style.zIndex = ++zTop;
-      if (s.pin) { s.rz = 2.5; toast("Fenêtre figée : clique sur la punaise pour la libérer"); return; }
+      if (s.pin) { if (!e.target.closest("h2")) { s.rz = 2.5; toast("Fenêtre figée : clique sur la punaise pour la libérer"); } else { downTitle = true; moved = 0; sx = e.clientX; sy = e.clientY; mode = "title"; e.currentTarget.setPointerCapture(e.pointerId); } return; }
+      downTitle = m === "move" && !!e.target.closest("h2"); moved = 0;
       mode = m; sx = e.clientX; sy = e.clientY; ox = s.tx; oy = s.ty; ow = s.w; oh = s.h; lastX = e.clientX;
-      s.drag = m === "move"; el.classList.add("dragging"); dragEl = el; force.setDrag(el);
+      s.drag = m === "move"; s.settle = 0; el.classList.add("dragging"); dragEl = el; force.setDrag(el);
       e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault();
     }
     function move(e) {
       if (!mode) return;
       const s = S[id], z = plans.zoom, dx = (e.clientX - sx) / z, dy = (e.clientY - sy) / z;
+      moved = Math.max(moved, Math.hypot(e.clientX - sx, e.clientY - sy));
+      if (mode === "title") return;                      // fenêtre figée : seul le clic sur le nom compte
       if (s.max && Math.abs(dx) + Math.abs(dy) > 4) s.max = null;   // déplacée ou retaillée à la main : elle n'est plus « agrandie »
-      if (mode === "move") { s.tx = ox + dx; s.ty = oy + dy; s.vx = e.clientX - lastX; lastX = e.clientX; }
+      if (mode === "move") {
+        if (!downTitle || moved > 6) { s.tx = ox + dx; s.ty = oy + dy; s.vx = e.clientX - lastX; lastX = e.clientX; showGhost(s); }   // sous 6 px sur le nom : c'est un clic, pas un déplacement
+      }
       else { s.w = Math.max(MIN.w, ow + dx); s.h = Math.max(MIN.h, oh + dy); applySize(el, s); }
     }
-    function end() {
+    function end(e) {
       if (!mode) return;
-      const s = S[id];
-      if (mode === "move") { s.tx = Math.round(s.tx / 8) * 8; s.ty = Math.round(s.ty / 8) * 8; }
-      mode = null; s.drag = false; s.vx = 0; el.classList.remove("dragging"); dragEl = null; force.setDrag(null); save();
+      const s = S[id], click = downTitle && moved <= 6 && e && e.type === "pointerup";
+      if (mode === "move" && !click) { s.tx = snap(s.tx); s.ty = snap(s.ty); s.settle = state.reduce ? 0 : 0.45; s.bvx = s.bvy = 0; }   // pose avec un léger rebond
+      else if (mode === "move") { s.tx = ox; s.ty = oy; }
+      const wasDrag = mode !== "title";
+      mode = null; s.drag = false; s.vx = 0; el.classList.remove("dragging"); ghost.classList.remove("on"); if (wasDrag) { dragEl = null; force.setDrag(null); force.setDragRect(null); }
+      if (click) toggleReduced(el); else save();
       if (!s.hover) { state.energyTarget = 0; state.accent = null; }
     }
     ph.addEventListener("pointerdown", (e) => start(e, "move"));
@@ -226,9 +268,17 @@ export function createWindows({ world, plans, force }) {
     els.forEach((el) => {
       const s = S[el.dataset.id];
       const pl = planOf(el); el.classList.toggle("p1", pl === 1); el.classList.toggle("p2", pl === 2);
-      s.cx += (s.tx - s.cx) * kPos; s.cy += (s.ty - s.cy) * kPos;
-      if (Math.abs(s.tx - s.cx) < 0.05) s.cx = s.tx;
-      if (Math.abs(s.ty - s.cy) < 0.05) s.cy = s.ty;
+      if (s.drag) { s.cx = s.tx; s.cy = s.ty; }                                  // glisser : la fenêtre colle à la souris, sans retard
+      else if (s.settle > 0) {                                                    // lâcher : petit ressort (rebond de 0,4 s)
+        s.settle -= dt;
+        s.bvx += ((s.tx - s.cx) * 380 - s.bvx * 22) * dt; s.bvy += ((s.ty - s.cy) * 380 - s.bvy * 22) * dt;
+        s.cx += s.bvx * dt; s.cy += s.bvy * dt;
+        if (s.settle <= 0) { s.settle = 0; s.bvx = s.bvy = 0; }
+      } else {
+        s.cx += (s.tx - s.cx) * kPos; s.cy += (s.ty - s.cy) * kPos;
+        if (Math.abs(s.tx - s.cx) < 0.05) s.cx = s.tx;
+        if (Math.abs(s.ty - s.cy) < 0.05) s.cy = s.ty;
+      }
       if (s.foc && Math.abs(plans.zoom - fzoom) > 0.002) { fzoom = plans.zoom; aim(el); }   // la caméra bouge : on revise la cible
       const kF = state.reduce ? 1 : 1 - Math.exp(-dt * 9);
       s.fx += (s.fxT - s.fx) * kF; s.fy += (s.fyT - s.fy) * kF; s.fk += (s.fkT - s.fk) * kF;
@@ -238,14 +288,18 @@ export function createWindows({ world, plans, force }) {
       }
       const mid = s.cx + s.w / 2;
       const ryT = (s.hover || s.drag || s.foc) ? 0 : -9 * clamp((mid - core.x) / (W * 0.33), -1, 1);
-      const rzT = s.drag && !state.reduce ? clamp(s.vx * 0.12, -3, 3) : 0;
+      const rzT = s.drag && !state.reduce ? clamp(s.vx * 0.06, -2, 2) : 0;
       s.ry += (ryT - s.ry) * kRot; s.rz += (rzT - s.rz) * kRot; s.vx *= 0.85;
       if (Math.abs(s.rz) < 0.005) s.rz = 0;
       const tf = `translate3d(${(s.cx + s.fx).toFixed(1)}px, ${(s.cy + s.fy).toFixed(1)}px, 0) perspective(1200px) rotateY(${s.ry.toFixed(2)}deg) rotateZ(${s.rz.toFixed(2)}deg) scale(${((s.drag ? 1.025 : 1) * s.fk).toFixed(4)})`;
       if (tf !== s.last) { s.last = tf; el.style.transform = tf; }
+      if (s.drag) {                                                               // le champ de force reçoit la place calculée (pas de relecture de la mise en page)
+        const k = 1.025, ex = plans.zoom === 1 && state.cine < 0.01 && !s.foc;
+        force.setDragRect(ex ? { left: s.cx - s.w * (k - 1) / 2, top: s.cy - s.h * (k - 1) / 2, width: s.w * k, height: s.h * k, right: s.cx + s.w * (k + 1) / 2, bottom: s.cy + s.h * (k + 1) / 2 } : null);
+      }
     });
   }
 
   function reset() { const D = layout(W, H, true); save(); return D; }
-  return { layout, update, reset, planOf, focus, unfocus, get focused() { return focusEl; }, toggleMax, togglePin, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
+  return { layout, update, reset, planOf, focus, unfocus, get focused() { return focusEl; }, toggleMax, togglePin, setReduced, toggleReduced, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
 }

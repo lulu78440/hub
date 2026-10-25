@@ -151,7 +151,7 @@ body.lite #force, body.lite .reticle { display: none !important; }
 .in::before { content: ""; position: absolute; left: 0; top: 44px; bottom: 26px; width: 3px; background: repeating-linear-gradient(to bottom, var(--a) 0 7px, transparent 7px 12px); opacity: .7; }
 .ph { display: flex; align-items: stretch; height: 30px; flex: none; user-select: none; -webkit-user-select: none; }
 .ph h2 { margin: 0; display: flex; align-items: center; padding: 0 26px 0 calc(var(--cut) + 6px); font-family: var(--ui); font-weight: 700; font-size: 14px; letter-spacing: .26em; text-transform: uppercase; color: var(--void); background: linear-gradient(90deg, var(--a), color-mix(in srgb, var(--a) 70%, #fff)); clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%); white-space: nowrap; }
-.ph .hatch { flex: 1; margin: 7px 10px 7px -4px; background: repeating-linear-gradient(-55deg, color-mix(in srgb, var(--a) 40%, transparent) 0 2px, transparent 2px 7px); min-width: 10px; }
+.ph .hatch { flex: 1; margin: 7px 10px 7px -4px; background: repeating-linear-gradient(-55deg, color-mix(in srgb, var(--a) 14%, transparent) 0 2px, transparent 2px 7px); min-width: 10px; }
 .ph .tag { align-self: center; margin-right: 12px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--a); white-space: nowrap; }
 .pb { flex: 1; min-height: 0; padding: 12px 14px 8px 18px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
 .pf { flex: none; display: flex; justify-content: space-between; gap: 8px; padding: 5px 30px 7px 18px; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; color: var(--dim); border-top: 1px solid rgba(63,230,255,.12); white-space: nowrap; overflow: hidden; }
@@ -926,3 +926,27 @@ body.lite .focus-veil { display: none; }
 body.cine:not(.lite) .dof { display: block; }
 @media (prefers-reduced-motion: reduce) { .dof { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(2, 6, 13, .35); } }
 body.lite .floor, body.lite .dof { display: none; }
+
+/* ---------- Refonte · ergo-visuel a (25/10) : visuel allégé, glisser fluide, fenêtre réduite à son nom ---------- */
+.ph .tag.off, .pf .off, .pf.off { display: none; }
+.ph .tag:empty { display: none; }
+.ph h2 { cursor: pointer; }
+.win.dragging .panel { filter: none !important; transition: none; }
+.snap-ghost { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; opacity: 0; border: 1px dashed rgba(63, 230, 255, .55); background: rgba(63, 230, 255, .035); transition: opacity .12s; }
+.snap-ghost.on { opacity: 1; }
+body.lite .snap-ghost { display: none; }
+body:not(.lite) .win.reduced { width: max-content !important; height: auto !important; pointer-events: none; }
+body:not(.lite) .win.reduced::before, body:not(.lite) .win.reduced .badge, body:not(.lite) .win.reduced .grip, body:not(.lite) .win.reduced .pin,
+body:not(.lite) .win.reduced .ph .hatch, body:not(.lite) .win.reduced .ph .tag, body:not(.lite) .win.reduced .in::before { display: none; }
+body:not(.lite) .win.reduced .panel { width: auto; height: auto; padding: 0; background: none; clip-path: none; animation: none; filter: none !important; opacity: 1 !important; }
+body:not(.lite) .win.reduced .in { flex: none; background: none; clip-path: none; }
+body:not(.lite) .win.reduced .ph { pointer-events: auto; }
+body:not(.lite) .win.reduced .pb, body:not(.lite) .win.reduced .pf { position: absolute; left: 0; top: 0; width: 0 !important; height: 0 !important; min-height: 0; padding: 0; margin: 0; border: 0; overflow: hidden; }
+/* Compteur d'images et jauge de zoom : cachés (Maj + F pour le compteur) */
+.fps { display: none; }
+body.show-fps .fps { display: block; }
+.zoom { display: none !important; }
+/* Raccourcis de la recherche : seulement quand on écrit */
+.search .hints { opacity: 0; transition: opacity .25s; }
+.search:focus-within .hints { opacity: 1; }
+body.lite .search .hints { opacity: 1; }
