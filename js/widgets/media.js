@@ -15,9 +15,10 @@ const openUrl = (u) => { u = webUrl(u); if (!u) return; const a = document.creat
 /** Identifiant de vidéo ou de playlist dans un lien YouTube (watch, youtu.be, shorts, embed, playlist). */
 export function parseYouTube(s) {
   s = (s || "").trim();
+  if (/^[\w-]{11}$/.test(s)) return { v: s, list: null };                 // identifiant seul, collé tel quel
   try {
-    const u = new URL(/^https?:/.test(s) ? s : "https://" + s), h = u.hostname.replace(/^www\.|^m\.|^music\./, "");
-    const list = u.searchParams.get("list");
+    const u = new URL(/^https?:/i.test(s) ? s : "https://" + s), h = u.hostname.replace(/^www\.|^m\.|^music\./, "");
+    let list = u.searchParams.get("list"); if (list && !/^[\w-]+$/.test(list)) list = null;     // identifiant de playlist propre ou rien
     let v = null;
     if (h === "youtu.be") v = u.pathname.slice(1).split("/")[0];
     else if (h === "youtube.com" || h === "youtube-nocookie.com") {
