@@ -1,11 +1,12 @@
 # Banc d'essai automatique du hub
 
-Une commande rejoue tout ce qui a été vérifié pendant le banc d'essai du 24/10/2026 (cycles 1 à 5).
+Une commande rejoue tout ce qui a été vérifié pendant le banc d'essai des 24 et 25/10/2026 (cycles 1 à 7). Relais : poste « Banc de test ».
 
 ```bash
 pip install playwright && playwright install chromium   # une seule fois
-python3 tools/tests/run.py              # tout (environ 17 min, 46 tests, 1 928 cas)
-python3 tools/tests/run.py precis       # seulement les 1 895 cas précis (2 min)
+python3 tools/tests/run.py              # tout (environ 11 min, 46 tests, 1 929 cas)
+python3 tools/tests/run.py precis       # seulement les cas précis (2 min)
+HUB_TRACE=1 python3 tools/tests/run.py nom   # détail d'un échec ; HUB_LIMITE=600 : garde-fou par test (s)
 python3 tools/tests/run.py --rapide     # sans les tests longs (charge, mémoire) : environ 6 min
 python3 tools/tests/run.py securite     # seulement les tests dont le nom contient « securite »
 ```
@@ -23,5 +24,5 @@ et le flux d'actualité sont simulés (`fakes.py`, `t2_fonctions.py`). Code de s
 | `t6_precis.py` | 7 | 1 895 cas unitaires contre des oracles Python : échéances `@…`, heures, recherche, voix, YouTube, coordonnées, anniversaires, fêtes 2015-2045, rappel du dimanche, XSS × 7 endroits, liens × 4 endroits, coffre (chiffrement, falsification, Unicode), lecture des fichiers, import champ par champ, synchro (40 situations). Écarts listés dans `.tmp/echecs-<groupe>.txt` |
 | `t5_confort.py` | 5 | chargement à froid, images/s (rendu logiciel : valeur plancher), mémoire dans la durée, mouvement réduit, clavier, contrastes |
 
-Limites : Chromium et non Brave ; 3D sans carte graphique ; l'ouverture de fichiers de Mon PC (accès aux dossiers) et les
+Limites : Chromium et non Brave ; 3D coupée dans les tests de fonctions (rendu logiciel trop lent), gardée dans `t5_confort.py` ; l'ouverture de fichiers de Mon PC (accès aux dossiers) et les
 vraies connexions Google, Microsoft et GitHub ne sont pas rejouées. Les tests utilisent `window.__hub` et les modules du hub.

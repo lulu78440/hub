@@ -1,17 +1,17 @@
 # Banc d'essai · rapport
 
-## Résumé (24/10/2026, 16 h 14 → 18 h 15)
+## Résumé (clôture du 25/10/2026 · relais au poste « Banc de test »)
 
-1. **Cycles réalisés** : 1 à 6 complets, puis un 2e tour d'approfondissement (imports, liens, coupures). Suite automatique : 33 tests, `python3 tools/tests/run.py` (mode d'emploi `tools/tests/README.md`). Dernier passage complet : 32/32 (après correction d'un test instable) ; après B17, les 18 tests d'import, sécurité et charge sont verts, mais le passage complet final s'est bloqué et a été arrêté à 25 min : test à identifier (`HUB_TRACE=1`).
-2. **Problèmes** : 17 au total · **1 critique** (B7) · **7 importants** (B3, B4, B5, B6, B8, B9, B14) · **9 mineurs** (B1, B2, B10 à B13, B15 à B17).
-3. **Corrigés sur `banc-essai`** (13, un commit par problème) : B1, B3 à B13, B17. **Décrits seulement** (4) : B2, B14, B15, B16.
-4. Le plus grave : un fichier HTML/SVG ouvert depuis **Mon PC** tournait avec les droits du hub (B7) ; liens `javascript:` venus d'un flux RSS ou d'un export trafiqué (B3, B4) ; météo piégeable par un export (B8) ; stockage plein = perte silencieuse (B6).
-5. **Décisions qui te reviennent** : B9 (désactiver le verrouillage efface la clé Gemini, à recoller) ; B2 (un import sur un appareil synchronisé se comporte comme une fusion) ; B14 (figer la version de WebLLM, origine partagée avec tes autres pages GitHub) ; B15 (CSP à tester sur Brave) ; B16.
-6. **À la fusion** : monter la version (sw.js et js/version.js : main est en 7.5.0 depuis le 25/10, donc 7.5.1), sinon les appareils gardent l'ancien code en cache. La correction de `tools/flux.py` (B3) n'agit qu'une fois sur main.
-7. **Ordre conseillé** : la branche `noyau` est déjà dans main (7.5.0). Fusion d'essai locale `main` + `banc-essai` le 25/10 : **0 conflit, 46 tests et 1 928 cas verts**. Fusionner `banc-essai` (aucun fichier `js/noyau/` touché), version 7.5.1, recette rapide sur Brave et Android. Si tu préfères trier : B7, puis B8, B3, B4, B5, B6, puis le reste (commits séparés, `git cherry-pick` possible).
-8. **25/10, série « 1 000 cas précis »** : 1 895 vérifications unitaires (`t6_precis.py`), **10 nouveaux problèmes** (B18 à B27 : 4 importants, 6 mineurs), tous corrigés sur `banc-essai`. Le plus utile : synchro qui effaçait une note remise avec « Annuler » (B23), phrase accentuée refusée selon le clavier (B24), export du Bloc-notes refusé (B25), `@13/13` → janvier (B18).
-9. Suite complète : 46 tests, 1 928 cas, environ 17 min, tout vert. Le « blocage » d'hier n'en était pas un : mon délai coupait trop tôt. Un garde-fou de 7 min par test est désormais en place.
-10. Limites : Chromium sans carte graphique (pas Brave), images/s non représentatives ; Mon PC et les vraies connexions Google/Microsoft/GitHub non rejouées ; mémoire mesurée sur 3 min (stable), pas 30.
+1. **Tests réalisés** : cycles 1 à 6 (sauvegardes, fonctions, sécurité, limites et charge, confort, suite automatique), relecture statique du code, série de 1 895 cas précis, fusion d'essai avec la dernière main (2077509, Noyau compris).
+2. **Suite rejouable** : `python3 tools/tests/run.py` : 46 tests, 1 929 cas, ~11 min, **tout vert** sur `banc-essai` et sur la fusion d'essai ; essais du Noyau (`labo/essais*.mjs`) identiques avant et après fusion.
+3. **Problèmes : 28** · **critique : 1** (B7) · **importants : 12** (B3, B4, B5, B6, B8, B9, B14, B18, B23, B24, B25, B28) · **mineurs : 15** (B1, B2, B10 à B13, B15 à B17, B19 à B22, B26, B27).
+4. **Corrections prêtes sur `banc-essai` (24, un commit par problème)** : B1, B3 à B13, B17 à B28.
+5. **Seulement décrites (4, décision de Lucien)** : B2 (import sur appareil synchronisé = fusion), B14 (WebLLM en version flottante, origine partagée github.io), B15 (CSP et referrer à tester sur Brave), B16 (`window.__hub`, valeurs en clair acceptées par le coffre, workflow non figé).
+6. Les plus graves corrigés : fichier HTML/SVG ouvert depuis Mon PC avec les droits du hub (B7) ; liens `javascript:` d'un flux ou d'un export (B3, B4) ; météo piégeable (B8) ; perte silencieuse quand le stockage est plein (B6) ; synchro qui effaçait une note remise ou se croisait entre onglets (B23, B28) ; phrase accentuée refusée (B24).
+7. À valider par Lucien : B9 (désactiver le verrouillage efface la clé Gemini).
+8. **Fusion** : 0 conflit avec main au 25/10 ; monter la version au-dessus de celle de main (`sw.js`, `js/version.js`) ; recette rapide sur Brave et Android ; rejouer la suite juste avant.
+9. Limites : Chromium sans carte graphique (3D coupée dans les tests de fonctions, gardée pour le confort) ; Mon PC et vraies connexions Google, Microsoft, GitHub non rejoués ; mémoire mesurée 3 min, pas 30.
+10. Rien n'a été fusionné dans main ; aucune reprise programmée en attente.
 
 ## Décisions prises en l'absence de Lucien
 

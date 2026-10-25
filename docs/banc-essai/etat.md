@@ -2,11 +2,13 @@
 
 Mission du 24/10/2026, 16 h 14 → 18 h 15 (Paris). Branche `banc-essai` créée depuis `main` (8aa1802).
 Environnement : serveur local (`python3 -m http.server`), Chromium headless (Playwright), données factices uniquement.
-Reprise programmée : une seule en attente (voir fin de fichier).
+Mission close le 25/10/2026 à 15 h 11 ; relais : poste « Banc de test » (Charte des postes).
 
-## Cycle en cours
+## Bilan
 
-25/10 : série « 1 000 cas précis » terminée (1 895 cas, B18 à B27 corrigés). Rien fusionné.
+- **Fait** : cycles 1 à 6, relecture statique, série « 1 000 cas précis » (1 895 cas), fusion d'essai avec main 2077509 (0 conflit, tout vert), B28 corrigé. 24 corrections sur la branche, 4 décrites.
+- **En cours** : rien (aucun test lancé, aucune reprise programmée).
+- **À faire (poste Banc de test / Lucien)** : décisions B2, B9, B14, B15, B16 ; fusion de `banc-essai` (version au-dessus de main) après un dernier passage de `python3 tools/tests/run.py` ; recette sur Brave (PC) et Android ; mémoire sur 30 min ; Mon PC avec de vrais dossiers ; vraies connexions (jeton Gists, Gmail, Outlook, Gemini).
 
 ## Tests
 
@@ -54,10 +56,12 @@ Reprise programmée : une seule en attente (voir fin de fichier).
 | 7 | Lecture des fichiers (53), import champ par champ (28) | corrigé | B25, B26, B27 |
 | 7 | Synchro, 40 situations × 2 (80) | corrigé | B23 |
 | 6 | Suite complète (46 tests, 1 928 cas) | réussi | ~17 min ; tests d'export chiffré adaptés au rendu logiciel lent après la feuille du coffre |
+| 7 | Synchros simultanées (deux onglets) | corrigé | B28 |
+| 6 | Fusion d'essai avec main 2077509 : suite (46 tests, 1 929 cas) + essais du Noyau | réussi | 0 conflit ; 3D coupée dans les tests de fonctions |
 
 ## Prochaine action
 
-Attendre Lucien : décisions B2, B9, B14 à B16 ; fusion de `banc-essai` (monter la version à 7.2.7).
+Poste « Banc de test » : relire ce fichier et `rapport.md`, rejouer `python3 tools/tests/run.py` (mode d'emploi `tools/tests/README.md`), puis la liste « À faire » ci-dessus.
 
 ## Reprise programmée
 
