@@ -16,6 +16,7 @@ import { state, pulse } from "../state.js";
 
 const ON = (k) => prefs.on("surprise-" + k);
 const pad = (n) => String(n).padStart(2, "0");
+const mulberry = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 
 /** Phase de la lune (0 = nouvelle, 0.5 = pleine), à partir d'une nouvelle lune connue (6 janvier 2000 18:14 UTC). */
 export function moon(d = new Date()) {
@@ -229,6 +230,58 @@ body.hyperon .win .panel, body.hyperon header.top, body.hyperon .agband, body.hy
     g.fillStyle = `rgba(220,240,255,${(e < 0.18 ? 0.45 * (1 - e / 0.18) + 0.12 * k : 0.12 * k).toFixed(3)})`; g.fillRect(0, 0, W, H);
   });
 
+  // ---------- 5b. Pleine lune dans le ciel 3D (demande de Lucien, 25/10) ----------
+  // Visible seulement les nuits de pleine lune (phase 0,47 → 0,53, environ 3 nuits par mois), derrière l'orbe.
+  let moon3d = null;
+  document.addEventListener("hub:scene", ({ detail: { THREE, scene, lite } }) => {
+    const c = document.createElement("canvas"); c.width = c.height = lite ? 256 : 512;
+    const g = c.getContext("2d"), S = c.width, R = S / 2 - 2, rnd = mulberry(7);
+    g.save(); g.beginPath(); g.arc(S / 2, S / 2, R, 0, 6.283); g.clip();
+    let gr = g.createRadialGradient(S * 0.46, S * 0.44, R * 0.1, S / 2, S / 2, R);
+    gr.addColorStop(0, "#f4f6f8"); gr.addColorStop(0.7, "#d9dee4"); gr.addColorStop(1, "#9aa3ad");
+    g.fillStyle = gr; g.fillRect(0, 0, S, S);
+    // Mers lunaires (taches sombres)
+    g.filter = `blur(${S / 70}px)`;
+    [[0.36, 0.34, 0.16, 0.12], [0.55, 0.3, 0.12, 0.1], [0.6, 0.47, 0.14, 0.11], [0.42, 0.5, 0.1, 0.13], [0.3, 0.6, 0.12, 0.08], [0.68, 0.36, 0.06, 0.08]].forEach(([x, y, rx, ry]) => {
+      g.fillStyle = "rgba(25,32,45,.85)"; g.beginPath(); g.ellipse(x * S, y * S, rx * S, ry * S, rnd() * 3, 0, 6.283); g.fill();
+    });
+    g.filter = "none";
+    // Cratères
+    for (let i = 0; i < (lite ? 40 : 90); i++) {
+      const x = rnd() * S, y = rnd() * S, r = (0.004 + rnd() * rnd() * 0.03) * S;
+      g.fillStyle = "rgba(30,38,50,.5)"; g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.45)"; g.lineWidth = Math.max(1, r * 0.25); g.beginPath(); g.arc(x - r * 0.15, y - r * 0.15, r, 2.4, 5.5); g.stroke();
+    }
+    // Tycho et ses rayons
+    g.strokeStyle = "rgba(255,255,255,.16)"; g.lineWidth = S / 300;
+    for (let i = 0; i < 14; i++) { const a = rnd() * 6.283, l = (0.15 + rnd() * 0.3) * S; g.beginPath(); g.moveTo(S * 0.47, S * 0.8); g.lineTo(S * 0.47 + Math.cos(a) * l, S * 0.8 + Math.sin(a) * l); g.stroke(); }
+    g.fillStyle = "#fff"; g.beginPath(); g.arc(S * 0.47, S * 0.8, S * 0.012, 0, 6.283); g.fill();
+    // Assombrissement du bord
+    gr = g.createRadialGradient(S / 2, S / 2, R * 0.6, S / 2, S / 2, R); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(5,10,20,.75)");
+    g.fillStyle = gr; g.fillRect(0, 0, S, S); g.restore();
+    const tex = new THREE.CanvasTexture(c);
+    const disc = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0x3a424c, fog: false, depthWrite: false, transparent: true }));
+    // Halo bleuté autour
+    const hc = document.createElement("canvas"); hc.width = hc.height = 128; const hg = hc.getContext("2d");
+    const hr = hg.createRadialGradient(64, 64, 20, 64, 64, 64); hr.addColorStop(0, "rgba(190,215,255,.55)"); hr.addColorStop(0.45, "rgba(150,190,255,.14)"); hr.addColorStop(1, "rgba(150,190,255,0)");
+    hg.fillStyle = hr; hg.fillRect(0, 0, 128, 128);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(hc), fog: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.28 }));
+    const grp = new THREE.Group(); grp.add(glow, disc); grp.renderOrder = -10; disc.renderOrder = glow.renderOrder = -10;
+    scene.add(grp);
+    moon3d = { grp, disc, glow, place(v) {
+      const P = v === "derriere" ? [0, 0.6, -45, 13] : [-7, 8.5, -45, 7.5];   // x, y, z, diamètre
+      grp.position.set(P[0], P[1], P[2]); disc.scale.set(P[3], P[3], 1); glow.scale.set(P[3] * 2.6, P[3] * 2.6, 1);
+    } };
+    moon3d.place(prefs.get("lune-place", "coin"));
+    showMoon();
+  });
+  function showMoon(forceOn) {
+    if (!moon3d) return;
+    const p = moon().phase;
+    moon3d.grp.visible = forceOn ?? (ON("lune") && p >= 0.47 && p < 0.53);
+  }
+  setInterval(() => showMoon(), 30 * 60e3);
+
   // ---------- Menus et réglages ----------
   extendMenu("fond", () => (focus ? [{ t: "Arrêter le Focus", fn: () => stopFocus(false) }] : [{ t: "Focus 25 min", fn: () => startFocus(25) }, { t: "Focus 50 min", fn: () => startFocus(50) }])
     .concat([{ t: "Revoir le briefing du jour", fn: () => briefing(true) }]));
@@ -244,5 +297,5 @@ body.hyperon .win .panel, body.hyperon header.top, body.hyperon .agband, body.hy
     });
   }
   setTimeout(() => briefing(false), 2500);
-  return { briefing, startFocus, stopFocus, hyper, moon };
+  return { briefing, startFocus, stopFocus, hyper, moon, moonPreview: (v) => { if (moon3d) { moon3d.place(v); showMoon(true); } } };
 }
