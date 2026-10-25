@@ -94,6 +94,8 @@ async function mergeIn(remote) {
   return changes;
 }
 
+let running = null;
+
 export const sync = {
   get configured() { const c = config(); return !!(c && c.token && c.phrase && c.gist); },
   /** Première mise en route sur un appareil : vérifie le jeton, trouve ou crée le Gist secret. */
@@ -114,8 +116,13 @@ export const sync = {
     return { created };
   },
   forget() { saveConfig(null); localStorage.removeItem("hub-synchro-etat"); },
-  /** Tire, fusionne, pousse. Renvoie { pulled, pushed }. */
-  async run() {
+  /** Tire, fusionne, pousse. Renvoie { pulled, pushed }. Une seule synchro à la fois, tous onglets confondus
+   *  (deux onglets du hub ouverts : leurs synchros automatiques ne doivent pas se croiser et écraser le Gist). */
+  run() {
+    if (navigator.locks) return navigator.locks.request("hub-synchro", () => this._run());
+    const p = (running || Promise.resolve()).catch(() => {}).then(() => this._run()); running = p; return p;
+  },
+  async _run() {
     const c = config(); if (!c) throw new Error("Synchro non configurée");
     const remote = await readRemote(c);
     const pulled = remote ? await mergeIn(remote) : 0;
