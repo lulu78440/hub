@@ -3,7 +3,7 @@ import { creerCatalogue, appliquerRegle, listeOutils, OUTILS_VALIDES, OUTILS_PRO
 let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
 const cat = creerCatalogue({ raccourcis: () => ({}) });
 const aBrancher = new Set(OUTILS_A_BRANCHER.map((o) => o.nom));
-ok(cat.length === 34 && cat.length === Object.keys(OUTILS_VALIDES).length - aBrancher.size, `le catalogue en service = les 34 outils confirmés le 25/10 (${cat.length} outils)`);
+ok(cat.length === 39 && cat.length === Object.keys(OUTILS_VALIDES).length - aBrancher.size, `le catalogue en service = les 34 outils confirmés + les 5 validés le 25/10 (${cat.length} outils)`);
 ok(Object.keys(OUTILS_VALIDES).every((n) => cat.some((o) => o.nom === n) || aBrancher.has(n)), "chaque outil validé est soit en service, soit listé « à brancher »");
 ok(cat.every((o) => OUTILS_VALIDES[o.nom] === o.niveau), "chaque outil a exactement le niveau validé");
 ok(cat.every((o) => o.niveau === "LIBRE" || o.niveau === "CONFIRMATION"), "aucun outil INTERDIT dans le catalogue (jamais présenté au modèle)");
@@ -19,8 +19,9 @@ ok(r.catalogue.length === 1, "une fois validé (ajouté à la liste avec son niv
 // Validation du 25/10 (21 h 05) : les 5 outils proposés sont validés avec leur niveau, mais pas actifs (modules non branchés, sw.js à la fusion).
 const attendus = { consulter_manuel: "LIBRE", chercher_decisions: "LIBRE", lire_contradictions: "LIBRE", proposer_decision: "CONFIRMATION", creer_routine: "CONFIRMATION" };
 ok(Object.entries(attendus).every(([n, niv]) => OUTILS_VALIDES[n] === niv), "les 5 outils validés le 25/10 sont dans la liste validée, au bon niveau");
-ok(OUTILS_A_BRANCHER.length === 5 && OUTILS_A_BRANCHER.every((o) => attendus[o.nom] === o.niveau && o.module && o.pourquoi), "ils sont listés « à brancher » avec leur module");
-ok(Object.keys(attendus).every((n) => !cat.some((o) => o.nom === n)), "aucun d'eux n'est actif dans le hub tant que son module n'est pas branché");
+ok(OUTILS_A_BRANCHER.length === 0, "plus rien « à brancher » : les 5 outils sont en service");
+ok(Object.keys(attendus).every((n) => cat.some((o) => o.nom === n && o.niveau === attendus[n])), "les 5 sont actifs, exactement au niveau validé");
+ok(cat.length === Object.keys(OUTILS_VALIDES).length, "aucun autre outil que ceux validés");
 ok(OUTILS_PROPOSES.length === 0, "plus aucune proposition en attente");
 const branche = { nom: "consulter_manuel", niveau: "LIBRE", description: "x", params: { type: "object", properties: {} }, exec: async () => ({}) };
 ok(appliquerRegle([branche]).catalogue.length === 1 && appliquerRegle([{ ...branche, niveau: "CONFIRMATION" }]).catalogue.length === 0, "le jour du branchement, consulter_manuel entre en LIBRE, jamais à un autre niveau");
@@ -29,5 +30,5 @@ const liste = listeOutils(cat);
 ok(liste.length === cat.length + OUTILS_A_BRANCHER.length + OUTILS_PROPOSES.length, "liste visible : outils actifs + validés à brancher + propositions");
 ok(liste.filter((l) => l.statut === "validé").length === cat.length, "tous les outils actifs sont « validé »");
 const prop = liste.find((l) => l.nom === "consulter_manuel");
-ok(prop && prop.statut === "validé · à brancher", "consulter_manuel apparaît « validé · à brancher »");
+ok(prop && prop.statut === "validé", "consulter_manuel apparaît « validé » (actif)");
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

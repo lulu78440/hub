@@ -76,17 +76,9 @@ export const OUTILS_VALIDES = {
   consulter_manuel: "LIBRE", chercher_decisions: "LIBRE", lire_contradictions: "LIBRE", proposer_decision: "CONFIRMATION", creer_routine: "CONFIRMATION"
 };
 /**
- * Outils VALIDÉS par Lucien mais pas encore actifs : leur module (manuel.js, decisions.js, contradictions.js, routines.js) n'est pas importé par le
- * Noyau tant qu'il n'est pas dans le cache hors ligne (`sw.js`, fichier partagé : se fera à la fusion de labo-auto dans main). Le jour du branchement,
- * il suffit d'ajouter l'outil (même nom, même niveau) au catalogue ci-dessous : la règle le laissera entrer.
+ * Outils VALIDÉS par Lucien mais pas encore actifs. Vide depuis le branchement des 5 outils du 25/10 (labo-auto2) ; un futur outil validé non branché s'y inscrit.
  */
-export const OUTILS_A_BRANCHER = [
-  { nom: "consulter_manuel", niveau: "LIBRE", module: "js/noyau/manuel.js", fonction: "creerManuel().pourModele()", pourquoi: "Lecture seule du manuel public du hub ; ne donne aucun droit sur les fonctions décrites." },
-  { nom: "chercher_decisions", niveau: "LIBRE", module: "js/noyau/decisions.js", fonction: "creerDecisions().chercher()", pourquoi: "Lecture seule des décisions déjà enregistrées par Lucien (décision, raison, conséquences)." },
-  { nom: "lire_contradictions", niveau: "LIBRE", module: "js/noyau/contradictions.js", fonction: "detecterContradictions()", pourquoi: "Lecture seule des signaux calculés par règles (au plus 3), sans rien modifier." },
-  { nom: "proposer_decision", niveau: "CONFIRMATION", module: "js/noyau/decisions.js", fonction: "creerDecisions().enregistrer()", pourquoi: "Écriture dans la mémoire des décisions : Lucien valide chaque enregistrement ; jamais d'effacement." },
-  { nom: "creer_routine", niveau: "CONFIRMATION", module: "js/noyau/routines.js", fonction: "validerRoutine()", pourquoi: "Écriture : crée ou modifie une routine ; Lucien valide la liste des étapes ; ne lance rien." }
-];
+export const OUTILS_A_BRANCHER = [];
 /** Outils proposés par les postes, EN ATTENTE de validation : aucun pour l'instant (voir docs/labo-auto/outils-propose.md). */
 export const OUTILS_PROPOSES = [];
 /** Ne garde que les outils validés au bon niveau. Renvoie { catalogue, ecartes } ; rien n'est jamais ajouté ni élevé de niveau. */
@@ -260,7 +252,38 @@ export function creerCatalogue(ctx = {}) {
       params: O({ action: S("creer, supprimer ou lister", { enum: ["creer", "supprimer", "lister"] }), phrase: S("La phrase exacte qui déclenche le raccourci", { maxLength: 80 }), nom: S("Nom court (facultatif)", { maxLength: 60 }),
         etapes: { type: "array", maxItems: 5, description: "Étapes dans l'ordre", items: { type: "object", properties: { outil: S("Nom d'un outil du catalogue"), params_json: S("Paramètres de l'outil en JSON, ex. {\"minutes\":25} (facultatif)", { maxLength: 400 }) }, required: ["outil"] } } }, ["action"]),
       resume: (p) => { try { return rac().resume(p); } catch (e) { return "Raccourci (demande invalide : " + e.message + ")"; } },
-      exec: async (p) => rac().executerOutil(p) }
+      exec: async (p) => rac().executerOutil(p) },
+    // ----- Validés par Lucien le 25/10 (21 h 05) : modules chargés à la demande (import dynamique), jamais au démarrage -----
+    { nom: "consulter_manuel", niveau: "LIBRE", description: "Consulte le manuel du hub (fiches courtes : à quoi sert une fonction, où la trouver, ses limites). Lecture seule : connaître une fonction ne donne aucun droit de l'utiliser. Si aucune fiche ne correspond, dis-le au lieu d'inventer.",
+      params: O({ question: S("La fonction ou la question, en quelques mots", { maxLength: 200 }) }, ["question"]), resume: (p) => "Consulter le manuel : " + court(p.question, 60),
+      exec: async (p) => { const { creerManuel } = await import("./manuel.js"); const base = (u) => new URL(u, typeof location !== "undefined" ? location.href : "http://local/").href;
+        const m = creerManuel({ maintenant: now, lireIndex: async () => { const r = await hote.fetch(base("docs/manuel/index.json")); if (!r.ok) throw new Error("index"); return r.json(); }, lireFiche: async (c) => { if (!/^docs\/manuel\/fiches\/[a-z0-9-]+\.md$/.test(String(c))) throw new Error("chemin refusé"); const r = await hote.fetch(base(c)); if (!r.ok) throw new Error("fiche"); return r.text(); } });
+        return { manuel: await m.pourModele(p.question) }; } },
+    { nom: "chercher_decisions", niveau: "LIBRE", description: "Retrouve les décisions que Lucien a déjà prises (la décision, la raison, ses conséquences). Lecture seule.",
+      params: O({ question: S("Le sujet, en quelques mots", { maxLength: 200 }) }, ["question"]), resume: (p) => "Chercher dans les décisions : " + court(p.question, 60),
+      exec: async (p) => { const { creerDecisions } = await import("./decisions.js"); const l = await creerDecisions({ stockage: st(), maintenant: now }).chercher(p.question, { limite: 3 });
+        return { decisions: l.map((d) => ({ id: d.id, decision: d.decision, raison: d.raison, date: d.date, statut: d.statut, consequences: d.consequences.slice(-3).map((c) => c.observation) })) }; } },
+    { nom: "lire_contradictions", niveau: "LIBRE", description: "Signale (3 au plus) ce qui se contredit dans le hub : deux décisions actives opposées, rendez-vous qui se chevauchent, tâche contraire à une décision. Calculé par règles, rien n'est modifié.",
+      params: O(), resume: () => "Chercher des contradictions",
+      exec: async () => { const [{ detecterContradictions }, { creerDecisions }] = await Promise.all([import("./contradictions.js"), import("./decisions.js")]);
+        const decisions = await creerDecisions({ stockage: st(), maintenant: now }).lister(); const taches = await st().tout("tasks"), evts = await st().tout("events");
+        const sig = detecterContradictions({ decisions, taches: taches.map((t) => ({ id: t.id, texte: t.text, faite: !!t.done, echeance: t.due || null })), evenements: evts.map((e) => ({ id: e.id, titre: e.title, date: e.date, debut: e.start || null, fin: e.end || null })) }, { now: now() });
+        return { signaux: sig.map((x) => ({ id: x.id, type: x.type, message: x.message })) }; } },
+    { nom: "proposer_decision", niveau: "CONFIRMATION", description: "Propose d'enregistrer une décision que Lucien vient de prendre (phrase claire, raison facultative). Rien n'est enregistré sans sa validation ; aucun effacement possible.",
+      params: O({ decision: S("La décision, en une phrase", { maxLength: 200 }), raison: S("Pourquoi (facultatif)", { maxLength: 300 }) }, ["decision"]), resume: (p) => "Enregistrer la décision : « " + court(p.decision, 100 ) + " »" + (p.raison ? " (raison : " + court(p.raison, 80) + ")" : ""),
+      exec: async (p) => { const { creerDecisions } = await import("./decisions.js"); const l = await creerDecisions({ stockage: st(), maintenant: now, nouvelId: () => hote.nouvelId("dec-") }).enregistrer({ decision: p.decision, raison: p.raison || null }); return { enregistree: { id: l.id, decision: l.decision, date: l.date } }; } },
+    { nom: "creer_routine", niveau: "CONFIRMATION", description: "Crée ou modifie une routine : une suite de 1 à 5 outils déjà autorisés, déclenchée à une heure, sur un événement ou par une phrase. Ne lance rien. Lucien valide la liste des étapes ; chaque étape garde son niveau de permission.",
+      params: O({ id: S("Identifiant : minuscules, chiffres, tirets", { maxLength: 40 }), nom: S("Nom court", { maxLength: 60 }), declencheur_json: S("Déclencheur en JSON : {\"type\":\"heure\",\"heure\":\"08:00\"} ou {\"type\":\"evenement\",\"nom\":\"ouverture-du-jour\"} ou {\"type\":\"phrase\",\"phrase\":\"mode soirée\"}", { maxLength: 300 }),
+        etapes: { type: "array", maxItems: 5, description: "Étapes dans l'ordre", items: { type: "object", properties: { outil: S("Nom d'un outil du catalogue"), params_json: S("Paramètres JSON (facultatif)", { maxLength: 400 }) }, required: ["outil"] } } }, ["id", "nom", "declencheur_json", "etapes"]),
+      resume: (p) => { try { return "Créer la routine « " + court(p.nom, 60) + " » (" + (p.etapes || []).map((e) => e.outil).join(" → ") + ") ; déclencheur : " + court(p.declencheur_json, 100); } catch (e) { return "Créer une routine (demande invalide)"; } },
+      exec: async (p) => { const { validerRoutine } = await import("./routines.js"); let declencheur, etapes;
+        try { declencheur = JSON.parse(p.declencheur_json); etapes = (p.etapes || []).map((e) => ({ outil: e.outil, ...(e.params_json ? { params: JSON.parse(e.params_json) } : {}) })); } catch (e) { throw new Error("JSON illisible dans le déclencheur ou les paramètres"); }
+        if (etapes.some((e) => e.outil === "creer_routine" || e.outil === "proposer_decision")) throw new Error("Une routine ne peut pas créer de routine ni enregistrer de décision");
+        const r = { id: p.id, nom: p.nom, declencheur, etapes, actif: true };
+        const pb = validerRoutine(r, { barriere: { outil: (n) => T.some((o) => o.nom === n) } }); if (pb.length) throw new Error("Routine refusée : " + pb.join(" ; "));
+        const doc = (await st().lire("kv", "noyau-routines")) || { id: "noyau-routines", lignes: [] }; const i = doc.lignes.findIndex((x) => x.id === r.id);
+        if (i < 0 && doc.lignes.length >= 15) throw new Error("15 routines au plus"); if (i < 0) doc.lignes.push(r); else doc.lignes[i] = r; await st().ecrire("kv", doc);
+        return { routine: { id: r.id, nom: r.nom, etapes: etapes.map((e) => e.outil) }, remplacee: i >= 0, lancee: false }; } }
   ];
   for (const o of T) o.params = o.params || O();
   const { catalogue, ecartes } = appliquerRegle(T);
