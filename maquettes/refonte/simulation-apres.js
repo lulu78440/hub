@@ -73,10 +73,9 @@ async function showMenu(p, x, y, items, sheet = false) {
 }
 const hideMenu = (p) => p.evaluate(() => { const b = document.getElementById('ctx'); b.hidden = true; b.innerHTML = ''; });
 
-const FOND_APRES = [{ h: 'Hub' }, { t: 'Focus 25 min' }, { t: 'Revoir le briefing du jour' }, { t: 'Coller une image ici', k: 'Ctrl+V' }, '-',
-  { t: 'Aller au plan 2 · Noyau et web', k: '2' }, { t: 'Aller au plan 3 · Mon PC', k: '3' }, '-', { t: 'Verrouiller maintenant' }, { t: 'Outils…', k: 'O', hi: true }];
-const FEN_APRES = [{ h: 'Vidéo' }, { t: 'Plein écran', off: true }, { t: 'Arrêter', off: true }, '-', { h: 'Fenêtre' }, { t: 'Ramener vers moi' }, { t: 'Figer la fenêtre' }, { t: 'Masquer la fenêtre' }, { t: 'Plus…', k: '›', hi: true }];
-const PLUS_APRES = [{ h: 'Vidéo · plus' }, { t: 'Masquer les vidéos à suivre' }, { t: 'Ajouter des chaînes YouTube ↗' }, '-', { t: 'Agrandir', k: 'double-clic' }, { t: 'Ramener devant' }, { t: 'Focus 25 min sur cette fenêtre' }, { t: 'Résumer avec le Noyau' }, '-', { t: '‹ Retour' }];
+const FOND_APRES = [{ h: 'Hub' }, { t: 'Focus 25 min' }, { t: 'Revoir le briefing du jour' }, { t: 'Coller une image ici', k: 'Ctrl+V' }, '-', { t: 'Verrouiller maintenant' }, { t: 'Outils…', k: 'O', hi: true }];
+const FEN_APRES = [{ h: 'Vidéo' }, { t: 'Plein écran', off: true }, { t: 'Arrêter', off: true }, '-', { h: 'Fenêtre' }, { t: 'Réduire' }, { t: 'Personnaliser…' }, { t: 'Figer la fenêtre' }, { t: 'Masquer la fenêtre' }, { t: 'Plus…', k: '›', hi: true }];
+const PLUS_APRES = [{ h: 'Vidéo · plus' }, { t: 'Masquer les vidéos à suivre' }, { t: 'Ajouter des chaînes YouTube ↗' }, '-', { t: 'Agrandir', k: 'double-clic' }, { t: 'Focus 25 min sur cette fenêtre' }, { t: 'Résumer avec le Noyau' }, '-', { t: '‹ Retour' }];
 
 async function showOutils(p, lite = false) {
   await p.evaluate((lite) => {
