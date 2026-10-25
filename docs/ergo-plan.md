@@ -120,21 +120,57 @@ Aujourd'hui le plan 2 réduit tout le monde à 50 % : les fenêtres sont petites
 
 Technique : `perspective` sur la page, monde en 3D (`preserve-3d`) tourné autour du point de vue, place de chaque fenêtre du plan 2 enregistrée en angle et hauteur (disposition version 3), reflets en `-webkit-box-reflect` (Brave le gère). Fichiers : `js/ui/plans.js`, `js/ui/windows.js`, `css/hud.css`. Script de simulation : `maquettes/refonte/simulation-salle.js`.
 
-## 9. Ordre de construction (Sonnet)
+## 9. Tuiles magnétiques personnalisables (proposition du 25/10, à valider)
+
+Reprend les idées gardées de la maquette « tuiles » (palette d'origine, pas de survol axonométrique) et les rend **personnalisables**. Planche interactive « Tuiles magnétiques personnalisables » sur la toile : on y glisse les tuiles et on change leur style en direct.
+
+**Le principe** : chaque fenêtre devient une tuile posée sur une grille invisible aimantée ; sa taille suit son contenu ; deux états seulement (repos : contour fin ; active : texture et lueur de sa couleur, une seule active à la fois).
+
+**Par tuile** (clic droit → « Personnaliser… », panneau à côté de la tuile, aperçu en direct) :
+
+| Réglage | Choix | Par défaut |
+| --- | --- | --- |
+| Style du cadre | Hologramme (l'actuel, onglet coloré et coins coupés) · Fin (contour 1 px, coins arrondis) · Verre (fond flouté translucide) · Minimal (ni fond ni cadre, le nom et le contenu) | Hologramme |
+| Couleur | celle de la fenêtre · cyan · violet · ambre · rouge (palette d'origine seulement) | celle de la fenêtre |
+| Taille | Auto (suit le contenu) · S · M · L · Libre (poignée du coin, comme aujourd'hui) | Auto |
+| Fond | 100 % · 70 % · 40 % | 100 % |
+| Nom | toujours visible · au survol seulement | toujours |
+| Aimant | oui · non (tuile posée librement) | oui |
+
+**Pour toutes** (Outils → Tuiles) : modèle appliqué à toutes (Hologramme, Épuré, Verre, Minimal), pas de la grille (8, 16 ou 24 px, ou sans aimant), écart entre tuiles (6, 10 ou 16 px), « Revenir au style d'origine ».
+
+**Règles** : réglages gardés à part pour le PC et le téléphone (comme la disposition) et inclus dans l'export ; une tuile réduite (§7) garde son nom dans sa couleur ; au plan 2, les tuiles du mur gardent leur style ; sur téléphone, pas d'aimant (pile), mais style, couleur, fond et nom s'appliquent ; « mouvement réduit » : pas de rebond.
+
+## 10. Déplacement plus fluide (demande de Lucien, 25/10)
+
+Causes relevées dans le code actuel : la fenêtre rattrape la souris avec un amortissement (environ 60 ms de retard) ; à chaque image, le champ de force relit la place de la fenêtre déplacée et celle de l'orbe (calcul de mise en page forcé) ; le survol applique un filtre de luminosité à toute la fenêtre ; la fenêtre penche selon la vitesse ; au lâcher, elle saute sur la grille de 8 px.
+
+Corrections :
+- **La tuile suit la souris sans retard** pendant le glisser (position posée directement, amortissement seulement après le lâcher).
+- **Mouvements de souris complets** (`getCoalescedEvents`) pour une trace sans à-coups sur les souris rapides.
+- **Aucune relecture de mise en page pendant le glisser** : le champ de force reçoit la position calculée au lieu de la relire ; la place de l'orbe est relue une fois par image au lieu de trois.
+- **Place aimantée affichée en pointillé** pendant le glisser, puis **pose avec un léger rebond** (0,4 s) au lieu du saut.
+- Filtre de survol coupé pendant le glisser ; inclinaison limitée à 2° et adoucie.
+- Lancer une tuile d'un geste vif : elle glisse puis ralentit (désactivable, coupé en « mouvement réduit »).
+- Objectif mesuré : 60 images par seconde pendant un déplacement, avec le compteur des réglages.
+
+## 11. Ordre de construction (Sonnet)
 
 | Étape | Contenu | Fichiers |
 | --- | --- | --- |
-| ergo-visuel a | §6, réduction des fenêtres (§7), barre du haut allégée (sous-titre, img/s, jauge de zoom), raccourcis de recherche au focus, textes périmés | `css/`, `index.html`, `js/ui/topbar.js`, `js/ui/windows.js` |
-| ergo-visuel b | salle immersive du plan 2 (§8) | `js/ui/plans.js`, `js/ui/windows.js`, `css/hud.css` |
+| ergo-visuel a | déplacement fluide (§10), §6, réduction des fenêtres (§7), barre du haut allégée (sous-titre, img/s, jauge de zoom), raccourcis de recherche au focus, textes périmés | `css/`, `index.html`, `js/ui/topbar.js`, `js/ui/windows.js` |
+| ergo-visuel b | tuiles magnétiques personnalisables (§9), si validées | `js/ui/windows.js`, `js/ui/tuiles.js` (nouveau), `css/hud.css`, `js/fx/force.js` (lecture de position) |
+| ergo-visuel c | salle immersive du plan 2 (§8) | `js/ui/plans.js`, `js/ui/windows.js`, `css/hud.css` |
 | ergo-fusion | §5 menus, correction du verrouillage, doublons du §2, nouvelle disposition v3, Fonctions en réserve | `js/ui/menus.js`, `js/ui/ctxmenu.js`, `js/ui/windows.js`, `js/ui/reserve.js` (nouveau), `js/main.js` (démarrage des fonctions en réserve), `js/widgets/images.js` (1 ligne) |
 | ergo-outils | §3 fenêtre Outils, Réglages (ex-Diag) dedans, touches O et D | `js/ui/outils.js` (nouveau), `js/ui/diag.js`, `css/hud.css`, `index.html` |
 | ergo-mobile | ordre et contenu mobile du §1, menu d'appui long, feuille Outils | `css/mobile.css`, `js/ui/menus.js` |
 
 Après chaque étape : test de Lucien sur PC et Android, « validé », puis la suivante. À la fin : recette du poste Banc (ergo-recette), puis version stable.
 
-## 10. À valider par Lucien
+## 12. Décisions de Lucien (25/10)
 
-1. **Constellation** sans tâches : les étoiles s'allument à chaque **Focus terminé** (recommandé, touche `widgets/surprises.js`), ou on garde seulement les étoiles déjà allumées.
-2. **Tuiles magnétiques** (maquette du 25/10 en attente) : intégrer à ergo-visuel les idées gardées (cadre fin, taille selon le contenu, deux états repos / actif), ou laisser pour plus tard.
-3. Réduction des fenêtres (§7) et salle immersive (§8) telles que sur la toile.
-4. Le reste du plan tel quel.
+1. **Plan validé**, avec la réduction des fenêtres (§7), la salle immersive (§8) et un déplacement plus fluide (§10).
+2. **Constellation** : une étoile s'allume à chaque **Focus terminé** (touche `widgets/surprises.js`, noté au journal à la construction).
+3. **Tuiles magnétiques** : maintenant, et **personnalisables** ; proposition au §9, à valider avant la construction.
+4. **Plan 3** : vrai bureau du PC, plus tard.
+5. Passage sur Sonnet seulement après le feu vert de Lucien.

@@ -139,11 +139,12 @@
   "p3-sync",
   "p4-ok",
   "p4-perf",
-  "ergo-audit"
+  "ergo-audit",
+  "ergo-plan"
  ],
  "prochaine": {
-  "id": "ergo-plan",
-  "texte": "Plan de simplification avec maquette avant / après"
+  "id": "ergo-visuel",
+  "texte": "Visuel allégé, réduction, déplacement fluide"
  },
  "built": [
   "ns-int",
@@ -167,7 +168,7 @@
   "ergo-audit",
   "ergo-plan"
  ],
- "maj": "2026-10-25T16:20:00+01:00",
+ "maj": "2026-10-25T16:40:00+01:00",
  "par": "Claude",
  "titres": {
   "p2-focus": "Ramener vers moi",
