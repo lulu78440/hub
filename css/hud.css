@@ -1182,3 +1182,13 @@ body.lite .o-q { min-height: 48px; font-size: 16px; }
 body.q-allege:not(.lite) .win.p2, body.q-minimal:not(.lite) .win.p2 { -webkit-box-reflect: none !important; }
 body.q-allege:not(.lite) .dof, body.q-minimal:not(.lite) .dof { display: none !important; }
 body.q-minimal:not(.lite) .win.p2 .panel { box-shadow: none !important; }
+
+/* ---------- Refonte · ergo-plan2-salle : brume, profondeur de champ par fenêtre, entrée en travelling ---------- */
+.brume { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: calc(var(--cine, 0) * (.55 + .45 * var(--entree, 0)));
+  background: linear-gradient(to top, rgba(8, 34, 62, .55) 0, rgba(8, 34, 62, .22) 24%, transparent 50%), radial-gradient(ellipse 90% 30% at 50% 62%, rgba(20, 70, 110, .28), transparent 70%); }
+body.lite .brume, body.salle-light .brume, body.q-allege .brume, body.q-minimal .brume { display: none; }
+/* Flou : posé fenêtre par fenêtre sur le contenu (jamais sur le parent 3D). Le survol rend la fenêtre nette et adoucit les autres. */
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2 .panel { filter: blur(calc((var(--entree, 0) * 6px + var(--df, 0) * 2.4px) * var(--cine, 0))) brightness(calc(1 - var(--df, 0) * var(--cine, 0) * .3)); }
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2:hover .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.focus .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.dragging .panel { filter: none; }
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .win.p2:not(:hover) .panel { filter: brightness(.74) saturate(.85); }
+@media (prefers-reduced-motion: reduce) { .brume { opacity: calc(var(--cine, 0) * .55); } .win.p2 .panel { filter: none !important; } }

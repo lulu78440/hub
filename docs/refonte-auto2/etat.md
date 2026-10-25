@@ -4,4 +4,4 @@
 | --- | --- |
 | 1. ergo-plan2-maquette | fait · `maquettes/p2-profondeur-mix2.html` |
 | 2. ergo-perf-repos | fait · 7.28.0 · `js/ui/qualite.js`, tuiles « Qualité du rendu » dans Outils (Automatique, Complet, Allégé, Minimal) ; recette PC + mobile simulé : aucune erreur nouvelle |
-| 3. ergo-plan2-salle | à faire |
+| 3. ergo-plan2-salle | fait · 7.29.0 · travelling 2,4 s / 0,8 s, brume, flou par fenêtre, survol, niveaux reliés ; recette PC + mobile simulé : aucune erreur nouvelle |

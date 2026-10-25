@@ -16,7 +16,7 @@ export function createQuality({ onChange } = {}) {
   let lastInput = performance.now(); const boot = lastInput;
   let prev = 0, acc = 0, n = 0, low = 0, holds = 0;
   const body = document.body;
-  const paint = () => { body.classList.toggle("q-allege", level === 1); body.classList.toggle("q-minimal", level === 2); };
+  const paint = () => { state.qlevel = state.lite ? 0 : level; body.classList.toggle("q-allege", level === 1); body.classList.toggle("q-minimal", level === 2); };
   paint();
   const touch = () => { lastInput = performance.now(); };
   ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach((ev) => addEventListener(ev, touch, { passive: true, capture: true }));
