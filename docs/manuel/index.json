@@ -1,0 +1,46 @@
+[
+ {
+  "id": "focus",
+  "nom": "Mode Focus",
+  "utilite": "Se concentrer 25 ou 50 minutes ; le reste du hub s'estompe.",
+  "mots": [
+   "focus",
+   "concentration",
+   "minuteur",
+   "pomodoro",
+   "travail"
+  ],
+  "maj": "2026-10-25",
+  "chemin": "docs/manuel/fiches/focus.md"
+ },
+ {
+  "id": "hyperespace",
+  "nom": "Hyperespace",
+  "utilite": "Effet de saut en vitesse lumière, pour le plaisir (surprise du hub).",
+  "mots": [
+   "hyperespace",
+   "saut",
+   "vitesse lumiere",
+   "espace",
+   "surprise",
+   "effet"
+  ],
+  "maj": "2026-10-25",
+  "chemin": "docs/manuel/fiches/hyperespace.md"
+ },
+ {
+  "id": "ramener-vers-moi",
+  "nom": "Ramener vers moi",
+  "utilite": "Mettre une fenêtre au centre, en grand, pour la lire sans bouger les autres.",
+  "mots": [
+   "ramener",
+   "focus fenetre",
+   "agrandir",
+   "centrer",
+   "zoom",
+   "fenetre"
+  ],
+  "maj": "2026-10-25",
+  "chemin": "docs/manuel/fiches/ramener-vers-moi.md"
+ }
+]
