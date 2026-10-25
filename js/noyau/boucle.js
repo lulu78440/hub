@@ -114,7 +114,7 @@ export function creerCycle(deps) {
   }
 
   const MESSAGES_ERREUR = {
-    budget: "Mon budget de requêtes du jour est épuisé.", hors_ligne: "Je suis hors ligne.", cle: "Ma clé Gemini manque ou est refusée.",
+    budget: "Mon budget de requêtes du jour est épuisé.", hors_ligne: "Je suis hors ligne.", cle: "Ma clé d'IA (Gemini ou Claude) manque ou est refusée.", credit: "Le crédit Claude est épuisé.",
     quota: "Le quota gratuit de Gemini est atteint.", reseau: "La connexion à Gemini a échoué.", delai: "Gemini a mis trop de temps à répondre.",
     refus_securite: "Gemini n'a pas voulu répondre à cette demande.", coupe: "Ce moteur est coupé.", local: "L'IA locale n'est pas disponible."
   };
@@ -165,7 +165,7 @@ export function creerCycle(deps) {
         }
         r = await eng.generer({ systeme, messages, outils, forcer: dernier ? ["repondre"] : null });
         trace.requetes++; trace.tokens += (r.usage && r.usage.total) || 0;
-        trace.appels.push({ n, texte: (r.texte || "").slice(0, 300), outils: r.appels.map((a) => a.nom), ms: r.ms, usage: r.usage });
+        trace.appels.push({ n, texte: (r.texte || "").slice(0, 300), outils: r.appels.map((a) => a.nom), ms: r.ms, usage: r.usage, moteur: r.moteur || null });
         const rep = r.appels.find((a) => a.nom === "repondre");
         if (rep) { final = rep.params || {}; break; }
         if (!r.appels.length) { final = { texte: r.texte || "(pas de réponse)", ton: "calme", confiance: "basse", sources: [] }; break; }
@@ -228,7 +228,7 @@ export function creerCycle(deps) {
     sauverTravail();
     if (etat && etat.noter) etat.noter({ type: "echange", texte: question, outils: trace.outils.length, refus: !!reponse.refus, erreur });
     trace.ms = Date.now() - t0; trace.reponse = reponse;
-    const msg = emettre({ type: "reponse", tour, texte: reponse.texte, ton: reponse.ton, confiance: reponse.confiance, sources: reponse.sources, sur: !!reponse.sur, refus: !!reponse.refus, reduit: !!reponse.reduit, local: !!reponse.local, code: reponse.code || null, requetes: trace.requetes, ms: trace.ms });
+    const msg = emettre({ type: "reponse", tour, texte: reponse.texte, ton: reponse.ton, confiance: reponse.confiance, sources: reponse.sources, sur: !!reponse.sur, refus: !!reponse.refus, reduit: !!reponse.reduit, local: !!reponse.local, code: reponse.code || null, requetes: trace.requetes, ms: trace.ms, moteurs: [...new Set(trace.appels.map((a) => a.moteur).filter(Boolean))] });
     phase(erreur ? "repos" : "parle", { ton: reponse.ton });
     setTimeout(() => phase("repos"), 1500);
     return msg;

@@ -56,7 +56,7 @@ function versContenusGemini(messages) {
   for (const m of messages) {
     if (m.role === "user") out.push({ role: "user", parts: [{ text: m.texte }] });
     else if (m.role === "assistant") {
-      if (m.brut) out.push(m.brut);                              // contenu d'origine, signatures de réflexion comprises
+      if (m.brut && m.brut.parts) out.push(m.brut);                              // contenu d'origine, signatures de réflexion comprises
       else out.push({ role: "model", parts: [...(m.texte ? [{ text: m.texte }] : []), ...(m.appels || []).map((a) => ({ functionCall: { name: a.nom, args: a.params || {} } }))] });
     } else if (m.role === "outil") out.push({ role: "user", parts: m.resultats.map((r) => ({ functionResponse: { name: r.nom, response: { resultat: r.contenu } } })) });
   }
@@ -117,11 +117,111 @@ export function moteurGemini({ cle, modele = MODELE_DEFAUT, budget, attenteQuota
   };
 }
 
-// ---------- Claude : écrit, COUPÉ (l'API est facturée à part ; contrat, principe 4) ----------
-export function moteurClaude() {
+// ---------- Claude (API Anthropic, facturée à part) ----------
+// Même instruction système, mêmes outils, même format de réponse que Gemini : la mémoire et les réactions du Noyau ne changent pas.
+// Il a son propre plafond (requêtes ET jetons par jour). La clé est celle de Lucien, gardée chiffrée par le coffre.
+export const CLAUDE_API = "https://api.anthropic.com/v1/messages";
+export const MODELE_CLAUDE_DEFAUT = "claude-haiku-5-5";
+export const PLAFOND_CLAUDE_DEFAUT = 20, JETONS_CLAUDE_DEFAUT = 60000;
+
+/** Jetons Claude du jour (entrée + sortie), avec plafond. */
+export function creerBudgetJetons({ cleReglage = "noyau-jetons-claude", cleMax = "noyau-plafond-jetons-claude", plafondParDefaut = JETONS_CLAUDE_DEFAUT } = {}) {
+  const jour = () => { const d = hote.maintenant(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+  const lire = () => { try { const b = JSON.parse(hote.reglage.lire(cleReglage, "null")); return b && b.jour === jour() ? b : { jour: jour(), n: 0 }; } catch (e) { return { jour: jour(), n: 0 }; } };
+  const plafond = () => { const v = parseInt(hote.reglage.lire(cleMax, ""), 10); return v > 0 ? v : plafondParDefaut; };
+  return { plafond, utilises: () => lire().n, restant: () => Math.max(plafond() - lire().n, 0), definirPlafond: (n) => hote.reglage.ecrire(cleMax, String(Math.max(1000, Math.min(n | 0, 2000000)))), ajouter(n) { const b = lire(); b.n += Math.max(0, n | 0); hote.reglage.ecrire(cleReglage, JSON.stringify(b)); } };
+}
+
+export function versMessagesClaude(messages) {
+  const out = []; let ids = [], seq = 0;
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i];
+    if (m.role === "user") out.push({ role: "user", content: [{ type: "text", text: String(m.texte || "") }] });
+    else if (m.role === "assistant") {
+      const suiv = messages[i + 1], repondus = suiv && suiv.role === "outil" ? suiv.resultats.length : 0;      // un tool_use sans résultat serait refusé
+      const appels = (m.appels || []).slice(0, repondus); ids = appels.map(() => "toolu_" + (++seq));
+      const contenu = [...(m.texte ? [{ type: "text", text: m.texte }] : []), ...appels.map((a, k) => ({ type: "tool_use", id: ids[k], name: a.nom, input: a.params || {} }))];
+      if (contenu.length) out.push({ role: "assistant", content: contenu });
+    } else if (m.role === "outil") out.push({ role: "user", content: m.resultats.map((r, k) => ({ type: "tool_result", tool_use_id: ids[k] || "toolu_0", content: String(r.contenu) })) });
+  }
+  return out;
+}
+
+export function moteurClaude({ cle = null, modele = MODELE_CLAUDE_DEFAUT, budget = null, budgetJetons = null, delaiMax = 45000 } = {}) {
+  if (!cle) return { nom: "Claude (sans clé)", type: "claude", coupe: true, versClaude, async generer() { throw new ErreurNoyau("cle", "Aucune clé Claude : colle-la dans Noyau → Réglages."); } };
+  async function appeler(corps) {
+    if (!hote.enLigne()) throw new ErreurNoyau("hors_ligne", "Hors ligne : Claude n'est pas joignable.");
+    if (budget) budget.reserver();
+    if (budgetJetons && budgetJetons.restant() <= 0) throw new ErreurNoyau("budget", "Plafond de jetons Claude du jour atteint.");
+    const ctl = typeof AbortController !== "undefined" ? new AbortController() : null, minuteur = ctl ? setTimeout(() => ctl.abort(), delaiMax) : 0;
+    let r;
+    try { r = await hote.fetch(CLAUDE_API, { method: "POST", headers: { "x-api-key": cle, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true", "content-type": "application/json" }, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined }); }
+    catch (e) { throw new ErreurNoyau(e && e.name === "AbortError" ? "delai" : "reseau", e && e.name === "AbortError" ? "Claude n'a pas répondu à temps." : "Connexion à Claude impossible."); }
+    finally { clearTimeout(minuteur); }
+    if (r.ok) return r.json();
+    let msg = ""; try { msg = ((await r.json()).error || {}).message || ""; } catch (e) { msg = ""; }
+    if (r.status === 401 || r.status === 403) throw new ErreurNoyau("cle", "Clé Claude refusée : vérifie-la dans la console Anthropic.");
+    if (r.status === 400 && /credit/i.test(msg)) throw new ErreurNoyau("credit", "Crédit Claude épuisé : recharge dans la console Anthropic.");
+    if (r.status === 429) throw new ErreurNoyau("quota", "Limite de débit Claude atteinte : réessaie dans une minute.");
+    throw new ErreurNoyau("reseau", "Claude répond " + r.status + (msg ? " : " + msg.slice(0, 120) : ""));
+  }
   return {
-    nom: "Claude (coupé)", type: "claude", coupe: true, versClaude,
-    async generer() { throw new ErreurNoyau("coupe", "Le moteur Claude est coupé : l'API Claude est facturée à part."); }
+    nom: "Claude · " + modele, modele, type: "claude", versClaude,
+    async generer({ systeme, messages, outils = [], forcer = null, temperature = 0.6 }) {
+      const t0 = Date.now();
+      const corps = { model: modele, max_tokens: 1800, temperature, system: systeme, messages: versMessagesClaude(messages) };
+      if (outils.length) { corps.tools = versClaude(outils); corps.tool_choice = forcer && forcer.length === 1 ? { type: "tool", name: forcer[0] } : { type: "any" }; }
+      const j = await appeler(corps);
+      const bloc = Array.isArray(j.content) ? j.content : [];
+      if (!bloc.length) throw new ErreurNoyau("refus_securite", "Claude n'a pas donné de réponse (" + (j.stop_reason || "vide") + ").");
+      const u = j.usage || {}, total = (u.input_tokens || 0) + (u.output_tokens || 0);
+      if (budgetJetons) budgetJetons.ajouter(total);
+      return { texte: bloc.filter((x) => x.type === "text").map((x) => x.text).join(""), appels: bloc.filter((x) => x.type === "tool_use").map((x) => ({ nom: x.name, params: x.input || {} })), brut: null, usage: { entree: u.input_tokens || 0, sortie: u.output_tokens || 0, total }, ms: Date.now() - t0 };
+    }
+  };
+}
+
+// ---------- Routage automatique : les deux moteurs sont actifs ----------
+const RAISONNEMENT = /\b(compare|compar|analyse|analyser|explique pourquoi|argument|strategie|decision|decider|arbitr|critique|relis|plan en|etapes|avantages|inconvenients|synthese|redige|code|algorithme|demonstr|pourquoi)\b/;
+/** Complexité estimée d'une demande, sans requête : 0 (simple) à 4 (exigeante). */
+export function complexite(texte) {
+  const t = String(texte || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); let c = 0;
+  if (t.length > 280) c++; if (t.length > 700) c++;
+  if (RAISONNEMENT.test(t)) c++;
+  if ((t.match(/\?/g) || []).length >= 2) c++;
+  if (/\b(et aussi|ensuite|puis|d'abord)\b/.test(t)) c++;
+  return Math.min(c, 4);
+}
+/**
+ * Choisit pour chaque tour : Gemini (gratuit) pour le courant, Claude pour l'exigeant tant qu'il lui reste des jetons ;
+ * si le moteur choisi échoue (quota, réseau, crédit), l'autre prend le relais. Le choix reste le même pendant tout un tour.
+ */
+export function moteurAuto({ gemini, claude, jetons, preference = () => "auto", seuil = 2, surChoix = () => {} }) {
+  let tour = null;                                        // { choix } pour le tour en cours
+  const G = () => (typeof gemini === "function" ? gemini() : gemini), C = () => (typeof claude === "function" ? claude() : claude);
+  const dispo = (m) => m && !m.coupe;
+  const claudeOk = () => dispo(C()) && (!jetons || jetons.restant() > 500);
+  const ordre = (messages) => {
+    const dernier = [...messages].reverse().find((m) => m.role === "user"), debut = messages.length <= 1 || messages[messages.length - 1].role === "user";
+    if (tour && !debut) return tour.ordre;
+    const pref = preference(), gem = G(), cla = C(), g = dispo(gem), c = claudeOk(); let o;
+    if (pref === "claude" && c) o = [cla, gem]; else if (pref === "gemini" && g) o = [gem, cla];
+    else {
+      const x = complexite(dernier ? dernier.texte : ""), serre = jetons && jetons.restant() < jetons.plafond() * 0.2;
+      o = c && (x >= seuil + (serre ? 1 : 0) || !g) ? [cla, gem] : [gem, cla];
+    }
+    tour = { ordre: o.filter(Boolean) }; return tour.ordre;
+  };
+  return {
+    nom: "Auto · Gemini + Claude", type: "auto", auto: true,
+    async generer(entree) {
+      const liste = ordre(entree.messages); let derniere = null;
+      for (const m of liste.filter((x) => x && !x.coupe)) {
+        try { const r = await m.generer(entree); r.moteur = m.type === "claude" ? "Claude" : "Gemini"; if (tour) tour.ordre = [m, ...tour.ordre.filter((x) => x !== m)]; surChoix(r.moteur); return r; }
+        catch (e) { derniere = e; if (!(e instanceof ErreurNoyau) || !["quota", "reseau", "delai", "credit", "budget", "cle"].includes(e.code)) throw e; }
+      }
+      throw derniere || new ErreurNoyau("cle", "Aucun moteur disponible (ni clé Gemini, ni clé Claude).");
+    }
   };
 }
 

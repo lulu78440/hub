@@ -245,3 +245,4 @@ Décisions (24/10) :
 - **Appli Windows** pour les fonctions marquées ◇ (processeur, volume direct, lancement de programmes, Corbeille) et pour l'écran du PC en direct avec navigation. Une page web peut seulement afficher une vue en direct (avec l'accord de Brave), sans pouvoir cliquer dedans.
 - **Cahier des charges** : les ajouts des maquettes sont repris dans `docs/plan-phase1.md` (tableau des phases), qui fait foi en cas de doute.
 - **Liaison automatique** entre la fenêtre Progression et le Suivi du Hub : pour l'instant c'est un relevé (`docs/suivi.json`), mis à jour par Claude à chaque sous-étape.
+| 25/10 | N10.0 Moteur Claude + routage auto (version 7.7.0, sur `noyau`) | Aucun nouveau fichier au cache. **Nouveau** : `labo/essais-moteurs.mjs`. **Fichiers partagés touchés** : `sw.js`, `js/version.js` (7.7.0) ; `js/noyau/hote.js` (adaptateur : clé Claude dans le coffre) uniquement. |

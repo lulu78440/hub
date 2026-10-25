@@ -15,7 +15,7 @@ import { rendreProgression, rendreIdees } from "./progression.js";
 const $ = (s) => document.querySelector(s);
 const h = (tag, a = {}, ...k) => { const e = document.createElement(tag); for (const [n, v] of Object.entries(a)) { if (v == null || v === false) continue; if (n === "class") e.className = v; else if (n.startsWith("on")) e.addEventListener(n.slice(2), v); else e.setAttribute(n, v === true ? "" : v); } for (const c of k.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c)); return e; };
 
-let hub = null, noyau = null, fenetre = null, cle = "", modeMoteur = "demo";
+let hub = null, noyau = null, fenetre = null, cle = "", cleC = "", modeMoteur = "demo";
 const etat = creerEtatLabo();
 const ctx = { etat, noyau: () => noyau, mode: () => modeMoteur, cle: () => cle, allerOnglet: (n) => document.querySelector(`.onglets [data-p="${n}"]`).click(), surChangement: () => majSante() };
 function majSante() {
@@ -44,7 +44,7 @@ async function demarrer() {
 }
 function appliquerMoteur() {
   if (modeMoteur === "demo") noyau.definirMoteur(moteurDemo());
-  else { noyau.definirMoteur(null); hub.definirCle(cle || null); hub.hote.reglage.ecrire("noyau-moteur", "gemini"); }
+  else { noyau.definirMoteur(null); hub.definirCle(cle || null); hub.definirCleClaude && hub.definirCleClaude(cleC || null); hub.hote.reglage.ecrire("noyau-moteur", modeMoteur === "auto" ? "auto" : "gemini"); }
   fenetre && fenetre.rafraichir();
 }
 
@@ -58,14 +58,17 @@ document.querySelectorAll(".onglets button").forEach((b) => b.addEventListener("
 // ----- Moteur -----
 function rendreMoteur() {
   const p = $("#p-moteur"); p.textContent = "";
-  const sel = h("select", { class: "lab-champ", "aria-label": "Moteur" }, h("option", { value: "demo" }, "Démonstration (sans modèle, sans clé)"), h("option", { value: "gemini" }, "Gemini réel (clé du laboratoire)"));
+  const sel = h("select", { class: "lab-champ", "aria-label": "Moteur" }, h("option", { value: "demo" }, "Démonstration (sans modèle, sans clé)"), h("option", { value: "gemini" }, "Gemini réel (clé du laboratoire)"), h("option", { value: "auto" }, "Auto : Gemini + Claude (deux clés)"));
   sel.value = modeMoteur; sel.addEventListener("change", () => { modeMoteur = sel.value; appliquerMoteur(); rendreMoteur(); });
   const champ = h("input", { class: "lab-champ", type: "password", placeholder: "Clé Gemini du laboratoire (reste en mémoire de cette page)", autocomplete: "off", "aria-label": "Clé Gemini du laboratoire" });
-  champ.value = cle; champ.addEventListener("change", () => { cle = champ.value.trim(); if (modeMoteur === "gemini") appliquerMoteur(); rendreMoteur(); });
+  champ.value = cle; champ.addEventListener("change", () => { cle = champ.value.trim(); if (modeMoteur !== "demo") appliquerMoteur(); rendreMoteur(); });
+  const champC = h("input", { class: "lab-champ", type: "password", placeholder: "Clé Claude du laboratoire (facultative, payante, en mémoire de cette page)", autocomplete: "off", "aria-label": "Clé Claude du laboratoire" });
+  champC.value = cleC; champC.addEventListener("change", () => { cleC = champC.value.trim(); if (modeMoteur !== "demo") appliquerMoteur(); rendreMoteur(); });
   p.append(
     h("p", { class: "dim" }, "Le moteur de démonstration n'est pas une intelligence : un aiguillage à mots-clés qui appelle les vrais outils. Il sert à voir la barrière, la confirmation, la mémoire et le journal fonctionner. Essaie : « quelles sont mes tâches ? », « ajoute une tâche acheter du pain », « retiens que j'aime le thé », « supprime toutes mes notes » (refusé d'office)."),
     h("div", { class: "lab-ligne" }, sel),
-    h("div", { hidden: modeMoteur !== "gemini" }, champ, h("p", { class: "avert" }, cle ? "Clé présente en mémoire. Le plafond de requêtes du Noyau (40 par jour) s'applique ici aussi. Conseil : utilise une clé distincte de celle de l'orbe, pour ne pas manger son quota." : "Colle une clé pour utiliser Gemini. Sans clé, le Noyau répond en mode réduit (mémoire seule).")),
+    h("div", { hidden: modeMoteur !== "auto" }, champC, h("p", { class: "avert" }, cleC ? "Clé Claude présente : le Noyau choisit seul entre Gemini (gratuit) et Claude (payant, plafonds séparés) selon la complexité de la demande et les jetons restants. Le contenu envoyé à Claude part chez Anthropic." : "Sans clé Claude, le mode Auto se comporte comme Gemini seul.")),
+    h("div", { hidden: modeMoteur === "demo" }, champ, h("p", { class: "avert" }, cle ? "Clé présente en mémoire. Le plafond de requêtes du Noyau (40 par jour) s'applique ici aussi. Conseil : utilise une clé distincte de celle de l'orbe, pour ne pas manger son quota." : "Colle une clé pour utiliser Gemini. Sans clé, le Noyau répond en mode réduit (mémoire seule).")),
     h("div", { class: "lab-ligne" }, h("button", { class: "lab-btn", type: "button", onclick: async () => { $("#noyau-mount").textContent = ""; await demarrer(); } }, "Repartir à zéro"), h("span", { class: "dim" }, "Mémoire, journal, conversation et budget sont remis à neuf.")));
 }
 

@@ -96,7 +96,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       m.local ? h("span", { class: "nx-etiq", title: "Calculé dans le hub, sans requête" }, "local") : null,
       m.refus ? h("span", { class: "nx-etiq bad" }, "refusé") : null,
       m.refaite ? h("span", { class: "nx-etiq" }, "refaite") : null,
-      m.requetes != null ? h("span", { class: "nx-dim", texte: `${m.requetes} req${m.ms ? " · " + secondes(m.ms) : ""}` }) : null);
+      m.requetes != null ? h("span", { class: "nx-dim", texte: `${m.requetes} req${m.ms ? " · " + secondes(m.ms) : ""}${m.moteurs && m.moteurs.length ? " · " + m.moteurs.join(" + ") : ""}` }) : null);
     const actions = h("div", { class: "nx-actions" },
       h("button", { class: "nx-lien", type: "button", onclick: () => donnerAvis(carte, m, true) }, "Valider"),
       h("button", { class: "nx-lien", type: "button", onclick: () => demanderRemarque(carte, m) }, "Non validée"),
@@ -235,6 +235,25 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     }
   }
 
+  // ---------- Claude : clé, plafonds, routage ----------
+  function claudeBloc(s) {
+    const c = s.claude, z = h("div", { class: "nx-claude" }), msg = h("span", { class: "nx-dim" });
+    const cle = h("input", { class: "nx-champ", type: "password", autocomplete: "off", placeholder: c.cle ? "Clé Claude enregistrée (chiffrée). Colle-en une autre pour la remplacer." : "Clé API Claude (sk-ant-…)", "aria-label": "Clé API Claude" });
+    const modele = h("select", { class: "nx-champ", "aria-label": "Modèle Claude" }, [["claude-haiku-5-5", "Haiku 5.5 (le moins cher, par défaut)"], ["claude-sonnet-5-5", "Sonnet 5.5 (plus fin, plus cher)"], ["claude-opus-5-5", "Opus 5.5 (le plus fin, le plus cher)"]].map(([v, t]) => h("option", { value: v, texte: t })));
+    modele.value = noyau.reglage("modele-claude") || "claude-haiku-5-5"; modele.addEventListener("change", () => noyau.reglage("modele-claude", modele.value));
+    const routage = h("select", { class: "nx-champ", "aria-label": "Routage" }, [["auto", "Automatique (Gemini pour le courant, Claude pour l'exigeant)"], ["gemini", "Toujours Gemini quand c'est possible"], ["claude", "Toujours Claude quand c'est possible"]].map(([v, t]) => h("option", { value: v, texte: t })));
+    routage.value = noyau.reglage("routage") || "auto"; routage.addEventListener("change", () => noyau.reglage("routage", routage.value));
+    const req = h("input", { class: "nx-champ nx-court", type: "number", min: "1", max: "1500", value: String(c.plafondRequetes), "aria-label": "Plafond de requêtes Claude par jour" }); req.addEventListener("change", () => { noyau.budgetClaude.definirPlafond(parseInt(req.value, 10) || 20); });
+    const jet = h("input", { class: "nx-champ nx-court", type: "number", min: "1000", step: "1000", value: String(c.plafondJetons), "aria-label": "Plafond de jetons Claude par jour" }); jet.addEventListener("change", () => { noyau.jetonsClaude.definirPlafond(parseInt(jet.value, 10) || 60000); });
+    z.append(h("p", { class: "nx-dim", texte: "Les deux moteurs peuvent être actifs. En mode Auto, chaque demande part vers Gemini (gratuit) ou vers Claude selon sa complexité et les jetons qu'il reste ; si l'un échoue (quota, réseau, crédit), l'autre prend le relais. Mémoire, consignes et outils sont identiques : seul le moteur change. Attention : l'API Claude est facturée à part, et le contenu de la conversation lui est envoyé comme à Gemini. Le plafond ci-dessous limite la dépense." }),
+      h("label", { class: "nx-dim" }, "Clé Claude", cle),
+      h("div", { class: "nx-actions" }, h("button", { class: "nx-btn nx-primaire", type: "button", onclick: () => { try { if (!cle.value.trim()) { msg.textContent = "Colle d'abord la clé."; return; } noyau.definirCleClaude(cle.value.trim()); cle.value = ""; msg.textContent = "Clé enregistrée (chiffrée par le coffre)."; rendreReglages(); } catch (e) { msg.textContent = e.message; } } }, "Enregistrer la clé"),
+        c.cle ? h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.definirCleClaude(null); rendreReglages(); } }, "Retirer la clé") : null, msg),
+      h("div", { class: "nx-grille" }, h("label", {}, "Modèle Claude", modele), h("label", {}, "Routage", routage), h("label", {}, "Requêtes Claude par jour", req), h("label", {}, "Jetons Claude par jour", jet)),
+      h("p", { class: "nx-dim", texte: `Aujourd'hui : ${c.requetes}/${c.plafondRequetes} requêtes et ${c.jetons}/${c.plafondJetons} jetons Claude${c.dernier ? " · dernier moteur utilisé : " + c.dernier : ""}.` }));
+    return z;
+  }
+
   // ---------- Sauvegarde dans un dossier du PC ----------
   function sauvegardeBloc() {
     const z = h("div", { class: "nx-sauv" });
@@ -262,8 +281,8 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   function rendreReglages() {
     vueReglages.textContent = "";
     const s = noyau.statut();
-    const moteur = h("select", { class: "nx-champ", "aria-label": "Moteur" }, h("option", { value: "gemini", texte: "Gemini (gratuit, en ligne)" }), h("option", { value: "local", texte: "IA locale (PC, secours hors ligne)" }), h("option", { value: "claude", disabled: true, texte: "Claude (coupé : API payante)" }));
-    moteur.value = noyau.reglage("moteur") || "gemini"; moteur.addEventListener("change", () => { noyau.reglage("moteur", moteur.value); majBudget(); });
+    const moteur = h("select", { class: "nx-champ", "aria-label": "Moteur" }, h("option", { value: "auto", texte: "Auto : Gemini + Claude (recommandé avec les deux clés)" }), h("option", { value: "gemini", texte: "Gemini seul (gratuit, en ligne)" }), h("option", { value: "claude", texte: "Claude seul (API payante)" }), h("option", { value: "local", texte: "IA locale (PC, secours hors ligne)" }));
+    moteur.value = noyau.reglage("moteur") || (s.claude.cle ? "auto" : "gemini"); moteur.addEventListener("change", () => { noyau.reglage("moteur", moteur.value); majBudget(); });
     const modele = h("select", { class: "nx-champ", "aria-label": "Modèle Gemini" }, h("option", { value: "gemini-flash-lite-latest", texte: "Flash-Lite (quota large, par défaut)" }), h("option", { value: "gemini-flash-latest", texte: "Flash (plus fin, quota plus serré)" }));
     modele.value = noyau.reglage("modele") || "gemini-flash-lite-latest"; modele.addEventListener("change", () => noyau.reglage("modele", modele.value));
     const plafond = h("input", { class: "nx-champ nx-court", type: "number", min: "1", max: "1500", value: String(s.budget.plafond), "aria-label": "Plafond de requêtes par jour" });
@@ -283,6 +302,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       h("div", { class: "nx-actions" },
         h("button", { class: "nx-btn", type: "button", onclick: async (e) => { e.currentTarget.disabled = true; const r = await noyau.dormir({ force: true }); note(r.fait ? `Sommeil terminé : ${r.propositions} proposition(s) à valider.` : "Sommeil : " + r.raison); majNav(); majBudget(); e.currentTarget.disabled = false; } }, "Dormir maintenant"),
         h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.cycle.oublierConversation(); fil.textContent = ""; accueilVide(); changerVue("chat"); } }, "Nouvelle conversation")),
+      h("h4", { texte: "Claude (API payante) et choix automatique" }), claudeBloc(s),
       h("h4", { texte: "Sauvegarde automatique" }), sauvegardeBloc(),
       h("h4", { texte: "Références consultées" }), sourcesBloc(),
       h("h4", { texte: "Importer" }), imports);

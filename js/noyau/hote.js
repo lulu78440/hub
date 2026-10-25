@@ -7,7 +7,7 @@
 //   nom, maintenant(), enLigne(), fetch(url, opts), nouvelId(prefixe)
 //   stockage : tout(coll), lire(coll, id), ecrire(coll, obj), ecrireMany(coll, objs), retirerMany(coll, ids) *, surChangement(coll, fn)
 //   reglage  : lire(cle, defaut), ecrire(cle, valeur)
-//   secret   : cle() -> clé Gemini ou null, protege() -> vrai si le coffre est actif
+//   secret   : cle() -> clé Gemini ou null, cleClaude() -> clé Claude ou null, definirCleClaude(k), protege() -> vrai si le coffre est actif
 //   hub      : actus() -> flux.json ou null, meteo() -> cache météo ou null, agir(nom, params) -> { ok, ... }
 //   sauvegarde (facultatif) : dispo(), dossier() -> {nom}|null, choisir(), droit() -> 'granted'|'prompt'|..., ecrire() -> {nom, octets}, retirer()
 //   ui       : toast(msg), orbe({ phase, humeur }), ajouterMenuFond(fn), conteneur() -> élément où monter la fenêtre
@@ -49,7 +49,11 @@ export async function brancherHub() {
       surChangement: (c, fn) => store.on(c, fn)
     },
     reglage: { lire: (k, d) => prefs.get(k, d), ecrire: (k, v) => prefs.set(k, v) },
-    secret: { cle: () => vault.lsGet("hub-secret-ia") || null, protege: () => vault.active },
+    secret: {
+      cle: () => vault.lsGet("hub-secret-ia") || null, protege: () => vault.active,
+      cleClaude: () => vault.lsGet("hub-secret-claude") || null,
+      definirCleClaude: (k) => { if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-claude", k); else vault.lsRemove("hub-secret-claude"); }
+    },
     hub: {
       actus: () => fluxMod.flux.data,
       meteo: () => { try { return JSON.parse(prefs.get("meteo-cache", "null")); } catch (e) { return null; } },
@@ -112,7 +116,7 @@ export async function brancherHub() {
       let persistant, quotaPct = null;
       try { persistant = !!(navigator.storage && navigator.storage.persisted && await navigator.storage.persisted()); const q = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (q && q.quota) quotaPct = Math.round((q.usage / q.quota) * 100); } catch (e) { persistant = undefined; }
       const { VERSION } = await import("../version.js");
-      return { verrou: vault.active, deverrouille: vault.unlocked, cleIA: !!vault.lsGet("hub-secret-ia"), dernierExport: prefs.get("dernier-export", ""), version: VERSION, swVersion, stockagePersistant: persistant, quotaPct };
+      return { verrou: vault.active, deverrouille: vault.unlocked, cleIA: !!vault.lsGet("hub-secret-ia") || !!vault.lsGet("hub-secret-claude"), dernierExport: prefs.get("dernier-export", ""), version: VERSION, swVersion, stockagePersistant: persistant, quotaPct };
     },
     ui: {
       toast: (m) => toastMod.toast(m),
