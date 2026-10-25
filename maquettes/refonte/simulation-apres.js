@@ -129,7 +129,8 @@ async function afterMob(p) {
   await p.waitForTimeout(500);
 }
 
-(async () => {
+module.exports = { seed, clean, afterPC, showMenu, hideMenu, menuHTML, showOutils, afterMob };
+if (require.main === module) (async () => {
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const errs = [];
   // PC

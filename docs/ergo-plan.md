@@ -16,8 +16,8 @@ Base : `docs/ergo-audit.md` et les réponses de Lucien. Maquette avant / après 
 | Où | Avant | Après |
 | --- | --- | --- |
 | PC · plan 1 « Hub » | Mon PC, Veille, Vidéo, Page en direct, Tâches | **Favoris, Notes** à gauche ; **Vidéo** (figée), **Musique** à droite ; orbe et recherche au centre |
-| PC · plan 2 « Noyau et web » | 10 fenêtres, dont Noyau, Sécurité et Savoir hors de l'écran | **Page en direct, Mon PC** à gauche ; **Noyau** à droite, entièrement visible |
-| PC · plan 3 « Mon PC » | bureau du PC | inchangé, sans les éléments inactifs (applis ◇ et « Écran en direct · bientôt » : ils reviendront avec l'appli Windows) |
+| PC · plan 2 « Noyau et web » | 10 fenêtres réduites à 50 %, dont Noyau, Sécurité et Savoir hors de l'écran | **Salle immersive** (§7) : Page en direct, Mon PC, Noyau et les fenêtres que tu y ranges, grandeur nature sur un mur courbe |
+| PC · plan 3 « Mon PC » | bureau du PC | inchangé pendant la refonte ; il deviendra un vrai bureau comme celui du PC, travaillé plus tard (demande de Lucien du 25/10) |
 | Mobile | 17 fenêtres, environ 7 600 px à faire défiler ; Noyau, Sécurité et Savoir en tête | **Météo, Agenda, Notes, Favoris, Vidéo, Musique, Noyau, Page en direct** : environ 3 500 px |
 | Barre du haut | 12 éléments | logo et HUB, progression, vignettes des mods, horloge, météo, Hub / Plan 2 / Plan 3, 🎙 Parler, **Outils**, Labo |
 | Bande d'agenda, bandeau d'actualité | — | inchangés |
@@ -98,19 +98,43 @@ Mécanisme : le tri « en tête / Plus… » se fait dans `js/ui/menus.js` (tabl
 - Hachures des barres de titre atténuées (35 %).
 - Mêmes tailles de titre, de texte et de bouton dans toutes les fenêtres.
 
-## 7. Ordre de construction (Sonnet)
+## 7. Réduire une fenêtre à son nom (demande de Lucien, 25/10)
+
+- **Un clic sur le nom** de la fenêtre (l'onglet coloré en haut à gauche) la réduit : il ne reste que ce nom, sans cadre, sans hachures, sans étiquette, sans contenu. Un second clic la rouvre à sa taille.
+- Glisser le nom déplace toujours la fenêtre (au-delà de 6 px, c'est un déplacement, pas un clic). Le double-clic sur le reste de la barre garde « Agrandir ».
+- La fenêtre réduite continue de vivre (la radio joue, les rappels sonnent). « Ramener vers moi » la rouvre d'abord.
+- L'état est mémorisé avec la disposition, au plan 1 comme au plan 2. Menu de la fenêtre : « Réduire » / « Rouvrir » en tête.
+- **Mobile** : toucher le titre réduit ou rouvre (la page raccourcit d'autant) ; l'appui long garde le menu.
+
+## 8. Plan 2 · salle immersive, type cinéma VR (demande de Lucien, 25/10)
+
+Aujourd'hui le plan 2 réduit tout le monde à 50 % : les fenêtres sont petites et floues. Il devient une **salle** dans laquelle on se tient :
+- **Mur courbe** autour de toi : chaque fenêtre du plan 2 est posée sur un cylindre (rayon environ 1 300 px), tournée vers toi, **à sa vraie taille**, donc lisible. Deux fenêtres de face, les autres sur les côtés, à découvrir en tournant la tête.
+- **Tourner la tête** : souris près du bord gauche ou droit, glisser sur le fond, flèches ← →, ou molette avec Maj ; jusqu'à environ 60° de chaque côté. Retour de face : touche 2 ou double-clic sur le fond.
+- **Immensité et profondeur** : le plan 1 (ses fenêtres, la recherche et l'orbe) recule au fond de la salle, au centre, plus sombre ; **sol miroir** quadrillé jusqu'à l'horizon, avec le reflet des fenêtres du mur ; voile de brume à l'horizon ; bandes noires du cinéma gardées.
+- La scène 3D du fond et l'orbe ne sont pas modifiées : l'orbe suit simplement la place de son emplacement, au fond de la salle.
+- Arrivée en 0,8 s depuis le plan 1 (les fenêtres glissent vers le mur) ; « mouvement réduit » : sans animation ni rotation douce.
+- Déplacer une fenêtre dans la salle la fait glisser le long du mur ; on y range aussi des fenêtres réduites (§7).
+- Si les images par seconde chutent sur ton PC : réglage « Salle allégée » (sans reflets ni brume).
+- Mobile : pas de plan 2, comme aujourd'hui.
+
+Technique : `perspective` sur la page, monde en 3D (`preserve-3d`) tourné autour du point de vue, place de chaque fenêtre du plan 2 enregistrée en angle et hauteur (disposition version 3), reflets en `-webkit-box-reflect` (Brave le gère). Fichiers : `js/ui/plans.js`, `js/ui/windows.js`, `css/hud.css`. Script de simulation : `maquettes/refonte/simulation-salle.js`.
+
+## 9. Ordre de construction (Sonnet)
 
 | Étape | Contenu | Fichiers |
 | --- | --- | --- |
-| ergo-visuel | §6, barre du haut allégée (sous-titre, img/s, jauge de zoom), raccourcis de recherche au focus, textes périmés | `css/`, `index.html`, `js/ui/topbar.js` |
+| ergo-visuel a | §6, réduction des fenêtres (§7), barre du haut allégée (sous-titre, img/s, jauge de zoom), raccourcis de recherche au focus, textes périmés | `css/`, `index.html`, `js/ui/topbar.js`, `js/ui/windows.js` |
+| ergo-visuel b | salle immersive du plan 2 (§8) | `js/ui/plans.js`, `js/ui/windows.js`, `css/hud.css` |
 | ergo-fusion | §5 menus, correction du verrouillage, doublons du §2, nouvelle disposition v3, Fonctions en réserve | `js/ui/menus.js`, `js/ui/ctxmenu.js`, `js/ui/windows.js`, `js/ui/reserve.js` (nouveau), `js/main.js` (démarrage des fonctions en réserve), `js/widgets/images.js` (1 ligne) |
 | ergo-outils | §3 fenêtre Outils, Réglages (ex-Diag) dedans, touches O et D | `js/ui/outils.js` (nouveau), `js/ui/diag.js`, `css/hud.css`, `index.html` |
 | ergo-mobile | ordre et contenu mobile du §1, menu d'appui long, feuille Outils | `css/mobile.css`, `js/ui/menus.js` |
 
 Après chaque étape : test de Lucien sur PC et Android, « validé », puis la suivante. À la fin : recette du poste Banc (ergo-recette), puis version stable.
 
-## 8. À valider par Lucien
+## 10. À valider par Lucien
 
 1. **Constellation** sans tâches : les étoiles s'allument à chaque **Focus terminé** (recommandé, touche `widgets/surprises.js`), ou on garde seulement les étoiles déjà allumées.
 2. **Tuiles magnétiques** (maquette du 25/10 en attente) : intégrer à ergo-visuel les idées gardées (cadre fin, taille selon le contenu, deux états repos / actif), ou laisser pour plus tard.
-3. Le reste du plan tel quel.
+3. Réduction des fenêtres (§7) et salle immersive (§8) telles que sur la toile.
+4. Le reste du plan tel quel.
