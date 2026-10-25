@@ -1011,3 +1011,8 @@ body:not(.lite) .win.reduced .fx-ring, body:not(.lite) .win.reduced .fx-const, b
 .perso .opt.lnk { border-color: transparent; color: var(--dim); }
 body.lite .perso { display: none; }
 body:not(.lite) .win.t-holo::before { transform: translateZ(-40px); }   /* le halo reste derrière les plaques (sinon il les coupe en biais) */
+
+/* ---------- Refonte · ergo-visuel c : plan 2 en salle immersive ---------- */
+body.room:not(.lite) .world { transform-style: preserve-3d; }
+body.room:not(.lite):not(.salle-light) .win.p2:not(.reduced) { -webkit-box-reflect: below 8px linear-gradient(transparent 64%, rgba(255, 255, 255, .15)); }
+body.cine:not(.lite) .win.p2 .panel { box-shadow: 0 0 40px rgba(63, 230, 255, .12); }

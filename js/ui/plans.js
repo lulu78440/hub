@@ -11,6 +11,9 @@ const nearestPlan = (z) => PLANS.reduce((a, b) => (Math.abs(b - z) < Math.abs(a 
 
 export function createPlans({ world, anchor, desk }) {
   let zoom = 1, zoomTarget = 1, snapT = 0, lastT = "";
+  // Salle du plan 2 : on tourne la tête (yaw, en radians) devant le mur courbe de fenêtres (voir ui/windows.js)
+  let yaw = 0, yawT = 0, yawLo = -1.05, yawHi = 1.05, persp = 1500;
+  const setYaw = (v) => { yawT = clamp(v, yawLo, yawHi); };
   const zmark = $("zmark"), zlbl = $("zlbl");
 
   /** Place l'emplacement du noyau et le centre du zoom (PC : entre les colonnes de fenêtres, calculé par ui/windows.js). */
@@ -31,6 +34,7 @@ export function createPlans({ world, anchor, desk }) {
 
   addEventListener("wheel", (e) => {
     if (state.lite || !onBackground(e.target)) return;
+    if (e.shiftKey && state.cine > 0.5) { e.preventDefault(); setYaw(yawT + e.deltaY * 0.0016); return; }   // Maj + molette : tourner la tête
     e.preventDefault(); setZoom(zoomTarget * Math.exp(-e.deltaY * 0.0015));
     clearTimeout(snapT); snapT = setTimeout(() => setZoom(nearestPlan(zoomTarget)), 260);
   }, { passive: false });
@@ -43,7 +47,8 @@ export function createPlans({ world, anchor, desk }) {
   $("live-btn").addEventListener("click", () => toast("Écran en direct : prévu plus tard, avec l'appli Windows."));
   addEventListener("keydown", (e) => {
     if (state.lite || e.ctrlKey || e.metaKey || e.altKey || e.target.isContentEditable || (e.target.closest && e.target.closest("input, textarea"))) return;
-    if (e.key === "1" || e.key === "2" || e.key === "3") goPlan(+e.key);
+    if (e.key === "1" || e.key === "2" || e.key === "3") { goPlan(+e.key); if (e.key === "2") setYaw(0); }
+    else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && state.cine > 0.5) { e.preventDefault(); setYaw(yawT + (e.key === "ArrowLeft" ? -0.22 : 0.22)); }
     else if (e.key === "g" || e.key === "G") goPlan(zoomTarget < 0.85 ? 1 : 2);
     else if (e.key === "-") setZoom(nearestPlan(zoomTarget) === 1 ? PLANS[1] : PLANS[2]);
     else if (e.key === "+" || e.key === "=") setZoom(nearestPlan(zoomTarget) === PLANS[2] ? PLANS[1] : 1);
@@ -58,13 +63,19 @@ export function createPlans({ world, anchor, desk }) {
     const d = clamp((0.5 - zoom) / 0.2, 0, 1);
     const cine = clamp((0.92 - zoom) / 0.3, 0, 1) * (1 - d);
     state.cine = cine;
+    // Tête qui tourne : souris près des bords gauche et droit, ou flèches, ou Maj + molette
+    if (cine > 0.9 && !state.paused && Math.abs(state.mx) > 0.86 && state.my > -0.7) setYaw(yawT + Math.sign(state.mx) * (Math.abs(state.mx) - 0.86) / 0.14 * dt * 0.9);
+    yaw += (yawT - yaw) * (state.reduce ? 1 : 1 - Math.exp(-dt * 6));
+    if (Math.abs(yaw - yawT) < 0.0004) yaw = yawT;
+    persp = 1500 - 420 * cine;
     // Grand angle au plan 2 : perspective plus serrée, inclinaison plus marquée, caméra un peu remontée
-    const tf = `perspective(${(1500 - 420 * cine).toFixed(0)}px) translateY(${(-72 * cine).toFixed(1)}px) rotateX(${(cine * 11).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
+    const tf = `perspective(${persp.toFixed(0)}px) rotateX(${(cine * 4).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
     if (tf !== lastT) {
       lastT = tf; world.style.transform = tf;
       const b = document.body;
       b.style.setProperty("--cine", cine.toFixed(3));
       b.classList.toggle("cine", cine > 0.45);
+      b.classList.toggle("room", cine > 0.01);
       b.classList.toggle("zoomed", zoom < 0.99);
       b.classList.toggle("global", zoom < 0.85);   // vue globale : fenêtres figées en vedette, les autres en retrait
       zmark.style.top = ((1 - (zoom - ZMIN) / (1 - ZMIN)) * 167).toFixed(1) + "px";
@@ -75,5 +86,5 @@ export function createPlans({ world, anchor, desk }) {
       desk.classList.toggle("on", d > 0.03);
     }
   }
-  return { layout, update, goPlan, get zoom() { return zoom; }, get plan() { return planIndex() + 1; } };
+  return { layout, update, goPlan, setYaw, setYawRange(lo, hi) { yawLo = Math.min(lo, -0.3); yawHi = Math.max(hi, 0.3); yawT = clamp(yawT, yawLo, yawHi); }, get yaw() { return yaw; }, get persp() { return persp; }, get zoom() { return zoom; }, get plan() { return planIndex() + 1; } };
 }
