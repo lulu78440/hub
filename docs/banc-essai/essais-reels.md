@@ -27,7 +27,7 @@ Relevé automatique du journal (statuts du 25/10, branche `banc-essai`) : ce que
 | R2 | Mémoire sur 30 min d'usage (PC) | mesurée 3 min seulement |
 | R3 | Images/s réelles PC et Android (3D allumée) | le banc n'a qu'un rendu logiciel (2 à 9 img/s, non représentatif) |
 | R4 | Synchro réelle PC ↔ téléphone avec le jeton Gists | GitHub simulé seulement |
-| R5 | CSP proposée (B15) sur Brave : WebLLM, YouTube, radios, Open-Meteo | une CSP mal réglée casse des fonctions sans prévenir |
+| R5 | CSP (B15, branche `banc-csp`) sur Brave et Android : les 11 essais de `csp.md` (WebLLM, YouTube, radios, Open-Meteo, connexion Gmail/Outlook…) | une CSP mal réglée casse des fonctions sans prévenir |
 | R6 | Désactiver puis réactiver le verrouillage : les clés d'IA sont à recoller (B9, B29) | à confirmer que c'est le comportement voulu |
 
 Après chaque essai, une phrase suffit (« R3 : 58 img/s PC, 31 Android ») : le Banc la reporte dans le journal et le rapport.
