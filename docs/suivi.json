@@ -142,7 +142,8 @@
     "ergo-audit",
     "ergo-plan",
     "ergo-visuel",
-    "ergo-fusion"
+    "ergo-fusion",
+    "ergo-outils"
   ],
   "prochaine": {
     "id": "ergo-mobile",
@@ -173,7 +174,7 @@
     "ergo-fusion",
     "ergo-outils"
   ],
-  "maj": "2026-10-25T17:45:00+01:00",
+  "maj": "2026-10-25T17:46:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",
