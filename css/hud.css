@@ -1084,3 +1084,56 @@ body.lite .outils section { margin-top: 12px; }
 body.lite .top > .actions { flex-wrap: wrap; max-width: 100%; row-gap: 8px; order: 1; }
 body.lite .top > .actions .btn { padding: 10px 12px; }
 body.lite .bar-in { min-width: 0; padding-inline: 14px; } body.lite .bar input { width: 100%; }
+
+/* ---------- Plan 3 · bureau : icônes flottantes (p3-bureau) ----------
+   Hexagone de verre (la forme du logo) : remplissage lumineux, liseré dégradé tracé en masque, halo de la couleur de l'icône,
+   reflet qui balaie au survol, onde qui s'étend, léger flottement. Les applis ◇ (appli Windows requise) sont atténuées. */
+.desk { grid-template-rows: minmax(0, 1fr); grid-template-areas: "dl dc dr"; }
+.dicos { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.dico { --a: var(--cyan); --hexmask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90' preserveAspectRatio='none'%3E%3Cpolygon points='25,1.6 75,1.6 98.4,45 75,88.4 25,88.4 1.6,45' fill='none' stroke='black' stroke-width='3.2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 7px; width: calc(var(--sz) * 1px + 44px); padding: 4px 0 2px; border: 0; background: none; color: #cfe8f3; font-family: var(--mono);
+  cursor: grab; touch-action: none; pointer-events: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .55)) drop-shadow(0 0 11px color-mix(in srgb, var(--a) 38%, transparent));
+  animation: dfloat 7s ease-in-out var(--dl, 0s) infinite; will-change: translate; }
+.dico[data-a="violet"] { --a: var(--violet); } .dico[data-a="ambre"] { --a: var(--amber); } .dico[data-a="vert"] { --a: var(--ok); }
+.desk.on .dico { pointer-events: auto; }
+.dico .hx { position: relative; display: block; width: calc(var(--sz) * 1px); height: calc(var(--sz) * .9px); transition: transform .28s cubic-bezier(.2, .9, .3, 1.35); }
+.dico .fl, .dico .bd, .dico .pu { position: absolute; inset: 0; }
+.dico .fl { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); overflow: hidden;
+  background: radial-gradient(120% 95% at 26% 8%, rgba(255, 255, 255, .26), transparent 52%), radial-gradient(90% 80% at 70% 100%, color-mix(in srgb, var(--a) 34%, transparent), transparent 70%), linear-gradient(160deg, color-mix(in srgb, var(--a) 24%, #08203a), #04101c 72%); }
+.dico .fl::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .42) 50%, transparent 62%); transform: translateX(-110%); }
+.dico .bd { background: linear-gradient(140deg, var(--a), color-mix(in srgb, var(--violet) 65%, transparent) 55%, color-mix(in srgb, var(--a) 45%, transparent)); -webkit-mask: var(--hexmask) center / 100% 100% no-repeat; mask: var(--hexmask) center / 100% 100% no-repeat; }
+.dico .pu { background: var(--a); -webkit-mask: var(--hexmask) center / 100% 100% no-repeat; mask: var(--hexmask) center / 100% 100% no-repeat; opacity: 0; pointer-events: none; }
+.dico .gl { position: absolute; inset: 0; display: grid; place-items: center; color: color-mix(in srgb, var(--a) 45%, #fff); }
+.dico .gl svg { filter: drop-shadow(0 0 5px var(--a)); }
+.dico .dlb { max-width: 100%; font-size: 10px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #cfe8f3; text-shadow: 0 0 3px #02060d, 0 0 9px #02060d, 0 1px 0 #02060d; }
+.dico:hover .hx, .dico:focus-visible .hx { transform: scale(1.1); }
+.dico:hover .fl::after, .dico:focus-visible .fl::after { animation: dsweep .85s ease; }
+.dico:hover .pu, .dico:focus-visible .pu { animation: dpulse 1.5s ease-out infinite; }
+.dico:hover .dlb, .dico:focus-visible .dlb { color: #fff; }
+.dico:focus-visible { outline: none; } .dico:focus-visible .dlb { text-decoration: underline; text-underline-offset: 3px; }
+.dico:active .hx { transform: scale(.95); }
+.dico.off { opacity: .62; filter: saturate(.55) drop-shadow(0 8px 10px rgba(0, 0, 0, .5)); }
+.dico .mk { position: absolute; top: 0; right: auto; left: calc(50% + var(--sz) * .5px - 6px); font-size: 9px; color: var(--amber); text-shadow: 0 0 4px #02060d; }
+.dico.dragging { animation: none; cursor: grabbing; z-index: 6; filter: drop-shadow(0 18px 18px rgba(0, 0, 0, .6)) drop-shadow(0 0 18px color-mix(in srgb, var(--a) 60%, transparent)); }
+.dico.dragging .hx { transform: scale(1.16); }
+.dico.settle { transition: left .3s cubic-bezier(.2, 1.4, .3, 1), top .3s cubic-bezier(.2, 1.4, .3, 1); }
+@keyframes dfloat { 0%, 100% { translate: 0 -3px; } 50% { translate: 0 3px; } }
+@keyframes dsweep { to { transform: translateX(110%); } }
+@keyframes dpulse { 0% { transform: scale(1); opacity: .65; } 100% { transform: scale(1.55); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .dico { animation: none; } .dico:hover .pu, .dico:focus-visible .pu { animation: none; } .dico:hover .fl::after { animation: none; } }
+.bur-pop { position: fixed; z-index: 20; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(540px, calc(100vw - 32px)); max-height: 82vh; overflow: auto; padding: 12px 18px 18px; background: rgba(3, 13, 24, .97); border: 1px solid var(--cyan); clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 40px rgba(63, 230, 255, .2); }
+.bp-h { display: flex; justify-content: space-between; align-items: center; }
+.bp-h h3 { margin: 0; font-family: var(--display); font-size: 15px; letter-spacing: .26em; color: var(--cyan); text-transform: uppercase; }
+.bp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 16px 6px; margin: 16px 0 10px; }
+.bur-pop .dico { position: relative; transform: none; animation: none; pointer-events: auto; width: auto; cursor: pointer; }
+.bur-pop .dico.used { opacity: .38; }
+.bp-form { display: grid; gap: 2px; }
+.bp-form label { display: grid; gap: 4px; margin: 6px 0; font: 500 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.bp-form input { background: rgba(6, 24, 42, .7); border: 1px solid rgba(63, 230, 255, .25); color: var(--ink); font: 600 15px var(--ui); letter-spacing: .02em; padding: 9px 10px; outline: none; }
+.bp-form input:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(63, 230, 255, .3); }
+.bp-t { font: 500 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); margin-top: 6px; padding-top: 12px; border-top: 1px solid rgba(63, 230, 255, .15); }
+.bp-err { margin: 2px 0; color: #ff8a8a; font-size: 13px; }
+.bp-act { display: flex; justify-content: flex-end; margin-top: 8px; }
+.desk.on { z-index: 3; }   /* le bureau passe devant les fenêtres des plans 1 et 2 : les icônes restent cliquables */
+.bur-pop .dico.used::after { content: "POSÉE"; position: absolute; top: 0; left: calc(50% + 12px); font: 500 8px var(--mono); letter-spacing: .1em; color: var(--ok); }

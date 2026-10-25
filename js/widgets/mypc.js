@@ -6,6 +6,7 @@ import { persistentSupported, savedFolders, forgetFolder, pickFolder, permission
 import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { pulse } from "../state.js";
+import { initBureau } from "../ui/bureau.js";
 import { prefs } from "../store/prefs.js";
 
 const ICO = {
@@ -58,21 +59,6 @@ export function initMyPC({ plans }) {
   L.innerHTML = ""; R.innerHTML = "";
   const P = { dirs: makePanel("Dossiers", "cyan", persistentSupported ? "ACCÈS MÉMORISÉ" : "SESSION"), rec: makePanel("Fichiers récents", "violet", "LECTURE SEULE"), sys: makePanel("Système", "amber", "EN DIRECT"), set: makePanel("Réglages rapides", "cyan", "WINDOWS") };
   L.append(P.dirs.sec, P.rec.sec); R.append(P.sys.sec, P.set.sec);
-  const bar = document.createElement("nav"); bar.className = "taskbar"; bar.setAttribute("aria-label", "Applications");
-  bar.innerHTML = '<span class="tl2">APPLIS</span>';
-  APPS.forEach(([name, ic, uri]) => {
-    const b = document.createElement("button"); b.type = "button"; b.className = "app" + (uri ? "" : " off");
-    b.innerHTML = `<span class="hex">${svg(ic)}</span>${name}<span class="mk ${uri ? "ok" : "app2"}">${uri ? "✓" : "◇"}</span>`;
-    b.title = uri === "ici" ? "Brave : c'est ici" : uri ? "Ouvrir " + name + " (Brave demande confirmation la première fois)" : name + " : demandera la petite appli Windows (V2)";
-    b.addEventListener("click", () => {
-      if (uri === "ici") { toast("Brave : tu y es déjà"); return; }
-      if (!uri) { toast(name + " : prévu avec la petite appli Windows (V2)"); return; }
-      openWindows(uri); pulse(0.7);
-    });
-    bar.append(b);
-  });
-  bar.insertAdjacentHTML("beforeend", '<div class="legend"><span class="ok">✓ marche depuis le navigateur</span><span class="app2">◇ demande la petite appli PC (V2)</span></div>');
-  desk.append(bar);
 
   // Système
   P.sys.pb.innerHTML = '<div class="chips"><span>Batterie <b class="s-batt">…</b></span><span>Réseau <b class="s-net">…</b></span><span>Écran <b class="s-scr">…</b></span></div><p class="dnote">◇ Processeur, mémoire et disques s\'afficheront avec la petite appli Windows (V2) : un navigateur n\'y a pas accès.</p>';
@@ -248,6 +234,7 @@ export function initMyPC({ plans }) {
     return it;
   });
   desk.dataset.menu = "desk";
+  initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows });   // icônes flottantes (remplacent l'ancienne barre d'applis)
 
   renderDirs(); renderRecent(); reload();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshRecent(); });

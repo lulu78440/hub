@@ -63,7 +63,7 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     return [{ h: "Plan 3 · bureau du PC" }, { note: "Dossiers, fichiers et applis : sous-étape 2.8" },
       { t: "Revenir au hub", k: "1", fn: () => plans.goPlan(1) },
       { t: "Aller au plan 2", k: "2", fn: () => plans.goPlan(2) },
-      { t: "Écran en direct · bientôt", off: true }];
+      { t: "Écran en direct · bientôt", off: true }, ...(hooks.bureau ? ["-", ...(hooks.bureau() || [])] : [])];
   }
   addEventListener("contextmenu", (e) => {
     if (state.lite || e.shiftKey) return;
