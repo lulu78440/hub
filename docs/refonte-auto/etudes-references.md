@@ -16,3 +16,6 @@ Lecture seule : rien n'a été copié dans le hub. Licences lues dans les dépô
 
 ## Nouvelles étapes au Suivi (aucune cochée) — à reporter dans `docs/suivi.json` après la fusion
 `ergo-plan2-maquette`, `ergo-plan2-salle`, `ergo-perf-repos` (bloc Refonte) ; `p3-fenetres`, `p3-lasso` (bloc Plan 3) ; `lv-bus`, `lv-panneaux` (bloc Laboratoire vivant).
+
+## Ids ajoutés le 25/10 (mission orchestrateur, bloc Suivi `orch`, poste Labo)
+orch-audit, orch-reuse, orch-registre, orch-moteur, orch-hote (fourni par la Refonte), orch-modules, orch-graphiques, orch-donnees, orch-workflows, orch-persistance, orch-tests. À aligner dans `docs/suivi.json` après fusion.
