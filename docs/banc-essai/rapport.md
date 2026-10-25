@@ -1,5 +1,16 @@
 # Banc d'essai · rapport
 
+## Résumé de la mission autonome du 25/10, 19 h 31 → 20 h 00 (poste Banc de test)
+
+1. **Problèmes : 32** · critique 1 (B7) · importants 15 (B3-B6, B8, B9, B14, B18, B23-B25, B28, B29, L1, L2) · mineurs 16. Tous corrigés sur `banc-essai` sauf B2, B14-B16 (décrits) et L1-L3 (branches des autres postes).
+2. **main reste exposée** à B3, B4, B5, B8 et B29 (rejoué ce soir sur main c611939) : les corrections attendent sur `banc-essai`, sans conflit avec main (essai du 25/10).
+3. **Nouveau ce soir** : B29 (clés Claude et relais laissées en clair, corrigé), `t7_charte.py` (mode simple sans IA ni WebGL : vert ; manuel : 0/15 fiches), `t8_blocs.py` (bloc 7.21.0 catalogue par lien : 25 cas, aucun défaut).
+4. **Journal** : statuts posés en un commit (e992be6) sur la base de main c611939, à fusionner vite (la Refonte y écrit souvent).
+5. **refonte-auto (ffa94c3)** et **labo-auto (546df41)** : BRANCHES_RESUME
+6. **À décider par toi** : quelles corrections passent dans main (proposé : les 25 d'un bloc, avant que la Refonte touche `lockui.js`) ; B9 (clé d'IA retirée à la désactivation) ; conventions du manuel (`propositions.md`) ; ne pas fusionner les `apercu-*.html` (L2) ; figer les bibliothèques d'IA (B14, L1).
+7. **Essais réels à faire par toi** : `essais-reels.md` (20 points). Recette de la refonte prête : `recette-refonte.md`.
+8. Rien fusionné dans main ; aucune reprise programmée en attente.
+
 ## Résumé (clôture du 25/10/2026 · relais au poste « Banc de test »)
 
 1. **Tests réalisés** : cycles 1 à 6 (sauvegardes, fonctions, sécurité, limites et charge, confort, suite automatique), relecture statique du code, série de 1 895 cas précis, fusion d'essai avec la dernière main (2077509, Noyau compris).
@@ -70,6 +81,9 @@ Vérifié juste sans correction : fêtes et jours fériés 2015-2045 (304 cas, P
 | # | Gravité | Zone | Problème | Reproduction | Correction | Statut |
 | --- | --- | --- | --- | --- | --- | --- |
 | B29 | important | Verrouillage · clés IA (main 7.15+) | Sur main, désactiver le verrouillage remet en clair dans le stockage du navigateur les clés `hub-secret-claude` et `hub-secret-libre` (relais) ajoutées par le Noyau ; la correction B9 ne retire que `hub-secret-ia` (Gemini). Même défaut que B9, pour les clés venues après. | Lecture de `vault.js · destroy()` sur la fusion d'essai du 25/10 (`if (k !== "hub-secret-ia")`). Test `t7_charte.py · test_charte_b29_cles_ia_retirees` (rouge sur main tant que non corrigé). | Proposée : dans `destroy()`, ne remettre en clair aucune clé `hub-secret-…` (préfixe), comme pour l'export. Écrite sur banc-essai : `vault.js · destroy()` retire `hub-secret-ia`, `-claude` et `-libre` (jetons des mails gardés, par conception). | corrigé (banc-essai) |
+| L1 | important | labo-auto · worker d'IA locale | WebLLM chargé en version flottante (`@0.2`) et Transformers.js (`@3.0.0`) depuis jsDelivr, sans contrôle d'intégrité, dans un worker qui partage l'origine (et la base IndexedDB) du hub. | Relecture de `js/noyau/worker-ia.js` (labo-auto 546df41). | Figer les versions exactes testées ou copier dans `vendor/`. Poste Labo. | décrit (`branches.md`) |
+| L2 | important | refonte-auto, labo-auto · aperçus | `apercu-refonte.html` et `apercu-labo.html` (hub ou labo entiers en un fichier) à la racine : une fois sur main, GitHub Pages les servirait sur l'origine du vrai hub, avec accès à tes données par une autre version du code. | Relecture des deux branches. | Ne pas fusionner les `apercu-*.html` dans main (fichier local seulement). | décrit (`branches.md`) |
+| L3 | mineur | labo-auto · manuel | Fiches valides, mais la règle 12 n'a pas de liste des « fonctions livrées » (fiches = fonctions, pas fenêtres). | `t7_charte.py`. | Décision de la Commande (`propositions.md`). | décrit |
 
 ### Blocs passés au banc (étape test-blocs)
 
