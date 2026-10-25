@@ -950,3 +950,64 @@ body.show-fps .fps { display: block; }
 .search .hints { opacity: 0; transition: opacity .25s; }
 .search:focus-within .hints { opacity: 1; }
 body.lite .search .hints { opacity: 1; }
+
+/* ---------- Refonte · ergo-visuel b : tuiles personnalisables (styles, effets, taille du texte) ---------- */
+@property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+.hl, .fx-ring, .fx-const { display: none; position: absolute; pointer-events: none; }
+body:not(.lite) .win[data-fs] .in > * { zoom: var(--fs, 1); }
+/* Fin / Verre / Minimal : le nom devient un simple titre coloré */
+body:not(.lite) .win.t-fin .ph h2, body:not(.lite) .win.t-verre .ph h2, body:not(.lite) .win.t-minimal .ph h2 { background: none; clip-path: none; color: var(--a); padding: 0 14px; }
+body:not(.lite) .win.t-fin .ph .hatch, body:not(.lite) .win.t-verre .ph .hatch, body:not(.lite) .win.t-minimal .ph .hatch,
+body:not(.lite) .win.t-fin .in::before, body:not(.lite) .win.t-verre .in::before, body:not(.lite) .win.t-minimal .in::before { display: none; }
+body:not(.lite) .win.t-fin .panel { clip-path: none; border-radius: 10px; padding: 1px; background: color-mix(in srgb, var(--a) 28%, transparent); }
+body:not(.lite) .win.t-fin .in { clip-path: none; border-radius: 9px; background: rgba(6, 24, 42, .92); }
+body:not(.lite) .win.t-verre .panel { clip-path: none; border-radius: 14px; padding: 0; background: none; border: 1px solid rgba(255, 255, 255, .14); }
+body:not(.lite) .win.t-verre .in { clip-path: none; border-radius: 13px; background: rgba(150, 220, 255, .07); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+body:not(.lite) .win.t-minimal .panel { clip-path: none; padding: 0; background: none; }
+body:not(.lite) .win.t-minimal .in { clip-path: none; background: none; }
+body:not(.lite) .win.t-minimal .pf { border-top: 0; }
+/* Hologramme 3D : trois plaques (fond quadrillé en retrait, contenu, verre en avant), coins lumineux, faisceau et émetteur, flottement lent */
+body:not(.lite) .win.t-holo { transform-style: preserve-3d; }
+body:not(.lite) .win.t-holo .panel { transform-style: preserve-3d; clip-path: none; padding: 0; background: none; filter: none !important; animation: tl-flotte 7s ease-in-out infinite; }
+body:not(.lite) .win.t-holo:hover .panel, body:not(.lite) .win.t-holo.dragging .panel { animation-play-state: paused; }
+body:not(.lite) .win.t-holo .in { clip-path: none; background: none; transform: translateZ(4px); }
+body:not(.lite) .win.t-holo .in::before { display: none; }
+body:not(.lite) .win.t-holo .ph h2 { background: none; clip-path: none; color: #e9fcff; padding: 0 14px 0 10px; gap: 8px; animation: tl-flick 5s steps(1) infinite; }
+body:not(.lite) .win.t-holo .ph h2::before { content: ""; width: 14px; height: 14px; border-radius: 50%; flex: none; margin-right: 6px; background: radial-gradient(circle, #fff 0%, #bff8ff 22%, var(--a) 48%, transparent 72%); box-shadow: 0 0 10px var(--a); }
+body:not(.lite) .win.t-holo .ph .hatch { opacity: .5; }
+body:not(.lite) .win.t-holo .ph h2, body:not(.lite) .win.t-holo .pb, body:not(.lite) .win.t-holo .pf { text-shadow: -1px 0 rgba(255, 60, 200, .3), 1px 0 rgba(63, 230, 255, .4), 0 0 8px color-mix(in srgb, var(--a) 50%, transparent); }
+body:not(.lite) .win.t-holo .hl { display: block; }
+.hl-back { inset: 0; transform: translateZ(-18px); border: 1px solid color-mix(in srgb, var(--a) 30%, transparent); background: linear-gradient(color-mix(in srgb, var(--a) 10%, transparent) 1px, transparent 1px) 0 0 / 18px 18px, linear-gradient(90deg, color-mix(in srgb, var(--a) 10%, transparent) 1px, transparent 1px) 0 0 / 18px 18px, rgba(3, 14, 26, .8); }
+.hl-scan { inset: 0; transform: translateZ(-2px); background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--a) 9%, transparent) 0 1px, transparent 1px 3px); animation: tl-scan 6s linear infinite; mix-blend-mode: screen; }
+.hl-glass { inset: 0; transform: translateZ(16px); border: 1px solid color-mix(in srgb, var(--a) 55%, transparent); background: linear-gradient(115deg, rgba(255, 255, 255, .08) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, .04) 100%); box-shadow: 0 0 18px color-mix(in srgb, var(--a) 25%, transparent), inset 0 0 22px color-mix(in srgb, var(--a) 12%, transparent); }
+.hl-c1, .hl-c2, .hl-c3, .hl-c4 { width: 14px; height: 14px; transform: translateZ(18px); border: 2px solid var(--a); }
+.hl-c1 { left: -3px; top: -3px; border-right: 0; border-bottom: 0; } .hl-c2 { right: -3px; top: -3px; border-left: 0; border-bottom: 0; }
+.hl-c3 { left: -3px; bottom: -3px; border-right: 0; border-top: 0; } .hl-c4 { right: -3px; bottom: -3px; border-left: 0; border-top: 0; }
+.hl-beam { left: 18%; right: 18%; bottom: -74px; height: 74px; transform: translateZ(-8px); background: linear-gradient(to top, color-mix(in srgb, var(--a) 34%, transparent), transparent); clip-path: polygon(38% 100%, 62% 100%, 100% 0, 0 0); opacity: .55; }
+.hl-emit { left: calc(50% - 26px); bottom: -84px; width: 52px; height: 14px; border-radius: 50%; background: radial-gradient(closest-side, #fff, color-mix(in srgb, var(--a) 80%, transparent) 45%, transparent); box-shadow: 0 0 22px var(--a); }
+@keyframes tl-flotte { 0%, 100% { transform: rotateX(2deg) rotateY(-2.5deg) translateY(0); } 50% { transform: rotateX(1deg) rotateY(2.5deg) translateY(-4px); } }
+@keyframes tl-scan { to { background-position: 0 120px; } }
+@keyframes tl-flick { 0%, 93%, 100% { opacity: 1; } 94% { opacity: .6; } 96% { opacity: .9; } }
+/* Effets : Halo (la lueur de la fenêtre), Énergie (un trait de lumière fait le tour du cadre), Constellation (points et fils qui scintillent) */
+body:not(.lite) .win.fx-halo::before { opacity: .5; }
+body:not(.lite) .win.fx-energy .fx-ring { display: block; inset: 0; padding: 1.5px; background: conic-gradient(from var(--ang), transparent 0 72%, color-mix(in srgb, var(--a) 60%, transparent) 84%, #fff 88%, transparent 93%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: tl-tour 3.2s linear infinite; }
+@keyframes tl-tour { to { --ang: 360deg; } }
+body:not(.lite) .win.fx-cst .fx-const { display: block; overflow: visible; }
+.fx-const line { stroke: color-mix(in srgb, var(--a) 40%, transparent); stroke-width: 1; }
+.fx-const circle { fill: var(--a); animation: tl-scint 3s ease-in-out infinite; }
+@keyframes tl-scint { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .win.t-holo .panel, .hl-scan, .fx-ring, .fx-const circle, .win.t-holo .ph h2 { animation: none !important; } }
+body:not(.lite) .win.reduced .fx-ring, body:not(.lite) .win.reduced .fx-const, body:not(.lite) .win.reduced .hl { display: none !important; }
+/* Panneau Personnaliser… */
+.perso { position: fixed; z-index: 12; width: 300px; padding: 10px 12px 12px; background: rgba(3, 13, 24, .97); border: 1px solid var(--cyan); clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); box-shadow: 0 0 30px rgba(63, 230, 255, .15); font-family: var(--ui); color: var(--ink); display: grid; gap: 10px; }
+.perso[hidden] { display: none; }
+.perso .ptit { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--cyan); text-transform: uppercase; }
+.perso .plbl { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 5px; }
+.perso .pgrp { display: flex; flex-wrap: wrap; gap: 6px; }
+.perso .opt { height: 30px; padding: 0 10px; border: 1px solid rgba(63, 230, 255, .18); background: transparent; color: #9cc3d4; font: 600 13px var(--ui); letter-spacing: .04em; cursor: pointer; }
+.perso .opt:hover { color: #dff6fd; border-color: rgba(63, 230, 255, .4); }
+.perso .opt.on { color: #fff; background: rgba(8, 30, 48, .9); border-color: rgba(63, 230, 255, .55); box-shadow: 0 0 12px rgba(63, 230, 255, .15); }
+.perso .pfoot { display: flex; justify-content: space-between; }
+.perso .opt.lnk { border-color: transparent; color: var(--dim); }
+body.lite .perso { display: none; }
+body:not(.lite) .win.t-holo::before { transform: translateZ(-40px); }   /* le halo reste derrière les plaques (sinon il les coupe en biais) */

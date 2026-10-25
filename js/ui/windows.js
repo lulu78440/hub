@@ -5,6 +5,7 @@
 import { state, pulse } from "../state.js";
 import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
+import { initTuiles } from "./tuiles.js";
 
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 const MIN = { w: 220, h: 120 };
@@ -300,6 +301,12 @@ export function createWindows({ world, plans, force }) {
     });
   }
 
+  /** Taille du texte changée (Personnaliser…) : la fenêtre grandit ou rétrécit dans la même proportion. */
+  function rescale(el, k) {
+    const s = S[el.dataset.id]; if (!s || !k || k === 1 || s.max) return;
+    s.w = clamp(s.w * k, MIN.w, W - 32); s.h = clamp(s.h * k, MIN.h, H - 90); applySize(el, s); save();
+  }
+  const tuiles = initTuiles({ els, rescale });
   function reset() { const D = layout(W, H, true); save(); return D; }
-  return { layout, update, reset, planOf, focus, unfocus, get focused() { return focusEl; }, toggleMax, togglePin, setReduced, toggleReduced, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
+  return { layout, update, reset, planOf, focus, unfocus, get focused() { return focusEl; }, toggleMax, togglePin, personnaliser: (el) => tuiles.open(el), setReduced, toggleReduced, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
 }
