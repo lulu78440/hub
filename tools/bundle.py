@@ -20,7 +20,9 @@ def css(p):
 
 # ---------- Modules JS → un seul script classique ----------
 IMPORT = re.compile(r'^import\s*\{([^}]*)\}\s*from\s*"([^"]+)";\s*$', re.M)
-EXPORT = re.compile(r'^export\s+(?:async\s+)?(?:const|let|function)\s+([A-Za-z_$][\w$]*)', re.M)
+IMPORT_NS = re.compile(r'^import\s*\*\s*as\s+([A-Za-z_$][\w$]*)\s+from\s*"([^"]+)";\s*$', re.M)   # import * as x from "…" (Noyau)
+DYN = re.compile(r'import\(\s*"(\.{1,2}/[^"]+)"\s*\)')   # import("./…") relatif → module déjà inclus
+EXPORT = re.compile(r'^export\s+(?:async\s+)?(?:const|let|function|class)\s+([A-Za-z_$][\w$]*)', re.M)
 
 def load_modules():
     mods, order = {}, []
@@ -35,6 +37,9 @@ def load_modules():
         deps = []
         for m in IMPORT.finditer(src):
             deps.append((m.group(1), visit(m.group(2), (ROOT / key).parent)))
+        for m in IMPORT_NS.finditer(src):
+            deps.append(("*" + m.group(1), visit(m.group(2), (ROOT / key).parent)))
+        src = DYN.sub(lambda m: "Promise.resolve(__M[%r])" % visit(m.group(1), (ROOT / key).parent), src)
         mods[key] = (src, deps); order.append(key)
         return key
     visit("main.js", ROOT / "js")
@@ -46,10 +51,12 @@ def bundle_js():
     for key in order:
         src, deps = mods[key]
         exports = EXPORT.findall(src)
-        body = IMPORT.sub("", src)
+        body = IMPORT_NS.sub("", IMPORT.sub("", src))
         body = re.sub(r'^export\s+', "", body, flags=re.M)
         head = ""
         for names, dep in deps:
+            if names.startswith("*"):
+                head += "const %s = __M[%r];\n" % (names[1:], dep); continue
             parts = [n.strip().replace(" as ", ": ") for n in names.split(",") if n.strip()]
             head += "const { %s } = __M[%r];\n" % (", ".join(parts), dep)
         ret = "return { %s };" % ", ".join(exports)
