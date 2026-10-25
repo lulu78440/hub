@@ -7,11 +7,38 @@ const TAU = Math.PI * 2;
 const hex = (h, a = 1) => { const n = parseInt(h.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
 function fibonacci(n, r) { const out = []; const g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = n === 1 ? 0 : 1 - (i / (n - 1)) * 2, rad = Math.sqrt(Math.max(0, 1 - y * y)), t = g * i; out.push([Math.cos(t) * rad * r, y * r, Math.sin(t) * rad * r]); } return out; }
 
+
+// ----- Disposition : les domaines proches (affinités) sont voisins, toute la vue est occupée -----
+const AFFINITES = [["sciences", "maths", 1], ["sciences", "espace", 1], ["sciences", "nature", 0.9], ["sciences", "sante", 0.8], ["maths", "code", 0.9], ["code", "ia", 1], ["ia", "maths", 0.8], ["histoire", "geo", 0.9], ["histoire", "droit", 0.6], ["histoire", "culture", 0.8], ["culture", "musique", 1], ["culture", "langues", 0.9], ["culture", "philo", 0.8], ["philo", "droit", 0.6], ["economie", "droit", 0.8], ["economie", "geo", 0.7], ["cuisine", "sante", 0.8], ["cuisine", "nature", 0.6], ["geo", "nature", 0.8], ["geo", "espace", 0.5], ["langues", "geo", 0.6], ["ia", "philo", 0.5], ["musique", "maths", 0.4], ["economie", "code", 0.4]];
+function aleaPos(id, k) { let x = 2166136261; const s = id + "#" + k; for (let i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967295; }
+export function disposer() {
+  const ids = PROGRAMME.map((d) => d.id), n = ids.length, P = new Map(fibonacci(n, 1).map((p, i) => [ids[i], p.slice()]));
+  const W = (a, b) => { const e = AFFINITES.find((x) => (x[0] === a && x[1] === b) || (x[0] === b && x[1] === a)); return e ? e[2] : 0; };
+  for (let it = 0; it < 260; it++) {
+    const F = new Map(ids.map((i) => [i, [0, 0, 0]]));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const a = P.get(ids[i]), b = P.get(ids[j]), d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], L = Math.hypot(...d) || 0.01, w = W(ids[i], ids[j]);
+      const f = -0.012 / (L * L) + (w ? w * 0.05 * (L - (1.15 - w * 0.75)) : 0);              // répulsion générale ; attraction vers une distance d'autant plus courte que l'affinité est forte
+      for (let k = 0; k < 3; k++) { F.get(ids[i])[k] += d[k] / L * f; F.get(ids[j])[k] -= d[k] / L * f; }
+    }
+    for (const id of ids) { const p = P.get(id), f = F.get(id); for (let k = 0; k < 3; k++) p[k] += f[k] * 0.9; const L = Math.hypot(...p) || 1, r = 0.72 + aleaPos(id, "r") * 0.3; for (let k = 0; k < 3; k++) p[k] = p[k] / L * r; }   // remise sur une coque épaisse
+  }
+  const subs = new Map(), tous = []; PROGRAMME.forEach((d) => d.sousThemes.forEach((s, j) => { const h = P.get(d.id), o = fibonacci(d.sousThemes.length, 0.34)[j], L = Math.hypot(...h) || 1; const p = [h[0] + o[0] + h[0] / L * 0.12, h[1] + o[1] + h[1] / L * 0.12, h[2] + o[2] + h[2] / L * 0.12]; subs.set(s.id, p); tous.push({ id: s.id, dom: d.id, mots: new Set(s.mots), h }); }));
+  for (let it = 0; it < 40; it++) for (let i = 0; i < tous.length; i++) for (let j = i + 1; j < tous.length; j++) {          // sujets voisins par le sens : légèrement attirés, sans quitter leur domaine
+    const a = tous[i], b = tous[j]; if (a.dom === b.dom) continue; let c = 0; for (const m of a.mots) if (b.mots.has(m)) c++; if (!c) continue;
+    const pa = subs.get(a.id), pb = subs.get(b.id), d = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]];
+    for (const [t, pp, sg] of [[a, pa, 1], [b, pb, -1]]) { for (let k = 0; k < 3; k++) pp[k] += sg * d[k] * 0.012 * c; const o = [pp[0] - t.h[0], pp[1] - t.h[1], pp[2] - t.h[2]], L = Math.hypot(...o); if (L > 0.5) for (let k = 0; k < 3; k++) pp[k] = t.h[k] + o[k] / L * 0.5; }
+  }
+  return { hubs: P, subs };
+}
+
 export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
   const ctx = canvas.getContext("2d"); const reduit = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const pos = new Map();            // id -> [x,y,z]
-  const hubs = fibonacci(PROGRAMME.length, 1);
-  PROGRAMME.forEach((d, i) => { const h = hubs[i]; pos.set(d.id, h); const n = d.sousThemes.length, dir = fibonacci(n, 0.3), len = Math.hypot(...h) || 1; d.sousThemes.forEach((s, j) => { const o = dir[j], out = [h[0] / len, h[1] / len, h[2] / len]; pos.set(s.id, [h[0] + o[0] + out[0] * 0.16, h[1] + o[1] + out[1] * 0.16, h[2] + o[2] + out[2] * 0.16]); }); });
+  const dep = disposer();
+  for (const d of PROGRAMME) pos.set(d.id, dep.hubs.get(d.id));
+  for (const [id, p] of dep.subs) pos.set(id, p);
+  pos.set("orbe", [0, 0, 0]);
   let carte = null, selection = null, survol = null, rotY = 0.6, rotX = -0.25, zoom = 1, auto = !reduit, derniere = 0, vitesse = 0.00012, actif = true, raf = 0, w = 0, h = 0, dpr = 1;
   const proj = new Map();
   let drag = null;
@@ -20,8 +47,8 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
   function projeter(p) {
     const cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
     let x = p[0] * cy + p[2] * sy, z = -p[0] * sy + p[2] * cy, y = p[1] * cx - z * sx; z = p[1] * sx + z * cx;
-    const f = 3.2, k = f / (f + z + 1.6), e = Math.min(w, h) * 0.62 * zoom;
-    return { x: w / 2 + x * k * e, y: h / 2 + y * k * e, z, k };
+    const f = 3.2, k = f / (f + z + 1.6), e = Math.min(w, h) * 0.74 * zoom, asp = Math.max(1, Math.min(1.8, w / h));
+    return { x: w / 2 + x * k * e * asp, y: h / 2 + y * k * e, z, k };
   }
   const niveauDe = (id) => { if (!carte) return 0; for (const d of carte.domaines) { const s = d.sousThemes.find((x) => x.id === id); if (s) return s.niveau; } return 0; };
   const domaineDe = (id) => PROGRAMME.find((d) => d.id === id || d.sousThemes.some((s) => s.id === id));
@@ -76,6 +103,18 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
     }
   }
 
+  /** L'orbe centrale : le Noyau. Elle respire plus vite quand le savoir couvre plus de programme. */
+  function orbe(p, t) {
+    const g = carte.global || 0, r = (16 + g * 0.1) * p.k * zoom * 1.25, v = reduit ? 0.5 : 0.5 + 0.5 * Math.sin(t * 0.0026);
+    ctx.globalCompositeOperation = "lighter";
+    const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.6); halo.addColorStop(0, `rgba(63,230,255,${0.35 + v * 0.15})`); halo.addColorStop(0.35, "rgba(63,230,255,.12)"); halo.addColorStop(1, "rgba(63,230,255,0)"); ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.6, 0, TAU); ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "rgba(2,14,24,.92)"; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fill();
+    for (let i = 0; i < 3; i++) { ctx.strokeStyle = `rgba(63,230,255,${0.7 - i * 0.2})`; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(p.x, p.y, r * (1 - i * 0.12), r * (0.34 + i * 0.22), (reduit ? 0.5 : t * 0.0004) * (i % 2 ? -1 : 1) + i, 0, TAU); ctx.stroke(); }
+    ctx.fillStyle = `rgba(223,246,253,${0.85 + v * 0.15})`; ctx.beginPath(); ctx.arc(p.x, p.y, r * (0.28 + v * 0.05), 0, TAU); ctx.fill();
+    ctx.font = `${Math.max(9, Math.round(10.5 * p.k * zoom))}px Rajdhani, system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = "rgba(223,246,253,.9)"; ctx.fillText("Noyau " + g + " %", p.x, p.y + r + 5);
+  }
+
   function dessiner(t) {
     ctx.clearRect(0, 0, w, h);
     const bg = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, Math.max(w, h) * 0.65); bg.addColorStop(0, "rgba(10,40,60,.55)"); bg.addColorStop(1, "rgba(2,6,13,0)"); ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
@@ -93,15 +132,23 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
         axone(d.id, s.id, ph, ps, t, col, s.niveau, alea(s.id, "g"), false);
       }
     }
+    // flux de données entre l'orbe centrale et chaque domaine : la requête descend vers le domaine, la connaissance remonte vers l'orbe
+    { const po = proj.get("orbe");
+      for (const d of carte.domaines) {
+        const ph = proj.get(d.id), col = PROGRAMME.find((x) => x.id === d.id).couleur;
+        if (d.pct <= 0) { ctx.strokeStyle = hex(col, 0.1); ctx.lineWidth = 0.6; ctx.setLineDash([2, 5]); ctx.beginPath(); ctx.moveTo(po.x, po.y); ctx.lineTo(ph.x, ph.y); ctx.stroke(); ctx.setLineDash([]); continue; }
+        const niv = Math.max(0.2, d.pct / 100); axone("orbe", d.id, po, ph, t, col, niv, alea(d.id, "o"), false); axone(d.id, "orbe", ph, po, t + 1100, col, niv * 0.7, alea(d.id, "r"), false);
+      } }
     // axones longs entre connaissances qui se recoupent
     for (const l of carte.liens) { const a = proj.get(l.a), b = proj.get(l.b); if (!a || !b) continue; axone(l.a, l.b, a, b, t + 900, "#b79bff", 0.25 + l.force * 0.75, alea(l.a + l.b, "g"), true); }
     // faisceaux entre domaines qui partagent des connaissances
     const entre = new Map(); for (const l of carte.liens) { const da = domaineDe(l.a).id, db = domaineDe(l.b).id; if (da !== db) { const k = da < db ? da + "|" + db : db + "|" + da; entre.set(k, (entre.get(k) || 0) + l.force); } }
     for (const [k, f] of entre) { const [a, b] = k.split("|"); ctx.lineWidth = 1 + Math.min(2, f); ctx.strokeStyle = `rgba(155,114,255,${Math.min(0.6, 0.15 + f * 0.2)})`; ctx.beginPath(); ctx.moveTo(proj.get(a).x, proj.get(a).y); ctx.lineTo(proj.get(b).x, proj.get(b).y); ctx.stroke(); }
     ctx.globalCompositeOperation = "source-over";
-    const noeuds = []; for (const d of carte.domaines) { noeuds.push({ id: d.id, hub: true, d }); for (const s of d.sousThemes) noeuds.push({ id: s.id, hub: false, d, s }); }
+    const noeuds = [{ id: "orbe", orb: true }]; for (const d of carte.domaines) { noeuds.push({ id: d.id, hub: true, d }); for (const s of d.sousThemes) noeuds.push({ id: s.id, hub: false, d, s }); }
     noeuds.sort((a, b) => proj.get(b.id).z - proj.get(a.id).z);
     for (const n of noeuds) {
+      if (n.orb) { orbe(proj.get("orbe"), t); continue; }
       const p = proj.get(n.id), col = PROGRAMME.find((x) => x.id === n.d.id).couleur, prof = Math.max(0.35, Math.min(1, p.k * 0.9)), estSel = selection === n.id, estSurvol = survol === n.id, dansSel = selD && selD.id === n.d.id;
       const niv = n.hub ? n.d.pct / 100 : n.s.niveau, et = n.hub ? (niv >= 1 ? "valide" : niv > 0 ? "cours" : "dormant") : etatDe(niv);
       // dendrites : les ramifications du neurone (visibles surtout quand il est actif ou son domaine choisi)
@@ -149,7 +196,7 @@ export function monterCarte3d(canvas, { surSelection = () => {} } = {}) {
   }
   function choisir(x, y) {
     let meilleur = null, dist = 1e9;
-    for (const [id, p] of proj) { const hub = PROGRAMME.some((d) => d.id === id), r = (hub ? 18 : 9) * p.k * zoom + 6, dd = Math.hypot(p.x - x, p.y - y); if (dd < r && (dd - r) < dist) { dist = dd - r; meilleur = id; } }
+    for (const [id, p] of proj) { if (id === "orbe") continue; const hub = PROGRAMME.some((d) => d.id === id), r = (hub ? 18 : 9) * p.k * zoom + 6, dd = Math.hypot(p.x - x, p.y - y); if (dd < r && (dd - r) < dist) { dist = dd - r; meilleur = id; } }
     return meilleur;
   }
   const xy = (e) => { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };

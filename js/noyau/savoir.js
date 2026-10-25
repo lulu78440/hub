@@ -6,7 +6,7 @@
 //   - le pourcentage d'un domaine est la moyenne de ses sous-thèmes. Il part de 0 % et ne monte que par des fiches que Lucien a validées.
 // Ce pourcentage mesure la couverture du programme (curriculum.js), pas le savoir total sur le sujet.
 import { hote } from "./hote.js";
-import { jetons, normaliser, resumerLocalement } from "./recherche.js";
+import { jetons, normaliser, resumerLocalement, Index } from "./recherche.js";
 import { PROGRAMME, SOUS_THEMES, DOMAINES_SAVOIR, TOTAL_SOUS_THEMES } from "./curriculum.js";
 
 const POIDS = (it) => it.type === "wiki" ? 1 : it.type === "kb" ? (it.verifie === true ? 1 : 0.5) : it.type === "sem" ? 0.5 : it.type === "epi" ? 0.25 : 0;
@@ -71,5 +71,56 @@ export function creerSavoir({ memoire, barriere }) {
     return { ok: true, propose: n, interrogees: (r.donnees.sources_interrogees || []).length, erreurs: r.donnees.erreurs || [] };
   }
 
-  return { carte, prochain, etudier, themeDe, SEUIL };
+
+  // ----- Test de validation d'un point de connaissance -----
+  // Lucien demande « réaliser le test pour valider ce point » : le Noyau s'interroge lui-même, sans requête (0 jeton), puis valide seul si le test est réussi.
+  // Pour chaque fiche du sous-thème : (1) retrouve-t-il la fiche à partir d'une phrase dont un mot clé est masqué ? (2) le mot masqué se retrouve-t-il dans la fiche retrouvée ?
+  // (3) la fiche a-t-elle une source ? (4) ne contredit-elle pas une autre fiche de la mémoire ? Seuil : au moins 75 % des questions, et une fiche sourcée qui réussit tout.
+  const MOTS_VIDES = new Set(["dans", "avec", "pour", "cette", "plus", "sont", "être", "elle", "leur", "aussi", "comme", "entre", "mais"]);
+  function questions(fiche) {
+    const texte = String(fiche.texte || ""), phrases = texte.split(/(?<=[.!?])\s+/).filter((x) => x.length > 30), p = phrases[phrases.length > 1 ? 1 : 0] || texte;
+    const tj = new Set(jetons(fiche.titre || "", { vides: false }));
+    const cand = [...new Set(jetons(p, { vides: false }))].filter((w) => w.length >= 6 && !tj.has(w) && !MOTS_VIDES.has(w)).sort((a, b) => b.length - a.length);
+    const cle = cand[0] || null;
+    const reste = cle ? p.split(/\s+/).filter((m) => !jetons(m, { vides: false }).includes(cle)).join(" ") : p;
+    return { cle, reste, phrase: p };
+  }
+  async function tester(idSousTheme, { surEtape = () => {}, etudierSiVide = true } = {}) {
+    const st = SOUS_THEMES.get(idSousTheme); if (!st) return { ok: false, raison: "Sous-thème inconnu." };
+    const rassembler = () => {
+      const dej = memoire.tous({ archive: false }).filter((it) => ["kb", "wiki"].includes(it.type) && themeDe(it) === idSousTheme).map((it) => ({ ...it, enMemoire: true }));
+      const att = memoire.aValider().filter((p) => p.type === "kb" && p.theme === idSousTheme).map((p) => ({ ...p, enMemoire: false }));
+      return [...dej, ...att];
+    };
+    let cands = rassembler();
+    if (!cands.length && etudierSiVide) { surEtape("Aucune fiche : étude des références…"); await etudier(idSousTheme, { origine: "lucien" }); cands = rassembler(); }
+    if (!cands.length) return { ok: false, raison: "Aucune fiche à tester : les références n'ont rien donné. Réessaie plus tard ou ajoute une fiche toi-même.", questions: [] };
+    cands = cands.slice(0, 4); surEtape(`Test sur ${cands.length} fiche(s)…`);
+    const index = new Index(), doc = new Map();                    // la mémoire du domaine (pour que le test soit réaliste) + les fiches testées
+    for (const it of memoire.tous({ archive: false })) if (["kb", "wiki"].includes(it.type)) { index.ajouter(it.id, [it.titre, it.texte].join(" ")); doc.set(it.id, it); }
+    for (const c of cands) { index.ajouter(c.id, [c.titre, c.texte].join(" ")); doc.set(c.id, c); }
+    const rapport = [], parFiche = [];
+    for (const c of cands) {
+      const q = questions(c), res = [];
+      const trouve = q.reste.length > 10 ? index.chercher(q.reste, { limite: 3 }) : [];
+      res.push({ q: `Retrouver la fiche « ${c.titre || "sans titre"} » à partir de : « ${q.reste.slice(0, 90)}${q.reste.length > 90 ? "…" : ""} »`, ok: trouve.some((x) => x.id === c.id) });
+      res.push({ q: q.cle ? `Retrouver le mot masqué « ${q.cle} » dans la fiche retrouvée` : "Fiche assez riche pour poser une question", ok: !!q.cle && trouve.some((x) => x.id === c.id && normaliser(doc.get(x.id).texte).includes(q.cle)) });
+      res.push({ q: "Source indiquée", ok: !!String(c.source || c.url || "").trim() || c.type === "wiki" });
+      const voisines = index.chercher([c.titre, c.texte].join(" "), { limite: 4 }).filter((x) => x.id !== c.id && x.pertinence > 0.75).map((x) => doc.get(x.id)).filter((x) => x && x.theme === c.theme);
+      res.push({ q: "Aucune fiche voisine ne la contredit", ok: !voisines.some((x) => x.verifie === false && x.type === "kb" && /\bne\s+pas\b|\bnon\b/.test(normaliser(x.texte)) !== /\bne\s+pas\b|\bnon\b/.test(normaliser(c.texte))) });
+      const reussi = res.filter((x) => x.ok).length; parFiche.push({ fiche: c, ok: res.every((x) => x.ok), reussi, total: res.length }); rapport.push({ fiche: c.titre || c.id, enMemoire: c.enMemoire, questions: res });
+    }
+    const tot = parFiche.reduce((a, f) => a + f.total, 0), bon = parFiche.reduce((a, f) => a + f.reussi, 0), score = Math.round(bon / tot * 100);
+    const solide = parFiche.filter((f) => f.ok), reussi = score >= 75 && solide.length >= 1;
+    const valides = [];
+    if (reussi) {                                                // validation automatique : seules les fiches qui ont tout réussi sont retenues
+      for (const f of solide) {
+        if (f.fiche.enMemoire) { const r = await memoire.certifier(f.fiche.id); if (r) valides.push(f.fiche.titre || f.fiche.id); }
+        else { await memoire.trier(f.fiche.id, "garder"); valides.push(f.fiche.titre || f.fiche.id); }
+      }
+    }
+    return { ok: true, reussi, score, valides, rapport, sousTheme: st.titre, raison: reussi ? `Test réussi (${score} %) : ${valides.length} fiche(s) validée(s).` : `Test non réussi (${score} %) : rien n'est validé. Corrige ou ajoute des fiches sourcées, puis refais le test.` };
+  }
+
+  return { carte, prochain, etudier, tester, themeDe, SEUIL };
 }

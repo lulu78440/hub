@@ -248,3 +248,4 @@ Décisions (24/10) :
 - **Liaison automatique** entre la fenêtre Progression et le Suivi du Hub : pour l'instant c'est un relevé (`docs/suivi.json`), mis à jour par Claude à chaque sous-étape.
 | 25/10 | N10.0 Moteur Claude + routage auto (version 7.7.0, sur `noyau`) | Aucun nouveau fichier au cache. **Nouveau** : `labo/essais-moteurs.mjs`. **Fichiers partagés touchés** : `sw.js`, `js/version.js` (7.7.0) ; `js/noyau/hote.js` (adaptateur : clé Claude dans le coffre) uniquement. |
 | 25/10 | N11.0 Carte neuronale, relais gratuit, onglet Visuel (version 7.8.0, sur `noyau`) | **Nouveau** : `labo/visuel.js`. **Fichiers partagés touchés** : `sw.js`, `js/version.js` (7.8.0) ; `js/noyau/hote.js` (adaptateur : clé du relais dans le coffre) uniquement. |
+| 25/10 | N12.0 Orbe centrale, disposition par proximité, test de validation (version 7.9.0, sur `noyau`) | Aucun nouveau fichier au cache. **Fichiers partagés touchés** : `sw.js`, `js/version.js` (7.9.0) uniquement. |

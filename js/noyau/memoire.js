@@ -125,6 +125,12 @@ export function creerMemoire() {
       const p = { id: "noyau-av-" + hote.nouvelId(), type, texte: String(texte).slice(0, 400), titre, cle, source, origine, avant, cibleId, theme: theme || undefined, cree: maintenant(), statut: "attente" };
       propositions.set(p.id, p); await hote.stockage.ecrire("kv", p); return p;
     },
+    /** Marque une fiche de connaissance comme vérifiée après un test réussi (demandé par Lucien). Journalisé, réversible par « restaurer ». */
+    async certifier(id, origine = "lucien (test de validation)") {
+      const it = items.get(id); if (!it || it.type !== "kb" || it.archive) return null; if (it.verifie === true) return it;
+      const avant = { texte: it.texte, titre: it.titre || "" }; it.verifie = true; it.confiance = "haute"; it.teste = maintenant();
+      await sauver(it); await ecrireJournal("modifier", it, avant, origine); return it;
+    },
     aValider: () => [...propositions.values()].filter((p) => p.statut === "attente").sort((a, b) => a.cree - b.cree),
 
     /** Tri de Lucien : garder, modifier (avec nouveau texte) ou écarter. Une proposition écartée est gardée (statut) mais ne sert plus. */

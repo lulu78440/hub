@@ -5,6 +5,19 @@ import { PROGRAMME } from "./curriculum.js";
 
 function h(tag, a = {}, ...k) { const e = document.createElement(tag); for (const [n, v] of Object.entries(a || {})) { if (v == null || v === false) continue; if (n === "class") e.className = v; else if (n.startsWith("on")) e.addEventListener(n.slice(2), v); else e.setAttribute(n, v === true ? "" : v); } for (const c of k.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c)); return e; }
 
+/** Lance le test de validation d'un sous-thème et affiche le compte rendu dans `zone`. Utilisé par la fenêtre Savoir et par le labo. */
+export async function lancerTest(savoir, id, zone, apres = () => {}) {
+  zone.textContent = ""; const etat = h("p", { class: "nx-dim" }, "Test en cours…"); zone.append(etat);
+  try {
+    const r = await savoir.tester(id, { surEtape: (t) => { etat.textContent = t; } });
+    zone.textContent = "";
+    zone.append(h("p", { class: r.reussi ? "nx-ok" : "nx-dim", style: "font-weight:600" }, r.raison));
+    (r.rapport || []).forEach((f) => zone.append(h("details", {}, h("summary", {}, `${f.fiche} · ${f.questions.filter((x) => x.ok).length}/${f.questions.length}${f.enMemoire ? "" : " (proposition)"}`), f.questions.map((x) => h("div", { class: "nx-dim" }, (x.ok ? "✓ " : "✗ ") + x.q)))));
+    if (r.reussi && r.valides.length) document.dispatchEvent(new CustomEvent("noyau:memoire"));
+    apres(r);
+  } catch (e) { zone.textContent = "Test impossible : " + (e.message || e); }
+}
+
 export function monterSavoir(conteneur, noyau) {
   const savoir = noyau.savoir;
   conteneur.textContent = "";
@@ -13,7 +26,7 @@ export function monterSavoir(conteneur, noyau) {
   const entete = h("div", { class: "nx-sv-haut" });
   const detail = h("div", { class: "nx-sv-detail", "aria-live": "polite" });
   const suite = h("div", { class: "nx-sv-suite" });
-  const cur = h("div", { class: "nx-sv-cur" });
+  const cur = h("div", { class: "nx-sv-cur" }), zoneTest = h("div", { class: "nx-sv-test", "aria-live": "polite" });
   racine.append(entete, h("div", { class: "nx-carte-cadre" }, canvas), detail, suite, cur,
     h("details", { class: "nx-aide" }, h("summary", {}, "Comment ce pourcentage est calculé"),
       h("p", {}, "Chaque domaine est découpé en sous-thèmes (le programme). Un sous-thème est couvert à 100 % quand le Noyau a retenu, et que tu as validé, des fiches sourcées qui totalisent 2 points : une fiche vérifiée vaut 1, une fiche non vérifiée 0,5, un fait sur toi 0,5, un souvenir d'échange 0,25."),
@@ -47,7 +60,9 @@ export function monterSavoir(conteneur, noyau) {
     detail.append(h("div", { class: "nx-av-t" }, h("b", {}, `${d.symbole} ${d.nom}`), h("span", { class: "nx-puce", style: `color:${d.couleur};border-color:${d.couleur}` }, d.pct + " %")),
       h("p", { class: "nx-dim" }, `${d.couverts} couverts, ${d.entames} entamés sur ${d.total} · ${d.fiches} fiches`));
     d.sousThemes.forEach((s) => detail.append(h("div", { class: "nx-sv-st" + (choix.id === s.id ? " sel" : "") }, h("span", {}, s.titre), barre(s.niveau, d.couleur), h("span", { class: "nx-dim" }, Math.round(s.niveau * 100) + " %"),
-      h("button", { class: "nx-lien", type: "button", disabled: etudeEnCours || s.niveau >= 1, onclick: () => etudier(s.id) }, s.niveau >= 1 ? "couvert" : "Étudier"))));
+      h("button", { class: "nx-lien", type: "button", disabled: etudeEnCours || s.niveau >= 1, onclick: () => etudier(s.id) }, s.niveau >= 1 ? "couvert" : "Étudier"),
+      s.niveau >= 1 ? null : h("button", { class: "nx-lien", type: "button", disabled: etudeEnCours, title: "Le Noyau s'interroge sur ce point et le valide seul si le test est réussi", onclick: () => lancerTest(savoir, s.id, zoneTest, () => rafraichir()) }, "Réaliser le test pour valider ce point"))));
+    detail.append(zoneTest);
   }
   async function etudier(id) {
     if (etudeEnCours) return; etudeEnCours = true; rafraichir();

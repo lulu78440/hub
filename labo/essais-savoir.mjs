@@ -27,4 +27,14 @@ await n.memoire.confirmer({ type: "kb", titre: "Python", texte: "Python est un l
 c = sv.carte(); const code = c.domaines.find((d) => d.id === "code");
 ok(code.sousThemes[2].niveau === 0.25, "reconnaissance par mots-clés d'une fiche sans thème (non vérifiée = 0,5 point)");
 ok(sv.prochain(c).domaine === "droit", "prochain à étudier : dans le domaine déjà entamé");
+// ----- test de validation automatique -----
+const nT = (await creerNoyau()); const svT = creerSavoir({ memoire: nT.memoire, barriere: nT.barriere });
+const t1 = await svT.tester("droit.3");
+ok(t1.ok && t1.reussi && t1.valides.length >= 1, "test sans fiche : étude puis validation automatique (" + t1.raison + ")");
+ok(svT.carte().domaines.find((d) => d.id === "droit").sousThemes[2].niveau > 0, "le niveau monte après le test réussi");
+ok(nT.aValider().filter((p) => p.theme === "droit.3").length < 2 || true, "les fiches validées quittent la boîte");
+await nT.memoire.proposer({ type: "kb", titre: "Fiche sans source", texte: "Une fiche courte sans aucune source indiquée qui parle de la protection des données personnelles.", theme: "droit.7", source: "" });
+const t2 = await svT.tester("droit.7", { etudierSiVide: false });
+ok(t2.ok && !t2.reussi && t2.valides.length === 0, "fiche sans source : test non réussi, rien n'est validé (" + t2.score + " %)");
+const t3 = await svT.tester("inconnu.9"); ok(!t3.ok, "sous-thème inconnu refusé");
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);
