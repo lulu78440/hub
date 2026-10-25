@@ -8,3 +8,6 @@ Règle : option la plus prudente et réversible. Tout est sur la branche `refont
 | 19:30 | Tâche 1 (ergo-outils, ergo-mobile) : rien à refaire, ces deux étapes sont déjà validées par Lucien (Suivi : « fait ») et sur `main`. Je les recontrôle seulement (recette PC + mobile simulé). | Les reconstruire n'aurait aucun sens. | — |
 | 19:30 | Les étapes du plan 3 `p3-bureau` (7.25.0) et `p3-applis` (7.26.0) sont déjà sur `main` : je n'y touche pas pendant la mission. | Elles attendent le « validé » de Lucien. | — |
 | 19:30 | Tâche 4 (fixRadios à l'import du Coffre) : déjà en place dans `js/ui/coffre.js` (radios existantes et entrantes corrigées avant la détection des doublons). Je le recontrôle par lecture et par un essai. | Rien à ajouter. | — |
+| 19:45 | Ctrl+K actif par défaut, coupable par la tuile « Raccourci Ctrl+K » (pref `hub-palette-ctrlk`) ; pris aussi quand le focus est dans la barre de recherche du hub, jamais dans un autre champ ; Ctrl+Maj+K et Alt+K restent au navigateur. Repli : bouton Outils / touche O. | Option réversible, sans conflit avec Brave tant que la page a le focus. |
+| 19:45 | Erreur console « reading 'active' » (lockui/vault) présente aussi sans mes changements : non corrigée, hors de mon périmètre à vérifier par le Banc de test. | Ne pas toucher ce que je n'ai pas cassé. |
+

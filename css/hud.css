@@ -1167,3 +1167,8 @@ body.lite .bar-in { min-width: 0; padding-inline: 14px; } body.lite .bar input {
 .dchips, .dlinks { display: flex; flex-wrap: wrap; gap: 6px; }
 @keyframes dopen { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .panel.dp.dwin { animation: none; } }
+
+/* Palette tapée d'Outils (ergo-palette) */
+.o-q { width: 100%; box-sizing: border-box; margin: 10px 0 4px; min-height: 40px; padding: 8px 12px; border: 1px solid rgba(63, 230, 255, .3); background: rgba(4, 16, 30, .8); color: #fff; font: 500 14px var(--ui); letter-spacing: .03em; }
+.o-q:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
+body.lite .o-q { min-height: 48px; font-size: 16px; }
