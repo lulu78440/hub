@@ -99,7 +99,7 @@ export function creerMemoire() {
      * Crée un élément après VALIDATION de Lucien (outil confirmé ou boîte « À valider »).
      * Garde contre l'empoisonnement : une origine extérieure ne peut produire qu'une connaissance.
      */
-    async confirmer({ type, texte, titre = "", cle = "", source = "", actualite = false, origine = "lucien", importance, url = null }) {
+    async confirmer({ type, texte, titre = "", cle = "", source = "", actualite = false, origine = "lucien", importance, url = null, theme = null, verifie }) {
       if (!PREFIXES[type] || type === "epi") throw new Error("Type de mémoire inconnu");
       if ((type === "sem" || type === "pro") && EXTERNE.test(origine)) throw new Error("Un contenu venu de l'extérieur ne peut pas devenir un fait sur Lucien ni une règle : seulement une fiche de connaissance.");
       const norm = normaliser(texte).trim();
@@ -110,19 +110,19 @@ export function creerMemoire() {
         const ancien = [...items.values()].find((x) => x.type === "sem" && !x.archive && x.cle && normaliser(x.cle) === normaliser(cle));
         if (ancien) { const p = await m.proposer({ type: "contradiction", texte, cle, origine, avant: ancien.texte, cibleId: ancien.id }); return { propose: true, id: p.id, note: "Contredit un fait déjà retenu : ajouté à la boîte « À valider » pour que Lucien tranche." }; }
       }
-      const it = { id: PREFIXES[type] + hote.nouvelId(), type, texte: String(texte).slice(0, 1500), titre, cle, source, url, actualite, origine, confiance: type === "kb" ? "moyenne" : "haute", verifie: type === "kb" ? false : undefined, importance: importance || IMPORTANCE[type], cree: maintenant(), dernierRappel: null };
+      const it = { id: PREFIXES[type] + hote.nouvelId(), type, texte: String(texte).slice(0, 1500), titre, cle, source, url, actualite, origine, confiance: type === "kb" ? "moyenne" : "haute", verifie: type === "kb" ? (verifie === true) : undefined, theme: theme || undefined, importance: importance || IMPORTANCE[type], cree: maintenant(), dernierRappel: null };
       ajouterLocal(it); await sauver(it); await ecrireJournal("ecrire", it, null, origine);
       return { ajoute: true, id: it.id, type: it.type };
     },
 
     /** Dépose une proposition dans la boîte « À valider ». Rien n'entre dans la mémoire avant l'accord de Lucien. */
-    async proposer({ type, texte, origine = "conversation", exterieur = false, avant = null, cle = "", cibleId = null, titre = "", source = "" }) {
+    async proposer({ type, texte, origine = "conversation", exterieur = false, avant = null, cle = "", cibleId = null, titre = "", source = "", theme = null }) {
       if (exterieur && (type === "sem" || type === "pro" || type === "fond")) type = "kb";
       const norm = normaliser(texte).trim(); if (!norm) return null;
       const doublon = [...propositions.values()].find((p) => p.statut === "attente" && p.type === type && normaliser(p.texte).trim() === norm)
         || [...items.values()].find((x) => x.type === (type === "contradiction" || type === "modif" ? "sem" : type) && !x.archive && normaliser(x.texte).trim() === norm);
       if (doublon) return doublon;
-      const p = { id: "noyau-av-" + hote.nouvelId(), type, texte: String(texte).slice(0, 400), titre, cle, source, origine, avant, cibleId, cree: maintenant(), statut: "attente" };
+      const p = { id: "noyau-av-" + hote.nouvelId(), type, texte: String(texte).slice(0, 400), titre, cle, source, origine, avant, cibleId, theme: theme || undefined, cree: maintenant(), statut: "attente" };
       propositions.set(p.id, p); await hote.stockage.ecrire("kv", p); return p;
     },
     aValider: () => [...propositions.values()].filter((p) => p.statut === "attente").sort((a, b) => a.cree - b.cree),
@@ -140,7 +140,7 @@ export function creerMemoire() {
           res = await m.confirmer({ type: "sem", texte, cle: "", origine: "lucien (tri de la boîte À valider)", importance: 7 });
         } else {
           const type = p.type === "lecon" ? "pro" : p.type === "actualite" ? "kb" : p.type;
-          res = await m.confirmer({ type, texte, titre: p.titre, source: p.source, actualite: p.type === "actualite", origine: p.type === "kb" ? "source : " + (p.origine || "conversation") : "lucien (tri de la boîte À valider)" });
+          res = await m.confirmer({ type, texte, titre: p.titre, source: p.source, actualite: p.type === "actualite", theme: p.theme, verifie: !!(p.theme && p.source && type === "kb"), origine: p.type === "kb" ? "source : " + (p.origine || "conversation") : "lucien (tri de la boîte À valider)" });
         }
         p.statut = "acceptee";
       }

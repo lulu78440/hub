@@ -15,6 +15,7 @@ import { creerSommeil } from "./sommeil.js";
 import { journalActions, journalMemoire } from "./journal.js";
 import * as imp from "./import38.js";
 import { creerSentinelle } from "./sentinelle.js";
+import { creerSavoir } from "./savoir.js";
 
 export const VERSION_NOYAU = "noyau-1.0";
 
@@ -49,7 +50,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const demanderTexte = async (systeme, texte) => { const r = await moteur().generer({ systeme, messages: [{ role: "user", texte }], outils: [], temperature: 0.2 }); return String(r.texte || "").trim() || "(pas de réponse)"; };
   const sentinelle = creerSentinelle({ demander: demanderTexte });
   const noyau = {
-    sentinelle, demanderTexte,
+    sentinelle, demanderTexte, savoir: creerSavoir({ memoire, barriere }),
     /** Recommandation système de l'orbe : locale, sans requête ; montrée dans l'échange du Noyau. */
     async recommander() { const r = await sentinelle.recommandation(); cycle.emettre({ type: "initiative", texte: r.texte, raison: "systeme", niveau: r.niveau }); if (r.niveau === "critique" || r.niveau === "alerte") hote.ui.toast("Sécurité : " + r.texte.slice(0, 90)); return r; },
     version: VERSION_NOYAU, memoire, cerveau, etat, budget, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
@@ -94,7 +95,11 @@ export async function initNoyau() {
   const { monterSecurite } = await import("./securite.js");
   const zoneSecu = document.querySelector('.win[data-id="securite"] .pb');
   const secu = zoneSecu ? monterSecurite(zoneSecu, noyau.sentinelle) : null;
-  hote.ui.ajouterMenuFond(() => [{ t: "Ouvrir le Noyau", fn: () => ui.ouvrir() }, ...(secu ? [{ t: "Ouvrir la sécurité", fn: () => secu.ouvrir() }] : [])]);
+  const { monterSavoir } = await import("./fenetre-savoir.js");
+  const zoneSav = document.querySelector('.win[data-id="savoir"] .pb');
+  const sav = zoneSav ? monterSavoir(zoneSav, noyau) : null;
+  hote.ui.ajouterMenuFond(() => [{ t: "Ouvrir le Noyau", fn: () => ui.ouvrir() }, ...(secu ? [{ t: "Ouvrir la sécurité", fn: () => secu.ouvrir() }] : []), ...(sav ? [{ t: "Ouvrir la carte du savoir", fn: () => sav.ouvrir() }] : [])]);
+  document.addEventListener("noyau:ouvrir-savoir", () => sav && sav.ouvrir());
   document.addEventListener("noyau:ouvrir", () => ui.ouvrir());                          // appui long sur l'orbe
   document.addEventListener("noyau:ouvrir-securite", () => secu && secu.ouvrir());
   // Sentinelle : capteurs, analyse locale toutes les 5 min (sans requête), recommandation de l'orbe toutes les 30 min

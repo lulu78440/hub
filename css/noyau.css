@@ -137,3 +137,14 @@
 .nx-code.nx-long{max-height:300px}
 .nx-aide{margin:8px 0;padding:6px 10px;border:1px dashed var(--n-line);font-size:13px}.nx-aide summary{cursor:pointer;color:var(--n-cyan)}
 .nx-analyse{margin-top:6px}
+
+/* Fenêtre Savoir : carte 3D */
+.nx-carte-cadre{position:relative;height:400px;margin:6px 0;border:1px solid var(--n-line);background:#02060d;overflow:hidden}
+.nx-carte{display:block;width:100%;height:100%}
+.nx-carte:focus-visible{outline:2px solid var(--n-cyan);outline-offset:-2px}
+.nx-sv-global b{font-size:26px;color:var(--n-cyan);margin-right:6px}
+.nx-sv-suite{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:4px 0}
+.nx-sv-st{display:grid;grid-template-columns:1fr 70px 42px auto;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--n-line);font-size:14px}
+.nx-sv-st.sel{background:rgba(63,230,255,.07)}
+.nx-sv-barre{display:block;height:5px;background:rgba(255,255,255,.08)}.nx-sv-barre i{display:block;height:100%}
+@media (max-width:520px){.nx-carte-cadre{height:300px}.nx-sv-st{grid-template-columns:1fr 50px 38px auto}}
