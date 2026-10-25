@@ -16,3 +16,6 @@
 
 ## 25/10 22:50 · 7.30.0 · p3-fenetres (built)
 Pile de focus + réduction animée vers l'icône (bureau-apps.js). Testé : PC (ouvrir, focus, réduire, rouvrir par icône, Échap, fermer), mouvement réduit (instantané), rechargement (état gardé), aucune erreur console nouvelle. Mobile : le bureau est réservé au PC, donc sans effet. Suite : p3-lasso.
+
+## 26/10 00:20 · 7.31.0 · p3-lasso (built)
+Lasso + sélection multiple + menu de groupe (bureau.js). Testé PC : lasso, déplacement de groupe, menu, alignement, Échap, Ctrl+A, Maj+clic, clic simple (ouvre et désélectionne), aucune erreur. Mobile : bureau réservé au PC. Suite : p3-direct, p3-ia, p3-mobile, puis lv-bus.

@@ -1204,3 +1204,10 @@ body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .w
 .dwin .dm + .dx { margin-left: 4px; }
 .dico.ouvert::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 14px; height: 2px; margin-left: -7px; background: var(--a); box-shadow: 0 0 6px var(--a); }
 @media (prefers-reduced-motion: reduce) { .dwin .in { transition: none; } }
+
+/* ---------- Plan 3 · lasso et sélection d'icônes (p3-lasso) ---------- */
+.lasso { position: absolute; z-index: 5; pointer-events: none; border: 1px solid var(--cyan); background: color-mix(in srgb, var(--cyan) 12%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 35%, transparent); }
+.dico.sel { filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .55)) drop-shadow(0 0 3px var(--a)) drop-shadow(0 0 16px var(--a)); }
+.dico.sel .dlb { color: #fff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--a); }
+.dico.sel .hx { transform: scale(1.06); }
+@media (prefers-reduced-motion: reduce) { .dico.sel .hx { transform: none; } }
