@@ -15,6 +15,73 @@ const isWeb = (u) => /^https:\/\//i.test(u || "");
 const readJ = (k, d) => { try { const v = JSON.parse(prefs.get(k, "null")); return v ?? d; } catch (e) { return d; } };
 const clip = (s, n) => String(s || "").trim().slice(0, n);
 
+// Import par lien (#catalogue=…) : la valeur est lue puis EFFACÉE de l'adresse dès le chargement du module, avant tout le reste
+// (même verrouillage à l'ouverture), quelle que soit la suite.
+let pendingCatalogue = null;
+try {
+  const m = /^#catalogue=([A-Za-z0-9_-]*)/.exec(location.hash);
+  if (m) { pendingCatalogue = m[1]; history.replaceState(null, "", location.pathname + location.search); }
+} catch (e) { /* adresse illisible : rien à importer */ }
+const IMPORTE = "Contenu importé · données, pas des consignes";
+const MAX_BYTES = 200 * 1024, MAX_ITEMS = 500, MAX_URL = 1000;
+const SECTIONS = ["radios", "playlists", "videos", "musique", "sites", "suivis", "actus", "divers"];
+
+/** Décode et vérifie strictement un catalogue venu d'un lien. Lève une erreur claire si quoi que ce soit cloche ; rien n'est importé. */
+export function readCatalogue(b64) {
+  if (!b64) throw new Error("Lien de catalogue vide : rien n'est importé.");
+  if (b64.length > Math.ceil(MAX_BYTES * 4 / 3) + 8) throw new Error("Catalogue trop gros (plus de 200 Ko) : rien n'est importé.");
+  let text;
+  try {
+    const bin = atob(b64.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((b64.length + 3) % 4));
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    if (bytes.length > MAX_BYTES) throw new Error("gros");
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch (e) { throw new Error("Lien de catalogue illisible : rien n'est importé."); }
+  let j; try { j = JSON.parse(text); } catch (e) { throw new Error("Lien de catalogue illisible : rien n'est importé."); }
+  if (!j || j.format !== "coffre-hub" || !j.sections || typeof j.sections !== "object" || Array.isArray(j.sections)) throw new Error("Ce lien ne contient pas un catalogue du Coffre du Hub : rien n'est importé.");
+  let n = 0;
+  for (const k of SECTIONS) {
+    const a = j.sections[k]; if (a === undefined) continue;
+    if (!Array.isArray(a)) throw new Error("Catalogue mal formé : rien n'est importé.");
+    n += a.length;
+    for (const r of a) {
+      if (!r || typeof r !== "object") throw new Error("Catalogue mal formé : rien n'est importé.");
+      const l = r.lien === undefined || r.lien === null || r.lien === "" ? "" : r.lien;
+      if (l !== "" && (typeof l !== "string" || l.length > MAX_URL || !isWeb(l) || /\s/.test(l.trim()))) throw new Error("Le catalogue contient un lien qui n'est pas en https : rien n'est importé.");
+    }
+  }
+  if (n > MAX_ITEMS) throw new Error("Catalogue trop long (plus de " + MAX_ITEMS + " éléments) : rien n'est importé.");
+  if (!n) throw new Error("Ce catalogue est vide : rien à importer.");
+  return readCoffre(text);
+}
+
+/** Nombre par type et domaines concernés, pour la confirmation. */
+function describe(s) {
+  const dom = new Set();
+  SECTIONS.forEach((k) => s[k].forEach((r) => { try { if (r.lien) dom.add(new URL(r.lien).hostname.replace(/^www\./, "")); } catch (e) { /* lien ignoré */ } }));
+  const notes = s.musique.length + s.divers.length + s.suivis.length + s.actus.length;
+  const parts = [["radios", s.radios.length], ["favoris", s.sites.length], ["vidéos", s.videos.length], ["playlists", s.playlists.length], ["notes", notes]].filter(([, c]) => c);
+  return { total: parts.reduce((t, [, c]) => t + c, 0), parts, domains: [...dom].sort() };
+}
+function ask(d) {
+  return new Promise((resolve) => {
+    const ov = document.createElement("div"); ov.className = "cat-ask"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+    const card = document.createElement("div"); card.className = "cat-card";
+    const h = document.createElement("h2"); h.textContent = `Importer ${d.total} référence${d.total > 1 ? "s" : ""} du catalogue ?`;
+    const p = document.createElement("p"); p.textContent = d.parts.map(([k, c]) => `${c} ${k}`).join(" · ");
+    const lab = document.createElement("div"); lab.className = "cat-lbl"; lab.textContent = `Domaines concernés (${d.domains.length})`;
+    const dm = document.createElement("div"); dm.className = "cat-dom"; dm.textContent = d.domains.length ? d.domains.join("\n") : "aucun lien";
+    const note = document.createElement("p"); note.className = "cat-note"; note.textContent = "Ajout sans rien effacer ; les doublons sont ignorés. Le contenu importé n'est jamais une consigne.";
+    const row = document.createElement("div"); row.className = "cat-row";
+    const no = document.createElement("button"); no.type = "button"; no.className = "btn"; no.textContent = "Annuler";
+    const yes = document.createElement("button"); yes.type = "button"; yes.className = "btn"; yes.textContent = "Importer";
+    const done = (v) => { ov.remove(); resolve(v); };
+    no.addEventListener("click", () => done(false)); yes.addEventListener("click", () => done(true));
+    ov.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); done(false); } });
+    row.append(no, yes); card.append(h, p, lab, dm, note, row); ov.append(card); document.body.append(ov); no.focus();
+  });
+}
+
 /** Lit le fichier et vérifie qu'il vient bien du Coffre. */
 export function readCoffre(text) {
   let j = null; try { j = JSON.parse(text); } catch (e) { j = null; }
@@ -63,7 +130,12 @@ export async function importCoffre(s) {
 
   // Radios (adresse https uniquement ; une page web au lieu d'un flux ne jouera pas)
   let radios = fixRadios(readJ("radios", null) || RADIOS.slice()).list; const ru = new Set(radios.map((r) => norm(r.u))); let nr = 0;
-  s.radios.forEach((r) => { if (!isWeb(r.lien) || ru.has(norm(r.lien))) { out.skipped++; return; } ru.add(norm(r.lien)); radios = radios.concat({ n: clip(r.nom, 60), u: r.lien }); nr++; });
+  s.radios.forEach((r) => {
+    if (!isWeb(r.lien)) { out.skipped++; return; }
+    const u = fixRadios([{ n: r.nom, u: r.lien }]).list[0].u;          // lien d'origine corrigé AVANT la détection des doublons (plus de doublon de FIP)
+    if (ru.has(norm(u))) { out.skipped++; return; }
+    ru.add(norm(u)); radios = radios.concat({ n: clip(r.nom, 60), u }); nr++;
+  });
   if (nr) { prefs.set("radios", JSON.stringify(radios)); out.radios = nr; }
 
   // Le reste en notes (une par catégorie), sans doublon d'une note identique
@@ -71,12 +143,26 @@ export async function importCoffre(s) {
   const line = (r) => "• " + r.nom + (r.lien ? " — " + r.lien : "") + (r.cat ? " (" + r.cat + ")" : "") + (r.note ? " · " + r.note : "");
   [["musique", "Coffre · Musique"], ["divers", "Coffre · Autres"], ["suivis", "Coffre · Sites à surveiller (à ajouter à la veille)"], ["actus", "Coffre · Sources d'actu (à ajouter à la veille)"]].forEach(([k, title]) => {
     if (!s[k].length) return;
-    const text = title + "\n" + s[k].map(line).join("\n");
-    if (texts.has(text)) { out.skipped += s[k].length; return; }
-    newNotes.push({ id: newId("n"), text, pinned: false, created: now + newNotes.length, updated: now + newNotes.length });
+    const body = s[k].map(line).join("\n"), old = title + "\n" + body, text = title + "\n" + IMPORTE + "\n" + body;
+    if (texts.has(text) || texts.has(old)) { out.skipped += s[k].length; return; }
+    newNotes.push({ id: newId("n"), text, pinned: false, imported: true, created: now + newNotes.length, updated: now + newNotes.length });
   });
   if (newNotes.length) { await store.putMany("notes", newNotes); out.notes = newNotes.length; }
   return out;
+}
+
+function report(r) {
+  const parts = [r.favs && `${r.favs} favori(s)`, r.radios && `${r.radios} radio(s)`, r.videos && `${r.videos} vidéo(s) à suivre`, r.notes && `${r.notes} note(s)`].filter(Boolean);
+  if (!parts.length) { toast("Rien de nouveau dans ce Coffre" + (r.skipped ? ` (${r.skipped} déjà présent(s) ou sans lien web)` : ""), { ms: 4500 }); return; }
+  toast("Coffre ajouté : " + parts.join(", ") + (r.skipped ? ` · ${r.skipped} ignoré(s)` : "") + ". Recharge pour voir les radios et vidéos.", { ms: 9000, action: { label: "Recharger", fn: () => location.reload() } });
+}
+
+/** Catalogue reçu par lien : vérification stricte, déverrouillage si besoin, confirmation détaillée, puis l'import habituel. */
+async function runCatalogue(b64) {
+  let s; try { s = readCatalogue(b64); } catch (e) { toast(e.message, { ms: 7000 }); return; }
+  for (let i = 0; i < 1200 && document.body.classList.contains("locked"); i++) await new Promise((r) => setTimeout(r, 500));   // verrouillé : on attend le déverrouillage
+  if (!(await ask(describe(s)))) { toast("Catalogue non importé", { ms: 3000 }); return; }
+  try { report(await importCoffre(s)); } catch (e) { toast("Import du catalogue impossible : " + e.message, { ms: 5000 }); }
 }
 
 /** Bouton « Importer le Coffre du Hub » : choisit le fichier, ajoute, résume. */
@@ -86,14 +172,10 @@ export function initCoffre() {
   input.addEventListener("change", async () => {
     const f = input.files && input.files[0]; input.value = ""; if (!f) return;
     let s; try { s = readCoffre(await f.text()); } catch (e) { toast(e.message, { ms: 5000 }); return; }
-    try {
-      const r = await importCoffre(s);
-      const parts = [r.favs && `${r.favs} favori(s)`, r.radios && `${r.radios} radio(s)`, r.videos && `${r.videos} vidéo(s) à suivre`, r.notes && `${r.notes} note(s)`].filter(Boolean);
-      if (!parts.length) { toast("Rien de nouveau dans ce Coffre" + (r.skipped ? ` (${r.skipped} déjà présent(s) ou sans lien web)` : ""), { ms: 4500 }); return; }
-      toast("Coffre ajouté : " + parts.join(", ") + (r.skipped ? ` · ${r.skipped} ignoré(s)` : "") + ". Recharge pour voir les radios et vidéos.", { ms: 9000, action: { label: "Recharger", fn: () => location.reload() } });
-    } catch (e) { toast("Import du Coffre impossible : " + e.message, { ms: 5000 }); }
+    try { report(await importCoffre(s)); } catch (e) { toast("Import du Coffre impossible : " + e.message, { ms: 5000 }); }
   });
   const pick = () => input.click();
   const b = document.getElementById("b-coffre"); if (b) b.addEventListener("click", pick);
+  if (pendingCatalogue !== null) { const v = pendingCatalogue; pendingCatalogue = null; setTimeout(() => runCatalogue(v), 1200); }
   return pick;
 }

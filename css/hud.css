@@ -1023,3 +1023,13 @@ body.cine:not(.lite) .win.p2 .panel { box-shadow: 0 0 40px rgba(63, 230, 255, .1
 .lvl-gauge span { padding: 3px 10px; }
 .lvl-gauge span.on { color: #02060d; background: var(--cyan); }
 body.lite .lvl-gauge { display: none; }
+
+/* Confirmation de l'import d'un catalogue (lien #catalogue=) */
+.cat-ask { position: fixed; inset: 0; z-index: 14; display: grid; place-items: center; background: rgba(2, 6, 13, .78); }
+.cat-card { width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 16px 18px; background: rgba(3, 13, 24, .98); border: 1px solid var(--cyan); box-shadow: 0 0 30px rgba(63, 230, 255, .15); display: grid; gap: 10px; font-family: var(--ui); color: var(--ink); }
+.cat-card h2 { margin: 0; font-size: 18px; letter-spacing: .06em; }
+.cat-card p { margin: 0; font-size: 15px; }
+.cat-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.cat-dom { font-family: var(--mono); font-size: 12px; line-height: 1.5; white-space: pre-line; max-height: 180px; overflow: auto; color: #a9c7d6; border: 1px solid rgba(63, 230, 255, .15); padding: 8px 10px; }
+.cat-note { color: var(--dim); font-size: 13px !important; }
+.cat-row { display: flex; justify-content: flex-end; gap: 10px; }
