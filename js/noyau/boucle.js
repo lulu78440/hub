@@ -8,6 +8,7 @@ import { OUTIL_REPONDRE, calculer } from "./outils.js";
 import { detecterInterdit, encadrer } from "./barriere.js";
 import { journalActions } from "./journal.js";
 import { ErreurNoyau } from "./moteurs.js";
+import { badgeReponse } from "./ia-regles.js";
 
 export const MAX_APPELS = 3;
 const MAX_OUTILS_PAR_APPEL = 4;
@@ -161,11 +162,12 @@ export function creerCycle(deps) {
         let r;
         if (eng.texteSeulement) {                                   // IA locale : texte brut, confiance basse
           r = await eng.generer({ systeme, messages, outils: [] }); trace.requetes++;
+          trace.appels.push({ n, texte: (r.texte || "").slice(0, 300), outils: [], ms: r.ms, usage: r.usage, moteur: r.moteur || null, badge: badgeReponse({ moteur: r.moteurInfo || eng }).texte });
           final = { texte: r.texte || "(pas de réponse)", ton: "calme", confiance: "basse", sources: [] }; break;
         }
         r = await eng.generer({ systeme, messages, outils, forcer: dernier ? ["repondre"] : null });
         trace.requetes++; trace.tokens += (r.usage && r.usage.total) || 0;
-        trace.appels.push({ n, texte: (r.texte || "").slice(0, 300), outils: r.appels.map((a) => a.nom), ms: r.ms, usage: r.usage, moteur: r.moteur || null });
+        trace.appels.push({ n, texte: (r.texte || "").slice(0, 300), outils: r.appels.map((a) => a.nom), ms: r.ms, usage: r.usage, moteur: r.moteur || null, badge: badgeReponse({ moteur: r.moteurInfo || eng }).texte, secours: r.secours || null });
         const rep = r.appels.find((a) => a.nom === "repondre");
         if (rep) { final = rep.params || {}; break; }
         if (!r.appels.length) { final = { texte: r.texte || "(pas de réponse)", ton: "calme", confiance: "basse", sources: [] }; break; }
@@ -196,7 +198,7 @@ export function creerCycle(deps) {
       if (code === "budget") await journalActions.ecrire({ outil: "(requête au modèle)", niveau: "—", params: "budget du jour atteint", statut: "BUDGET_ATTEINT", origine, sortie: [] });
       else if (!(e instanceof ErreurNoyau)) console.error(e);
       const extraits = memoire ? memoire.rappeler(resoudreRelance(texte, travail.fil), { limite: 3, vecteur: memoire.preparer ? await memoire.preparer(resoudreRelance(texte, travail.fil)) : null }) : [];
-      const raison = (MESSAGES_ERREUR[code] || "Une erreur est survenue.") + " ";
+      const raison = (e && e.chaine ? e.message : (MESSAGES_ERREUR[code] || "Une erreur est survenue.")) + " ";     // chaîne de secours : dit quels moteurs ont échoué
       reponse = repondreSansModele(texte, raison.trim(), extraits);
       reponse.erreur = e && e.message ? e.message : String(e); reponse.code = code;
       emettre({ type: "erreur", message: reponse.erreur, code });
@@ -228,7 +230,7 @@ export function creerCycle(deps) {
     sauverTravail();
     if (etat && etat.noter) etat.noter({ type: "echange", texte: question, outils: trace.outils.length, refus: !!reponse.refus, erreur });
     trace.ms = Date.now() - t0; trace.reponse = reponse;
-    const msg = emettre({ type: "reponse", tour, texte: reponse.texte, ton: reponse.ton, confiance: reponse.confiance, sources: reponse.sources, sur: !!reponse.sur, refus: !!reponse.refus, reduit: !!reponse.reduit, local: !!reponse.local, code: reponse.code || null, requetes: trace.requetes, ms: trace.ms, moteurs: [...new Set(trace.appels.map((a) => a.moteur).filter(Boolean))] });
+    const msg = emettre({ type: "reponse", tour, texte: reponse.texte, ton: reponse.ton, confiance: reponse.confiance, sources: reponse.sources, sur: !!reponse.sur, refus: !!reponse.refus, reduit: !!reponse.reduit, local: !!reponse.local, code: reponse.code || null, requetes: trace.requetes, ms: trace.ms, moteurs: [...new Set(trace.appels.map((a) => a.moteur).filter(Boolean))], badges: [...new Set(trace.appels.map((a) => a.badge).filter(Boolean))], secours: (trace.appels.find((a) => a.secours) || {}).secours || null });
     phase(erreur ? "repos" : "parle", { ton: reponse.ton });
     setTimeout(() => phase("repos"), 1500);
     return msg;

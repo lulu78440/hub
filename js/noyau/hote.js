@@ -7,13 +7,15 @@
 //   nom, maintenant(), enLigne(), fetch(url, opts), nouvelId(prefixe)
 //   stockage : tout(coll), lire(coll, id), ecrire(coll, obj), ecrireMany(coll, objs), retirerMany(coll, ids) *, surChangement(coll, fn)
 //   reglage  : lire(cle, defaut), ecrire(cle, valeur)
-//   secret   : cle() -> clé Gemini ou null, cleClaude() -> clé Claude ou null, definirCleClaude(k), cleLibre()/definirCleLibre(k) (fournisseur gratuit de relais), protege() -> vrai si le coffre est actif
+//   secret   : cle() -> clé Gemini ou null, cleClaude() -> clé Claude ou null, definirCleClaude(k), cleLibre()/definirCleLibre(k) (fournisseur gratuit de relais),
+//              cleService(id)/definirCleService(id, k) (IA de secours : groq | openrouter | mistral, coffre « hub-secret-ia-<id> »), protege() -> vrai si le coffre est actif
 //   hub      : actus() -> flux.json ou null, meteo() -> cache météo ou null, agir(nom, params) -> { ok, ... }
 //   sauvegarde (facultatif) : dispo(), dossier() -> {nom}|null, choisir(), droit() -> 'granted'|'prompt'|..., ecrire() -> {nom, octets}, retirer()
 //   ui       : toast(msg), orbe({ phase, humeur }), ajouterMenuFond(fn), conteneur() -> élément où monter la fenêtre
 //   * retirerMany ne sert qu'à annuler un import raté : le Noyau n'a aucun outil de suppression.
 
 export const hote = { pret: false, nom: "(non branché)" };
+const SERVICES = ["groq", "openrouter", "mistral"];                 // IA de secours (même liste que SERVICES_SECOURS dans moteurs.js)
 
 /** Branche un hôte (hub réel ou hub simulé du laboratoire). */
 const reseauLog = [];
@@ -54,7 +56,10 @@ export async function brancherHub() {
       cleClaude: () => vault.lsGet("hub-secret-claude") || null,
       cleLibre: () => vault.lsGet("hub-secret-libre") || null,
       definirCleLibre: (k) => { if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-libre", k); else vault.lsRemove("hub-secret-libre"); },
-      definirCleClaude: (k) => { if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-claude", k); else vault.lsRemove("hub-secret-claude"); }
+      definirCleClaude: (k) => { if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-claude", k); else vault.lsRemove("hub-secret-claude"); },
+      // IA de secours : liste fermée, une clé par service, jamais exportée ni synchronisée (préfixe hub-secret), retirée avec le verrouillage.
+      cleService: (id) => (SERVICES.includes(id) ? vault.lsGet("hub-secret-ia-" + id) || null : null),
+      definirCleService: (id, k) => { if (!SERVICES.includes(id)) throw new Error("Service inconnu."); if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-ia-" + id, k); else vault.lsRemove("hub-secret-ia-" + id); }
     },
     hub: {
       /** Personnalisation demandée par Lucien (perso.js) : CSS vérifié, jamais de script. */
@@ -140,7 +145,7 @@ export async function brancherHub() {
       let persistant, quotaPct = null;
       try { persistant = !!(navigator.storage && navigator.storage.persisted && await navigator.storage.persisted()); const q = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (q && q.quota) quotaPct = Math.round((q.usage / q.quota) * 100); } catch (e) { persistant = undefined; }
       const { VERSION } = await import("../version.js");
-      return { verrou: vault.active, deverrouille: vault.unlocked, cleIA: !!vault.lsGet("hub-secret-ia") || !!vault.lsGet("hub-secret-claude"), dernierExport: prefs.get("dernier-export", ""), version: VERSION, swVersion, stockagePersistant: persistant, quotaPct };
+      return { verrou: vault.active, deverrouille: vault.unlocked, cleIA: !!vault.lsGet("hub-secret-ia") || !!vault.lsGet("hub-secret-claude") || SERVICES.some((id) => !!vault.lsGet("hub-secret-ia-" + id)), dernierExport: prefs.get("dernier-export", ""), version: VERSION, swVersion, stockagePersistant: persistant, quotaPct };
     },
     ui: {
       toast: (m) => toastMod.toast(m),

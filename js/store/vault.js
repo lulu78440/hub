@@ -141,7 +141,7 @@ export const vault = {
   async destroy() {
     await writes;
     // Les clés d'IA (Gemini, Claude, relais…) exigent le verrouillage : elles partent avec lui, au lieu de rester en clair sur l'appareil (B9, B29)
-    const iaKey = (k) => k === "hub-secret-ia" || k === "hub-secret-claude" || k === "hub-secret-libre";
+    const iaKey = (k) => k === "hub-secret-ia" || k.startsWith("hub-secret-ia-") || k === "hub-secret-claude" || k === "hub-secret-libre";   // hub-secret-ia-groq, -mistral, -openrouter…
     for (const [k, v] of cache) if (!iaKey(k)) localStorage.setItem(k, v);
     for (const k of Object.keys(localStorage)) if (iaKey(k)) localStorage.removeItem(k);
     writeMeta(null); dek = null; raw = null; cache.clear(); tellOthers();

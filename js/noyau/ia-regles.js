@@ -5,7 +5,7 @@
 import { marquerSuspect } from "./barriere.js";
 
 // ---------- lab-badge ----------
-export const FOURNISSEURS = { gemini: "Gemini (Google)", claude: "Claude (Anthropic)" };
+export const FOURNISSEURS = { gemini: "Gemini (Google)", claude: "Claude (Anthropic)", groq: "Groq", openrouter: "OpenRouter", mistral: "Mistral (peut entraîner ses modèles avec les requêtes gratuites)" };
 /** `moteur` = le moteur qui a répondu (type et nom) ; absent ou `reflexe` = réponse sans IA. */
 export function badgeReponse({ moteur = null, reflexe = false } = {}) {
   if (reflexe || !moteur) return { lieu: "appareil", ia: false, texte: "Sans IA · règle locale", detail: "Réponse calculée par les règles du hub, sur cet appareil. Rien n'est parti.", sortant: false };
@@ -13,7 +13,12 @@ export function badgeReponse({ moteur = null, reflexe = false } = {}) {
     case "local": return { lieu: "appareil", ia: true, texte: "Traité sur cet appareil", detail: "IA locale : ta question n'a pas quitté cet appareil.", sortant: false };
     case "gemini": return { lieu: "en-ligne", ia: true, texte: "En ligne · Gemini", detail: "Le texte de la question et le contexte partagé sont partis chez Google.", sortant: true };
     case "claude": return { lieu: "en-ligne", ia: true, texte: "En ligne · Claude", detail: "Le texte de la question et le contexte partagé sont partis chez Anthropic.", sortant: true };
-    case "libre": return { lieu: "en-ligne", ia: true, texte: "En ligne · " + String(moteur.nom || "relais").split(" · ")[0], detail: "Le texte de la question et le contexte partagé sont partis chez ce relais.", sortant: true };
+    case "libre":
+    case "secours": {
+      const nom = String(moteur.service || String(moteur.nom || "relais").split(" · ")[0]);
+      if (moteur.entrainement) return { lieu: "en-ligne", ia: true, entrainement: true, texte: "En ligne · peut servir à l'entraînement (" + nom + ")", detail: "Le texte de la question et le contexte partagé sont partis chez " + nom + ", dont l'offre gratuite peut utiliser tes requêtes pour entraîner ses modèles.", sortant: true };
+      return { lieu: "en-ligne", ia: true, texte: "En ligne · " + nom, detail: "Le texte de la question et le contexte partagé sont partis chez " + nom + (moteur.type === "secours" ? " (IA de secours)." : " (relais gratuit)."), sortant: true };
+    }
     case "script": return { lieu: "appareil", ia: false, texte: "Démonstration · sans modèle", detail: "Moteur d'essai du laboratoire : aucune intelligence réelle.", sortant: false };
     default: return { lieu: "inconnu", ia: true, texte: "Origine inconnue", detail: "Le moteur n'a pas déclaré son type : traite cette réponse avec prudence.", sortant: null };
   }

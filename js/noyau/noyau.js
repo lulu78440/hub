@@ -10,7 +10,7 @@ import { definirMoteurVoix } from "./voix.js";
 import { hote, brancherHub } from "./hote.js";
 import { creerCatalogue } from "./outils.js";
 import { creerBarriere } from "./barriere.js";
-import { creerBudget, creerBudgetJetons, moteurGemini, moteurLocal, moteurClaude, moteurAuto, ErreurNoyau, MODELE_DEFAUT, MODELE_CLAUDE_DEFAUT, moteurLibre, FOURNISSEURS_LIBRES, PLAFOND_LIBRE_DEFAUT, PLAFOND_CLAUDE_DEFAUT } from "./moteurs.js";
+import { creerBudget, creerBudgetJetons, moteurGemini, moteurLocal, moteurClaude, moteurAuto, ErreurNoyau, MODELE_DEFAUT, MODELE_CLAUDE_DEFAUT, moteurLibre, FOURNISSEURS_LIBRES, PLAFOND_LIBRE_DEFAUT, PLAFOND_CLAUDE_DEFAUT, moteurService, SERVICES_SECOURS, IDS_SECOURS, lireOrdreSecours } from "./moteurs.js";
 import { creerMemoire } from "./memoire.js";
 import { creerCerveau } from "./cerveau.js";
 import { creerEtat } from "./etat.js";
@@ -39,8 +39,14 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   let confirmerUI = null, surcharge = moteurImpose, geminiCache = null, local = null, verrou = () => false;
   const budgetClaude = creerBudget({ cleReglage: "noyau-budget-claude", cleMax: "noyau-plafond-claude", plafondParDefaut: PLAFOND_CLAUDE_DEFAUT }), jetonsClaude = creerBudgetJetons();
   const budgetLibre = creerBudget({ cleReglage: "noyau-budget-libre", cleMax: "noyau-plafond-libre", plafondParDefaut: PLAFOND_LIBRE_DEFAUT });
+  // IA de secours (Groq, OpenRouter, Mistral) : un plafond quotidien chacune, sous la limite gratuite du service.
+  const budgetsSecours = Object.fromEntries(IDS_SECOURS.map((id) => [id, creerBudget({ cleReglage: "noyau-budget-" + id, cleMax: "noyau-plafond-" + id, plafondParDefaut: SERVICES_SECOURS[id].plafond })]));
+  const cleService = (id) => (hote.secret.cleService ? hote.secret.cleService(id) : null);
+  /** Mistral peut entraîner ses modèles avec les requêtes gratuites : coupé tant que Lucien ne l'a pas activé lui-même. */
+  const serviceAutorise = (id) => !SERVICES_SECOURS[id].entrainement || hote.reglage.lire("noyau-secours-" + id, "off") === "on";
+  const serviceUtilisable = (id) => !!cleService(id) && serviceAutorise(id);
   /** Ce qui reste de requêtes, tous moteurs utilisables confondus : le cycle et le sommeil ne s'arrêtent que si plus aucun moteur n'est disponible. */
-  const budgetTotal = { restant: () => budget.restant() + (cleLibre() ? budgetLibre.restant() : 0) + (cleClaude() && jetonsClaude.restant() > 500 ? budgetClaude.restant() : 0), plafond: () => budget.plafond(), utilisees: () => budget.utilisees() };
+  const budgetTotal = { restant: () => budget.restant() + (cleLibre() ? budgetLibre.restant() : 0) + (cleClaude() && jetonsClaude.restant() > 500 ? budgetClaude.restant() : 0) + IDS_SECOURS.reduce((t, id) => t + (serviceUtilisable(id) ? budgetsSecours[id].restant() : 0), 0), plafond: () => budget.plafond(), utilisees: () => budget.utilisees() };
   const barriere = creerBarriere({ catalogue, confirmer: (d) => (confirmerUI ? confirmerUI(d) : false), delai: delaiConfirmation, verrouille: () => verrou() });
   racRef = creerRaccourcis({ barriere });
 
@@ -63,6 +69,25 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     if (!libreCache || libreCache.cle !== cle || libreCache.fo !== fo || libreCache.modele !== modele) libreCache = { cle, fo, modele, m: moteurLibre({ fournisseur: fo, cle, modele, budget: budgetLibre }) };
     return libreCache.m;
   }
+  const delaiSecours = () => { const v = parseInt(hote.reglage.lire("noyau-delai-secours", ""), 10); return v > 0 ? v : 20000; };
+  const secoursCache = {};
+  function secoursMoteur(id) {
+    const s = SERVICES_SECOURS[id], cle = cleService(id);
+    const coupe = (nom, msg) => ({ nom, type: "secours", service: s.nom, entrainement: s.entrainement, coupe: true, async generer() { throw new ErreurNoyau("cle", msg); } });
+    if (!cle) return coupe(s.nom + " (sans clé)", "Aucune clé " + s.nom + " : colle-la dans Noyau → Réglages → IA de secours.");
+    if (!hote.secret.protege()) return coupe(s.nom + " (coffre inactif)", "Active le verrouillage du hub : la clé " + s.nom + " ne s'utilise que chiffrée par le coffre.");
+    if (!serviceAutorise(id)) return coupe(s.nom + " (désactivé : peut servir à l'entraînement)", s.nom + " est désactivé tant que tu ne l'as pas activé.");
+    const modele = hote.reglage.lire("noyau-modele-" + id, "") || s.modele, delai = delaiSecours();
+    const c = secoursCache[id];
+    if (!c || c.cle !== cle || c.modele !== modele || c.delai !== delai) secoursCache[id] = { cle, modele, delai, m: moteurService({ id, cle, modele, budget: budgetsSecours[id], delaiMax: delai, racine: hote.racine ? hote.racine() : null }) };
+    return secoursCache[id].m;
+  }
+  /** IA locale dans la chaîne : seulement si un modèle est DÉJÀ téléchargé (jamais de téléchargement sans l'accord de Lucien). */
+  function localSecours() {
+    const m = local || (local = moteurLocal());
+    if (!m.disponible) m.disponible = async () => { if (typeof navigator === "undefined" || !navigator.gpu) return false; const { etatModeles } = await import("./modeles.js"); return (await etatModeles()).some((x) => x.id === "qwen-1.5b" && x.telecharge); };
+    return m;
+  }
   function claudeMoteur() {
     const cle = cleClaude();
     if (!cle) return { nom: "Claude (sans clé)", coupe: true, async generer() { throw new ErreurNoyau("cle", "Aucune clé Claude : colle-la dans Noyau → Réglages."); } };
@@ -73,10 +98,13 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   }
   function moteur() {
     if (surcharge) return surcharge;
-    const m = hote.reglage.lire("noyau-moteur", cleClaude() || cleLibre() ? "auto" : "gemini");
+    const m = hote.reglage.lire("noyau-moteur", cleClaude() || cleLibre() || IDS_SECOURS.some(serviceUtilisable) ? "auto" : "gemini");
     if (m === "local") return local || (local = moteurLocal());
     if (m === "claude") return claudeMoteur();
-    if (m === "auto") return autoCache || (autoCache = moteurAuto({ gemini: geminiMoteur, claude: claudeMoteur, libre: libreMoteur, jetons: jetonsClaude, preference: () => hote.reglage.lire("noyau-routage", "auto"), seuil: parseInt(hote.reglage.lire("noyau-seuil-claude", "2"), 10) || 2, surChoix: (n) => { dernierMoteur = n; } }));
+    if (m === "auto") return autoCache || (autoCache = moteurAuto({ gemini: geminiMoteur, claude: claudeMoteur, libre: libreMoteur, jetons: jetonsClaude, preference: () => hote.reglage.lire("noyau-routage", "auto"), seuil: parseInt(hote.reglage.lire("noyau-seuil-claude", "2"), 10) || 2, surChoix: (n) => { dernierMoteur = n; },
+      maillons: { ...Object.fromEntries(IDS_SECOURS.map((id) => [id, () => secoursMoteur(id)])), local: localSecours },
+      ordre: () => hote.reglage.lire("noyau-ordre-secours", ""), delaiMaillon: delaiSecours(),
+      surSecours: (texte) => { try { hote.ui.toast("IA de secours · " + texte); } catch (e) { /* pas d'interface */ } } }));
     return geminiMoteur();
   }
 
@@ -115,6 +143,11 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     async activerVoixNaturelle(on) { noyau.reglage("voix-piper", on ? "on" : "off"); if (!on) { definirMoteurVoix(null); piper.desactiver(); return piper.statut(); } const st = await piper.preparer(); if (piper.pret()) definirMoteurVoix(piper); return st; },
     definirCleLibre: (k) => { hote.secret.definirCleLibre(k); libreCache = null; autoCache = null; },
     definirCleClaude: (k) => { hote.secret.definirCleClaude(k); claudeCache = null; autoCache = null; },
+    /** IA de secours : clé d'un service (groq | openrouter | mistral), gardée par le coffre sous hub-secret-ia-<id>. */
+    definirCleService: (id, k) => { if (!IDS_SECOURS.includes(id)) throw new Error("Service inconnu."); hote.secret.definirCleService(id, k); delete secoursCache[id]; autoCache = null; },
+    /** Ordre de secours (liste d'identifiants) ; « sans-ia » reste toujours à la fin. */
+    definirOrdreSecours: (liste) => { const o = lireOrdreSecours(liste); hote.reglage.ecrire("noyau-ordre-secours", o.join(",")); autoCache = null; return o; },
+    activerService: (id, on) => { if (!IDS_SECOURS.includes(id)) throw new Error("Service inconnu."); hote.reglage.ecrire("noyau-secours-" + id, on ? "on" : "off"); autoCache = null; },
     async exporter() { try { const e = await noyau.sauvegarde.etat(); if (e.dossier) { const r = await noyau.sauvegarde.maintenant({ demander: true }); hote.ui.toast("Sauvegarde écrite : " + r.nom); return r; } } catch (x) { hote.ui.toast("Sauvegarde dans le dossier impossible : " + (x.message || x)); } return hote.ui.exporter && hote.ui.exporter(); },
     /** Résume ce qu'affiche une fenêtre (jamais les mails). Une requête Gemini si possible, sinon résumé local. */
     async resumerFenetre(id) {
@@ -126,7 +159,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
       if (!res) res = resumerLocalement(texte, "", 3);
       const t = `Fenêtre « ${id} » : ${res}`; cycle.emettre({ type: "initiative", texte: t, raison: "resume" }); return { ok: true, texte: t };
     },
-    version: VERSION_NOYAU, memoire, cerveau, etat, budget, budgetClaude, budgetLibre, jetonsClaude, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
+    version: VERSION_NOYAU, memoire, cerveau, etat, budget, budgetClaude, budgetLibre, budgetsSecours, jetonsClaude, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
     /** Pose une question. origine : lucien, voix, initiative, autonome. */
     async poser(texte, origine = "lucien") { const rc = await racRef.tenter(String(texte).slice(0, 2000), origine); if (rc) { return rc; } const r = await cycle.penser({ texte: String(texte).slice(0, 2000), origine }); signalerAValider(); return r; },
     avis: (a) => cycle.avis(a),
@@ -143,7 +176,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     async trier(id, action, texte) { const r = await memoire.trier(id, action, texte); signalerAValider(); return r; },
     reglage: (cle, valeur) => (valeur === undefined ? hote.reglage.lire("noyau-" + cle, "") : hote.reglage.ecrire("noyau-" + cle, valeur)),
     statut() {
-      return { version: VERSION_NOYAU, moteur: moteur().nom, budget: { utilisees: budget.utilisees(), plafond: budget.plafond(), restant: budgetTotal.restant() }, libre: { cle: !!cleLibre(), fournisseur: hote.reglage.lire("noyau-libre-fournisseur", "groq"), requetes: budgetLibre.utilisees(), plafondRequetes: budgetLibre.plafond() }, claude: { cle: !!cleClaude(), requetes: budgetClaude.utilisees(), plafondRequetes: budgetClaude.plafond(), jetons: jetonsClaude.utilises(), plafondJetons: jetonsClaude.plafond(), dernier: dernierMoteur }, memoire: memoire.stats(), cerveau: cerveau.resume(), humeur: etat.humeur(), sommeilFait: sommeil.faitAujourdhui(), hote: hote.nom };
+      return { version: VERSION_NOYAU, moteur: moteur().nom, budget: { utilisees: budget.utilisees(), plafond: budget.plafond(), restant: budgetTotal.restant() }, libre: { cle: !!cleLibre(), fournisseur: hote.reglage.lire("noyau-libre-fournisseur", "groq"), requetes: budgetLibre.utilisees(), plafondRequetes: budgetLibre.plafond() }, secours: { ordre: lireOrdreSecours(hote.reglage.lire("noyau-ordre-secours", "")), services: IDS_SECOURS.map((id) => { const x = SERVICES_SECOURS[id]; return { id, nom: x.nom, cle: !!cleService(id), autorise: serviceAutorise(id), entrainement: x.entrainement, page: x.page, limite: x.limite, modele: hote.reglage.lire("noyau-modele-" + id, "") || x.modele, requetes: budgetsSecours[id].utilisees(), plafond: budgetsSecours[id].plafond() }; }) }, claude: { cle: !!cleClaude(), requetes: budgetClaude.utilisees(), plafondRequetes: budgetClaude.plafond(), jetons: jetonsClaude.utilises(), plafondJetons: jetonsClaude.plafond(), dernier: dernierMoteur }, memoire: memoire.stats(), cerveau: cerveau.resume(), humeur: etat.humeur(), sommeilFait: sommeil.faitAujourdhui(), hote: hote.nom };
     },
     // Import de la mémoire v3.8 et du cerveau (fichiers choisis par Lucien)
     apercu38: (texte) => imp.apercu(imp.lireSauvegarde(texte)),
