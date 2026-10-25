@@ -7,7 +7,7 @@ Mission close le 25/10/2026 à 15 h 11 ; relais : poste « Banc de test » (Char
 ## Bilan
 
 - **Fait** : cycles 1 à 6, relecture statique, série « 1 000 cas précis » (1 895 cas), fusion d'essai avec main 2077509 (0 conflit, tout vert), B28 corrigé. 24 corrections sur la branche, 4 décrites.
-- **En cours** : rien (aucun test lancé, aucune reprise programmée).
+- **En cours** : rien (aucun test lancé, aucune reprise programmée). Mission du 25/10 au soir terminée ; voir le tableau ci-dessous.
 - **À faire (poste Banc de test / Lucien)** : décisions B2, B9, B14, B15, B16 ; fusion de `banc-essai` (version au-dessus de main) après un dernier passage de `python3 tools/tests/run.py` ; recette sur Brave (PC) et Android ; mémoire sur 30 min ; Mon PC avec de vrais dossiers ; vraies connexions (jeton Gists, Gmail, Outlook, Gemini).
 
 ## Tests
@@ -66,9 +66,10 @@ Mission close le 25/10/2026 à 15 h 11 ; relais : poste « Banc de test » (Char
 | 19 h 35 | 1 cons-banc | fait | 29 problèmes : critique 1 (B7), importants 13 (B3-B6, B8, B9, B14, B18, B23-B25, B28, B29), mineurs 15. B29 ajouté (clés Claude et relais remises en clair sur main). Fusion d'essai avec main du 25/10 16 h 40 : 0 conflit, 1 896 cas justes. |
 | 19 h 33 | 2 test-suite | fait | `t7_charte.py` (4 tests) : mode simple sans IA ni WebGL PC et mobile, fiches de manuel (0/15, non bloquant), B29. B29 corrigé sur banc-essai. `run.py charte securite` : 13/13 verts. Conventions à décider : `propositions.md`. |
 | 19 h 36 | 3 test-statuts | fait | Format : 3 statuts + « — » pour ce qui n'est pas une étape (maquettes remplacées, notes, plans), légende en tête. Appliqué en UN commit (e992be6) sur le journal de main c611939 : 117 lignes marquées, contenu inchangé, lignes collées en fin de fichier reprises sous un en-tête. Script : `tools/tests/statuts_journal.py`. À fusionner vite : la Refonte écrit souvent dans le journal. |
-| 19 h 41 | 4 branches | en cours | Suite complète trop lente à trois navigateurs : remplacée par une sélection ciblée (Charte, sécurité, recette, bloc, secrets) sur main c611939 (référence), refonte-auto ffa94c3, labo-auto 546df41. Relecture du code : L1, L2, L3 (`branches.md`). Test du manuel aligné sur le format de labo-auto. |
+| 19 h 41 → 19 h 53 | 4 branches | fait | Suite complète trop lente à trois navigateurs : remplacée par une sélection ciblée (Charte, sécurité, recette, bloc, secrets) sur main c611939 (référence), refonte-auto ffa94c3, labo-auto 546df41. Relecture du code : L1, L2, L3 (`branches.md`). Test du manuel aligné sur le format de labo-auto. |
 | 19 h 45 | suite du bloc | fait | Plan de la recette finale de la refonte (`recette-refonte.md`), liste des essais réels (`essais-reels.md`). À mettre à jour avec la recette : `test_fonctions_recette_pc` (la fenêtre Tâches est en réserve depuis ergo-fusion). |
 | 19 h 48 | test-blocs (suite du bloc) | fait | Bloc 7.21.0 (catalogue par lien) passé au banc sur main c611939 : 25 cas, aucun défaut (`t8_blocs.py`). Liste des essais réels qui t'attendent : `essais-reels.md` (14 relevés du journal + 6 du banc). |
+| 19 h 53 | fin | fait | Résumé en tête de `rapport.md`. Test « mode simple » corrigé (fenêtres en réserve non exigées) et rejoué vert sur main et banc-essai. Reprise programmée : déclenchée à 19 h 51 pendant la mission (sans effet), puis supprimée. |
 
 Décisions prudentes prises seul : main n'est jamais fusionnée dans banc-essai (essais dans des copies jetables) ; B29 seulement décrit (code présent sur main uniquement) ; reprise programmée à 19 h 50 (19 h 30 déjà passée au démarrage) ; statuts : « Validée par Lucien » seulement si écrit dans le journal ou coché dans le Suivi, statut « — » ajouté pour les lignes qui ne sont pas des étapes, étapes 5 à 17 du Noyau marquées validées d'après la clôture N19 (« validations et tests considérés comme validés »).
 

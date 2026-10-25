@@ -1,4 +1,4 @@
-# Banc de test · branches refonte-auto et labo-auto (25/10, 19 h 40 → 19 h 55)
+# Banc de test · branches refonte-auto et labo-auto (25/10, 19 h 40 → 19 h 53)
 
 Méthode (la plus prudente dans le temps disponible) : la suite du banc (`tools/tests/` de `banc-essai`) est copiée dans une copie jetable de chaque branche, et rejouée aussi sur **main c611939** comme référence. Un échec qui existe déjà sur main n'est pas imputé à la branche. Rien n'est fusionné, rien n'est poussé sur ces branches.
 
@@ -14,7 +14,26 @@ La suite complète (`--rapide`, environ 40 tests) avançait trop lentement avec 
 
 ## Résultats
 
-RESULTATS_A_COMPLETER
+Sélection de 17 tests, suite du banc du 25/10 au soir.
+
+| Test | main c611939 | refonte-auto ffa94c3 | labo-auto 546df41 | Lecture |
+| --- | --- | --- | --- | --- |
+| Recette téléphone simulé | ✓ | ✓ | ✓ | |
+| Recette PC | ✗ | ✗ | ✓ | test à mettre à jour : il saisit dans Tâches, fenêtre « en réserve » depuis ergo-fusion (labo-auto part d'une main plus ancienne) |
+| Textes piégés | ✗ | ✗ | ✓ | même cause (saisie dans Tâches), pas un défaut |
+| Aucun secret dans le dépôt | ✓ | ✓ | ✓ | |
+| Secrets jamais exportés ni synchronisés | ✓ | ✓ | ✓ | |
+| Verrouillage, verrouillage automatique | ✓ | ✓ | ✓ | |
+| Flux RSS piégé (B3) | ✗ | ✗ | ✗ | défaut de main, corrigé sur banc-essai |
+| Liens `javascript:` importés (B4) | ✗ | ✗ | ✗ | idem |
+| Page en direct isolée (B5) | ✗ | ✗ | ✗ | idem |
+| Cache météo piégé (B8) | ✗ | ✗ | ✗ | idem |
+| Clés d'IA retirées à la désactivation (B29) | ✗ | ✗ | ✗ | idem |
+| Mode simple sans IA ni WebGL, PC et téléphone (règle 11) | ✓ | ✓ * | ✓ | * premier passage rouge pour la même cause (Tâches en réserve) ; test corrigé, rejoué en vert sur main et banc-essai |
+| Fiches de manuel (règle 12) | 0/18 | 0/18 | 0/18 | non bloquant ; les 3 fiches de labo-auto sont des fonctions, pas des fenêtres (L3) |
+| Bloc 7.21.0 catalogue par lien | ✓ (25 cas) | ✓ (25 cas) | sauté | labo-auto n'a pas encore ce bloc |
+
+**Conclusion** : aucune régression propre à refonte-auto ni à labo-auto : chaque échec existe déjà sur main (défauts corrigés sur banc-essai, ou tests à adapter à la refonte). Restent les constats de relecture L1, L2 (importants) et L3, L4 (mineurs) ci-dessous. Non rejoué faute de temps : sauvegardes, charge, confort et cas précis sur ces deux branches (la suite complète prend plus de 10 min par branche).
 
 ## Relecture du code (statique)
 

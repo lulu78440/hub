@@ -47,9 +47,14 @@ def _check_simple_mode(h, mobile):
     _assert(len(wins) > 0, "aucune fenêtre affichée sans IA ni WebGL")
     vides = [w["id"] for w in wins if w["kids"] < 2]
     _assert(not vides, "fenêtres vides sans IA ni WebGL : " + ", ".join(vides))
-    body = p.evaluate("document.body.innerText")
-    for t in ("Note factice 0", "Tâche factice 0"):
-        _assert(t in body, f"« {t} » absent de l'écran sans IA ni WebGL")
+    # Une fenêtre mise « en réserve » par la refonte (masquée par défaut, rouverte par Outils) n'est pas exigée à l'écran.
+    vis = p.evaluate("""Object.fromEntries([...document.querySelectorAll('.win[data-id]')].map(w => [w.dataset.id,
+        !!(w.offsetParent || w.getClientRects().length) && getComputedStyle(w).visibility !== 'hidden' && !w.hidden]))""")
+    for win, t in (("notes", "Note factice 0"), ("tasks", "Tâche factice 0")):
+        if not vis.get(win):
+            continue
+        txt = p.evaluate("(id) => (document.querySelector('.win[data-id=\"' + id + '\"]') || {}).innerText || ''", win)
+        _assert(t in txt, f"« {t} » absent de la fenêtre {win} sans IA ni WebGL")
     # Une action de base par fonction de données, par le code du hub (pas d'IA)
     n = ev(p, """const s = await import('/js/store/storage.js');
         await s.store.put('notes', { id: 'n-simple', text: 'Note mode simple', pinned: false, created: Date.now(), updated: Date.now() });

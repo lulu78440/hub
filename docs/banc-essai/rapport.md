@@ -2,14 +2,14 @@
 
 ## Résumé de la mission autonome du 25/10, 19 h 31 → 20 h 00 (poste Banc de test)
 
-1. **Problèmes : 32** · critique 1 (B7) · importants 15 (B3-B6, B8, B9, B14, B18, B23-B25, B28, B29, L1, L2) · mineurs 16. Tous corrigés sur `banc-essai` sauf B2, B14-B16 (décrits) et L1-L3 (branches des autres postes).
+1. **Problèmes : 33** · critique 1 (B7) · importants 15 (B3-B6, B8, B9, B14, B18, B23-B25, B28, B29, L1, L2) · mineurs 17. Corrigés sur `banc-essai` (25) sauf B2, B14-B16 (décrits) et L1-L4 (branches des autres postes, décrits).
 2. **main reste exposée** à B3, B4, B5, B8 et B29 (rejoué ce soir sur main c611939) : les corrections attendent sur `banc-essai`, sans conflit avec main (essai du 25/10).
 3. **Nouveau ce soir** : B29 (clés Claude et relais laissées en clair, corrigé), `t7_charte.py` (mode simple sans IA ni WebGL : vert ; manuel : 0/15 fiches), `t8_blocs.py` (bloc 7.21.0 catalogue par lien : 25 cas, aucun défaut).
 4. **Journal** : statuts posés en un commit (e992be6) sur la base de main c611939, à fusionner vite (la Refonte y écrit souvent).
-5. **refonte-auto (ffa94c3)** et **labo-auto (546df41)** : BRANCHES_RESUME
+5. **refonte-auto (ffa94c3)** et **labo-auto (546df41)** : aucune régression propre (17 tests ciblés, comparés à main ; détail `branches.md`). Relecture : L1 (WebLLM et Transformers.js non figés dans le worker de labo-auto) et L2 (fichiers `apercu-*.html` à ne pas fusionner dans main).
 6. **À décider par toi** : quelles corrections passent dans main (proposé : les 25 d'un bloc, avant que la Refonte touche `lockui.js`) ; B9 (clé d'IA retirée à la désactivation) ; conventions du manuel (`propositions.md`) ; ne pas fusionner les `apercu-*.html` (L2) ; figer les bibliothèques d'IA (B14, L1).
 7. **Essais réels à faire par toi** : `essais-reels.md` (20 points). Recette de la refonte prête : `recette-refonte.md`.
-8. Rien fusionné dans main ; aucune reprise programmée en attente.
+8. Tests à adapter à la refonte : recette PC et textes piégés (fenêtre Tâches en réserve). Rien fusionné dans main ; aucune reprise programmée en attente.
 
 ## Résumé (clôture du 25/10/2026 · relais au poste « Banc de test »)
 
