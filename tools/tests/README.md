@@ -4,7 +4,8 @@ Une commande rejoue tout ce qui a été vérifié pendant le banc d'essai du 24/
 
 ```bash
 pip install playwright && playwright install chromium   # une seule fois
-python3 tools/tests/run.py              # tout (environ 10 min)
+python3 tools/tests/run.py              # tout (environ 17 min, 46 tests, 1 928 cas)
+python3 tools/tests/run.py precis       # seulement les 1 895 cas précis (2 min)
 python3 tools/tests/run.py --rapide     # sans les tests longs (charge, mémoire) : environ 6 min
 python3 tools/tests/run.py securite     # seulement les tests dont le nom contient « securite »
 ```
@@ -19,6 +20,7 @@ et le flux d'actualité sont simulés (`fakes.py`, `t2_fonctions.py`). Code de s
 | `t2_fonctions.py` | 2 | recette PC (plans, notes, tâches, favoris, menus, météo, actu, veille, rappel) et mobile ; hors ligne ; mise à jour du service worker ; deux onglets |
 | `t3_securite.py` | 3 | secrets dans le dépôt ; textes piégés ; liens `javascript:` (flux, exports trafiqués) ; verrouillage (repos, mauvaise phrase, vieil onglet, verrouillage auto) ; jetons jamais exportés ni synchronisés ; page en direct isolée ; cache météo piégé ; clé Gemini |
 | `t4_limites.py` | 4 | 1 000 notes et tâches, 2 000 favoris ; stockage plein ; coupure réseau en pleine synchro ; onglet fermé en plein import ; fuseaux, horloge, textes de 100 000 caractères |
+| `t6_precis.py` | 7 | 1 895 cas unitaires contre des oracles Python : échéances `@…`, heures, recherche, voix, YouTube, coordonnées, anniversaires, fêtes 2015-2045, rappel du dimanche, XSS × 7 endroits, liens × 4 endroits, coffre (chiffrement, falsification, Unicode), lecture des fichiers, import champ par champ, synchro (40 situations). Écarts listés dans `.tmp/echecs-<groupe>.txt` |
 | `t5_confort.py` | 5 | chargement à froid, images/s (rendu logiciel : valeur plancher), mémoire dans la durée, mouvement réduit, clavier, contrastes |
 
 Limites : Chromium et non Brave ; 3D sans carte graphique ; l'ouverture de fichiers de Mon PC (accès aux dossiers) et les

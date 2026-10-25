@@ -58,7 +58,8 @@ def test_sauvegarde_export_chiffre_phrase(h):
     pb.fill(".lock .lcard input", "mauvaise phrase 123")
     pb.click(".lock .lcard button[type=submit]")
     pb.wait_for_function("document.querySelector('.lock .lmsg').textContent.includes('incorrecte')")
-    pb.click(".lock .lcard button:not([type=submit])")       # Annuler
+    pb.evaluate("document.querySelector('.lock .lcard button:not([type=submit])').click()")       # Annuler (clic direct : voir import_file)
+    pb.wait_for_function("document.querySelector('.lock').hidden", timeout=120000)
     _assert(sum(counts(pb).values()) == 0, "import malgré une mauvaise phrase")
     import_file(pb, path, secret=PHRASE)
     unlock_page(pb, PHRASE)

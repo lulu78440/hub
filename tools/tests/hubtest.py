@@ -189,7 +189,8 @@ def import_file(page, path, secret=None, reload=True):
     with page.expect_file_chooser() as fc:
         page.evaluate("window.__hub.data.importFile()")
     if reload:
-        with page.expect_navigation(timeout=30000):
+        # 120 s : en rendu logiciel, le premier affichage après la feuille du coffre peut prendre ~40 s (verre flou sur la 3D)
+        with page.expect_navigation(timeout=120000):
             fc.value.set_files(path)
             if secret is not None:
                 page.wait_for_selector(".lock .lcard input", timeout=10000)
