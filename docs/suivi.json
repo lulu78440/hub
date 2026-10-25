@@ -138,11 +138,12 @@
   "p3-news",
   "p3-sync",
   "p4-ok",
-  "p4-perf"
+  "p4-perf",
+  "ergo-audit"
  ],
  "prochaine": {
-  "id": "p5-read",
-  "texte": "Mails : lecture"
+  "id": "ergo-plan",
+  "texte": "Plan de simplification avec maquette avant / après"
  },
  "built": [
   "ns-int",
