@@ -64,6 +64,7 @@ Mission close le 25/10/2026 à 15 h 11 ; relais : poste « Banc de test » (Char
 | Heure | Tâche | Statut | Note |
 | --- | --- | --- | --- |
 | 19 h 35 | 1 cons-banc | fait | 29 problèmes : critique 1 (B7), importants 13 (B3-B6, B8, B9, B14, B18, B23-B25, B28, B29), mineurs 15. B29 ajouté (clés Claude et relais remises en clair sur main). Fusion d'essai avec main du 25/10 16 h 40 : 0 conflit, 1 896 cas justes. |
+| 19 h 45 | 2 test-suite | fait | `t7_charte.py` (4 tests) : mode simple sans IA ni WebGL PC et mobile, fiches de manuel (0/15, non bloquant), B29. B29 corrigé sur banc-essai. `run.py charte securite` : 13/13 verts. Conventions à décider : `propositions.md`. |
 
 Décisions prudentes prises seul : main n'est jamais fusionnée dans banc-essai (essais dans des copies jetables) ; B29 seulement décrit (code présent sur main uniquement) ; reprise programmée à 19 h 50 (19 h 30 déjà passée au démarrage).
 

@@ -9,6 +9,7 @@ python3 tools/tests/run.py precis       # seulement les cas précis (2 min)
 HUB_TRACE=1 python3 tools/tests/run.py nom   # détail d'un échec ; HUB_LIMITE=600 : garde-fou par test (s)
 python3 tools/tests/run.py --rapide     # sans les tests longs (charge, mémoire) : environ 6 min
 python3 tools/tests/run.py securite     # seulement les tests dont le nom contient « securite »
+python3 tools/tests/run.py charte       # règles de la Charte (mode simple, manuel, B29) : 10 s
 ```
 
 Le script lance un serveur local et un Chromium sans fenêtre, crée des « appareils » vierges (contextes de navigateur
@@ -22,6 +23,7 @@ et le flux d'actualité sont simulés (`fakes.py`, `t2_fonctions.py`). Code de s
 | `t3_securite.py` | 3 | secrets dans le dépôt ; textes piégés ; liens `javascript:` (flux, exports trafiqués) ; verrouillage (repos, mauvaise phrase, vieil onglet, verrouillage auto) ; jetons jamais exportés ni synchronisés ; page en direct isolée ; cache météo piégé ; clé Gemini |
 | `t4_limites.py` | 4 | 1 000 notes et tâches, 2 000 favoris ; stockage plein ; coupure réseau en pleine synchro ; onglet fermé en plein import ; fuseaux, horloge, textes de 100 000 caractères |
 | `t6_precis.py` | 7 | 1 895 cas unitaires contre des oracles Python : échéances `@…`, heures, recherche, voix, YouTube, coordonnées, anniversaires, fêtes 2015-2045, rappel du dimanche, XSS × 7 endroits, liens × 4 endroits, coffre (chiffrement, falsification, Unicode), lecture des fichiers, import champ par champ, synchro (40 situations). Écarts listés dans `.tmp/echecs-<groupe>.txt` |
+| `t7_charte.py` | 8 | règles de la Charte du 25/10 : mode simple sans IA ni WebGL (PC et téléphone simulé : WebGL et WebGPU coupés, réseau bloqué), fiche de manuel par fonction (liste les manques ; `HUB_MANUEL_STRICT=1` pour bloquer), clés d'IA retirées à la désactivation du verrouillage (B29) |
 | `t5_confort.py` | 5 | chargement à froid, images/s (rendu logiciel : valeur plancher), mémoire dans la durée, mouvement réduit, clavier, contrastes |
 
 Limites : Chromium et non Brave ; 3D coupée dans les tests de fonctions (rendu logiciel trop lent), gardée dans `t5_confort.py` ; l'ouverture de fichiers de Mon PC (accès aux dossiers) et les
