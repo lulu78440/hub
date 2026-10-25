@@ -25,7 +25,7 @@ import { creerUsages } from "./usages.js";
 import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.10";
+export const VERSION_NOYAU = "noyau-1.11";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation, sens: sensImpose = null } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
@@ -85,7 +85,8 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     savoir, memoire, lire: (k) => hote.reglage.lire("noyau-" + k, ""), ecrire: (k, v) => hote.reglage.ecrire("noyau-" + k, v), maintenant: () => hote.maintenant(), enLigne: () => hote.enLigne(),
     batterie: async () => { if (typeof navigator === "undefined" || !navigator.getBattery) return null; const b = await navigator.getBattery(); return { niveau: b.level, charge: b.charging }; },
     verrou: typeof navigator !== "undefined" && navigator.wakeLock ? { prendre: () => navigator.wakeLock.request("screen"), lacher: (v) => v.release() } : null,
-    emettre: (e) => cycle.emettre(e)
+    emettre: (e) => cycle.emettre(e),
+    get: async (u) => { const x = await hote.fetch(u, { headers: { Accept: "application/json" }, cache: "no-store" }); if (!x.ok) throw new Error("HTTP " + x.status); return x.json(); }
   });
   const initiative = creerInitiative({ memoire, actualite, etat, barriere, savoir });
   const sommeil = creerSommeil({ memoire, cerveau, etat, budget: budgetTotal, moteur, emettre: cycle.emettre, phase: cycle.phase });
@@ -206,6 +207,8 @@ export async function initNoyau() {
   // Veille d'étude (opt-in) : une étude toutes les 8 min, écran maintenu allumé ; rapport du matin à la première occasion
   setTimeout(() => { if (noyau.veille.actif()) noyau.veille.reprendre(); }, 6000);
   setInterval(() => { if (noyau.veille.actif()) noyau.veille.cycle().then(() => noyau.cycle.emettre({ type: "a_valider", n: noyau.memoire.aValider().length })).catch(() => {}); }, 60 * 1000);
+  const importerNuit = () => noyau.veille.importerGithub().then((r) => { if (r && r.importees) noyau.cycle.emettre({ type: "a_valider", n: noyau.memoire.aValider().length }); }).catch(() => {});
+  setTimeout(importerNuit, 12000); setInterval(importerNuit, 60 * 60e3);
   const rapporter = () => { if (document.hidden || noyau.veille.actif()) return; const r = noyau.veille.rapport(); if (r) { cycle.emettre({ type: "initiative", raison: "veille", texte: r.texte }); noyau.veille.marquerVu(r); } };
   setTimeout(rapporter, 9000);
   document.addEventListener("visibilitychange", () => { if (document.hidden) return; if (noyau.veille.actif()) noyau.veille.reprendre(); else rapporter(); });

@@ -1,0 +1,39 @@
+# Veille d'étude du Noyau (tâche programmée) : prépare des fiches à partir des sources publiques, toutes les 2 heures,
+# et les publie dans veille.json sur la branche « veille » (un seul commit, réécrit à chaque fois). Aucune clé ni donnée personnelle.
+name: Veille d'étude
+on:
+  schedule:
+    - cron: "23 */2 * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ["tools/veille.mjs", ".github/workflows/veille.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: veille
+  cancel-in-progress: false
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reprendre la veille précédente (curseur et fiches déjà préparées)
+        run: |
+          mkdir -p sortie
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/veille/veille.json" -o sortie/veille.json || true
+      - name: Étudier le prochain groupe de sous-thèmes
+        run: node tools/veille.mjs sortie 8
+      - name: Publier sur la branche veille
+        run: |
+          cd sortie
+          git init -q -b veille
+          git config user.name "hub-veille"
+          git config user.email "hub-veille@users.noreply.github.com"
+          git add veille.json
+          git commit -q -m "Veille du $(date -u +'%Y-%m-%d %H:%M') UTC"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" veille
