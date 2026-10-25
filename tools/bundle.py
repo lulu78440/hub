@@ -19,8 +19,8 @@ def css(p):
     return re.sub(r'url\("\.\./(fonts/[^"]+)"\)', lambda m: 'url("data:font/woff2;base64,%s")' % b64(m.group(1)), t)
 
 # ---------- Modules JS → un seul script classique ----------
-IMPORT = re.compile(r'^import\s*\{([^}]*)\}\s*from\s*"([^"]+)";\s*$', re.M)
-IMPORT_NS = re.compile(r'^import\s*\*\s*as\s+([A-Za-z_$][\w$]*)\s+from\s*"([^"]+)";\s*$', re.M)   # import * as x from "…" (Noyau)
+IMPORT = re.compile(r'^import\s*\{([^}]*)\}\s*from\s*"([^"]+)";[ \t]*(?://[^\n]*)?$', re.M)   # commentaire de fin de ligne toléré
+IMPORT_NS = re.compile(r'^import\s*\*\s*as\s+([A-Za-z_$][\w$]*)\s+from\s*"([^"]+)";[ \t]*(?://[^\n]*)?$', re.M)   # import * as x from "…" (Noyau)
 DYN = re.compile(r'import\(\s*"(\.{1,2}/[^"]+)"\s*\)')   # import("./…") relatif → module déjà inclus
 EXPORT = re.compile(r'^export\s+(?:async\s+)?(?:const|let|function|class)\s+([A-Za-z_$][\w$]*)', re.M)
 

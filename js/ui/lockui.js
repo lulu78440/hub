@@ -5,6 +5,8 @@ import { rewriteAll, plainAll, migrate } from "../store/storage.js";
 import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
 import { extendMenu } from "./menus.js";
+// p4-perf : rien ne s'anime derrière l'écran verrouillé
+import { state } from "../state.js";
 
 const MIN = 10;                                  // longueur minimale de la phrase
 let screen = null, locked = false, fails = 0, waitUntil = 0;
@@ -17,12 +19,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** Grand écran du coffre (au-dessus de tout). Renvoie la carte à remplir. */
 function sheet() {
   if (!screen) { screen = el("div", "lock"); screen.setAttribute("role", "dialog"); screen.setAttribute("aria-modal", "true"); screen.innerHTML = '<div class="lring" aria-hidden="true"></div>'; document.body.append(screen); }
-  screen.hidden = false; document.body.classList.add("locked");
+  screen.hidden = false; document.body.classList.add("locked"); state.paused = true;
   screen.querySelector(".lcard") && screen.querySelector(".lcard").remove();
   const card = el("form", "lcard"); card.autocomplete = "off"; screen.append(card);
   return card;
 }
-function closeSheet() { if (screen) screen.hidden = true; document.body.classList.remove("locked"); }
+function closeSheet() { if (screen) screen.hidden = true; document.body.classList.remove("locked"); state.paused = false; }
 
 /** Nouvelle phrase (deux fois). Résout avec la phrase choisie, ou null si annulé (cancel = false : impossible d'annuler). */
 function askNew(card, title, intro, cancel = true) {

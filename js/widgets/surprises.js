@@ -107,6 +107,29 @@ export function initSurprises({ force, plans, wins }) {
   }
   brief.addEventListener("click", () => { brief.hidden = true; });
 
+  // ---------- Calque sous les fenêtres (demande de Lucien, 25/10) ----------
+  // L'anneau du Focus, son compte à rebours et la constellation se dessinent ici : au-dessus de la 3D, SOUS les fenêtres
+  // (la fenêtre choisie reste toujours au premier plan). Le calque des effets de souris, lui, reste au-dessus.
+  const ucv = document.createElement("canvas"); ucv.id = "surprises-sous"; ucv.className = "pc-only"; ucv.setAttribute("aria-hidden", "true");
+  ucv.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;display:block";
+  const world = document.getElementById("world"); world.parentNode.insertBefore(ucv, world);
+  const ug = ucv.getContext("2d"), uLayers = [];
+  const usize = () => { ucv.width = innerWidth; ucv.height = innerHeight; };
+  usize(); addEventListener("resize", usize);
+  let uDirty = false, uBox = { x: 0, y: 0, w: 0, h: 0 };
+  const under = (fn) => uLayers.push(fn);
+  force.addLayer((g, dt, F) => {
+    // p4-perf : on n'efface que la zone dessinée (autour de l'orbe, plus la place de l'infobulle d'une étoile)
+    if (uDirty) { const b = uBox; ug.clearRect(b.x, b.y, b.w, b.h); uDirty = false; }
+    const r = anchor.getBoundingClientRect(); uBox = { x: Math.floor(r.left - 70), y: Math.floor(r.top - 70), w: Math.ceil(r.width + 70 + 360), h: Math.ceil(r.height + 140) };
+    uLayers.forEach((fn) => { ug.save(); const drew = fn(ug, dt, F); ug.restore(); if (drew) uDirty = true; });
+  });
+  setInterval(() => { if (uDirty && (state.paused || state.reduce || state.lite)) { ug.clearRect(0, 0, ucv.width, ucv.height); uDirty = false; } }, 500);
+  // p4-perf : halo d'étoile dessiné une seule fois, puis simplement recopié (au lieu d'un dégradé par étoile et par image)
+  const STAR = (() => { const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+    const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,248,225,1)"); gr.addColorStop(0.13, "rgba(255,248,230,1)"); gr.addColorStop(0.3, "rgba(255,200,120,.55)"); gr.addColorStop(1, "rgba(255,179,71,0)");
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c; })();
+
   // ---------- 2. Constellation des exploits ----------
   let stars = [];
   async function loadStars() {
@@ -125,9 +148,9 @@ export function initSurprises({ force, plans, wins }) {
   // Place calculée depuis l'identifiant de la tâche : stable d'une ouverture à l'autre.
   const hash = (str, k) => { let h = 2166136261 ^ k; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return ((h >>> 0) % 10000) / 10000; };
   let hoverStar = null, t0 = 0;
-  force.addLayer((g, dt, F) => {
+  under((g, dt, F) => {
     t0 += dt;
-    if (!ON("constellation") || !stars.length || plans.zoom < 0.8) return;
+    if (!ON("constellation") || !stars.length || plans.zoom < 0.8) return false;
     const c = core(), box = anchor.getBoundingClientRect();
     const inner = c.R * 1.45, outerX = Math.max(inner + 20, Math.min(box.width / 2 - 14, c.R * 2.7)), outerY = Math.max(30, Math.min(box.height / 2 - 14, outerX * 0.55));
     const spin = t0 * 0.02, pos = [];
@@ -147,11 +170,8 @@ export function initSurprises({ force, plans, wins }) {
       const { x, y } = pos[i];
       const fresh = Math.max(0, 1 - (Date.now() - (s.born || 0)) / 4000), tw = 0.75 + 0.25 * Math.sin(t0 * 2 + i * 1.7);
       const near = F.fin && Math.hypot(F.fmx - x, F.fmy - y) < 14; if (near) hoverStar = { s, x, y };
-      const rad = (near ? 5 : 3) + fresh * 8;
-      const gr = g.createRadialGradient(x, y, 0, x, y, rad * 3.4);
-      gr.addColorStop(0, `rgba(255,248,225,${tw.toFixed(2)})`); gr.addColorStop(0.3, `rgba(255,200,120,${(0.55 * tw).toFixed(2)})`); gr.addColorStop(1, "rgba(255,179,71,0)");
-      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad * 3.4, 0, 6.283); g.fill();
-      g.fillStyle = "#fff8e6"; g.beginPath(); g.arc(x, y, rad * 0.45, 0, 6.283); g.fill();
+      const rad = (near ? 5 : 3) + fresh * 8, d = rad * 6.8;
+      g.globalAlpha = Math.min(1, tw); g.drawImage(STAR, x - d / 2, y - d / 2, d, d); g.globalAlpha = 1;
     });
     if (hoverStar) {
       const d = new Date(hoverStar.s.at), txt = "★ " + hoverStar.s.n + " · " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1);
@@ -159,6 +179,7 @@ export function initSurprises({ force, plans, wins }) {
       g.fillStyle = "rgba(3,13,24,.92)"; g.fillRect(hoverStar.x + 12, hoverStar.y - 24, w, 20);
       g.fillStyle = "#ffd9a8"; g.fillText(txt, hoverStar.x + 19, hoverStar.y - 10);
     }
+    return true;
   });
 
   // ---------- 3. Mode Focus ----------
@@ -177,9 +198,9 @@ export function initSurprises({ force, plans, wins }) {
   }
   // Ajustement validé par Lucien (25/10) : anneau plus épais et lumineux, compte à rebours qui tourne autour de l'orbe
   // (écrit le long du cercle, il suit la tête de l'anneau), voile sombre uniforme au lieu du flou.
-  force.addLayer((g) => {
-    if (!focus) return;
-    const left = focus.end - Date.now(); if (left <= 0) { stopFocus(true); return; }
+  under((g) => {
+    if (!focus) return false;
+    const left = focus.end - Date.now(); if (left <= 0) { stopFocus(true); return false; }
     const c = core(), p = 1 - left / focus.total, R = c.R * 1.25, a0 = -Math.PI / 2, head = a0 + p * 6.283;
     g.save(); g.lineCap = "round";
     g.lineWidth = 9; g.strokeStyle = "rgba(255,179,71,.14)"; g.beginPath(); g.arc(c.x, c.y, R, 0, 6.283); g.stroke();
@@ -203,6 +224,7 @@ export function initSurprises({ force, plans, wins }) {
       ang += dir * widths[i] / Rl;
     });
     g.restore();
+    return true;
   });
   setInterval(() => { if (focus && focus.end <= Date.now()) stopFocus(true); }, 1000);   // aussi quand le dessin est coupé (onglet caché)
 
