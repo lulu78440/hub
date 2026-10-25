@@ -116,13 +116,19 @@ export function initSurprises({ force, plans, wins }) {
   const ug = ucv.getContext("2d"), uLayers = [];
   const usize = () => { ucv.width = innerWidth; ucv.height = innerHeight; };
   usize(); addEventListener("resize", usize);
-  let uDirty = false;
+  let uDirty = false, uBox = { x: 0, y: 0, w: 0, h: 0 };
   const under = (fn) => uLayers.push(fn);
   force.addLayer((g, dt, F) => {
-    if (uDirty) { ug.clearRect(0, 0, ucv.width, ucv.height); uDirty = false; }
+    // p4-perf : on n'efface que la zone dessinée (autour de l'orbe, plus la place de l'infobulle d'une étoile)
+    if (uDirty) { const b = uBox; ug.clearRect(b.x, b.y, b.w, b.h); uDirty = false; }
+    const r = anchor.getBoundingClientRect(); uBox = { x: Math.floor(r.left - 70), y: Math.floor(r.top - 70), w: Math.ceil(r.width + 70 + 360), h: Math.ceil(r.height + 140) };
     uLayers.forEach((fn) => { ug.save(); const drew = fn(ug, dt, F); ug.restore(); if (drew) uDirty = true; });
   });
   setInterval(() => { if (uDirty && (state.paused || state.reduce || state.lite)) { ug.clearRect(0, 0, ucv.width, ucv.height); uDirty = false; } }, 500);
+  // p4-perf : halo d'étoile dessiné une seule fois, puis simplement recopié (au lieu d'un dégradé par étoile et par image)
+  const STAR = (() => { const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+    const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,248,225,1)"); gr.addColorStop(0.13, "rgba(255,248,230,1)"); gr.addColorStop(0.3, "rgba(255,200,120,.55)"); gr.addColorStop(1, "rgba(255,179,71,0)");
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c; })();
 
   // ---------- 2. Constellation des exploits ----------
   let stars = [];
@@ -164,11 +170,8 @@ export function initSurprises({ force, plans, wins }) {
       const { x, y } = pos[i];
       const fresh = Math.max(0, 1 - (Date.now() - (s.born || 0)) / 4000), tw = 0.75 + 0.25 * Math.sin(t0 * 2 + i * 1.7);
       const near = F.fin && Math.hypot(F.fmx - x, F.fmy - y) < 14; if (near) hoverStar = { s, x, y };
-      const rad = (near ? 5 : 3) + fresh * 8;
-      const gr = g.createRadialGradient(x, y, 0, x, y, rad * 3.4);
-      gr.addColorStop(0, `rgba(255,248,225,${tw.toFixed(2)})`); gr.addColorStop(0.3, `rgba(255,200,120,${(0.55 * tw).toFixed(2)})`); gr.addColorStop(1, "rgba(255,179,71,0)");
-      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad * 3.4, 0, 6.283); g.fill();
-      g.fillStyle = "#fff8e6"; g.beginPath(); g.arc(x, y, rad * 0.45, 0, 6.283); g.fill();
+      const rad = (near ? 5 : 3) + fresh * 8, d = rad * 6.8;
+      g.globalAlpha = Math.min(1, tw); g.drawImage(STAR, x - d / 2, y - d / 2, d, d); g.globalAlpha = 1;
     });
     if (hoverStar) {
       const d = new Date(hoverStar.s.at), txt = "★ " + hoverStar.s.n + " · " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1);
