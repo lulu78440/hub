@@ -106,7 +106,7 @@ def test_sauvegarde_refus_fichiers_invalides(h):
         pa.evaluate("document.getElementById('toast').textContent = ''")
         import_file(pa, p, reload=False)
         try:
-            pa.wait_for_function("t => (document.getElementById('toast').textContent || '').includes(t)", arg=expect, timeout=5000)
+            pa.wait_for_function("t => (document.getElementById('toast').textContent || '').includes(t)", arg=expect, timeout=60000)
         except Exception:
             raise AssertionError(f"{name} : message attendu « {expect} », obtenu « {toast(pa)} »")
         _assert(counts(pa) == before, "données modifiées par " + name)

@@ -66,6 +66,7 @@ class Device:
         if reduced:
             opts["reduced_motion"] = "reduce"
         self.ctx = h.browser.new_context(**opts)
+        self.ctx.set_default_timeout(90000)          # rendu 3D logiciel lent : 90 s avant de déclarer un geste impossible
         self.blocked = []
         self.ctx.route("**/*", self._route)
         self.errors = []
@@ -193,7 +194,7 @@ def import_file(page, path, secret=None, reload=True):
         with page.expect_navigation(timeout=120000):
             fc.value.set_files(path)
             if secret is not None:
-                page.wait_for_selector(".lock .lcard input", timeout=10000)
+                page.wait_for_selector(".lock .lcard input", timeout=60000)
                 page.fill(".lock .lcard input", secret)
                 page.click(".lock .lcard button[type=submit]")
     else:

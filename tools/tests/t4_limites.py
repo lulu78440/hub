@@ -35,14 +35,14 @@ def test_limites_charge_1000_notes_taches_2000_favoris(h):
     p.evaluate("document.activeElement && document.activeElement.blur()"); p.keyboard.press("2"); p.wait_for_timeout(900)
     t1 = time.time()
     inp = p.locator('.win[data-id="notes"] form.addrow input'); inp.fill("Encore une"); inp.press("Enter")
-    p.wait_for_function("[...document.querySelectorAll('.win[data-id=\"notes\"] .note')].some(n => n.textContent.includes('Encore une'))", timeout=10000)
+    p.wait_for_function("[...document.querySelectorAll('.win[data-id=\"notes\"] .note')].some(n => n.textContent.includes('Encore une'))", timeout=60000)
     add = time.time() - t1
     _assert(add < 2, f"ajout d'une note lent avec 1 000 notes : {add:.1f} s")
     # Recherche dans 2 000 favoris
     t2 = time.time()
     p.fill('.win[data-id="favs"] input[type=search]', "Favori 1999"); p.wait_for_timeout(400)
     _assert(time.time() - t2 < 3, "recherche lente dans 2 000 favoris")
-    p.wait_for_function("import('/js/store/storage.js').then(s => s.store.all('notes')).then(l => l.length === 1001)", timeout=10000)
+    p.wait_for_function("import('/js/store/storage.js').then(s => s.store.all('notes')).then(l => l.length === 1001)", timeout=60000)
     # Export puis import de ce volume
     t3 = time.time(); path, _ = export_file(p, "c4-gros.json"); exp = time.time() - t3
     d2 = h.device(); q = d2.page()

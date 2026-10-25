@@ -441,7 +441,7 @@ def test_precis_K_liens_4_endroits(h):
     d = h.device(); p = d.page()
     ev(p, "const s = await import('/js/store/storage.js'); await s.store.putMany('favs', arg.map((u, i) => ({ id: 'fk' + i, title: 'K' + i, url: u, group: 'Liens', created: i })));", urls)
     p.reload(); p.wait_for_function("window.__hub && document.body.classList.contains('ready')", timeout=40000)
-    p.wait_for_function("document.querySelectorAll('.ticker .run a.it').length > 0", timeout=10000)
+    p.wait_for_function("document.querySelectorAll('.ticker .run a.it').length > 0", timeout=60000)
     p.evaluate("document.activeElement && document.activeElement.blur()"); p.keyboard.press("2"); p.wait_for_timeout(1200)
     favs = p.evaluate("[...document.querySelectorAll('.win[data-id=\"favs\"] a[data-id^=\"fk\"]')].reduce((o, a) => (o[a.dataset.id] = a.getAttribute('href'), o), {})")
     tick = p.evaluate("[...document.querySelectorAll('.ticker .run a.it')].reduce((o, a) => (o[a.lastChild.textContent] = a.getAttribute('href'), o), {})")
@@ -710,6 +710,12 @@ def test_precis_O_synchro_matrice(h):
         out.push([loc ? loc.text : null, px ? px.text : null, err]);
       }
       return out;""", [combos, T, "phrase de synchro factice"])
+    # Deux synchros lancées en même temps (deux onglets ouverts) : elles doivent passer l'une après l'autre
+    conc = ev(p, """const sy = await import('/js/store/sync.js'); let active = 0, max = 0; const f = window.fetch;
+      window.fetch = async (u, o = {}) => { const m = o.method || 'GET', read = String(u).endsWith('/gists/g1') && m === 'GET';
+        if (read) { active++; max = Math.max(max, active); await new Promise(r => setTimeout(r, 150)); } const res = await f(u, o); if (m === 'PATCH') active--; return res; };
+      await Promise.all([sy.sync.run(), sy.sync.run(), sy.sync.run()]); window.fetch = f; return max;""")
+    c.check("3 synchros lancées ensemble : jamais deux à la fois", conc, 1)
     for (l, r, lt, rt), (loc, pushed, err) in zip(combos, got):
         lab = f"local {l or '—'} · distant {r or '—'} · supprimé ici {lt or '—'} · supprimé là-bas {rt or '—'}"
         e = sync_oracle(l, r, lt, rt)

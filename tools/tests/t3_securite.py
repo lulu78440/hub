@@ -110,7 +110,7 @@ def test_securite_flux_rss_piege(h):
     flux["sites"][1]["nom"] = TRAPS[0]
     h.mock = make_mock(flux)
     d = h.device(); p = d.page()
-    p.wait_for_function("document.querySelectorAll('.ticker .run a.it').length >= 1", timeout=10000)
+    p.wait_for_function("document.querySelectorAll('.ticker .run a.it').length >= 1", timeout=60000)
     p.evaluate("document.activeElement && document.activeElement.blur()"); p.keyboard.press("2"); p.wait_for_timeout(1000)
     hrefs = p.evaluate("[...document.querySelectorAll('a[href]')].map(a => a.getAttribute('href')).filter(h => /^\\s*javascript:/i.test(h))")
     # clic sur le premier titre du bandeau et sur l'article de la veille

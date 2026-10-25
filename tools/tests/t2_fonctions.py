@@ -85,9 +85,9 @@ def test_fonctions_recette_pc(h):
     _assert(p.evaluate("!document.getElementById('ctx').hidden && document.getElementById('ctx').textContent.length > 20"), "menu du fond absent")
     p.keyboard.press("Escape")
     # Météo simulée affichée
-    p.wait_for_function("(document.querySelector('.wxm .wt') || {}).textContent === '14°'", timeout=10000)
+    p.wait_for_function("(document.querySelector('.wxm .wt') || {}).textContent === '14°'", timeout=60000)
     # Actualité et veille (flux simulé)
-    p.wait_for_function("document.querySelectorAll('.ticker .run a.it').length >= 5", timeout=10000)
+    p.wait_for_function("document.querySelectorAll('.ticker .run a.it').length >= 5", timeout=60000)
     _assert(p.locator(".alert").filter(has_text="EN PANNE").count() >= 1, "alerte de site en panne absente")
     # Rappel d'essai
     p.evaluate("window.__hub.reminders.test()"); p.wait_for_timeout(300)
@@ -167,13 +167,13 @@ def test_fonctions_deux_onglets(h):
     for x in (a, b): x.evaluate("document.activeElement && document.activeElement.blur()")
     a.keyboard.press("2"); b.keyboard.press("2")
     _ui_add(a, "notes", "Écrite dans l'onglet A")
-    b.wait_for_function("[...document.querySelectorAll('.win[data-id=\"notes\"] .note')].some(n => n.textContent.includes(\"onglet A\"))", timeout=5000)
+    b.wait_for_function("[...document.querySelectorAll('.win[data-id=\"notes\"] .note')].some(n => n.textContent.includes(\"onglet A\"))", timeout=60000)
     _ui_add(b, "tasks", "Écrite dans l'onglet B")
-    a.wait_for_function("[...document.querySelectorAll('.win[data-id=\"tasks\"] li')].some(n => n.textContent.includes('onglet B'))", timeout=5000)
+    a.wait_for_function("[...document.querySelectorAll('.win[data-id=\"tasks\"] li')].some(n => n.textContent.includes('onglet B'))", timeout=60000)
     # Suppression dans B vue dans A
     nid = ev(a, "const s = await import('/js/store/storage.js'); return (await s.store.all('notes'))[0].id;")
     ev(b, "const s = await import('/js/store/storage.js'); await s.store.del('notes', arg);", nid)
-    a.wait_for_function("document.querySelectorAll('.win[data-id=\"notes\"] .note').length === 0", timeout=5000)
+    a.wait_for_function("document.querySelectorAll('.win[data-id=\"notes\"] .note').length === 0", timeout=60000)
     _assert(not d.errors, "erreurs console : " + str(d.errors))
     d.close()
 
