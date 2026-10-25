@@ -1220,6 +1220,21 @@ body.lite .o-q { min-height: 48px; font-size: 16px; }
 .o-q::placeholder { color: #8fb3c4; }
 .o-tile:focus-visible, .o-q:focus-visible, .dwin .dx:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 
+/* ---------- Refonte · ergo-perf-repos : niveaux de qualité (Allégé, Minimal) ---------- */
+body.q-allege:not(.lite) .win.p2, body.q-minimal:not(.lite) .win.p2 { -webkit-box-reflect: none !important; }
+body.q-allege:not(.lite) .dof, body.q-minimal:not(.lite) .dof { display: none !important; }
+body.q-minimal:not(.lite) .win.p2 .panel { box-shadow: none !important; }
+
+/* ---------- Refonte · ergo-plan2-salle : brume, profondeur de champ par fenêtre, entrée en travelling ---------- */
+.brume { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: calc(var(--cine, 0) * (.55 + .45 * var(--entree, 0)));
+  background: linear-gradient(to top, rgba(8, 34, 62, .55) 0, rgba(8, 34, 62, .22) 24%, transparent 50%), radial-gradient(ellipse 90% 30% at 50% 62%, rgba(20, 70, 110, .28), transparent 70%); }
+body.lite .brume, body.salle-light .brume, body.q-allege .brume, body.q-minimal .brume { display: none; }
+/* Flou : posé fenêtre par fenêtre sur le contenu (jamais sur le parent 3D). Le survol rend la fenêtre nette et adoucit les autres. */
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2 .panel { filter: blur(calc((var(--entree, 0) * 6px + var(--df, 0) * 2.4px) * var(--cine, 0))) brightness(calc(1 - var(--df, 0) * var(--cine, 0) * .3)); }
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2:hover .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.focus .panel, body.room:not(.lite):not(.q-allege):not(.q-minimal) .win.p2.dragging .panel { filter: none; }
+body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .win.p2:not(:hover) .panel { filter: brightness(.74) saturate(.85); }
+@media (prefers-reduced-motion: reduce) { .brume { opacity: calc(var(--cine, 0) * .55); } .win.p2 .panel { filter: none !important; } }
+
 </style>
 <link rel="stylesheet" href="css/noyau.css">
 <style media="(max-width: 900px), (pointer: coarse)">
@@ -2444,6 +2459,7 @@ const state = {
   energyTarget: 0,      // intensité visée
   accent: null,
   mood: null,           // teinte du noyau selon la météo intérieure (7.1), si aucun accent temporaire         // couleur d'accent temporaire (ex. 0x9b72ff) ou null = cyan
+  qlevel: 0,            // niveau de qualité du rendu : 0 Complet, 1 Allégé, 2 Minimal (ui/qualite.js)
   cine: 0,              // 0..1 : mode cinéma du plan 2 (utilisé en 1.4)
   tilt: false,          // inclinaison du téléphone disponible (mobile)
   mx: 0, my: 0          // souris (PC) ou inclinaison (mobile), normalisées -1..1
@@ -2454,7 +2470,7 @@ return { state, pulse };
 })();
 __M['js/version.js'] = (() => {
 // Version du code. À garder identique à VERSION dans sw.js.
-const VERSION = "7.27.1";
+const VERSION = "7.29.0";
 
 return { VERSION };
 })();
@@ -3014,6 +3030,9 @@ const nearestPlan = (z) => PLANS.reduce((a, b) => (Math.abs(b - z) < Math.abs(a 
 
 function createPlans({ world, anchor, desk }) {
   let zoom = 1, zoomTarget = 1, snapT = 0, lastT = "";
+  // Entrée dans la salle : travelling de 2,4 s la première fois de la session, 0,8 s ensuite ; sans effet en mouvement réduit ou en qualité Minimal
+  let entry = null, prevCine = 0;
+  const brume = document.createElement("div"); brume.className = "brume"; brume.setAttribute("aria-hidden", "true"); if (!state.lite) document.body.append(brume);
   // Salle du plan 2 : on tourne la tête (yaw, en radians) devant le mur courbe de fenêtres (voir ui/windows.js)
   let yaw = 0, yawT = 0, yawLo = -1.05, yawHi = 1.05, persp = 1500;
   const setYaw = (v) => { yawT = clamp(v, yawLo, yawHi); };
@@ -3066,17 +3085,25 @@ function createPlans({ world, anchor, desk }) {
     const d = clamp((0.5 - zoom) / 0.2, 0, 1);
     const cine = clamp((0.92 - zoom) / 0.3, 0, 1) * (1 - d);
     state.cine = cine;
+    if (cine > 0.02 && prevCine <= 0.02 && !state.reduce && state.qlevel < 2) {
+      let first = true; try { first = sessionStorage.getItem("hub-salle-vue") !== "1"; sessionStorage.setItem("hub-salle-vue", "1"); } catch (e) { /* stockage indisponible */ }
+      entry = { t: 0, d: first ? 2.4 : 0.8 };
+    }
+    prevCine = cine;
+    let entree = 0;
+    if (entry) { entry.t += dt; const u = Math.min(entry.t / entry.d, 1); entree = Math.pow(1 - u, 3); if (u >= 1 || state.reduce || state.qlevel > 1) { entry = null; entree = 0; } }
     // Tête qui tourne : souris près des bords gauche et droit, ou flèches, ou Maj + molette
     if (cine > 0.9 && !state.paused && Math.abs(state.mx) > 0.86 && state.my > -0.7) setYaw(yawT + Math.sign(state.mx) * (Math.abs(state.mx) - 0.86) / 0.14 * dt * 0.9);
     yaw += (yawT - yaw) * (state.reduce ? 1 : 1 - Math.exp(-dt * 6));
     if (Math.abs(yaw - yawT) < 0.0004) yaw = yawT;
     persp = 1500 - 420 * cine;
     // Grand angle au plan 2 : perspective plus serrée, inclinaison plus marquée, caméra un peu remontée
-    const tf = `perspective(${persp.toFixed(0)}px) rotateX(${(cine * 4).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
+    const tf = `perspective(${persp.toFixed(0)}px) translateZ(${(entree * cine * 260).toFixed(1)}px) rotateX(${(cine * 4).toFixed(2)}deg) scale(${zoom.toFixed(4)})`;
     if (tf !== lastT) {
       lastT = tf; world.style.transform = tf;
       const b = document.body;
       b.style.setProperty("--cine", cine.toFixed(3));
+      b.style.setProperty("--entree", entree.toFixed(3));
       b.classList.toggle("cine", cine > 0.45);
       b.classList.toggle("room", cine > 0.01);
       b.classList.toggle("zoomed", zoom < 0.99);
@@ -3639,16 +3666,18 @@ function createWindows({ world, plans, force }) {
       s.ry += (ryT - s.ry) * kRot; s.rz += (rzT - s.rz) * kRot; s.vx *= 0.85;
       if (Math.abs(s.rz) < 0.005) s.rz = 0;
       const k = state.cine, fl = (s.drag ? 1.025 : 1) * s.fk;
-      let tf, op = "";
+      let tf, op = "", df = 0;
       if (k > 0.01 && s.isWall && !s.foc) {
         // Mur courbe : fenêtre à l'angle th autour du point de vue, à sa vraie taille (la mise à l'échelle du monde et la perspective sont compensées)
         const P = plans.persp, z = plans.zoom, th = (s.wa ?? s.waAuto) - plans.yaw, c = Math.cos(th), sn = Math.sin(th);
         const xw = core.x + P * sn / z - s.w / 2, yw = core.y + (s.wy || 0) * c / z - s.h / 2, fx0 = s.cx + s.fx, fy0 = s.cy + s.fy;
         const lx = fx0 + (xw - fx0) * k, ly = fy0 + (yw - fy0) * k, lz = k * (P - P * c), lr = s.ry + (-th * 57.2958 - s.ry) * k, ls = fl + (fl * c / z - fl) * k;
         tf = `translate3d(${lx.toFixed(1)}px, ${ly.toFixed(1)}px, ${lz.toFixed(1)}px) perspective(${k > 0.02 ? 100000 : 1200}px) rotateY(${lr.toFixed(2)}deg) rotateZ(${s.rz.toFixed(2)}deg) scale(${ls.toFixed(4)})`;
+        df = clamp((Math.abs(th) - 0.45) / 0.5, 0, 1);   // profondeur de champ : plus la fenêtre est sur le côté, plus elle s'adoucit (css, par fenêtre)
         const fade = clamp((1.4 - Math.abs(th)) / 0.25, 0, 1); op = fade >= 1 ? "" : fade.toFixed(2);
       } else tf = `translate3d(${(s.cx + s.fx).toFixed(1)}px, ${(s.cy + s.fy).toFixed(1)}px, 0) perspective(1200px) rotateY(${s.ry.toFixed(2)}deg) rotateZ(${s.rz.toFixed(2)}deg) scale(${fl.toFixed(4)})`;
       if (op !== s.lastOp) { s.lastOp = op; el.style.opacity = op; el.style.pointerEvents = op !== "" && +op < 0.05 ? "none" : ""; }
+      const dfs = df.toFixed(2); if (dfs !== s.lastDf) { s.lastDf = dfs; el.style.setProperty("--df", dfs); }
       if (tf !== s.last) { s.last = tf; el.style.transform = tf; }
       if (s.drag) {                                                               // le champ de force reçoit la place calculée (pas de relecture de la mise en page)
         const k = 1.025, ex = plans.zoom === 1 && state.cine < 0.01 && !s.foc;
@@ -3972,12 +4001,69 @@ function initMenus({ wins, plans, entity, cursor, resetLayout, data, test }) {
 
 return { registerMenu, extendMenu, initMenus };
 })();
+__M['js/ui/qualite.js'] = (() => {
+const { state } = __M['js/state.js'];
+const { prefs } = __M['js/store/prefs.js'];
+// Qualité du rendu (refonte, ergo-perf-repos) : trois niveaux — Complet, Allégé, Minimal — choisis à la main (Outils) ou automatiquement
+// quand les images par seconde chutent. Auto : on ne fait que descendre (jamais de yo-yo) ; mesure sur 2 s, trois mesures basses de suite,
+// images séparées de plus d.une seconde ignorées (onglet caché), pas avant 6 s après le chargement. Le niveau réduit la résolution de la scène (ratio de pixels) et coupe reflets et flou (classes q-allege,
+// q-minimal sur <body>, voir hud.css). Au repos (aucune action depuis 15 s, rien qui s'anime), la scène 3D est redessinée une image sur
+// deux : même rendu, moitié moins de calcul. Une fonction qui anime peut demander le plein débit avec hold(). Mobile : sans effet.
+
+
+
+const NIVEAUX = ["complet", "allege", "minimal"];
+const LIBELLE = { auto: "Automatique", complet: "Complet", allege: "Allégé", minimal: "Minimal" };
+const DPR_MAX = [1.75, 1.25, 1];
+
+function createQuality({ onChange } = {}) {
+  let mode = prefs.get("qualite", "auto"); if (mode !== "auto" && !NIVEAUX.includes(mode)) mode = "auto";
+  let level = mode === "auto" ? 0 : NIVEAUX.indexOf(mode);
+  let lastInput = performance.now(); const boot = lastInput;
+  let prev = 0, acc = 0, n = 0, low = 0, holds = 0;
+  const body = document.body;
+  const paint = () => { state.qlevel = state.lite ? 0 : level; body.classList.toggle("q-allege", level === 1); body.classList.toggle("q-minimal", level === 2); };
+  paint();
+  const touch = () => { lastInput = performance.now(); };
+  ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach((ev) => addEventListener(ev, touch, { passive: true, capture: true }));
+  const change = () => { paint(); if (onChange) onChange(level); };
+  return {
+    get mode() { return mode; },
+    get level() { return level; },
+    get name() { return NIVEAUX[level]; },
+    /** Choisit le mode : "auto", "complet", "allege" ou "minimal" (gardé sur l'appareil). */
+    set(m) {
+      if (m !== "auto" && !NIVEAUX.includes(m)) return;
+      mode = m; level = m === "auto" ? 0 : NIVEAUX.indexOf(m); low = 0; prefs.set("qualite", m); change();
+    },
+    /** Ratio de pixels maximal de la scène pour le niveau courant (mobile : 1, inchangé). */
+    dpr() { const d = devicePixelRatio || 1; return state.lite ? 1 : Math.min(d, DPR_MAX[level]); },
+    /** À appeler à chaque image avec l'horloge de requestAnimationFrame. */
+    feed(now) {
+      const gap = now - prev; prev = now;
+      if (mode !== "auto" || state.lite || state.paused || document.hidden || gap > 1000 || gap <= 0 || now - boot < 6000) { acc = 0; n = 0; return; }
+      acc += gap; n++;
+      if (acc < 2000) return;
+      const fps = n / (acc / 1000); acc = 0; n = 0;
+      if (fps < 40) { if (++low >= 3 && level < 2) { level++; low = 0; change(); } } else low = 0;
+    },
+    /** Une fonction qui anime la scène demande le plein débit ; appeler le retour pour le rendre. */
+    hold() { holds++; let done = false; return () => { if (!done) { done = true; holds = Math.max(0, holds - 1); } }; },
+    idle() { return !holds && performance.now() - lastInput > 15000 && state.energy < 0.05; },
+    /** 1 = chaque image ; 2 = une image sur deux (repos ou niveau Minimal). */
+    sceneEvery() { return state.lite ? 1 : (level >= 2 || this.idle() ? 2 : 1); }
+  };
+}
+
+return { NIVEAUX, LIBELLE, createQuality };
+})();
 __M['js/ui/outils.js'] = (() => {
 const { state } = __M['js/state.js'];
 const { prefs } = __M['js/store/prefs.js'];
 const { sound } = __M['js/device/sound.js'];
 const { toast } = __M['js/ui/toast.js'];
 const { PAR_DEFAUT } = __M['js/ui/reserve.js'];
+const { LIBELLE } = __M['js/ui/qualite.js'];
 // Fenêtre « Outils » (refonte, 25/10) : les fonctions rares, rangées en groupes de tuiles dans un panneau à droite (PC).
 // Bouton Outils de la barre du haut, touche O, ligne « Outils… » du menu du fond. Les tuiles reprennent les lignes de menu des widgets
 // (Focus, briefing, image, crépuscule…) au lieu de les réécrire, donc rien ne se perd : ce qu'aucune tuile ne reprend va dans « Autres actions ».
@@ -3989,9 +4075,10 @@ const { PAR_DEFAUT } = __M['js/ui/reserve.js'];
 
 
 
+
 const $ = (id) => document.getElementById(id);
 
-function initOutils({ wins, entity, cursor, resetLayout, data, menus, test }) {
+function initOutils({ wins, entity, cursor, resetLayout, data, menus, quality, test }) {
   const lite = state.lite, mob = menus && menus.mob;
   if (lite && !mob) return { open() {}, close() {} };
   const btn = $("b-outils");
@@ -4075,6 +4162,7 @@ function initOutils({ wins, entity, cursor, resetLayout, data, menus, test }) {
     G.push({ h: "Affichage", tiles: [
       { t: "Compteur img/s", s: document.body.classList.contains("show-fps") ? "affiché" : "caché", keep: true, fn: () => { const on = !document.body.classList.contains("show-fps"); document.body.classList.toggle("show-fps", on); prefs.setOn("compteur-fps", on); } },
       { t: "Salle allégée", s: document.body.classList.contains("salle-light") ? "sans reflets" : "avec reflets", keep: true, fn: () => { const on = !document.body.classList.contains("salle-light"); document.body.classList.toggle("salle-light", on); prefs.setOn("salle-allegee", on); } } ] });
+    if (quality) G.push({ h: "Qualité du rendu", note: "Automatique : le hub baisse tout seul la qualité si les images par seconde chutent, sans jamais la remonter.", tiles: ["auto", "complet", "allege", "minimal"].map((m) => ({ t: LIBELLE[m], s: m === "auto" ? "actuel : " + LIBELLE[quality.name].toLowerCase() : "", on: quality.mode === m, keep: true, fn: () => quality.set(m) })) });
     G.push({ h: "Palette", tiles: [{ t: "Raccourci Ctrl+K", s: prefs.get("palette-ctrlk", "1") !== "0" ? "actif" : "coupé", keep: true, on: prefs.get("palette-ctrlk", "1") !== "0", fn: () => { prefs.set("palette-ctrlk", prefs.get("palette-ctrlk", "1") !== "0" ? "0" : "1"); } }] });
     G.push({ h: "Réglages et diagnostic", tiles: [{ t: "Réglages et diagnostic…", s: "touche D", fn: () => $("b-diag").click() }] });
     const rest = cache.filter((l) => !used.has(l));
@@ -14483,6 +14571,7 @@ const { createPlans } = __M['js/ui/plans.js'];
 const { createWindows } = __M['js/ui/windows.js'];
 const { initMenus } = __M['js/ui/menus.js'];
 const { initOutils } = __M['js/ui/outils.js'];
+const { createQuality } = __M['js/ui/qualite.js'];
 const { toast } = __M['js/ui/toast.js'];
 const { initData } = __M['js/ui/data.js'];
 const { initNotes } = __M['js/widgets/notes.js'];
@@ -14517,6 +14606,7 @@ const { createCore } = __M['js/scene/core3d.js'];
 const { createPostFX } = __M['js/scene/postfx.js'];
 /* Démarrage du Hub : détection PC / mobile, fenêtres et widgets, puis la 3D, boucle d'animation unique.
    Les fenêtres et les données ne dépendent pas de la 3D : si WebGL est coupé, le hub reste utilisable. */
+
 
 
 
@@ -14600,7 +14690,9 @@ async function start() {
   initLockUI();
   const data = initData();
   const menus = initMenus({ wins, plans, entity: force.entity, cursor, resetLayout, data, test: () => window.__hub.reminders.test() });
-  initOutils({ wins, entity: force.entity, cursor, resetLayout, data, menus, test: () => window.__hub.reminders.test() });
+  let core = null, fx = null;
+  const quality = createQuality({ onChange: () => resize() });
+  initOutils({ wins, entity: force.entity, cursor, resetLayout, data, menus, quality, test: () => window.__hub.reminders.test() });
   initNotes();
   initTasks();
   initAgenda();
@@ -14626,20 +14718,20 @@ async function start() {
   initDusk();
   $("b-backup").addEventListener("click", () => backup.test());
 
-  let core = null, fx = null;
   function resize() {
     RW = innerWidth; RH = innerHeight;
     if (state.lite) plans.layout(RW, RH); else place(wins.layout(RW, RH));
-    if (fx) { fx.resize(RW, RH, lite ? 1 : Math.min(devicePixelRatio || 1, 1.75)); core.resize(RW, RH); }
+    if (fx) { fx.resize(RW, RH, quality.dpr()); core.resize(RW, RH); }
   }
   resize(); addEventListener("resize", resize);
   addEventListener("pointermove", (e) => { if (e.pointerType === "touch") return; state.mx = e.clientX / RW * 2 - 1; state.my = e.clientY / RH * 2 - 1; });
 
   // 2) Une seule boucle d'animation, arrêtée quand l'onglet est caché.
   const fpsEl = $("fps");
-  let t = 0, frames = 0, fpsT = 0, raf = 0, last = 0;
+  let t = 0, frames = 0, fpsT = 0, raf = 0, last = 0, sceneDt = 0, sceneN = 0;
   function loop(now) {
     raf = requestAnimationFrame(loop);
+    quality.feed(now);
     const dt = Math.min((now - last) / 1000 || 0, 0.05); last = now;
     frames++; fpsT += dt;
     if (fpsT >= 0.5) { fpsEl.textContent = Math.round(frames / fpsT) + " img/s"; frames = 0; fpsT = 0; }
@@ -14649,9 +14741,11 @@ async function start() {
     wins.update(dt);
     if (images.update) images.update(dt);
     state.energy += (state.energyTarget - state.energy) * Math.min(dt * 3, 1);
-    if (core) {
+    sceneDt += dt; sceneN++;
+    if (core && sceneN % quality.sceneEvery() === 0) {   // au repos ou en qualité Minimal : une image de scène sur deux, temps cumulé
+      const sdt = sceneDt; sceneDt = 0;
       const c = core.frame(anchorEl.getBoundingClientRect(), RW, RH); if (c) fx.setCenter(c);
-      core.update({ t, dt, k, energy: state.energy, accent: state.accent ?? state.mood, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
+      core.update({ t, dt: sdt, k, energy: state.energy, accent: state.accent ?? state.mood, cine: state.cine, mx: state.mx, my: state.my, tilt: state.tilt });
       updateLabels(core.project(RW, RH), state.lite ? 1 : plans.zoom);
       fx.update(t, state.energy, state.cine);
       fx.render();
@@ -14663,7 +14757,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
+  window.__hub = { state, quality, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;
