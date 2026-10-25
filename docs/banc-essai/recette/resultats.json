@@ -1,0 +1,439 @@
+[
+ [
+  "PC",
+  "version affichée",
+  "OK",
+  "7.35.0"
+ ],
+ [
+  "PC",
+  "mode PC détecté (pas de classe lite)",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "plan 1 : Favoris, Notes, Vidéo, Musique (et rien d'autre que la recherche et l'orbe au centre)",
+  "OK",
+  [
+   "video",
+   "music",
+   "notes",
+   "favs"
+  ]
+ ],
+ [
+  "PC",
+  "plan 2 (salle) : Page en direct, Mon PC, Noyau",
+  "OK",
+  [
+   "pc",
+   "progress",
+   "noyau",
+   "web"
+  ]
+ ],
+ [
+  "PC",
+  "plan 1 : Tâches, Veille, Sécurité, Savoir en réserve (masquées)",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "barre du haut : Outils et Labo présents, pas de jauge de zoom",
+  "OK",
+  [
+   "Hub",
+   "Plan 2",
+   "Plan 3",
+   "Outils",
+   "🎙 Parler",
+   "Labo"
+  ]
+ ],
+ [
+  "PC",
+  "jauge de zoom retirée de la vue",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "bouton Plan 1",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "bouton Plan 2",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "bouton Plan 3",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "molette sur le fond : plan 1 vers plan 2",
+  "OK",
+  2
+ ],
+ [
+  "PC",
+  "molette inverse : retour au plan 1",
+  "OK",
+  1
+ ],
+ [
+  "PC",
+  "menu du fond : 6 lignes au plus, sans navigation",
+  "OK",
+  [
+   "Ajouter une image iciCtrl+V",
+   "Focus 25 min",
+   "Revoir le briefing du jour",
+   "Outils…O"
+  ]
+ ],
+ [
+  "PC",
+  "Outils : bouton ouvre le panneau, groupes",
+  "OK",
+  [
+   "Gestes",
+   "Fenêtres rangées",
+   "Ambiance",
+   "Données",
+   "Fonctions en réserve",
+   "Affichage",
+   "Qualité du rendu",
+   "Palette",
+   "Réglages et diagnostic",
+   "Autres actions"
+  ]
+ ],
+ [
+  "PC",
+  "Outils : tuiles essentielles présentes",
+  "OK",
+  39
+ ],
+ [
+  "PC",
+  "Outils : Échap ferme",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "touche O ouvre Outils",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "touche D ouvre Réglages et diagnostic",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "clic sur le nom : la fenêtre se réduit à son nom",
+  "OK",
+  "447px -> 30px"
+ ],
+ [
+  "PC",
+  "second clic : elle se rouvre à sa taille",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "glisser le nom déplace sans réduire",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "menu de fenêtre : 8 lignes au plus, Réduire/Personnaliser/Plus…",
+  "OK",
+  [
+   "Modifier",
+   "Détacher",
+   "Copier le texte",
+   "Réduire",
+   "Personnaliser…",
+   "Figer la fenêtre",
+   "Masquer la fenêtre",
+   "Plus…"
+  ]
+ ],
+ [
+  "PC",
+  "Personnaliser… ouvre le panneau de tuile",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "plan 2 : arrivée dans la salle (plan actif = 2)",
+  "OK",
+  ""
+ ],
+ [
+  "Noyau",
+  "Réglages : section « IA de secours en ligne (Groq, OpenRouter, Mistral) »",
+  "OK",
+  ""
+ ],
+ [
+  "Noyau",
+  "3 services, champs de clé masqués (password)",
+  "OK",
+  ""
+ ],
+ [
+  "Noyau",
+  "ordre de secours affiché, « Sans IA » en dernier",
+  "OK",
+  ""
+ ],
+ [
+  "Noyau",
+  "services avec entraînement désactivés par défaut",
+  "OK",
+  ""
+ ],
+ [
+  "Noyau",
+  "clé vide : « Colle d'abord la clé. »",
+  "OK",
+  ""
+ ],
+ [
+  "Noyau",
+  "aucun appel vers un service IA pendant la recette",
+  "OK",
+  []
+ ],
+ [
+  "PC",
+  "plan 3 : icônes du bureau (applis)",
+  "OK",
+  [
+   "fichiers",
+   "pc",
+   "internet",
+   "mails"
+  ]
+ ],
+ [
+  "PC",
+  "plan 3 : l'icône Fichiers ouvre la fenêtre",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "plan 3 : réduire envoie la fenêtre vers son icône",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "plan 3 : l'icône la rouvre",
+  "OK",
+  ""
+ ],
+ [
+  "PC",
+  "plan 3 : clic sur le titre réduit à son nom",
+  "OK",
+  ""
+ ],
+ [
+  "Contraste",
+  "plan 1 : 26 textes, 0 sous AA, 0 sous 3:1",
+  "OK",
+  []
+ ],
+ [
+  "Contraste",
+  "plan 2 : 26 textes, 0 sous AA, 0 sous 3:1",
+  "OK",
+  []
+ ],
+ [
+  "Contraste",
+  "plan 3 : 39 textes, 1 sous AA, 1 sous 3:1",
+  "A CORRIGER",
+  [
+   {
+    "txt": "● Écran en direct · bientôt",
+    "where": "btn live-off",
+    "ratio": 2.6,
+    "need": 4.5,
+    "size": "11px"
+   }
+  ]
+ ],
+ [
+  "Console",
+  "PC : aucune erreur console",
+  "OK",
+  []
+ ],
+ [
+  "CSP",
+  "PC : aucune violation (securitypolicyviolation)",
+  "OK",
+  []
+ ],
+ [
+  "Dispositions",
+  "?pc / ?mobile / ?auto sur écran PC",
+  "OK",
+  "auto=False ?pc=(False, 'pc') suivant=(False, 'pc') ?mobile=(True, 'mobile') suivant=(True, 'mobile') ?auto=(False, None) suivant=(False, None)"
+ ],
+ [
+  "Dispositions",
+  "?pc / ?mobile / ?auto sur écran téléphone",
+  "OK",
+  "auto=True ?pc=(False, 'pc') suivant=(False, 'pc') ?mobile=(True, 'mobile') suivant=(True, 'mobile') ?auto=(True, None) suivant=(True, None)"
+ ],
+ [
+  "Mobile",
+  "classe lite (mode téléphone)",
+  "OK",
+  ""
+ ],
+ [
+  "Mobile",
+  "fenêtres visibles dans l'ordre",
+  "OK",
+  [
+   "noyau",
+   "securite",
+   "savoir",
+   "video",
+   "strip",
+   "meteo",
+   "tasks",
+   "rituels",
+   "radar",
+   "agenda",
+   "music",
+   "notes",
+   "favs",
+   "mails",
+   "watch",
+   "web"
+  ]
+ ],
+ [
+  "Mobile",
+  "hauteur de page (visé environ 3 500 px) et pas de défilement horizontal",
+  "A CORRIGER",
+  "7599px, débord 0px"
+ ],
+ [
+  "Mobile",
+  "toucher le titre réduit la fenêtre (la page raccourcit)",
+  "OK",
+  "7588 -> 7317"
+ ],
+ [
+  "Mobile",
+  "second toucher la rouvre",
+  "OK",
+  ""
+ ],
+ [
+  "Mobile",
+  "feuille Outils collée en bas de l'écran",
+  "OK",
+  "['Gestes', 'Fenêtres rangées', 'Fonctions rarement utilisées', 'Ambiance', 'Données', 'Réglages et diagnostic', 'Autres actions'] [844, 844, 390]"
+ ],
+ [
+  "Mobile",
+  "feuille Outils : pas d'Image ni Plein écran dans les gestes (selon plan)",
+  "OK",
+  [
+   "Focus 25 min",
+   "Focus 50 min",
+   "Revoir le briefing",
+   "Capture rapide (note)",
+   "Plein écran",
+   "Tout réduireà leur nom",
+   "Tout rouvriraucune réduite",
+   "Fenêtres masquéesaucune"
+  ]
+ ],
+ [
+  "Mobile",
+  "feuille Outils se ferme (Échap ou toucher à côté)",
+  "OK",
+  ""
+ ],
+ [
+  "Mobile",
+  "après masquage des 7 fonctions rares (Outils) : hauteur de page",
+  "OK",
+  "7599px -> 3871px ; 9 fenêtres : ['video', 'strip', 'meteo', 'agenda', 'music', 'notes', 'noyau', 'favs', 'web']"
+ ],
+ [
+  "Mobile",
+  "appui long sur un titre : menu (Ramener, Monter, Descendre, Masquer, Personnaliser)",
+  "A CORRIGER",
+  [
+   "Ramener vers moi",
+   "Réduire à son nom",
+   "Monter",
+   "Descendre",
+   "Tout en haut",
+   "Masquer la fenêtre",
+   "Fermer"
+  ]
+ ],
+ [
+  "Console",
+  "mobile : aucune erreur console",
+  "OK",
+  []
+ ],
+ [
+  "CSP",
+  "mobile : aucune violation",
+  "OK",
+  []
+ ],
+ [
+  "Contraste",
+  "mobile : 3 textes, 0 sous AA, 0 sous 3:1",
+  "OK",
+  []
+ ],
+ [
+  "Hors ligne",
+  "rechargement hors ligne : hub chargé, 2 notes lues",
+  "OK",
+  "2 notes ; (message « 3D désactivée » attendu : WebGL coupé dans le banc)"
+ ],
+ [
+  "Hors ligne",
+  "plans et Outils fonctionnent hors ligne",
+  "OK",
+  ""
+ ],
+ [
+  "Hors ligne",
+  "pas d'erreur console, pas de violation CSP",
+  "OK",
+  []
+ ]
+]
