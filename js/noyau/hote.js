@@ -57,6 +57,28 @@ export async function brancherHub() {
       definirCleClaude: (k) => { if (!vault.active) throw new Error("Active d'abord le verrouillage du hub (Diag → Verrouillage) : la clé ne se garde que chiffrée."); if (k) vault.lsSet("hub-secret-claude", k); else vault.lsRemove("hub-secret-claude"); }
     },
     hub: {
+      /** Personnalisation demandée par Lucien (perso.js) : CSS vérifié, jamais de script. */
+      styleNoyau: (css) => { let st = document.getElementById("noyau-perso"); if (!css) { if (st) st.remove(); return; } if (!st) { st = document.createElement("style"); st.id = "noyau-perso"; document.head.append(st); } st.textContent = css; },
+      /** Place, taille, visibilité, figeage d'une fenêtre. Écrit dans la disposition du hub (même clé que le glisser-déposer) puis relance la mise en page. */
+      disposer: async (id, d, { brut = false } = {}) => {
+        const el = document.querySelector('.win[data-id="' + CSS.escape(String(id)) + '"]'), W = window.__hub && window.__hub.wins;
+        if (!el || !W) return { ok: false, erreur: "Fenêtre inconnue ou hub pas prêt : " + id };
+        const cle = "disposition-pc-v1", lire = () => { try { return JSON.parse(prefs.get(cle, "null")); } catch (e) { return null; } };
+        if (!lire()) W.setHidden(el, el.classList.contains("hid"));                    // force une première sauvegarde de toutes les places
+        const tout = lire(); if (!tout || !tout[id]) return { ok: false, erreur: "Disposition indisponible pour « " + id + " » (affichage mobile ?)." };
+        const avant = JSON.parse(JSON.stringify(tout[id]));
+        if (brut) tout[id] = d; else {
+          const n = { ...tout[id] };
+          for (const k of ["x", "y"]) if (d[k] !== undefined) n[k] = d[k];
+          if (d.largeur !== undefined) n.w = d.largeur; if (d.hauteur !== undefined) n.h = d.hauteur;
+          if (d.figee !== undefined) n.pin = d.figee; if (d.visible !== undefined) n.hid = !d.visible;
+          n.x = Math.min(n.x, 1 - Math.min(n.w, 0.9) * 0.5); n.y = Math.min(n.y, 1 - Math.min(n.h, 0.9) * 0.5);        // reste dans l'écran
+          tout[id] = n;
+        }
+        prefs.set(cle, JSON.stringify(tout)); window.dispatchEvent(new Event("resize"));
+        return { ok: true, avant };
+      },
+      remettreDisposition: async () => { const W = window.__hub && window.__hub.wins; if (W) W.reset(); window.dispatchEvent(new Event("resize")); },
       actus: () => fluxMod.flux.data,
       meteo: () => { try { return JSON.parse(prefs.get("meteo-cache", "null")); } catch (e) { return null; } },
       contexteLive: () => ({

@@ -5,6 +5,7 @@ import { hote } from "./hote.js";
 import { jetons, Index } from "./recherche.js";
 import { interroger, DOMAINES, SOURCES } from "./sources.js";
 import { journalActions } from "./journal.js";
+import { creerPerso } from "./perso.js";
 
 const pad = (n) => String(n).padStart(2, "0");
 export const cleJour = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -67,6 +68,8 @@ const O = (properties = {}, required = []) => ({ type: "object", properties, req
 
 /** Construit le catalogue. `ctx` apporte memoire (mémoire du Noyau) et interdits (mots à ne pas envoyer dehors). */
 export function creerCatalogue(ctx = {}) {
+  let _perso = null; const perso = () => (_perso = _perso || creerPerso());
+  const rac = () => { if (!ctx.raccourcis) throw new Error("Raccourcis indisponibles"); return ctx.raccourcis(); };
   const st = () => hote.stockage;
   const now = () => hote.maintenant();
   const agir = async (nom, p) => { const r = await hote.hub.agir(nom, p); if (r && r.ok === false) throw new Error(r.erreur || "Action impossible"); return r; };
@@ -199,7 +202,20 @@ export function creerCatalogue(ctx = {}) {
       exec: async (p) => { const j = cleJour(now()), id = "rit-" + j, d = (await st().lire("kv", id)) || { id, counts: {} };
         if (p.humeur) { if (p.humeur < 1 || p.humeur > 5) throw new Error("Humeur : 1 à 5"); d.mood = p.humeur; }
         else if (p.habitude) { d.counts = d.counts || {}; d.counts[p.habitude] = (d.counts[p.habitude] || 0) + (Number.isInteger(p.ajout) ? p.ajout : 1); }
-        else throw new Error("Rien à régler"); await st().ecrire("kv", d); return { jour: j, humeur: d.mood || null, compteurs: d.counts }; } }
+        else throw new Error("Rien à régler"); await st().ecrire("kv", d); return { jour: j, humeur: d.mood || null, compteurs: d.counts }; } },
+    { nom: "personnaliser_hub", niveau: "CONFIRMATION", description: "Change l'apparence ou la disposition du hub, UNIQUEMENT quand Lucien le demande explicitement : couleur du thème, fenêtre (afficher/masquer, place, taille, figer), opacité, taille et couleur du texte d'une fenêtre. C'est une couche de réglages, pas du code : tout se défait (action « annuler », ou « tout_remettre »). Positions et tailles en pourcentage de l'écran. Ne touche ni à la sécurité, ni au Noyau, ni au labo.",
+      params: O({ action: S("annuler ou tout_remettre (facultatif ; sinon applique les changements demandés)", { enum: ["appliquer", "annuler", "tout_remettre"] }),
+        couleur: S("Couleur du thème à changer", { enum: ["cyan", "violet", "ambre", "encre", "discret", "fond", "rouge", "ok"] }), valeur: S("Nouvelle couleur #rrggbb"),
+        fenetre: S("Identifiant de la fenêtre (voir afficher / lire_fenetre : tasks, notes, agenda, favs, music, video, web, rituels, radar, pc, progress…)"),
+        visible: { type: "boolean" }, figee: { type: "boolean" }, x: { type: "number", description: "Bord gauche, % de l'écran (0-90)" }, y: { type: "number", description: "Bord haut, % (0-90)" }, largeur: { type: "number", description: "% (8-100)" }, hauteur: { type: "number", description: "% (8-100)" },
+        opacite: { type: "number", description: "0,3 à 1" }, taille_texte: { type: "integer", description: "11 à 26 px" }, couleur_texte: S("#rrggbb"), couleur_fond: S("#rrggbb") }),
+      resume: (p) => { try { return "Personnaliser le hub : " + perso().resume(p); } catch (e) { return "Personnaliser le hub (demande invalide : " + e.message + ")"; } },
+      exec: async (p) => perso().executer(p) },
+    { nom: "creer_raccourci", niveau: "CONFIRMATION", description: "Crée, liste ou supprime un raccourci : une phrase de Lucien qui rejoue une suite de 1 à 5 outils déjà autorisés (ex. « mode soirée » = lancer_focus puis afficher). Uniquement sur demande explicite de Lucien. Chaque étape garde son niveau de permission.",
+      params: O({ action: S("creer, supprimer ou lister", { enum: ["creer", "supprimer", "lister"] }), phrase: S("La phrase exacte qui déclenche le raccourci", { maxLength: 80 }), nom: S("Nom court (facultatif)", { maxLength: 60 }),
+        etapes: { type: "array", maxItems: 5, description: "Étapes dans l'ordre", items: { type: "object", properties: { outil: S("Nom d'un outil du catalogue"), params_json: S("Paramètres de l'outil en JSON, ex. {\"minutes\":25} (facultatif)", { maxLength: 400 }) }, required: ["outil"] } } }, ["action"]),
+      resume: (p) => { try { return rac().resume(p); } catch (e) { return "Raccourci (demande invalide : " + e.message + ")"; } },
+      exec: async (p) => rac().executerOutil(p) }
   ];
   for (const o of T) o.params = o.params || O();
   return T;

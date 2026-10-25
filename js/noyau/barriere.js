@@ -19,6 +19,7 @@ const FAMILLES = [
   { famille: "export des données", re: /\bcopie\w*\b[^.?!]{0,30}\b(memoire|donnees|souvenirs)\b[^.?!]{0,30}\b(dehors|exterieur|ailleurs|serveur|cloud|drive|internet)\b/ },
   { famille: "ouverture d'un site extérieur", re: /\b(ouvre|ouvrir|va sur|aller sur|redirige|lance)\b[^.?!]{0,30}(\bsites?\b|\bonglet\b|\blien\b|https?:\/\/|www\.|\.(com|fr|org|net|io)\b)/ },
   { famille: "modification de mon cerveau, de ma mémoire fondatrice ou de mes permissions", re: /\b(modifi|change|reecri|oubli|desactiv|ignor|supprim|contourn|leve|baisse|augmente)\w*\b[^.?!]{0,40}\b(ton cerveau|tes instructions|ta personnalite|tes regles|tes permissions|tes interdits|tes interdictions|tes limites|ton budget|memoire fondatrice|la barriere|les confirmations)\b/ },
+  { famille: "réécriture du code (je personnalise l'apparence et la disposition, jamais les fichiers)", re: /\b(modifi|change|reecri|edit|corrige|patch|supprim|ajoute)\w*\b[^.?!]{0,30}\b(ton code|le code|son code|code source|les fichiers|le fichier|index\.html|main\.js|sw\.js|les scripts?)\b/ },
   { famille: "modification de mon cerveau, de ma mémoire fondatrice ou de mes permissions", re: /\b(ignore|oublie)\b[^.?!]{0,30}\b(toutes? )?(les |tes |vos |ces )?(instructions|consignes|regles)\b/ }
 ];
 

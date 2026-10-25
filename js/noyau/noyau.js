@@ -4,6 +4,8 @@ import { pont } from "./pont.js";
 import { creerSens } from "./sens.js";
 import { creerPiper } from "./piper.js";
 import { creerVeille } from "./veille.js";
+import { creerRaccourcis } from "./raccourcis.js";
+import { creerPerso } from "./perso.js";
 import { definirMoteurVoix } from "./voix.js";
 import { hote, brancherHub } from "./hote.js";
 import { creerCatalogue } from "./outils.js";
@@ -25,20 +27,22 @@ import { creerUsages } from "./usages.js";
 import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.11";
+export const VERSION_NOYAU = "noyau-1.12";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation, sens: sensImpose = null } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
   const memoire = creerMemoire(), cerveau = creerCerveau(), etat = creerEtat(), budget = creerBudget();
   await Promise.all([memoire.charger(), cerveau.charger()]);
   const actualite = creerActualite({ memoire }), perception = creerPerception({ actualite, etat });
-  const catalogue = creerCatalogue({ memoire, interdits: async () => memoire.motsPrives() });
+  let racRef = null;
+  const catalogue = creerCatalogue({ memoire, interdits: async () => memoire.motsPrives(), raccourcis: () => racRef });
   let confirmerUI = null, surcharge = moteurImpose, geminiCache = null, local = null, verrou = () => false;
   const budgetClaude = creerBudget({ cleReglage: "noyau-budget-claude", cleMax: "noyau-plafond-claude", plafondParDefaut: PLAFOND_CLAUDE_DEFAUT }), jetonsClaude = creerBudgetJetons();
   const budgetLibre = creerBudget({ cleReglage: "noyau-budget-libre", cleMax: "noyau-plafond-libre", plafondParDefaut: PLAFOND_LIBRE_DEFAUT });
   /** Ce qui reste de requêtes, tous moteurs utilisables confondus : le cycle et le sommeil ne s'arrêtent que si plus aucun moteur n'est disponible. */
   const budgetTotal = { restant: () => budget.restant() + (cleLibre() ? budgetLibre.restant() : 0) + (cleClaude() && jetonsClaude.restant() > 500 ? budgetClaude.restant() : 0), plafond: () => budget.plafond(), utilisees: () => budget.utilisees() };
   const barriere = creerBarriere({ catalogue, confirmer: (d) => (confirmerUI ? confirmerUI(d) : false), delai: delaiConfirmation, verrouille: () => verrou() });
+  racRef = creerRaccourcis({ barriere });
 
   let claudeCache = null, autoCache = null, dernierMoteur = "";
   const cleLibre = () => (hote.secret.cleLibre ? hote.secret.cleLibre() : null);
@@ -124,7 +128,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     },
     version: VERSION_NOYAU, memoire, cerveau, etat, budget, budgetClaude, budgetLibre, jetonsClaude, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
     /** Pose une question. origine : lucien, voix, initiative, autonome. */
-    async poser(texte, origine = "lucien") { const r = await cycle.penser({ texte: String(texte).slice(0, 2000), origine }); signalerAValider(); return r; },
+    async poser(texte, origine = "lucien") { const rc = await racRef.tenter(String(texte).slice(0, 2000), origine); if (rc) { return rc; } const r = await cycle.penser({ texte: String(texte).slice(0, 2000), origine }); signalerAValider(); return r; },
     avis: (a) => cycle.avis(a),
     surMessage: (fn) => cycle.surMessage(fn),
     /** La fenêtre du hub branche ici sa confirmation ; sans elle, toute action à confirmer est refusée. */
@@ -204,6 +208,7 @@ export async function initNoyau() {
     } catch (e) { console.error("noyau", e); }
   }, 5 * 60e3);
   setTimeout(async () => { try { if (noyau.sommeil.moment({ ouvertureMatin: true })) await noyau.dormir(); } catch (e) { /* silencieux */ } }, 30000);
+  try { creerPerso().appliquer(); } catch (e) { /* hub sans personnalisation */ }       // couleurs et styles choisis par Lucien
   // Veille d'étude (opt-in) : une étude toutes les 8 min, écran maintenu allumé ; rapport du matin à la première occasion
   setTimeout(() => { if (noyau.veille.actif()) noyau.veille.reprendre(); }, 6000);
   setInterval(() => { if (noyau.veille.actif()) noyau.veille.cycle().then(() => noyau.cycle.emettre({ type: "a_valider", n: noyau.memoire.aValider().length })).catch(() => {}); }, 60 * 1000);

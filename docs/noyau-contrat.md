@@ -255,6 +255,8 @@ Règles générales :
 | `lire_mails` | Résume les mails importants : **leur contenu part chez Google** pour le résumé |
 | `jouer_media` | Lance une radio ou une vidéo (le son démarre) |
 | `regler_rituel` | Coche une habitude, note l'humeur |
+| `personnaliser_hub` | **Ajout du 25/10 (demande explicite de Lucien).** Apparence et disposition du hub, à sa demande seulement : couleurs du thème, fenêtres (afficher/masquer, place, taille, figer), opacité, taille et couleur du texte. C'est une couche de **réglages** vérifiés (liste blanche, aucun script ni URL), pas une réécriture du code : le principe 6 reste entier (aucun fichier du hub, du labo ni du cerveau n'est modifié). Fenêtres protégées : coffre, verrouillage, diag, synchro, Noyau, labo. Chaque changement est confirmé, se défait (« annuler », 20 pas) et se remet d'origine (« tout_remettre »). |
+| `creer_raccourci` | **Ajout du 25/10.** Une phrase exacte de Lucien rejoue 1 à 5 outils déjà autorisés (chaque étape garde son niveau et sa confirmation). Exclus : mémoire, cerveau, personnalisation, autres raccourcis, lecture de pages et de mails. Ne se déclenche jamais sur du texte extérieur. |
 
 ### INTERDIT
 

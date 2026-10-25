@@ -63,6 +63,7 @@ export function creerHubSimule(o = {}) {
     reglage: { lire: (k, d) => (regl.has(k) ? regl.get(k) : d), ecrire: (k, v) => { regl.set(k, String(v)); } },
     secret: { cle: () => cle, protege: () => true, cleClaude: () => cleC, definirCleClaude: (k) => { cleC = k || null; }, cleLibre: () => cleL, definirCleLibre: (k) => { cleL = k || null; } },
     hub: {
+      styleNoyau: (css) => { appels.push({ style: css }); }, disposer: async (id, d, o = {}) => { appels.push({ disposer: id, d, o }); if (id === "inconnue") return { ok: false, erreur: "Fenêtre inconnue" }; return { ok: true, avant: { x: 0.1, y: 0.1, w: 0.3, h: 0.3, pin: false, hid: false } }; }, remettreDisposition: async () => { appels.push({ remettre: 1 }); },
       actus: () => actus, meteo: () => meteo, contexteLive: () => live,
       agir: async (nom, p = {}) => { appels.push({ agir: nom, p }); if (nom === "afficher") return { ok: true, resume: "Fenêtre « " + p.fenetre + " » ramenée (simulé)." }; if (nom === "lancer_focus") return { ok: true, resume: "Focus " + p.minutes + " min lancé (simulé)." }; if (nom === "lire_fenetre") return { ok: true, texte: "(contenu simulé de la fenêtre " + p.fenetre + ")" }; return { ok: false, erreur: "Action « " + nom + " » non simulée." }; }
     },
