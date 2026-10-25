@@ -589,7 +589,7 @@ body.lite .gchip { padding: 7px 10px; font-size: 11px; }
 .ticker .it b { font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: .12em; padding: 2px 7px; color: var(--void); background: var(--c, var(--cyan)); }
 @keyframes tick { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .ticker .run { animation: none; } }
-body.cine:not(.lite) .ticker { opacity: .35; }
+body.cine:not(.lite) .ticker { opacity: .7; border-top-color: rgba(63,230,255,.15); }   /* cinéma : bandeau discret (bordure atténuée), textes à 4,5:1 au moins (ACTU, TECH, « à l'instant » ≈ 6,6:1) */
 body.cine:not(.lite) .ticker:hover { opacity: 1; }
 body:not(.lite) .fps { bottom: 48px; }
 .desk { bottom: 52px; }
