@@ -22,7 +22,7 @@ export const CHANTIERS = [
     { t: "Essayer la vue vocale sur Android (Chrome)", s: "attend", n: "Bouton « Parler » en haut" }] },
   { id: "avance", nom: "Options avancées (facultatives)", etapes: [
     { t: "Synchro PC/téléphone : les journaux se fusionnent sans rien écraser", s: "fait" }, { t: "Recherche par le sens (embeddings, WebGPU ou WebAssembly)", s: "fait" }, { t: "Voix naturelle Piper avec repli sur la voix du système", s: "fait" }, { t: "Interruption à la voix dans la vue vocale", s: "fait" },
-    { t: "Essayer le sens et Piper sur ton appareil (téléchargements)", s: "attend", n: "Réglages → Sens, voix naturelle, interruption" }, { t: "Kiwix (encyclopédie hors ligne)", s: "attend", n: "Demande un fichier ZIM et un serveur local de ta part" }] },
+    { t: "Essayer le sens et Piper sur ton appareil (téléchargements)", s: "attend", n: "Réglages → Sens, voix naturelle, interruption" }, { t: "Veille d'étude : étudier seul, écran allumé, avec rapport du matin", s: "fait" }, { t: "Essayer la veille une nuit complète, branché", s: "attend", n: "Réglages → Veille d'étude" }, { t: "Kiwix (encyclopédie hors ligne)", s: "attend", n: "Demande un fichier ZIM et un serveur local de ta part" }] },
   { id: "visuel", nom: "Visuel", etapes: [
     { t: "Carte neuronale : influx électriques sur les sous-thèmes en cours ou validés", s: "fait" }, { t: "Onglet Visuel du labo : carte, radars des critères, courbes", s: "fait" },
     { t: "Orbe centrale avec flux de données, domaines proches voisins, vue entièrement occupée", s: "fait" }, { t: "Test automatique pour valider un point de connaissance", s: "fait" }] },
@@ -69,5 +69,6 @@ export const PLAN_TEST = [
   ["t-sens", "Réglages : activer la recherche par le sens, attendre l'indexation, poser une question avec un synonyme"],
   ["t-piper", "Réglages : activer la voix naturelle et écouter une réponse (puis vérifier le repli si hors ligne)"],
   ["t-sync", "Faire une action sur le PC puis sur le téléphone, synchroniser, et vérifier que le journal du Noyau contient les deux"],
+  ["t-veille", "Brancher le téléphone, lancer la veille d'étude, laisser 1 h, puis lire le rapport et valider les fiches proposées"],
   ["t-android", "Ouvrir le hub sur Android et refaire une capture « Note : »"]
 ];

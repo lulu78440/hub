@@ -3,6 +3,7 @@
 import { pont } from "./pont.js";
 import { creerSens } from "./sens.js";
 import { creerPiper } from "./piper.js";
+import { creerVeille } from "./veille.js";
 import { definirMoteurVoix } from "./voix.js";
 import { hote, brancherHub } from "./hote.js";
 import { creerCatalogue } from "./outils.js";
@@ -24,7 +25,7 @@ import { creerUsages } from "./usages.js";
 import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.9";
+export const VERSION_NOYAU = "noyau-1.10";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation, sens: sensImpose = null } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
@@ -80,6 +81,12 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const usages = creerUsages({ barriere, memoire });
   const cycle = creerCycle({ moteur, barriere, catalogue, memoire, perception, cerveau, etat, budget: budgetTotal, usages });
   const savoir = creerSavoir({ memoire, barriere, juge: async (sys, txt) => { if (budgetTotal.restant() <= 0) throw new Error("budget du jour épuisé"); return demanderTexte(sys, txt); }, strict: () => hote.reglage.lire("noyau-test-strict", "on") !== "off" });
+  const veille = creerVeille({
+    savoir, memoire, lire: (k) => hote.reglage.lire("noyau-" + k, ""), ecrire: (k, v) => hote.reglage.ecrire("noyau-" + k, v), maintenant: () => hote.maintenant(), enLigne: () => hote.enLigne(),
+    batterie: async () => { if (typeof navigator === "undefined" || !navigator.getBattery) return null; const b = await navigator.getBattery(); return { niveau: b.level, charge: b.charging }; },
+    verrou: typeof navigator !== "undefined" && navigator.wakeLock ? { prendre: () => navigator.wakeLock.request("screen"), lacher: (v) => v.release() } : null,
+    emettre: (e) => cycle.emettre(e)
+  });
   const initiative = creerInitiative({ memoire, actualite, etat, barriere, savoir });
   const sommeil = creerSommeil({ memoire, cerveau, etat, budget: budgetTotal, moteur, emettre: cycle.emettre, phase: cycle.phase });
   await cycle.charger();
@@ -88,7 +95,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const demanderTexte = async (systeme, texte) => { const r = await moteur().generer({ systeme, messages: [{ role: "user", texte }], outils: [], temperature: 0.2 }); return String(r.texte || "").trim() || "(pas de réponse)"; };
   const sentinelle = creerSentinelle({ demander: demanderTexte });
   const noyau = {
-    sentinelle, demanderTexte, usages, savoir, sens, piper,
+    sentinelle, demanderTexte, usages, savoir, sens, piper, veille,
     /** Recommandation système de l'orbe : locale, sans requête ; montrée dans l'échange du Noyau. */
     async recommander() { const r = await sentinelle.recommandation(); cycle.emettre({ type: "initiative", texte: r.texte, raison: "systeme", niveau: r.niveau, action: r.id === "export" || r.id === "tip-export" ? "export" : null }); if (r.niveau === "critique" || r.niveau === "alerte") hote.ui.toast("Sécurité : " + r.texte.slice(0, 90)); return r; },
     sauvegarde: creerSauvegarde(),
@@ -196,6 +203,12 @@ export async function initNoyau() {
     } catch (e) { console.error("noyau", e); }
   }, 5 * 60e3);
   setTimeout(async () => { try { if (noyau.sommeil.moment({ ouvertureMatin: true })) await noyau.dormir(); } catch (e) { /* silencieux */ } }, 30000);
+  // Veille d'étude (opt-in) : une étude toutes les 8 min, écran maintenu allumé ; rapport du matin à la première occasion
+  setTimeout(() => { if (noyau.veille.actif()) noyau.veille.reprendre(); }, 6000);
+  setInterval(() => { if (noyau.veille.actif()) noyau.veille.cycle().then(() => noyau.cycle.emettre({ type: "a_valider", n: noyau.memoire.aValider().length })).catch(() => {}); }, 60 * 1000);
+  const rapporter = () => { if (document.hidden || noyau.veille.actif()) return; const r = noyau.veille.rapport(); if (r) { cycle.emettre({ type: "initiative", raison: "veille", texte: r.texte }); noyau.veille.marquerVu(r); } };
+  setTimeout(rapporter, 9000);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) return; if (noyau.veille.actif()) noyau.veille.reprendre(); else rapporter(); });
   window.__noyau = noyau;         // pour les essais en console
   return noyau;
 }

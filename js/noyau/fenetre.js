@@ -290,6 +290,21 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     return z;
   }
 
+  // ---------- Veille d'étude ----------
+  function veilleBloc() {
+    const z = h("div", { class: "nx-claude" }), msg = h("p", { class: "nx-dim" });
+    const dessiner = () => {
+      const st = noyau.veille.statut(), r = noyau.veille.rapport();
+      z.textContent = "";
+      z.append(
+        h("p", { class: "nx-dim", texte: "Laisse l'appareil branché et allumé : le Noyau étudie seul le programme (une recherche toutes les 8 minutes, 40 par jour au plus) et dépose des fiches dans « À valider ». Rien n'est appris sans toi. Il s'arrête si la batterie passe sous 20 % hors charge, hors ligne, ou si 20 propositions attendent. L'écran reste allumé tant que la veille est active." }),
+        h("div", { class: "nx-actions" }, h("button", { class: "nx-btn" + (st.actif ? "" : " nx-primaire"), type: "button", onclick: async (ev) => { if (!ev.isTrusted) return; ev.currentTarget.disabled = true; const s = await noyau.veille.activer(!st.actif); msg.textContent = s.actif ? (s.ecranAllume ? "Veille lancée, écran maintenu allumé." : "Veille lancée, mais ce navigateur ne garde pas l'écran allumé : désactive la mise en veille de l'écran.") : "Veille arrêtée."; dessiner(); } }, st.actif ? "Arrêter la veille" : "Lancer la veille d'étude")),
+        h("p", { class: "nx-dim", texte: `État : ${st.actif ? "active" : "coupée"} · aujourd'hui ${st.aujourdhui.etudes}/${st.maxJour} études, ${st.aujourdhui.fiches} fiches proposées.` }),
+        r ? h("p", { class: "nx-dim", texte: r.texte }) : null, msg);
+    };
+    dessiner(); return z;
+  }
+
   // ---------- Sauvegarde dans un dossier du PC ----------
   function sauvegardeBloc() {
     const z = h("div", { class: "nx-sauv" });
@@ -341,6 +356,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
         h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.cycle.oublierConversation(); fil.textContent = ""; accueilVide(); changerVue("chat"); } }, "Nouvelle conversation")),
       h("h4", { texte: "Claude (API payante) et choix automatique" }), claudeBloc(s),
       h("h4", { texte: "Relais gratuit de secours" }), libreBloc(s),
+      h("h4", { texte: "Veille d'étude (laisser tourner)" }), veilleBloc(),
       h("h4", { texte: "Sens, voix naturelle, interruption" }), avancesBloc(),
       h("h4", { texte: "Sauvegarde automatique" }), sauvegardeBloc(),
       h("h4", { texte: "Références consultées" }), sourcesBloc(),
