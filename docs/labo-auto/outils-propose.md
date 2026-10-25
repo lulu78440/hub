@@ -10,3 +10,4 @@ Aucun de ces outils n'est dans le catalogue. Ils ne le seront qu'après un « va
 | `lire_contradictions` (aucun paramètre) | LIBRE | Lecture seule de signaux calculés par règles (au plus 3, un signal écarté ne revient pas) | lab-contradictions | `detecterContradictions()` dans `js/noyau/contradictions.js` |
 
 **Pas d'outil pour le passeport (lab-passeport)** : « exporter les données » est INTERDIT pour le Noyau. Le passeport se prépare et s'exporte par un **bouton cliqué par Lucien** (aperçu, secrets retirés, confirmation), jamais par un appel de l'IA.
+| `creer_routine` (paramètres : `id`, `nom`, `declencheur`, `etapes`) | CONFIRMATION | Écriture : crée ou modifie une routine ; Lucien valide la liste des étapes ; ne lance rien. Le lancement reste un geste de Lucien (bouton, phrase exacte, ou heure avec fenêtre de validation) | lab-n8n-routines | `validerRoutine()` dans `js/noyau/routines.js` |
