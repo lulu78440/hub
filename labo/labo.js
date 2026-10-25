@@ -13,6 +13,7 @@ import { SOURCES, interroger } from "../js/noyau/sources.js";
 import { creerEtatLabo } from "./etat-labo.js";
 import { rendreLabo } from "./labos.js";
 import { rendreProgression, rendreIdees } from "./progression.js";
+import { rendreComposants } from "./composants-demo.js";
 
 const $ = (s) => document.querySelector(s);
 const h = (tag, a = {}, ...k) => { const e = document.createElement(tag); for (const [n, v] of Object.entries(a)) { if (v == null || v === false) continue; if (n === "class") e.className = v; else if (n.startsWith("on")) e.addEventListener(n.slice(2), v); else e.setAttribute(n, v === true ? "" : v); } for (const c of k.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c)); return e; };
@@ -29,6 +30,7 @@ const labos = {};
 function rendrePanneau(n) {
   if (n === "progression") rendreProgression($("#p-progression"), ctx);
   else if (n === "visuel") rendreVisuel($("#p-visuel"), ctx);
+  else if (n === "composants") rendreComposants($("#p-composants"));
   else if (n === "idees") rendreIdees($("#p-idees"), ctx);
   else if (n === "social" || n === "reflexion") { if (!labos[n]) labos[n] = rendreLabo($("#p-" + n), n, ctx); else labos[n].rafraichir(); }
 }
@@ -43,7 +45,7 @@ async function demarrer() {
     if (m.type === "reponse" || m.type === "erreur") rendreInspecteur();
     if (m.type === "reponse" && !m.refaite) { const t = noyau.inspecteur()[0]; if (t) etat.ajouterMetrique({ ms: t.ms, requetes: t.requetes, tokens: t.tokens, longueur: (m.texte || "").length, confiance: m.confiance, sources: (m.sources || []).length, ton: m.ton, reflexe: !!t.reflexe, finQuestion: !!t.finQuestion, repete: !!t.repete, moteur: modeMoteur }); }
   });
-  window.__noyau = noyau; window.__hub = hub;
+  window.__noyau = noyau; window.__hub = hub; window.__fenetre = fenetre;
   rendreInspecteur(); rendreHub(); rendreMoteur();
 }
 function appliquerMoteur() {

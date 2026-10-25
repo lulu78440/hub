@@ -5,6 +5,7 @@
 import { hote } from "./hote.js";
 import { SOURCES, DOMAINES } from "./sources.js";
 import { lire as lireVoix, arreter as arreterVoix, dicter, lectureDispo, dicteeDispo } from "./voix.js";
+import { rendre as rendreComposant } from "./modules/composants.js";
 
 const PHASES = { reflechit: "Je réfléchis", se_souvient: "Je me souviens", cherche: "Je cherche", attend: "J'attends ton accord", parle: "Je réponds", dort: "Je consolide ma mémoire", repos: "Au repos", horsligne: "Hors ligne" };
 const CONFIANCE = { haute: ["sûr", "ok"], moyenne: ["à vérifier", "mid"], basse: ["incertain", "low"] };
@@ -445,6 +446,15 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   return {
     racine, poser, note, changerVue,
     ouvrir() { const w = conteneur.closest(".win"); if (w) { document.dispatchEvent(new CustomEvent("hub:focus-win", { detail: w.dataset.id })); w.classList.remove("hid"); } saisie.focus(); },
-    rafraichir() { majBudget(); majNav(); }
+    rafraichir() { majBudget(); majNav(); },
+    /** Lot 2 : affiche un composant (courbe, barres, tableau, chiffre_cle) dans l'échange. Appelable par le code seulement :
+     *  aucun outil du Noyau n'y mène tant que Lucien n'a pas validé afficher_module. Refus clair si le jeu est invalide ou sans source. */
+    afficherComposant(type, jeu, options = {}) {
+      fil.querySelector(".nx-vide")?.remove();
+      const el = rendreComposant(type, jeu, options);
+      fil.append(h("article", { class: "nx-m nx-noyau nx-module" }, el, h("div", { class: "nx-actions" }, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Fermer"))));
+      fil.scrollTop = fil.scrollHeight;
+      return el;
+    }
   };
 }
