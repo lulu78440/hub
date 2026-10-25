@@ -1,6 +1,6 @@
 # Banc d'essai · rapport
 
-## Résumé de la mission autonome du 25/10, 19 h 31 → 20 h 00 (poste Banc de test)
+## Résumé de la mission autonome du 25/10, 19 h 31 → 20 h 41 (poste Banc de test, 41 min de retard sur l'heure de fin)
 
 1. **Problèmes : 33** · critique 1 (B7) · importants 15 (B3-B6, B8, B9, B14, B18, B23-B25, B28, B29, L1, L2) · mineurs 17. Corrigés sur `banc-essai` (25) sauf B2, B14-B16 (décrits) et L1-L4 (branches des autres postes, décrits).
 2. **main reste exposée** à B3, B4, B5, B8 et B29 (rejoué ce soir sur main c611939) : les corrections attendent sur `banc-essai`, sans conflit avec main (essai du 25/10).

@@ -1,4 +1,4 @@
-# Banc de test · branches refonte-auto et labo-auto (25/10, 19 h 40 → 19 h 53)
+# Banc de test · branches refonte-auto et labo-auto (25/10, 19 h 40 → 20 h 35)
 
 Méthode (la plus prudente dans le temps disponible) : la suite du banc (`tools/tests/` de `banc-essai`) est copiée dans une copie jetable de chaque branche, et rejouée aussi sur **main c611939** comme référence. Un échec qui existe déjà sur main n'est pas imputé à la branche. Rien n'est fusionné, rien n'est poussé sur ces branches.
 
