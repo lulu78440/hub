@@ -1,10 +1,10 @@
 # État de la mission autonome (labo-auto) · résumé de 20 h 00
 
-1. **Fait** (branche `labo-auto`, rien sur `main`) : manuel du hub (format, lecteur, 3 fiches, 14 fiches à valider), règle « aucun outil sans validation » appliquée, socle d'IA locale (détection, worker, mot par mot), gestion des modèles, badge honnête, verrou, hors ligne, décisions, contradictions, passeport, voix locale (modules) et performance.
-2. **Essais** : 24 suites dans `labo/` toutes bonnes (`node labo/essais*.mjs`), dont 8 nouvelles ; aperçu ouvert sans erreur dans un navigateur.
+1. **Fait** (branche `labo-auto`, rien sur `main`) : manuel du hub (format, lecteur, 3 fiches, 14 fiches à valider), règle « aucun outil sans validation » appliquée, socle d'IA locale (détection, worker, mot par mot), gestion des modèles, badge honnête, verrou, hors ligne, décisions, contradictions, passeport, voix locale (modules), performance, citations phrase par phrase, méthode de veille des briques libres.
+2. **Essais** : 25 suites dans `labo/` toutes bonnes (`node labo/essais*.mjs`), dont 9 nouvelles ; aperçu ouvert sans erreur dans un navigateur.
 3. **À tester en priorité** : ouvrir `apercu-labo.html` (double-clic) ; lire `docs/labo-auto/a-decider.md`.
 4. **Jamais essayé en réel** : WebLLM (WebGPU) et Transformers.js (WASM) dans le worker, tailles des modèles (estimations), licence de la voix Piper.
-5. **Décisions prises à ta place** : 17, listées dans `decisions.md` (la plus importante : la liste des 34 outils existants est tenue pour validée).
+5. **Décisions prises à ta place** : 19, listées dans `decisions.md` (la plus importante : la liste des 34 outils existants est tenue pour validée).
 6. **Outils proposés en attente** : `consulter_manuel`, `chercher_decisions`, `lire_contradictions` (LIBRE) ; `proposer_decision` (CONFIRMATION). Aucun actif ; aucun outil pour le passeport (bouton de Lucien).
 7. **Rien n'est branché dans le hub** : les nouveaux modules ne sont pas importés par le Noyau (cache `sw.js` et interface = fichiers partagés).
 8. **Suivi du Hub** : non mis à jour (rien n'est livré au sens du Suivi tant que ce n'est pas branché et validé) ; à faire à ton retour.
@@ -23,3 +23,5 @@
 | 7 · Fiches de rattrapage | 14 fiches à valider dans `docs/labo-auto/manuel-a-valider/` (emplacement provisoire) | `node labo/essais-manuel-rattrapage.mjs` : tout est bon |
 | 8 · lab-voix (modules) et lab-perf | Fait : rééchantillonnage, découpe, dictée, backend Whisper du worker (jamais essayé en réel), mesures de vitesse, mémoire, batterie | `node labo/essais-voix-perf.mjs` : tout est bon |
 | 9 · Aperçu | `apercu-labo.html` (double-clic, sans réseau), généré par `python3 labo/apercu.py`, ouvert sans erreur dans Chromium | |
+| 10 · lab-khoj-sources | Fait (`citations.js`, contrôle local phrase par phrase) | `node labo/essais-citations.mjs` : tout est bon |
+| 11 · lab-veille-os | Méthode et fiche modèle écrites (`veille-os.md`) ; aucune brique examinée | |
