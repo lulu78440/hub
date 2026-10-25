@@ -3,7 +3,7 @@
 // 12 images au maximum, réduites à 1600 px et stockées sur l'appareil (collection images, incluses dans l'export).
 import { store, newId } from "../store/storage.js";
 import { toast } from "../ui/toast.js";
-import { registerMenu } from "../ui/menus.js";
+import { registerMenu, extendMenu } from "../ui/menus.js";
 import { state, pulse } from "../state.js";
 
 const C = "images", MAX = 12, MAXSIDE = 1600;
@@ -121,7 +121,7 @@ export function initImages({ world, plans, force, wins }) {
       { t: "Taille d'origine", fn: () => { d.w = Math.min(d.nw, 900); d.h = d.w / d.ratio; size(p); save(p); } },
       "-", { t: "Supprimer l'image", fn: () => remove(p) }];
   });
-  registerMenu("fond", (t, x, y) => [{ t: "Ajouter une image ici", k: "Ctrl+V", fn: () => { pickAt = toWorld(x, y); pick.click(); } }]);
+  extendMenu("fond", (t, x, y) => [{ t: "Ajouter une image ici", k: "Ctrl+V", fn: () => { pickAt = toWorld(x, y); pick.click(); } }]);
 
   function update(dt) {
     W = wins.size.W; H = wins.size.H;

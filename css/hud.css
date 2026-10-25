@@ -1016,3 +1016,10 @@ body:not(.lite) .win.t-holo::before { transform: translateZ(-40px); }   /* le ha
 body.room:not(.lite) .world { transform-style: preserve-3d; }
 body.room:not(.lite):not(.salle-light) .win.p2:not(.reduced) { -webkit-box-reflect: below 8px linear-gradient(transparent 64%, rgba(255, 255, 255, .15)); }
 body.cine:not(.lite) .win.p2 .panel { box-shadow: 0 0 40px rgba(63, 230, 255, .12); }
+
+/* Jauge de niveau (molette sur une fenêtre maintenue) */
+.lvl-gauge { position: fixed; z-index: 13; display: flex; flex-direction: column; gap: 4px; padding: 8px; background: rgba(4, 16, 28, .94); box-shadow: 0 0 0 1px rgba(63, 230, 255, .3); font: 600 12px var(--ui); letter-spacing: .12em; color: var(--dim); pointer-events: none; }
+.lvl-gauge[hidden] { display: none; }
+.lvl-gauge span { padding: 3px 10px; }
+.lvl-gauge span.on { color: #02060d; background: var(--cyan); }
+body.lite .lvl-gauge { display: none; }

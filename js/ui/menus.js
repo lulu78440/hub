@@ -29,22 +29,19 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
       { t: "La réveiller", fn: () => toast("Pas encore : elle se réveillera quand l'IA sera branchée (phase 6)") },
       { t: "Masquer l'entité", fn: () => entity.setOn(false) }];
   }
-  function planItems() {
-    return [{ h: "Aller au plan" },
-      { t: "Plan 1 · Hub", k: "1", fn: () => plans.goPlan(1), off: plans.plan === 1 },
-      { t: "Plan 2 · Notes et applis", k: "2", fn: () => plans.goPlan(2), off: plans.plan === 2 },
-      { t: "Plan 3 · Bureau du PC", k: "3", fn: () => plans.goPlan(3), off: plans.plan === 3 }];
-  }
-  function bgMenu(t, x, y) {
-    const it = [{ h: "Hub" }, ...(hooks.fond ? hooks.fond(t, x, y) : []),
-      { t: entity.on ? "Masquer l'entité" : "Afficher l'entité", fn: () => entity.setOn(!entity.on) }];
+  // Menus allégés (refonte, 25/10) : peu de lignes en tête, le reste derrière « Plus… » ; plus aucune navigation
+  // (changer de plan, ramener vers soi ou devant se fait à la molette). Rien ne disparaît : les lignes rares restent à un clic.
+  let at = { x: 0, y: 0 };
+  const level = (items) => menu.open(at.x, at.y, items);
+  const lines = (arr) => (arr || []).filter((i) => i && i !== "-" && !i.h && !i.note);
+  const FOND_TETE = [/^Focus 25/, /^Arrêter le Focus/, /^Revoir le briefing/, /image ici/i, /^Verrouiller maintenant/];
+  function bgMenu(t, x, y, back) {
+    const all = lines(hooks.fond ? hooks.fond(t, x, y) : []);
+    const head = all.filter((i) => FOND_TETE.some((r) => r.test(i.t))), rest = all.filter((i) => !head.includes(i));
     const hidden = wins.hiddenEls();
-    if (hidden.length) {
-      it.push("-", { h: "Fenêtres masquées" });
-      hidden.forEach((el) => it.push({ t: "Afficher « " + wins.title(el) + " »", fn: () => wins.setHidden(el, false) }));
-    }
-    it.push("-", ...planItems(), "-",
-      { t: document.fullscreenElement ? "Quitter le plein écran" : "Plein écran", k: "F11", fn: () => $("fs").click() },
+    const plus = [...rest,
+      { t: entity.on ? "Masquer l'entité" : "Afficher l'entité", fn: () => entity.setOn(!entity.on) },
+      "-", { t: document.fullscreenElement ? "Quitter le plein écran" : "Plein écran", k: "F11", fn: () => $("fs").click() },
       { t: cursor.forced ? "Curseur normal" : "Curseur HUD", fn: () => toast(cursor.toggle() ? "Curseur HUD activé" : (cursor.on ? "Curseur HUD : reste actif en plein écran" : "Curseur normal")) },
       { t: "Réinitialiser la disposition", fn: resetLayout },
       "-", { h: "Rappels" },
@@ -53,21 +50,28 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
       "-", { h: "Mes données" },
       { t: "Exporter (fichier de sauvegarde)", fn: data.exportFile },
       { t: "Importer un export…", fn: data.importFile },
-      { t: "Importer le Coffre du Hub (ajoute sans effacer)…", fn: data.importCoffre });
+      { t: "Importer le Coffre du Hub (ajoute sans effacer)…", fn: data.importCoffre },
+      "-", { t: "‹ Retour", fn: () => level(bgMenu(t, x, y)) }];
+    if (back) return plus;
+    const it = [{ h: "Hub" }, ...head];
+    if (hidden.length) it.push({ t: "Fenêtres masquées (" + hidden.length + ")…", fn: () => level([{ h: "Fenêtres masquées" },
+      ...hidden.map((el) => ({ t: "Afficher « " + wins.title(el) + " »", fn: () => wins.setHidden(el, false) })), "-", { t: "‹ Retour", fn: () => level(bgMenu(t, x, y)) }]) });
+    it.push("-", { t: "Plus…", fn: () => level([{ h: "Hub · plus" }, ...bgMenu(t, x, y, true)]) });
     return it;
   }
-  function winMenu(el, t) {
+  function winMenu(el, t, back) {
     const id = el.dataset.id, s = wins.S[id];
-    const it = hooks[id] ? hooks[id](el, t) || [] : [];
-    if (it.length) it.push("-");
-    it.push({ h: "Fenêtre · " + wins.title(el) },
-      wins.focused === el ? { t: "Renvoyer en arrière", k: "Échap", fn: () => wins.unfocus() } : { t: "Ramener vers moi", fn: () => wins.focus(el), off: s.hid },
-      { t: s.pin ? "Libérer la fenêtre" : "Figer la fenêtre", fn: () => wins.togglePin(el) },
+    const own = lines(hooks[id] ? hooks[id](el, t) || [] : []), extra = lines(hooks.fenetre ? hooks.fenetre(el, t) || [] : []);
+    const plus = [...own.slice(3), ...extra,
       { t: s.max ? "Restaurer la taille" : "Agrandir", k: "double-clic", fn: () => wins.toggleMax(el), off: s.pin },
-      { t: "Ramener devant", fn: () => wins.bringFront(el) },
-      { t: "Masquer la fenêtre", fn: () => wins.setHidden(el, true) });
-    if (hooks.fenetre) it.push(...(hooks.fenetre(el, t) || []));
-    return it;
+      "-", { t: "‹ Retour", fn: () => level(winMenu(el, t)) }];
+    if (back) return plus;
+    return [{ h: wins.title(el) }, ...own.slice(0, 3), ...(own.length ? ["-"] : []),
+      { t: s.red ? "Rouvrir" : "Réduire", fn: () => wins.toggleReduced(el) },
+      { t: "Personnaliser…", fn: () => wins.personnaliser(el) },
+      { t: s.pin ? "Libérer la fenêtre" : "Figer la fenêtre", fn: () => wins.togglePin(el) },
+      { t: "Masquer la fenêtre", fn: () => wins.setHidden(el, true) },
+      "-", { t: "Plus…", fn: () => level([{ h: wins.title(el) + " · plus" }, ...winMenu(el, t, true)]) }];
   }
   function deskMenu() {
     return [{ h: "Plan 3 · bureau du PC" }, { note: "Dossiers, fichiers et applis : sous-étape 2.8" },
@@ -79,14 +83,13 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     if (state.lite || e.shiftKey) return;
     const t = e.target && e.target.closest ? e.target : document.body;
     if (t.closest("input, textarea, [contenteditable='true'], .diag, .ctx")) return;
-    e.preventDefault();
+    e.preventDefault(); at = { x: e.clientX, y: e.clientY };
     const winEl = t.closest(".win:not(.mob-only)"), zone = t.closest("[data-menu]");
     const items = t.closest("#logo") || (entity.near(e.clientX, e.clientY) && !zone && !winEl && !t.closest(".top")) ? entMenu()
       : zone && hooks[zone.dataset.menu] ? hooks[zone.dataset.menu](zone, t) || []
       : winEl ? winMenu(winEl, t)
       : plans.plan === 3 ? deskMenu()
       : bgMenu(t, e.clientX, e.clientY);
-    items.push("-", { note: "Maj + clic droit : menu du navigateur" });
     menu.open(e.clientX, e.clientY, items);
   });
 

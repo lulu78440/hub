@@ -4,7 +4,6 @@
 // Mobile : rien (la disposition empilée reste maîtresse).
 import { state, pulse } from "../state.js";
 import { prefs } from "../store/prefs.js";
-import { extendMenu } from "./menus.js";
 
 const KEY = "tuiles-pc-v1";
 const STYLES = [["normal", "Normal"], ["holo", "Hologramme 3D"], ["fin", "Fin"], ["verre", "Verre"], ["minimal", "Minimal"]];
@@ -103,6 +102,5 @@ export function initTuiles({ els, rescale }) {
   addEventListener("pointerdown", (e) => { if (!box.hidden && !box.contains(e.target) && !(e.target.closest && e.target.closest("#ctx"))) close(); }, true);
   addEventListener("keydown", (e) => { if (!box.hidden && e.key === "Escape") { e.stopPropagation(); close(); } }, true);
 
-  extendMenu("fenetre", (el) => [{ t: "Personnaliser…", fn: () => open(el) }]);
   return { open, get };
 }

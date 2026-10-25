@@ -221,6 +221,67 @@ export function createWindows({ world, plans, force }) {
     else if ((e.key === "1" || e.key === "2" || e.key === "3") && !(e.target.closest && e.target.closest("input, textarea")) && !e.ctrlKey && !e.metaKey && !e.altKey) unfocus(true);
   });
 
+  // ---------- Molette : changer une fenêtre de niveau (vers moi · plan 1 · plan 2) ----------
+  // Clic maintenu sur une fenêtre + molette vers le haut : elle vient vers toi ; vers le bas : elle repart. Alt + flèche haut / bas au survol.
+  let holdEl = null, stepAt = 0, gaugeT = 0;
+  const gauge = document.createElement("div"); gauge.className = "lvl-gauge"; gauge.hidden = true; gauge.setAttribute("aria-hidden", "true");
+  gauge.innerHTML = '<span data-l="2">VERS MOI</span><span data-l="1">PLAN 1</span><span data-l="0">PLAN 2</span>'; document.body.append(gauge);
+  const levelOf = (el) => (focusEl === el ? 2 : planOf(el) === 1 ? 1 : 0);
+  function showGauge(el, l) {
+    const r = el.getBoundingClientRect(); gauge.hidden = false;
+    gauge.querySelectorAll("span").forEach((sp) => sp.classList.toggle("on", +sp.dataset.l === l));
+    const gw = gauge.offsetWidth || 110; gauge.style.left = Math.max(8, Math.min(r.right + 10 > innerWidth - gw - 8 ? r.left - gw - 10 : r.right + 10, innerWidth - gw - 8)) + "px";
+    gauge.style.top = Math.max(8, Math.min(r.top + 10, innerHeight - 110)) + "px";
+    clearTimeout(gaugeT); gaugeT = setTimeout(() => { gauge.hidden = true; }, 1300);
+  }
+  const rect1 = (el) => { const s = S[el.dataset.id]; return { x: s.tx, y: s.ty, w: s.w, h: s.h }; };
+  const hit = (a, b, g) => a.x < b.x + b.w + g && b.x < a.x + a.w + g && a.y < b.y + b.h + g && b.y < a.y + a.h + g;
+  /** Plan 1 : la place libre la plus proche de la colonne du côté d'où elle vient (hors de la zone de l'orbe). */
+  function toPlan1(el) {
+    const s = S[el.dataset.id], left = (s.wa ?? s.waAuto) < 0;
+    s.w = Math.min(s.w, W * 0.4); s.h = Math.min(s.h, H - 124 - 52); applySize(el, s);
+    const others = els.filter((o) => o !== el && S[o.dataset.id] && !S[o.dataset.id].hid && planOf(o) === 1).map(rect1);
+    const orb = { x: core.x - 230, y: core.y - 190, w: 460, h: 380 };
+    let best = null, bestD = 1e9;
+    for (let y = 124; y <= H - 52 - s.h; y += 20) for (let x = 16; x <= W - 16 - s.w; x += 20) {
+      const r = { x, y, w: s.w, h: s.h };
+      if (others.some((o) => hit(r, o, 14))) continue;
+      const d = Math.hypot(x + s.w / 2 - (left ? W * 0.18 : W * 0.82), y + s.h / 2 - H * 0.5) + (hit(r, orb, 0) ? 600 : 0);
+      if (d < bestD) { bestD = d; best = r; }
+    }
+    s.tx = best ? best.x : clamp(W / 2 - s.w / 2, 16, W - s.w - 16); s.ty = best ? best.y : 140; s.wa = null; s.wy = 0;
+    wallSig = ""; el.style.zIndex = ++zTop; save();
+  }
+  /** Plan 2 : la place libre du mur la plus proche de ton regard. */
+  function toPlan2(el) {
+    const s = S[el.dataset.id], P = P0;
+    const wall = els.filter((o) => o !== el && S[o.dataset.id] && S[o.dataset.id].isWall).map((o) => { const q = S[o.dataset.id]; return { u: P * Math.tan(q.wa ?? q.waAuto), w: q.w }; });
+    let th = plans.yaw;
+    for (let k = 0; k < 24; k++) {
+      const off = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.12, u = P * Math.tan(plans.yaw + off);
+      if (!wall.some((o) => Math.abs(o.u - u) < (o.w + s.w) / 2 + WALL_GAP)) { th = plans.yaw + off; break; }
+    }
+    s.tx = W + 50; s.ty = Math.max(124, s.ty); s.wa = th; s.wy = 0; s.max = null; wallSig = ""; save();
+  }
+  function setLevel(el, l) {
+    const s = S[el.dataset.id]; if (!s || s.hid || state.lite) return;
+    const cur = levelOf(el); if (l === cur) return;
+    if (s.pin) { toast("Fenêtre figée : libère-la d'abord (punaise)"); return; }
+    if (cur === 2) unfocus(l === 0);
+    if (l === 2) { if (cur === 0) toPlan1(el); focus(el); }
+    else if (l === 1) { if (cur === 0) toPlan1(el); }
+    else toPlan2(el);
+    pulse(0.5); showGauge(el, l);
+  }
+  const step = (el, dir) => { const t = performance.now(); if (t - stepAt < 330) return; stepAt = t; setLevel(el, clamp(levelOf(el) + dir, 0, 2)); };
+  addEventListener("wheel", (e) => { if (!holdEl || state.lite) return; e.preventDefault(); e.stopPropagation(); step(holdEl, e.deltaY < 0 ? 1 : -1); }, { passive: false, capture: true });
+  ["pointerup", "pointercancel", "blur"].forEach((t) => addEventListener(t, () => { holdEl = null; }, true));
+  addEventListener("keydown", (e) => {
+    if (!e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown") || state.lite || (e.target.closest && e.target.closest("input, textarea"))) return;
+    const el = focusEl || els.find((o) => S[o.dataset.id] && S[o.dataset.id].hover); if (!el) return;
+    e.preventDefault(); step(el, e.key === "ArrowUp" ? 1 : -1);
+  });
+
   els.forEach((el) => {
     const id = el.dataset.id, ph = el.querySelector(".ph"), grip = el.querySelector(".grip"), pinBtn = el.querySelector(".pin");
     let sx = 0, sy = 0, ox = 0, oy = 0, ow = 0, oh = 0, mode = null, lastX = 0, lastY = 0, downTitle = false, moved = 0, wallDrag = false;
@@ -280,17 +341,13 @@ export function createWindows({ world, plans, force }) {
       if (plans.plan !== 1) { const n = planOf(el); plans.goPlan(n); toast("Plan " + n); return; }
       if (e.target.closest(".ph")) toggleMax(el);
     });
-    // Maintien du clic gauche sur le contenu (pas la barre de titre ni un contrôle) : ramener la fenêtre vers soi.
-    let hT = 0, hS = null;
-    const hCancel = () => { clearTimeout(hT); hT = 0; hS = null; };
+    // Clic sur une fenêtre : elle passe devant. Clic maintenu sur son contenu : la molette la change de niveau (voir plus bas).
     el.addEventListener("pointerdown", (e) => {
-      if (state.lite || e.button !== 0 || focusEl === el || S[id].hid) return;
+      if (state.lite || e.button !== 0 || S[id].hid) return;
+      if (!e.target.closest(".ph")) bringFront(el);
       if (e.target.closest(".ph, .grip, .pin, button, a, input, textarea, select, label, canvas, iframe, [contenteditable='true']")) return;
-      hCancel(); hS = { x: e.clientX, y: e.clientY };
-      hT = setTimeout(() => { hT = 0; hS = null; const stopClick = (ev) => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener("click", stopClick, { capture: true, once: true }); setTimeout(() => removeEventListener("click", stopClick, true), 400); focus(el); }, FOCUS.hold);
+      holdEl = el;
     });
-    el.addEventListener("pointermove", (e) => { if (hS && Math.hypot(e.clientX - hS.x, e.clientY - hS.y) > FOCUS.move) hCancel(); });
-    ["pointerup", "pointercancel", "pointerleave"].forEach((t) => el.addEventListener(t, hCancel));
   });
 
   /** Une image : les fenêtres glissent vers leur cible, s'inclinent vers le noyau, penchent quand on les traîne. */
