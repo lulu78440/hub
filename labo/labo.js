@@ -59,7 +59,7 @@ function rendreBanc() {
     if (!scenarios) scenarios = (window.__SCENARIOS && window.__SCENARIOS.scenarios) || (await (await fetch("labo/scenarios.json")).json()).scenarios;
     liste.textContent = ""; bilan.hidden = true;
     const opt = { lireFichier: async (f) => (await fetch("labo/" + f.replace(/^\.?\/?labo\//, ""))).text() };
-    if (reel && cle) opt.moteurReel = moteurGemini({ cle });
+    if (reel && cle) { opt.moteurReel = moteurGemini({ cle }); opt.fetchReel = (u, o) => fetch(u, o); }
     b1.disabled = b2.disabled = true;
     const out = await lancerBanc(scenarios, opt, (r) => {
       const cls = r.ok === true ? "ok" : r.ok === false ? "ko" : "sk";

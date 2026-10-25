@@ -31,10 +31,10 @@ async function preparer(sc, opt) {
   const pages = (sc.prepare && sc.prepare.pages) || {};
   const h = creerHubSimule({
     vide: !!(sc.prepare && sc.prepare.vide), enLigne: !(sc.prepare && sc.prepare.horsligne), cle: opt.cle || null,
-    fetch: async (u) => {
+    fetch: async (u, o) => {
       const url = String(u);
       if (pages[url] !== undefined) return { ok: true, status: 200, text: async () => pages[url], json: async () => ({}) };
-      if (opt.fetchReel) return opt.fetchReel(u);
+      if (opt.fetchReel && sc.mode === "reel") return opt.fetchReel(u, o);
       return { ok: false, status: 404, text: async () => "", json: async () => ({}) };
     }
   });
