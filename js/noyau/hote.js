@@ -9,6 +9,7 @@
 //   reglage  : lire(cle, defaut), ecrire(cle, valeur)
 //   secret   : cle() -> clé Gemini ou null, protege() -> vrai si le coffre est actif
 //   hub      : actus() -> flux.json ou null, meteo() -> cache météo ou null, agir(nom, params) -> { ok, ... }
+//   sauvegarde (facultatif) : dispo(), dossier() -> {nom}|null, choisir(), droit() -> 'granted'|'prompt'|..., ecrire() -> {nom, octets}, retirer()
 //   ui       : toast(msg), orbe({ phase, humeur }), ajouterMenuFond(fn), conteneur() -> élément où monter la fenêtre
 //   * retirerMany ne sert qu'à annuler un import raté : le Noyau n'a aucun outil de suppression.
 
@@ -54,6 +55,7 @@ export async function brancherHub() {
       meteo: () => { try { return JSON.parse(prefs.get("meteo-cache", "null")); } catch (e) { return null; } },
       contexteLive: () => ({
         focus: document.body.classList.contains("focus"),
+        verrouille: document.body.classList.contains("locked"),
         media: [...document.querySelectorAll("audio,video")].some((m) => !m.paused && !m.ended),
         fenetre: ((document.querySelector(".win:hover h2") || {}).textContent || "").trim() || null
       }),
@@ -77,6 +79,32 @@ export async function brancherHub() {
         return { ok: false, erreur: "Action « " + nom + " » non branchée dans cette version du hub." };
       }
     },
+    // Sauvegarde automatique chiffrée dans un dossier du PC (File System Access API). Le dossier est choisi par Lucien ; le Noyau n'y écrit que des fichiers hub-sauvegarde-*.json.
+    sauvegarde: (() => {
+      const IDB = () => new Promise((ok, ko) => { const r = indexedDB.open("noyau-sauvegarde", 1); r.onupgradeneeded = () => r.result.createObjectStore("k"); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+      const lire = async () => { const db = await IDB(); return new Promise((ok) => { const q = db.transaction("k").objectStore("k").get("dossier"); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); }); };
+      const poser = async (v) => { const db = await IDB(); return new Promise((ok, ko) => { const t = db.transaction("k", "readwrite"); v ? t.objectStore("k").put(v, "dossier") : t.objectStore("k").delete("dossier"); t.oncomplete = ok; t.onerror = () => ko(t.error); }); };
+      const pad = (n) => String(n).padStart(2, "0");
+      return {
+        dispo: () => typeof window.showDirectoryPicker === "function",
+        dossier: async () => { try { const h = await lire(); return h ? { nom: h.name } : null; } catch (e) { return null; } },
+        choisir: async () => { const h = await window.showDirectoryPicker({ mode: "readwrite", id: "hub-sauvegarde" }); await poser(h); return { nom: h.name }; },
+        droit: async () => { try { const h = await lire(); return h ? await h.queryPermission({ mode: "readwrite" }) : "aucun"; } catch (e) { return "aucun"; } },
+        retirer: async () => { await poser(null); },
+        ecrire: async ({ demander = false } = {}) => {
+          const h = await lire(); if (!h) throw new Error("Aucun dossier choisi.");
+          let d = await h.queryPermission({ mode: "readwrite" }); if (d !== "granted" && demander) d = await h.requestPermission({ mode: "readwrite" });
+          if (d !== "granted") throw new Error("Le navigateur demande de réautoriser le dossier : ouvre le Noyau → Réglages → Sauvegarde, puis « Sauvegarder maintenant ».");
+          const { exportAll } = await import("../store/storage.js"), { VERSION } = await import("../version.js"), n = new Date();
+          const data = await exportAll(VERSION), scelle = vault.active, fichier = scelle ? await vault.sealExport(data) : data;
+          const nom = `hub-sauvegarde-${scelle ? "chiffree-" : ""}${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}.json`, texte = JSON.stringify(fichier);
+          const f = await h.getFileHandle(nom, { create: true }), w = await f.createWritable(); await w.write(texte); await w.close();
+          try { const anciens = []; for await (const [k] of h.entries()) if (/^hub-sauvegarde-.*\.json$/.test(k) && k !== nom) anciens.push(k); anciens.sort().slice(0, Math.max(anciens.length - 6, 0)).forEach((k) => h.removeEntry(k).catch(() => {})); } catch (e) { /* ménage facultatif */ }
+          prefs.set("dernier-export", n.toISOString()); prefs.set("derniere-sauvegarde-auto", n.toISOString());
+          return { nom, octets: texte.length, chiffre: scelle };
+        }
+      };
+    })(),
     racine: () => new URL("./", location.href).href,
     systeme: async () => {
       let swVersion = null;

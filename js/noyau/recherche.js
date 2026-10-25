@@ -45,6 +45,10 @@ function levenshtein1(a, b) {          // vrai si la distance d'édition est au 
   return diff + (la - i) + (lb - j) <= 1;
 }
 
+/** Synonymes courants (formes après racine()). Ils comptent moitié moins que le mot demandé. */
+const GROUPES = ["voiture auto automobile vehicule", "ordinateur pc laptop", "telephone mobile smartphone portable", "mail courriel email", "tache todo corvee", "reunion rdv entretien", "medecin docteur", "film cinema", "musique chanson morceau", "travail boulot job emploi", "fatigue epuise creve", "content heureux joyeux", "triste deprime", "stress anxiete angoisse", "voyage vacance sejour", "note memo", "maison domicile logement appartement", "ecole college lycee", "argent budget", "cuisine recette", "livre roman ouvrage", "sauvegarde backup export", "mot de passe mdp", "ami copain pote", "manger repas dejeuner diner", "dormir sommeil", "sport entrainement"].map((g) => g.split(" ").map((m) => racine(m)));
+const SYN = new Map(); for (const g of GROUPES) for (const m of g) SYN.set(m, [...(SYN.get(m) || []), ...g.filter((x) => x !== m)]);
+
 export class Index {
   constructor({ k1 = 1.5, b = 0.75 } = {}) { this.k1 = k1; this.b = b; this.docs = new Map(); this.df = new Map(); this.total = 0; }
   get taille() { return this.docs.size; }
@@ -63,7 +67,9 @@ export class Index {
   }
   /** Résultats triés [{ id, score, pertinence }] ; pertinence = score ramené entre 0 et 1 (le meilleur vaut 1). */
   chercher(requete, { limite = 10, filtre = null, corriger = true } = {}) {
-    let q = jetons(requete);
+    const exclus = [], propre = String(requete).replace(/(^|\s)-([\p{L}\d]{2,})/gu, (m, sp, mot) => { exclus.push(...jetons(mot)); return sp; });     // « chat -noir » : sans le mot noir
+    if (exclus.length) { const f0 = filtre; filtre = (id) => (!f0 || f0(id)) && !exclus.some((e) => this.docs.get(id) && this.docs.get(id).tf.has(e)); }
+    let q = jetons(propre);
     if (!q.length || !this.docs.size) return [];
     let res = this._score(q, filtre);
     if (!res.length && corriger) {            // dernier recours : une lettre de travers
@@ -77,14 +83,15 @@ export class Index {
   }
   _score(q, filtre) {
     const N = this.docs.size, avg = this.total / N || 1, out = [];
-    const uniq = [...new Set(q)];
+    const uniq = [...new Set(q)], poids = new Map(uniq.map((t) => [t, 1]));
+    for (const t of uniq) for (const y of SYN.get(t) || []) if (!poids.has(y)) poids.set(y, 0.5);       // synonymes : moitié de poids
     for (const [id, d] of this.docs) {
       if (filtre && !filtre(id)) continue;
       let s = 0;
-      for (const t of uniq) {
+      for (const [t, w] of poids) {
         const f = d.tf.get(t); if (!f) continue;
         const df = this.df.get(t) || 0, idf = Math.log(1 + (N - df + 0.5) / (df + 0.5));
-        s += idf * (f * (this.k1 + 1)) / (f + this.k1 * (1 - this.b + this.b * d.len / avg));
+        s += w * idf * (f * (this.k1 + 1)) / (f + this.k1 * (1 - this.b + this.b * d.len / avg));
       }
       if (s > 0) out.push({ id, score: s });
     }

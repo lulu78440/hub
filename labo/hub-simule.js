@@ -19,6 +19,7 @@ export function creerHubSimule(o = {}) {
   let nid = 0, enLigne = o.enLigne !== false, cle = o.cle || null;
   const coll = { notes: new Map(), tasks: new Map(), events: new Map(), favs: new Map(), kv: new Map(), images: new Map() };
   const regl = new Map(), ecouteurs = {}, appels = [], toasts = [], orbe = [];
+  let live = {}, dossierFictif = null, droitFictif = "granted"; const fichiers = [];
   const now = () => new Date(t);
   const D = now();
   if (!o.vide) {
@@ -62,9 +63,15 @@ export function creerHubSimule(o = {}) {
     reglage: { lire: (k, d) => (regl.has(k) ? regl.get(k) : d), ecrire: (k, v) => { regl.set(k, String(v)); } },
     secret: { cle: () => cle, protege: () => true },
     hub: {
-      actus: () => actus, meteo: () => meteo,
+      actus: () => actus, meteo: () => meteo, contexteLive: () => live,
       agir: async (nom, p = {}) => { appels.push({ agir: nom, p }); if (nom === "afficher") return { ok: true, resume: "Fenêtre « " + p.fenetre + " » ramenée (simulé)." }; if (nom === "lancer_focus") return { ok: true, resume: "Focus " + p.minutes + " min lancé (simulé)." }; if (nom === "lire_fenetre") return { ok: true, texte: "(contenu simulé de la fenêtre " + p.fenetre + ")" }; return { ok: false, erreur: "Action « " + nom + " » non simulée." }; }
     },
+    sauvegarde: {
+      dispo: () => true, dossier: async () => dossierFictif, droit: async () => (dossierFictif ? droitFictif : "aucun"), retirer: async () => { dossierFictif = null; },
+      choisir: async () => { dossierFictif = { nom: "Sauvegardes-fictives" }; return dossierFictif; },
+      ecrire: async ({ demander = false } = {}) => { if (!dossierFictif) throw new Error("Aucun dossier choisi."); if (droitFictif !== "granted" && demander) droitFictif = "granted"; if (droitFictif !== "granted") throw new Error("réautoriser"); const nom = "hub-sauvegarde-" + jour(now()) + ".json"; fichiers.push(nom); regl.set("derniere-sauvegarde-auto", now().toISOString()); return { nom, octets: 1234, chiffre: true }; }
+    },
+    racine: () => "http://hub.test/",
     ui: {
       toast: (m) => toasts.push(m),
       orbe: (e) => orbe.push(e),
@@ -76,7 +83,7 @@ export function creerHubSimule(o = {}) {
   // Poignées pour le banc d'essai (hors de l'interface `hote`)
   return {
     hote, coll, appels, toasts, orbe,
-    avancer: (ms) => { t += ms; }, fixer: (d) => { t = d.getTime(); },
+    definirDroitDossier: (d) => { droitFictif = d; }, fichiersSauvegarde: () => fichiers.slice(), definirLive: (o) => { live = o || {}; }, avancer: (ms) => { t += ms; }, fixer: (d) => { t = d.getTime(); },
     reseau: (v) => { enLigne = !!v; }, definirCle: (k) => { cle = k || null; },
     reglage: regl
   };

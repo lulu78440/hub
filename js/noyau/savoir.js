@@ -48,10 +48,10 @@ export function creerSavoir({ memoire, barriere }) {
   }
 
   /** Prochain sous-thème à étudier : dans un domaine déjà entamé en priorité, le moins avancé. */
-  function prochain(c = carte()) {
+  function prochain(c = carte(), { exclure = [] } = {}) {
     const entames = c.domaines.filter((d) => d.pct > 0 && d.pct < 100).sort((a, b) => b.pct - a.pct);
     const pool = entames.length ? entames : c.domaines;
-    for (const d of pool) { const s = d.sousThemes.filter((x) => x.niveau < 1).sort((a, b) => a.niveau - b.niveau)[0]; if (s) return { domaine: d.id, sousTheme: s.id, titre: s.titre, domaineNom: d.nom }; }
+    for (const d of pool) { const s = d.sousThemes.filter((x) => x.niveau < 1 && !exclure.includes(x.id)).sort((a, b) => a.niveau - b.niveau)[0]; if (s) return { domaine: d.id, sousTheme: s.id, titre: s.titre, domaineNom: d.nom }; }
     return null;
   }
 

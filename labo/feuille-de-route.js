@@ -4,16 +4,16 @@
 export const CHANTIERS = [
   { id: "base", nom: "Noyau de base", etapes: [
     { t: "Cycle réflexe → rappel → modèle → outils → vérification", s: "fait" }, { t: "Barrière de permissions (libre / confirmation / interdit)", s: "fait" },
-    { t: "Mémoire à 5 types et boîte « À valider »", s: "fait" }, { t: "Mode réduit sans modèle", s: "fait" }, { t: "Fusion dans le hub (Noyau 1.0)", s: "fait" }, { t: "Test sur Android", s: "attend", n: "À faire par Lucien" }] },
+    { t: "Mémoire à 5 types et boîte « À valider »", s: "fait" }, { t: "Mode réduit sans modèle", s: "fait" }, { t: "Fusion dans le hub (Noyau 1.0)", s: "fait" }, { t: "Contradiction constructive, ton humain, sans question réflexe, sans répétition", s: "fait" }, { t: "Test sur Android", s: "attend", n: "À faire par Lucien" }] },
   { id: "savoir", nom: "Savoir et références", etapes: [
     { t: "30 sources publiques dans 15 domaines", s: "fait" }, { t: "Carte 3D du savoir (16 domaines, 110 sous-thèmes)", s: "fait" }, { t: "Étudier un sous-thème avec validation de Lucien", s: "fait" },
-    { t: "Curiosité autonome guidée par le programme", s: "prochain" }, { t: "Import de la mémoire v3.8", s: "attend", n: "Optionnel, par Lucien" }, { t: "Premier domaine couvert à 25 %", s: "attend", n: "Dépend de ce que tu valides dans la fenêtre Savoir" }] },
+    { t: "Curiosité autonome guidée par le programme", s: "fait" }, { t: "Recherche tolérante (synonymes, fautes, « -mot »)", s: "fait" }, { t: "Import de la mémoire v3.8", s: "attend", n: "Optionnel, par Lucien" }, { t: "Premier domaine couvert à 25 %", s: "attend", n: "Dépend de ce que tu valides dans la fenêtre Savoir" }] },
   { id: "securite", nom: "Sécurité", etapes: [
     { t: "Sentinelle : journal, empreintes des fichiers, activité du dépôt", s: "fait" }, { t: "Audit du code avec correctifs validés par Lucien", s: "fait" }, { t: "Recommandation système toutes les 30 min", s: "fait" },
-    { t: "Alerte quand un fichier sensible change sans commit connu", s: "prochain" }] },
+    { t: "Alerte quand un fichier sensible change sans commit connu", s: "fait" }] },
   { id: "usages", nom: "Usages du quotidien", etapes: [
     { t: "Briefing et revue du soir", s: "fait" }, { t: "Capture rapide « Note : », « Tâche : », « Retiens que »", s: "fait" }, { t: "Rappels en français", s: "fait" },
-    { t: "Résumé de fenêtre, recherche globale, mode hors ligne, rappel de sauvegarde", s: "fait" }, { t: "Suggestion du soir proposant la revue", s: "prochain" }] },
+    { t: "Résumé de fenêtre, recherche globale, mode hors ligne, rappel de sauvegarde", s: "fait" }, { t: "Suggestion du soir proposant la revue", s: "fait" }, { t: "Sauvegarde automatique chiffrée vers un dossier du PC", s: "fait" }] },
   { id: "qualite", nom: "Qualité mesurée (laboratoire)", etapes: [
     { t: "Banc d'essai mécanique sans erreur", s: "mesure", mesure: "banc_vert", cible: 1 }, { t: "Historique du banc avec détection de régression", s: "fait" },
     { t: "Deux labos (social, réflexion) avec grille de notes", s: "fait" }, { t: "Comparateur A/B de consignes", s: "fait" },
@@ -24,7 +24,7 @@ export const CHANTIERS = [
 /** Calcule l'avancement réel. `etat` = creerEtatLabo(). Renvoie les chantiers avec leurs étapes résolues et leur pourcentage. */
 export function avancement(etat) {
   const banc = etat.banc(), dernier = banc[banc.length - 1];
-  const mesures = { banc_vert: dernier && dernier.ko === 0 && dernier.ok > 0 ? 1 : 0, notes_social: etat.notes("social").length, notes_reflexion: etat.notes("reflexion").length, ab: etat.ab().length, banc_reel: banc.filter((b) => b.reel).length };
+  const mesures = { banc_vert: dernier && dernier.ko === 0 && dernier.ok > 0 ? 1 : 0, notes_social: etat.notes("social").length, notes_reflexion: etat.notes("reflexion").length, ab: etat.ab().length, banc_reel: banc.filter((b) => b.reel).length, ton_ok: (() => { const m = etat.resumeMetriques(10); return m && m.n >= 10 && m.pctFinQuestion <= 30 && m.nRepetitions === 0 ? 10 : (m ? Math.min(m.n, 9) : 0); })() };
   const chantiers = CHANTIERS.map((c) => {
     const etapes = c.etapes.map((e) => {
       if (e.s !== "mesure") return { ...e, fait: e.s === "fait", avance: e.s === "fait" ? 1 : 0 };
@@ -36,3 +36,18 @@ export function avancement(etat) {
   const total = chantiers.reduce((a, c) => a + c.etapes.length, 0), faites = chantiers.reduce((a, c) => a + c.etapes.reduce((x, e) => x + e.avance, 0), 0);
   return { chantiers, pct: Math.round((faites / total) * 100), suivantes: chantiers.flatMap((c) => c.etapes.filter((e) => e.s === "prochain" || e.s === "en_cours").map((e) => ({ chantier: c.nom, ...e }))).slice(0, 6), attendent: chantiers.flatMap((c) => c.etapes.filter((e) => e.s === "attend").map((e) => ({ chantier: c.nom, ...e }))) };
 }
+
+/** Plan de test de la version, à cocher par Lucien (l'état est gardé dans le labo). */
+export const PLAN_TEST = [
+  ["t-savoir", "Fenêtre Savoir : choisir un domaine, cliquer « Étudier », garder une fiche dans « À valider » et voir le % monter"],
+  ["t-curiosite", "Activer la curiosité autonome (fenêtre Savoir) et vérifier qu'une étude arrive dans « À valider » dans l'heure"],
+  ["t-capture", "Écrire « Note : test » puis « Rappelle-moi demain à 9 h de tester » dans le Noyau et confirmer"],
+  ["t-briefing", "Cliquer Briefing puis Revue du soir"],
+  ["t-resume", "Clic droit sur une fenêtre → « Résumer avec le Noyau »"],
+  ["t-sauvegarde", "Noyau → Réglages → Sauvegarde automatique : choisir un dossier puis « Sauvegarder maintenant »"],
+  ["t-securite", "Sécurité : enregistrer la référence des fichiers, puis vérifier la vue d'ensemble"],
+  ["t-ton", "Labo social : essayer 3 situations (dont « Décision risquée ») et noter les réponses"],
+  ["t-reflexion", "Labo réflexion : essayer 3 situations et noter les réponses"],
+  ["t-ab", "Comparer deux consignes A/B sur une situation (Gemini réel)"],
+  ["t-android", "Ouvrir le hub sur Android et refaire une capture « Note : »"]
+];

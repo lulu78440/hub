@@ -78,6 +78,8 @@ async function verifier(a, ctx) {
   if (a.confiance) T(rep.confiance === a.confiance, `confiance attendue ${a.confiance}, obtenue ${rep.confiance}`);
   if (a.sources) T(JSON.stringify(rep.sources) === JSON.stringify(a.sources), `sources attendues ${JSON.stringify(a.sources)}, obtenues ${JSON.stringify(rep.sources)}`);
   if (a.reduit !== undefined) T(!!rep.reduit === a.reduit, `mode réduit attendu : ${a.reduit}`);
+  if (a.fin_question !== undefined) T(!!trace.finQuestion === a.fin_question, `question de fin attendue : ${a.fin_question}`);
+  if (a.repete !== undefined) T(!!trace.repete === a.repete, `répétition attendue : ${a.repete}`);
   if (a.requetes !== undefined) T(trace.requetes === a.requetes, `requêtes attendues ${a.requetes}, obtenues ${trace.requetes}`);
   if (a.requetes_max !== undefined) T(trace.requetes <= a.requetes_max, `au plus ${a.requetes_max} requêtes, obtenues ${trace.requetes}`);
   const statuts = journal.map((l) => l.statut);

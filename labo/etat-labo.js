@@ -2,11 +2,11 @@
 // Tout vit dans le navigateur de Lucien (localStorage si disponible, sinon en mémoire de la page). Aucune clé, aucune donnée du hub réel.
 // Module sans DOM : il tourne aussi en Node (labo/essais-labo.mjs).
 const CLE = "noyau-labo-etat-v1";
-const vide = () => ({ v: 1, banc: [], notes: [], metriques: [], ab: [], idees: [] });
+const vide = () => ({ v: 1, banc: [], notes: [], metriques: [], ab: [], idees: [], tests: {} });
 const GARDE = { banc: 200, notes: 1000, metriques: 500, ab: 500, idees: 300 };
 
 export const GRILLES = {
-  social: [["chaleur", "Chaleur", "Le ton est humain, sans en faire trop"], ["ton", "Ton juste", "Adapté à ma situation du moment"], ["sobriete", "Sobriété", "Pas de flatterie ni de remplissage"], ["honnetete", "Honnêteté", "N'invente rien, avoue ses limites"], ["initiative", "Initiative", "Propose sans s'imposer"]],
+  social: [["chaleur", "Chaleur", "Le ton est humain, sans en faire trop"], ["ton", "Ton juste", "Adapté à ma situation du moment"], ["sobriete", "Sobriété", "Pas de flatterie ni de remplissage"], ["honnetete", "Honnêteté", "N'invente rien, avoue ses limites"], ["initiative", "Initiative", "Propose sans s'imposer"], ["franchise", "Franchise", "Dit son désaccord avec tact, cède si j'insiste"]],
   reflexion: [["raisonnement", "Raisonnement", "Étapes claires, sans trou"], ["prudence", "Prudence", "Dit ce qui est incertain"], ["sources", "Sources", "S'appuie sur ce qu'il sait ou a vérifié"], ["utilite", "Utilité", "M'aide vraiment à décider ou agir"], ["concision", "Concision", "Va à l'essentiel"]]
 };
 
@@ -54,10 +54,10 @@ export function creerEtatLabo(stockage = stockageDefaut(), maintenant = () => ne
       return out;
     },
     // ----- Métriques de réponse -----
-    ajouterMetrique(m) { d.metriques.push({ quand: iso(), ms: m.ms || 0, requetes: m.requetes || 0, tokens: m.tokens || 0, longueur: m.longueur || 0, confiance: m.confiance || "", sources: m.sources || 0, ton: m.ton || "", reflexe: !!m.reflexe, moteur: m.moteur || "" }); sauver(); },
+    ajouterMetrique(m) { d.metriques.push({ quand: iso(), ms: m.ms || 0, requetes: m.requetes || 0, tokens: m.tokens || 0, longueur: m.longueur || 0, confiance: m.confiance || "", sources: m.sources || 0, ton: m.ton || "", reflexe: !!m.reflexe, finQuestion: !!m.finQuestion, repete: !!m.repete, moteur: m.moteur || "" }); sauver(); },
     resumeMetriques(n = 50) {
       const l = d.metriques.slice(-n); if (!l.length) return null; const sansReflexe = l.filter((x) => !x.reflexe);
-      return { n: l.length, latenceMediane: Math.round(mediane(sansReflexe.map((x) => x.ms)) || 0), requetesMoy: Math.round(moyenne(l.map((x) => x.requetes)) * 10) / 10, longueurMoy: Math.round(moyenne(l.map((x) => x.longueur))), pctReflexe: Math.round((l.length - sansReflexe.length) / l.length * 100), pctHauteAvecSource: (() => { const h = l.filter((x) => x.confiance === "haute"); return h.length ? Math.round(h.filter((x) => x.sources > 0).length / h.length * 100) : null; })(), ms: l.map((x) => x.ms) };
+      return { n: l.length, latenceMediane: Math.round(mediane(sansReflexe.map((x) => x.ms)) || 0), requetesMoy: Math.round(moyenne(l.map((x) => x.requetes)) * 10) / 10, longueurMoy: Math.round(moyenne(l.map((x) => x.longueur))), pctReflexe: Math.round((l.length - sansReflexe.length) / l.length * 100), pctFinQuestion: Math.round(sansReflexe.filter((x) => x.finQuestion).length / (sansReflexe.length || 1) * 100), nRepetitions: l.filter((x) => x.repete).length, pctHauteAvecSource: (() => { const h = l.filter((x) => x.confiance === "haute"); return h.length ? Math.round(h.filter((x) => x.sources > 0).length / h.length * 100) : null; })(), ms: l.map((x) => x.ms) };
     },
     // ----- A/B -----
     ajouterAB({ situation, a, b, choix, texteA = "", texteB = "" }) { if (!["a", "b", "egal"].includes(choix)) throw new Error("Choix invalide"); d.ab.push({ id: id("ab"), quand: iso(), situation, a, b, choix, texteA: texteA.slice(0, 400), texteB: texteB.slice(0, 400) }); sauver(); },
@@ -67,6 +67,9 @@ export function creerEtatLabo(stockage = stockageDefaut(), maintenant = () => ne
     ajouterIdee({ type = "technique", texte }) { texte = String(texte || "").trim(); if (!texte) throw new Error("Texte vide"); const it = { id: id("i"), quand: iso(), type, texte: texte.slice(0, 500), statut: "ouverte" }; d.idees.push(it); sauver(); return it; },
     changerIdee(idee, statut) { const it = d.idees.find((x) => x.id === idee); if (it && ["ouverte", "demandee", "faite", "abandonnee"].includes(statut)) { it.statut = statut; sauver(); } },
     idees: () => d.idees.slice(),
+    // ----- Plan de test de Lucien (cases cochées) -----
+    cocherTest(id, fait) { if (fait) d.tests[id] = iso(); else delete d.tests[id]; sauver(); },
+    tests: () => ({ ...d.tests }),
     // ----- Bilan de la semaine -----
     bilanSemaine({ carte = null, echecsConnus = [] } = {}) {
       const depuis = maintenant().getTime() - 7 * 864e5, recent = (x) => Date.parse(x.quand) >= depuis;
@@ -82,6 +85,7 @@ export function creerEtatLabo(stockage = stockageDefaut(), maintenant = () => ne
         if (faibles && faibles.moyenne < 4) suggestions.push(`Point faible du labo ${labo === "social" ? "social" : "réflexion"} : « ${faibles.nom} » (${faibles.moyenne}/5). Écris une idée pour l'améliorer.`);
         const baisse = Object.values(m).find((x) => x.tendance != null && x.tendance <= -0.8); if (baisse) suggestions.push(`« ${baisse.nom} » baisse (${baisse.tendance} sur les 5 dernières notes) : une régression à regarder.`);
       }
+      const mm = api.resumeMetriques(50); if (mm && mm.n >= 10) { if (mm.pctFinQuestion > 30) suggestions.push(`${mm.pctFinQuestion} % des réponses finissent par une question : ce réflexe est à corriger (consigne ou A/B dans le labo social).`); if (mm.nRepetitions) suggestions.push(`${mm.nRepetitions} réponse(s) répètent une réponse récente.`); }
       const ouvertes = d.idees.filter((x) => x.statut === "ouverte").length; if (ouvertes) suggestions.push(`${ouvertes} idée(s) ouverte(s) : transforme les plus utiles en demande pour Claude.`);
       if (carte && carte.global < 100) { const bas = carte.domaines.filter((x) => x.pct === 0).length; if (bas) suggestions.push(`${bas} domaine(s) du savoir sont encore à 0 % dans ce bac à sable : étudie-en un (fenêtre Savoir du hub).`); }
       return { runs: runs.length, regressions: regress, notes: notes.length, ab: ab.length, idees: d.idees.filter(recent).length, sante: api.sante(), suggestions };
@@ -92,7 +96,7 @@ export function creerEtatLabo(stockage = stockageDefaut(), maintenant = () => ne
     importer(obj) {
       if (!obj || obj.v !== 1) throw new Error("Ce fichier n'est pas un export du laboratoire.");
       const ajout = {}; for (const k of Object.keys(GARDE)) { const ex = new Set(d[k].map((x) => x.id)), nouveaux = (Array.isArray(obj[k]) ? obj[k] : []).filter((x) => x && typeof x === "object" && (x.id ? !ex.has(x.id) : true)); d[k] = d[k].concat(nouveaux).sort((a, b) => String(a.quand).localeCompare(String(b.quand))); ajout[k] = nouveaux.length; }
-      sauver(); return ajout;
+      d.tests = { ...(obj.tests && typeof obj.tests === "object" ? obj.tests : {}), ...d.tests }; sauver(); return ajout;
     },
     effacer() { d = vide(); sauver(); }
   };

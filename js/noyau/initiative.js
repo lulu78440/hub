@@ -9,9 +9,9 @@ import { jetons, resumerLocalement } from "./recherche.js";
 import { depuis } from "./actualite.js";
 
 const jourDe = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-const DEUX_HEURES = 2 * 36e5, TRENTE_MIN = 30 * 6e4, MAX_CURIOSITE_JOUR = 20;
+const DEUX_HEURES = 2 * 36e5, TRENTE_MIN = 30 * 6e4, MAX_CURIOSITE_JOUR = 20, MAX_PROGRAMME_JOUR = 6;
 
-export function creerInitiative({ memoire, actualite, etat, barriere }) {
+export function creerInitiative({ memoire, actualite, etat, barriere, savoir = null }) {
   const on = (cle, defaut = true) => hote.reglage.lire("noyau-" + cle, defaut ? "on" : "off") !== "off";
   const live = () => (hote.hub.contexteLive ? hote.hub.contexteLive() : {});
   const heureOk = () => { const h = hote.maintenant().getHours(); return h >= 7 && h < 22; };
@@ -68,12 +68,30 @@ export function creerInitiative({ memoire, actualite, etat, barriere }) {
       return null;
     },
 
+    // ----- Curiosité guidée par le programme (carte du savoir) : un sous-thème à la fois, jamais sans ton accord pour l'apprendre -----
+    /** Étudie le prochain sous-thème du programme (domaine déjà entamé en priorité). Au plus 6 par jour, 1 toutes les 30 min, jamais si « À valider » compte déjà 12 propositions. */
+    async etudeProgramme(st, t) {
+      if ((st.prog || 0) >= MAX_PROGRAMME_JOUR) return { fait: false, raison: `${MAX_PROGRAMME_JOUR} études atteintes aujourd'hui` };
+      if (t - st.derniere < TRENTE_MIN) return { fait: false, raison: "30 minutes pas encore écoulées" };
+      if (memoire.aValider().length >= 12) return { fait: false, raison: "la boîte « À valider » est pleine (12) : valide d'abord" };
+      let vus = {}; try { vus = JSON.parse(hote.reglage.lire("noyau-curiosite-themes", "{}")); } catch (e) { vus = {}; }
+      const recents = Object.entries(vus).filter(([, q]) => t - q < 7 * 864e5).map(([id]) => id);
+      const p = savoir.prochain(undefined, { exclure: recents });
+      if (!p) return { fait: false, raison: "rien à étudier (tout est couvert ou déjà proposé cette semaine)" };
+      const r = await savoir.etudier(p.sousTheme, { origine: "autonome" });
+      st.prog = (st.prog || 0) + 1; st.derniere = t; st.faits.push(p.titre); hote.reglage.ecrire("noyau-curiosite-etat", JSON.stringify(st));
+      vus[p.sousTheme] = t; hote.reglage.ecrire("noyau-curiosite-themes", JSON.stringify(vus));
+      return { fait: true, programme: true, sujet: p.titre, domaine: p.domaineNom, trouve: r.ok ? r.propose : 0, erreur: r.ok ? null : r.erreur };
+    },
+
     // ----- Curiosité : mode autonome (coupé par défaut) -----
     etatCuriosite() { try { const c = JSON.parse(hote.reglage.lire("noyau-curiosite-etat", "null")); return c && c.jour === jourDe(hote.maintenant()) ? c : { jour: jourDe(hote.maintenant()), n: 0, derniere: 0, faits: [] }; } catch (e) { return { jour: jourDe(hote.maintenant()), n: 0, derniere: 0, faits: [] }; } },
     /** Un tour de curiosité : une recherche sur un centre d'intérêt, résumée localement. Aucune requête Gemini. */
     async curiosite() {
       if (!on("curiosite", false) || !hote.enLigne()) return { fait: false, raison: "coupée ou hors ligne" };
       const st = i.etatCuriosite(), t = hote.maintenant().getTime();
+      const lv = live(); if (!heureOk() || lv.focus || lv.media || lv.verrouille) return { fait: false, raison: "moment pas calme (nuit, Focus, média ou écran verrouillé)" };
+      if (savoir && on("curiosite-programme", true)) return i.etudeProgramme(st, t);
       if (st.n >= MAX_CURIOSITE_JOUR) return { fait: false, raison: "20 recherches atteintes aujourd'hui" };
       if (t - st.derniere < TRENTE_MIN) return { fait: false, raison: "30 minutes pas encore écoulées" };
       const sujets = actualite.centresInteret().filter((w) => !st.faits.includes(w));

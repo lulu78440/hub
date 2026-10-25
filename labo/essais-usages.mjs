@@ -30,4 +30,8 @@ t = await dire("Fais ma revue de fin de journée"); ok(/Revue/.test(t) && /demai
 t = await dire("Cherche partout garage"); ok(/résultat/.test(t) && /Tâches/.test(t), "recherche globale :\n" + t);
 t = await dire("Cherche partout zzqxv"); ok(/Rien trouvé/.test(t), "recherche sans résultat : le dit honnêtement");
 ok(n.budget.utilisees() === 0, "aucune requête Gemini utilisée (" + n.budget.utilisees() + ")");
+const hs = creerHubSimule({ maintenant: new Date(2026, 9, 26, 19, 0) }); const n2 = await creerNoyau(); const vus = []; n2.surMessage((m) => { if (m.type === "initiative") vus.push(m); });
+ok(n2.suggererRevue() === true && vus[0].action === "revue", "le soir (19 h) : le Noyau propose la revue de fin de journée");
+ok(n2.suggererRevue() === false, "une seule fois par jour");
+hs.fixer(new Date(2026, 9, 27, 10, 0)); ok(n2.suggererRevue() === false, "jamais en pleine matinée");
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

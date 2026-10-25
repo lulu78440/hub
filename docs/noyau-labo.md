@@ -14,6 +14,7 @@ Cahier public du laboratoire du Noyau (annexe A du contrat). Aucune donnée pers
 | noyau-0.9 | 24/10/2026 | Prototype complet : barrière, cycle, mémoires, import v3.8, fenêtre, labo | 32 réussis, 0 raté, 5 sautés (moteur réel requis) sur 37 |
 | noyau-1.0 | 24/10/2026 | 33 sources de référence par domaine, onglet Sources du labo (contrôle en direct), sources coupables dans les réglages, essais de sources (`node labo/essais-sources.mjs`) | 32 réussis, 0 raté, 6 sautés sur 38 ; essais de sources : tous bons |
 | noyau-1.2 | 25/10/2026 | Carte 3D du savoir (16 domaines, 110 sous-thèmes), usages du quotidien (capture, rappels, briefing, revue du soir, recherche globale, résumé de fenêtre, hors ligne, sauvegarde), sentinelle et sécurité, labos social et réflexion, historique et progression | 40 réussis, 0 raté, 14 sautés (moteur réel requis) sur 54 ; essais : savoir, usages, labo, sources tous bons |
+| noyau-1.3 | 25/10/2026 | Ton humain (désaccord constructif, validation affective, sans question réflexe, sans répétition), recherche tolérante (synonymes, « -mot »), curiosité autonome guidée par le programme, sauvegarde chiffrée vers un dossier du PC, alerte fichier modifié sans commit, suggestion du soir, plan de test dans le labo | 44 réussis, 0 raté, 15 sautés (moteur réel requis) sur 59 ; essais recherche, curiosité, sauvegarde, sentinelle, usages, labo : tous bons |
 
 ## Hypothèses à éprouver
 1. Flash-Lite suffit-il pour le cycle outil → réponse structurée, ou faut-il Flash ?
@@ -41,3 +42,13 @@ Onglets de `labo.html` ajoutés :
 L'état est gardé dans le navigateur (`labo/etat-labo.js`, localStorage si disponible). Il ne contient ni clé ni donnée du vrai hub. Essais : `node labo/essais-labo.mjs`.
 Banc : familles ajoutées `usages` (8 scénarios mécaniques sans requête), `social` (4) et `reflexion` (4) en mode réel.
 Limite assumée : les notes de Lucien mesurent la perception de la qualité, pas une vérité ; les critères automatiques du banc réel ne repèrent que des défauts grossiers (flatterie, affirmation sans prudence).
+
+
+## Intégrations tirées du « Cerveau v4.0 » analysé le 25/10
+- Repris : contradiction constructive avec cession sur insistance (jamais pour les actions interdites), validation affective avant les listes et 3 priorités maximum, pas de question réflexe en fin de réponse, non-répétition (le modèle reçoit ses 3 dernières réponses ; le Noyau mesure les questions de fin et les répétitions : visibles dans l'onglet Progression), synonymes et exclusion « -mot » dans la recherche, sauvegarde chiffrée automatique vers un dossier du PC.
+- Gardé pour plus tard : embeddings locaux sur le GPU, voix neuronale locale (Piper), Wikipédia complet hors ligne (fichier ZIM de 34 Go), synchronisation PC et téléphone chiffrée, dialogue vocal full-duplex.
+- Refusé : boucle d'auto-amélioration toutes les 6 s (budget de requêtes), auto-réécriture du fichier .html (le Noyau ne modifie jamais son code), proxy anti-CORS ou serveur local aspirant des sites (sécurité), « 721 savoirs » non vérifiés (seules comptent les fiches sourcées validées), scores auto-attribués.
+## Curiosité autonome (noyau-1.3)
+Coupée par défaut ; interrupteur dans la fenêtre Savoir. Quand elle est active : une étude au plus toutes les 30 min et 6 par jour, du prochain sous-thème du programme (domaine déjà entamé en priorité, jamais deux fois le même en 7 jours), jamais en Focus, la nuit, pendant un média ou écran verrouillé, jamais si « À valider » compte déjà 12 propositions, sans requête Gemini. Les fiches attendent ta validation.
+## Sauvegarde dans un dossier du PC (noyau-1.3)
+Réglages du Noyau → Sauvegarde automatique. Dossier choisi par Lucien (File System Access API : Chrome, Edge, Brave sur PC), une sauvegarde par jour hub ouvert, chiffrée si le verrouillage est actif, 7 gardées. Le navigateur peut demander de réautoriser le dossier après un redémarrage : le Noyau le signale. Le Noyau n'a toujours aucun outil pour exporter ; seuls le bouton et la veille appellent cette fonction.

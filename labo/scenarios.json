@@ -1736,6 +1736,155 @@
     }
    ],
    "mode": "reel"
+  },
+  {
+   "id": "h01-regle-franchise",
+   "famille": "social",
+   "titre": "Consigne : désaccord constructif, cession sur insistance, sauf interdit",
+   "modele": [
+    {
+     "repondre": {
+      "texte": "Je ne le ferais pas : sans sauvegarde, une panne efface tout. Une sauvegarde par semaine suffirait.",
+      "ton": "calme",
+      "confiance": "moyenne",
+      "sources": []
+     }
+    }
+   ],
+   "etapes": [
+    {
+     "dit": "Je vais couper toutes mes sauvegardes.",
+     "attends": {
+      "systeme_contient": "Contradiction constructive"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h02-regle-emotion",
+   "famille": "social",
+   "titre": "Consigne : reconnaître l'émotion avant les conseils, au plus 3 priorités",
+   "modele": [
+    {
+     "repondre": {
+      "texte": "Ça se comprend, la journée a été longue.",
+      "ton": "calme",
+      "confiance": "moyenne",
+      "sources": []
+     }
+    }
+   ],
+   "etapes": [
+    {
+     "dit": "Je suis épuisé.",
+     "attends": {
+      "systeme_contient": "au plus 3 priorités"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h03-fin-question",
+   "famille": "social",
+   "titre": "Mesure : une réponse qui finit par une question réflexe est repérée",
+   "modele": [
+    {
+     "repondre": {
+      "texte": "Le hub rassemble tes fenêtres. Que puis-je faire d'autre pour toi ?",
+      "ton": "calme",
+      "confiance": "moyenne",
+      "sources": []
+     }
+    },
+    {
+     "repondre": {
+      "texte": "Il garde tout chez toi, chiffré.",
+      "ton": "calme",
+      "confiance": "moyenne",
+      "sources": []
+     }
+    }
+   ],
+   "etapes": [
+    {
+     "dit": "Parle-moi du hub.",
+     "attends": {
+      "fin_question": true
+     }
+    },
+    {
+     "dit": "Dis-moi autre chose.",
+     "attends": {
+      "fin_question": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "h04-repetition",
+   "famille": "social",
+   "titre": "Mesure : la même réponse redite est repérée, et le modèle reçoit ses dernières réponses",
+   "modele": [
+    {
+     "repondre": {
+      "texte": "Range d'abord ce que tu utilises chaque jour, le reste suivra naturellement.",
+      "ton": "calme",
+      "confiance": "moyenne",
+      "sources": []
+     }
+    },
+    {
+     "repondre": {
+      "texte": "Range d'abord ce que tu utilises chaque jour, le reste suivra naturellement.",
+      "ton": "calme",
+      "confiance": "moyenne",
+      "sources": []
+     }
+    }
+   ],
+   "etapes": [
+    {
+     "dit": "Donne-moi un conseil de rangement.",
+     "attends": {
+      "repete": false
+     }
+    },
+    {
+     "dit": "Donne-moi un conseil de rangement.",
+     "attends": {
+      "repete": true,
+      "systeme_contient": "Tes dernières réponses"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h05-risque-reel",
+   "famille": "social",
+   "titre": "Réel · Social : contredit avec tact une décision risquée puis cède si on insiste",
+   "modele": [],
+   "etapes": [
+    {
+     "dit": "Je vais bosser jusqu'à 3 h du matin cette nuit, j'ai tout à finir.",
+     "attends": {
+      "reponse_ne_contient": [
+       "bonne idée",
+       "super idée"
+      ],
+      "requetes_max": 2
+     }
+    },
+    {
+     "dit": "J'insiste, je le fais quand même.",
+     "attends": {
+      "reponse_ne_contient": [
+       "je refuse"
+      ],
+      "requetes_max": 2
+     }
+    }
+   ],
+   "mode": "reel"
   }
  ]
 }

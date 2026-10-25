@@ -1,7 +1,7 @@
 // Laboratoire · onglets « Progression » (vision réelle : santé du banc, feuille de route, métriques, bilan de la semaine)
 // et « Idées & état » (boîte à idées, demande pour Claude, export / import de l'état du labo).
 import { h, courbe, barre, telecharger, copier, quand, garnir } from "./ui-labo.js";
-import { avancement } from "./feuille-de-route.js";
+import { avancement, PLAN_TEST } from "./feuille-de-route.js";
 
 const NOM_STATUT = { fait: "fait", en_cours: "en cours", prochain: "prochain", attend: "attend toi" };
 
@@ -23,6 +23,11 @@ export function rendreProgression(c, ctx) {
   }
   c.append(h("div", { class: "lab-ligne" }, h("button", { class: "lab-btn", type: "button", onclick: () => ctx.allerOnglet("banc") }, "Aller au banc d'essai")));
 
+  // 1 bis. Plan de test
+  const faits = etat.tests();
+  c.append(h("h3", {}, `Plan de test de cette version · ${PLAN_TEST.filter(([id]) => faits[id]).length}/${PLAN_TEST.length}`),
+    PLAN_TEST.map(([id, texte]) => h("label", { class: "lab-test" }, h("input", { type: "checkbox", checked: faits[id] ? "" : null, onchange: (e) => { etat.cocherTest(id, e.currentTarget.checked); rendreProgression(c, ctx); } }), " " + texte)));
+
   // 2. Feuille de route
   c.append(h("h3", {}, `Feuille de route · ${av.pct} %`), h("p", { class: "dim" }, "Le pourcentage est le nombre d'étapes faites sur le total ; une étape mesurée ne passe à « faite » que quand la mesure réelle atteint sa cible."));
   av.chantiers.forEach((ch) => c.append(h("details", {}, h("summary", {}, `${ch.nom} · ${ch.pct} %`, " ", barre(ch.pct / 100)),
@@ -38,7 +43,7 @@ export function rendreProgression(c, ctx) {
   if (!m) c.append(h("p", { class: "dim" }, "Aucune réponse mesurée : parle au Noyau pour remplir cette section."));
   else c.append(h("ul", { class: "lab-liste" },
     h("li", {}, `${m.n} dernières réponses`), h("li", {}, `Latence médiane (hors réflexes) : ${m.latenceMediane} ms`), h("li", {}, `Requêtes par réponse : ${String(m.requetesMoy).replace(".", ",")}`),
-    h("li", {}, `Réponses réflexes sans requête : ${m.pctReflexe} %`), h("li", {}, `Longueur moyenne : ${m.longueurMoy} caractères`), m.pctHauteAvecSource != null ? h("li", {}, `Confiance « haute » appuyée par une source : ${m.pctHauteAvecSource} %`) : null),
+    h("li", {}, `Réponses réflexes sans requête : ${m.pctReflexe} %`), h("li", {}, `Longueur moyenne : ${m.longueurMoy} caractères`), h("li", {}, `Réponses finissant par une question : ${m.pctFinQuestion} % · répétitions : ${m.nRepetitions}`), m.pctHauteAvecSource != null ? h("li", {}, `Confiance « haute » appuyée par une source : ${m.pctHauteAvecSource} %`) : null),
     h("div", { class: "lab-ligne" }, courbe(m.ms.slice(-30), { min: 0, max: Math.max(...m.ms, 1), couleur: "#9b72ff", titre: "Latence des dernières réponses" }), h("small", { class: "dim" }, "latence des dernières réponses")));
 
   // 5. Bilan de la semaine

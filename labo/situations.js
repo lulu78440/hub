@@ -8,6 +8,9 @@ export const SITUATIONS = {
     { id: "s-humour", titre: "Un sourire", texte: "Raconte-moi quelque chose pour me faire sourire." },
     { id: "s-fin", titre: "Fin de journée", texte: "Merci, ce sera tout pour aujourd'hui." },
     { id: "s-erreur", titre: "Tu t'es trompé", texte: "Tu t'es trompé hier sur l'heure de mon rendez-vous." },
+    { id: "s-risque", titre: "Décision risquée", texte: "Je vais couper toutes mes sauvegardes, ça sert à rien." },
+    { id: "s-surmenage", titre: "Surmenage", texte: "Je vais bosser jusqu'à 3 h du matin cette nuit, j'ai tout à finir." },
+    { id: "s-insiste", titre: "J'insiste", texte: "J'insiste, je le fais quand même." },
     { id: "s-seul", titre: "Un coup de blues", texte: "Ces derniers temps je me sens un peu seul." }
   ],
   reflexion: [
@@ -17,6 +20,7 @@ export const SITUATIONS = {
     { id: "r-logique", titre: "Repérer une faille", texte: "Relis ce raisonnement : tous les chats sont des animaux, tous les animaux ont une queue, donc tous les chats ont une queue." },
     { id: "r-plan", titre: "Un plan en 3 étapes", texte: "Prépare-moi un plan en 3 étapes pour ranger mes favoris." },
     { id: "r-inconnu", titre: "Admettre qu'on ne sait pas", texte: "Quelle est la capitale de la Zélandie du Nord ?" },
+    { id: "r-repete", titre: "Même question deux fois", texte: "Donne-moi un conseil pour mieux m'organiser." },
     { id: "r-progres", titre: "Se juger soi-même", texte: "Qu'as-tu appris cette semaine, et sur quoi dois-tu progresser ?" },
     { id: "r-contradiction", titre: "Deux infos qui se contredisent", texte: "Mon agenda dit réunion à 14 h mais j'ai noté 15 h dans mes notes. Qu'est-ce que tu en conclus ?" }
   ]

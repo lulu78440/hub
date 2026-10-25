@@ -76,7 +76,11 @@ export function creerSentinelle({ demander = null } = {}) {
     if (inconnus.length) add("reseau", "alerte", `Connexion du Noyau vers un site inattendu : ${inconnus[0].hote}`, "Le Noyau ne doit parler qu'à Google (Gemini) et aux sources de références.", "Ouvre Sécurité → Activité.");
     else add("reseau", "ok", "Connexions du Noyau conformes", hotes.length ? `${hotes.length} site(s) contacté(s), tous attendus.` : "Aucune connexion externe pour l'instant.");
     const b = await base();
-    if (b.etat === "differe") add("empreintes", "alerte", `${b.differents.length} fichier(s) du hub modifié(s) depuis ta dernière validation`, b.differents.slice(0, 3).join(", "), "Si c'est une mise à jour que tu as faite, accepte l'état actuel (Sécurité → Activité). Sinon, vérifie l'activité GitHub.");
+    if (b.etat === "differe") {
+      const n = await commitsDepuis(b.reference);          // null = GitHub injoignable ; 0 = aucune modification connue du dépôt
+      if (n === 0) add("empreintes", "critique", `${b.differents.length} fichier(s) sensible(s) modifié(s) sans aucun commit sur le dépôt`, b.differents.slice(0, 3).join(", "), "Ce n'est pas une mise à jour normale. Vérifie le journal de sécurité GitHub ; si tu ne reconnais rien, change ton mot de passe GitHub et ta phrase secrète du hub.");
+      else add("empreintes", "alerte", `${b.differents.length} fichier(s) du hub modifié(s) depuis ta dernière validation`, b.differents.slice(0, 3).join(", ") + (n ? ` · ${n} commit(s) sur le dépôt depuis ta référence` : ""), "Si c'est une mise à jour que tu as faite, accepte l'état actuel (Sécurité → Activité). Sinon, vérifie l'activité GitHub.");
+    }
     else if (b.etat === "sans-reference") add("empreintes", "info", "Aucune empreinte de référence enregistrée", "Elle permet de repérer toute modification du code que tu n'as pas faite.", "Sécurité → Activité → Enregistrer la référence.");
     else if (b.etat === "ok") add("empreintes", "ok", "Fichiers du hub conformes à la référence", `${FICHIERS_SENSIBLES.length} fichiers sensibles contrôlés.`);
     dernier = { quand: hote.maintenant().toISOString(), controles: c };
@@ -110,6 +114,13 @@ export function creerSentinelle({ demander = null } = {}) {
   async function accepterReference() { const h = await empreintes(); await hote.stockage.ecrire("kv", { id: "noyau-secu-base", date: hote.maintenant().toISOString(), h }); await noter("reference", "empreintes enregistrées"); return h; }
 
   // ---------- Activité du dépôt GitHub ----------
+  let cacheCommits = { ref: "", t: 0, n: null };
+  /** Nombre de commits du dépôt depuis la date de référence (null si GitHub injoignable). Mis en cache 30 min : GitHub limite les appels sans compte. */
+  async function commitsDepuis(ref) {
+    const t = hote.maintenant().getTime(); if (cacheCommits.ref === ref && t - cacheCommits.t < 30 * 6e4) return cacheCommits.n;
+    let n = null; try { const r = await hote.fetch(`https://api.github.com/repos/${DEPOT}/commits?since=${encodeURIComponent(ref)}&per_page=5`, { headers: { Accept: "application/vnd.github+json" } }); if (r.ok) n = (await r.json()).length; } catch (e) { n = null; }
+    cacheCommits = { ref, t, n }; return n;
+  }
   async function activiteDepot() {
     const r = await hote.fetch(`https://api.github.com/repos/${DEPOT}/commits?per_page=12`, { headers: { Accept: "application/vnd.github+json" } });
     if (!r.ok) throw new Error(r.status === 403 ? "Limite de requêtes GitHub atteinte, réessaie dans une heure." : "GitHub répond " + r.status);

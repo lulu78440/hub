@@ -17,9 +17,10 @@ import * as imp from "./import38.js";
 import { creerSentinelle } from "./sentinelle.js";
 import { creerSavoir } from "./savoir.js";
 import { creerUsages } from "./usages.js";
+import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.2";
+export const VERSION_NOYAU = "noyau-1.3";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
@@ -45,7 +46,8 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
 
   const usages = creerUsages({ barriere, memoire });
   const cycle = creerCycle({ moteur, barriere, catalogue, memoire, perception, cerveau, etat, budget, usages });
-  const initiative = creerInitiative({ memoire, actualite, etat, barriere });
+  const savoir = creerSavoir({ memoire, barriere });
+  const initiative = creerInitiative({ memoire, actualite, etat, barriere, savoir });
   const sommeil = creerSommeil({ memoire, cerveau, etat, budget, moteur, emettre: cycle.emettre, phase: cycle.phase });
   await cycle.charger();
 
@@ -53,10 +55,18 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const demanderTexte = async (systeme, texte) => { const r = await moteur().generer({ systeme, messages: [{ role: "user", texte }], outils: [], temperature: 0.2 }); return String(r.texte || "").trim() || "(pas de réponse)"; };
   const sentinelle = creerSentinelle({ demander: demanderTexte });
   const noyau = {
-    sentinelle, demanderTexte, usages, savoir: creerSavoir({ memoire, barriere }),
+    sentinelle, demanderTexte, usages, savoir,
     /** Recommandation système de l'orbe : locale, sans requête ; montrée dans l'échange du Noyau. */
     async recommander() { const r = await sentinelle.recommandation(); cycle.emettre({ type: "initiative", texte: r.texte, raison: "systeme", niveau: r.niveau, action: r.id === "export" || r.id === "tip-export" ? "export" : null }); if (r.niveau === "critique" || r.niveau === "alerte") hote.ui.toast("Sécurité : " + r.texte.slice(0, 90)); return r; },
-    exporter: () => hote.ui.exporter && hote.ui.exporter(),
+    sauvegarde: creerSauvegarde(),
+    /** Le soir (18 h 30 – 21 h 30), une fois par jour : propose la revue de fin de journée. Locale, sans requête. */
+    suggererRevue() {
+      const d = hote.maintenant(), m = d.getHours() * 60 + d.getMinutes(), j = d.toDateString();
+      if (m < 18 * 60 + 30 || m > 21 * 60 + 30 || hote.reglage.lire("noyau-revue-jour", "") === j || noyau.reglage("remarques") === "off") return false;
+      hote.reglage.ecrire("noyau-revue-jour", j); cycle.emettre({ type: "initiative", raison: "soir", action: "revue", texte: "La journée touche à sa fin. Veux-tu que je fasse le point : ce qui est fait, ce qui reste, ce que j'ai retenu et ton agenda de demain ?" }); return true;
+    },
+    /** Bouton « Exporter maintenant » : dossier choisi s'il est autorisé, sinon l'export classique du hub. */
+    async exporter() { try { const e = await noyau.sauvegarde.etat(); if (e.dossier) { const r = await noyau.sauvegarde.maintenant({ demander: true }); hote.ui.toast("Sauvegarde écrite : " + r.nom); return r; } } catch (x) { hote.ui.toast("Sauvegarde dans le dossier impossible : " + (x.message || x)); } return hote.ui.exporter && hote.ui.exporter(); },
     /** Résume ce qu'affiche une fenêtre (jamais les mails). Une requête Gemini si possible, sinon résumé local. */
     async resumerFenetre(id) {
       if (/^mails?$/i.test(String(id))) { const t = "Je ne résume pas les mails d'ici : leur contenu doit rester chez toi. Utilise la lecture des mails avec confirmation."; cycle.emettre({ type: "initiative", texte: t, raison: "resume" }); return { ok: false, texte: t }; }
@@ -96,7 +106,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     accueil: async () => { const a = await initiative.accueil(); if (a) cycle.emettre({ type: "initiative", texte: a.texte, raison: a.raison }); return a; },
     remarque: async () => { const a = await initiative.remarque(); if (a) cycle.emettre({ type: "initiative", texte: a.texte, raison: a.raison }); return a; },
     dormir: async (opt) => { const r = await sommeil.dormir(opt); signalerAValider(); return r; },
-    curiosite: async () => { const r = await initiative.curiosite(); signalerAValider(); return r; }
+    curiosite: async () => { const r = await initiative.curiosite(); signalerAValider(); if (r && r.fait && r.programme) cycle.emettre({ type: "initiative", raison: "curiosite", texte: r.trouve ? `J'ai étudié « ${r.sujet} » (${r.domaine}) : ${r.trouve} fiche(s) t'attendent dans « À valider ». Rien n'est appris sans ton accord.` : `J'ai cherché « ${r.sujet} » (${r.domaine}) sans rien trouver de net.` }); return r; }
   };
   return noyau;
 }
@@ -122,6 +132,8 @@ export async function initNoyau() {
   document.addEventListener("noyau:ouvrir-securite", () => secu && secu.ouvrir());
   // Sentinelle : capteurs, analyse locale toutes les 5 min (sans requête), recommandation de l'orbe toutes les 30 min
   noyau.sentinelle.surveiller();
+  const sauvegardeAuto = async () => { if (document.hidden || document.body.classList.contains("locked")) return; const r = await noyau.sauvegarde.auto().catch(() => ({ fait: false })); if (r.fait) hote.ui.toast("Sauvegarde automatique écrite : " + r.nom); else if (r.reautoriser && hote.reglage.lire("noyau-sauv-rappel", "") !== new Date().toDateString()) { hote.reglage.ecrire("noyau-sauv-rappel", new Date().toDateString()); document.dispatchEvent(new CustomEvent("noyau:initiative", { detail: { texte: "Le navigateur demande de réautoriser le dossier de sauvegarde. Ouvre Réglages → Sauvegarde, puis « Sauvegarder maintenant ».", raison: "systeme", niveau: "alerte" } })); } };
+  setTimeout(sauvegardeAuto, 20000); setInterval(sauvegardeAuto, 30 * 60e3);
   const calme = () => !document.hidden && !document.body.classList.contains("locked") && !document.body.classList.contains("focus") && (() => { const h = new Date().getHours(); return h >= 7 && h < 23; })();
   setTimeout(() => noyau.sentinelle.veille().catch(() => {}), 8000);
   setInterval(() => { if (!document.hidden) noyau.sentinelle.veille().then((c) => { if (c.some((x) => x.niveau === "critique")) hote.ui.orbe({ phase: "attend", humeur: "vigilant" }); }).catch(() => {}); }, 5 * 60e3);
@@ -135,6 +147,7 @@ export async function initNoyau() {
     try {
       if (document.hidden) return;
       await noyau.remarque();
+      if (calme()) noyau.suggererRevue();
       if (noyau.sommeil.moment({ inactifMs: Date.now() - dernierGeste })) await noyau.dormir();
       await noyau.curiosite();
     } catch (e) { console.error("noyau", e); }

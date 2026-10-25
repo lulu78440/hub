@@ -235,6 +235,23 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     }
   }
 
+  // ---------- Sauvegarde dans un dossier du PC ----------
+  function sauvegardeBloc() {
+    const z = h("div", { class: "nx-sauv" });
+    (async () => {
+      const e = await noyau.sauvegarde.etat(); z.textContent = "";
+      if (!e.dispo) { z.append(h("p", { class: "nx-dim", texte: "Ce navigateur ne sait pas écrire dans un dossier (Chrome, Edge et Brave sur PC le savent). Utilise Diag → Exporter." })); return; }
+      const der = Date.parse(e.derniere);
+      z.append(h("p", { class: "nx-dim", texte: e.dossier ? `Dossier choisi : « ${e.dossier.nom} ». Une sauvegarde par jour quand le hub est ouvert, chiffrée si le verrouillage est actif ; les 7 dernières sont gardées. Dernière : ${isFinite(der) ? new Date(der).toLocaleString("fr-FR") : "jamais"}.${e.droit !== "granted" ? " Le navigateur demande de réautoriser le dossier." : ""}` : "Choisis un dossier de ton PC (idéalement synchronisé avec Google Drive) : le hub y déposera ses sauvegardes tout seul. Rien n'est écrit ailleurs." }));
+      const msg = h("span", { class: "nx-dim" });
+      z.append(h("div", { class: "nx-actions" },
+        h("button", { class: "nx-btn", type: "button", onclick: async () => { try { await noyau.sauvegarde.choisir(); msg.textContent = "Dossier choisi."; z.replaceWith(sauvegardeBloc()); } catch (x) { msg.textContent = x.name === "AbortError" ? "Choix annulé." : "Impossible : " + x.message; } } }, e.dossier ? "Changer de dossier" : "Choisir le dossier"),
+        e.dossier ? h("button", { class: "nx-btn nx-primaire", type: "button", onclick: async (ev) => { ev.currentTarget.disabled = true; try { const r = await noyau.sauvegarde.maintenant({ demander: true }); msg.textContent = `Écrit : ${r.nom} (${Math.round(r.octets / 1024)} Ko${r.chiffre ? ", chiffré" : ", non chiffré : active le verrouillage"}).`; } catch (x) { msg.textContent = x.message; } ev.currentTarget.disabled = false; } }, "Sauvegarder maintenant") : null,
+        e.dossier ? h("button", { class: "nx-btn", type: "button", onclick: async () => { await noyau.sauvegarde.retirer(); z.replaceWith(sauvegardeBloc()); } }, "Oublier ce dossier") : null, msg));
+    })();
+    return z;
+  }
+
   // ---------- Réglages et imports ----------
   const vueReglages = h("section", { class: "nx-vue", "data-nom": "reglages" });
   function bascule(libelle, cle, defaut, aide) {
@@ -266,6 +283,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       h("div", { class: "nx-actions" },
         h("button", { class: "nx-btn", type: "button", onclick: async (e) => { e.currentTarget.disabled = true; const r = await noyau.dormir({ force: true }); note(r.fait ? `Sommeil terminé : ${r.propositions} proposition(s) à valider.` : "Sommeil : " + r.raison); majNav(); majBudget(); e.currentTarget.disabled = false; } }, "Dormir maintenant"),
         h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.cycle.oublierConversation(); fil.textContent = ""; accueilVide(); changerVue("chat"); } }, "Nouvelle conversation")),
+      h("h4", { texte: "Sauvegarde automatique" }), sauvegardeBloc(),
       h("h4", { texte: "Références consultées" }), sourcesBloc(),
       h("h4", { texte: "Importer" }), imports);
     imports.append(importBloc("Ma mémoire v3.8 (fichier noyau-full-state.json)", async (texte, zone) => {
@@ -339,11 +357,12 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     } else if (m.type === "erreur") { /* le texte de la réponse en mode réduit explique déjà */ }
     else if (m.type === "initiative") {
       fil.querySelector(".nx-vide")?.remove();
-      fil.append(h("article", { class: "nx-m nx-noyau nx-init", "data-ton": m.niveau === "critique" ? "preoccupe" : m.niveau === "alerte" ? "vigilant" : "curieux" }, h("p", { texte: m.texte }), h("div", { class: "nx-meta" }, h("span", { class: "nx-etiq" + (m.niveau === "critique" ? " bad" : m.niveau === "alerte" ? " warn" : ""), texte: m.raison === "accueil" ? "accueil" : m.raison === "systeme" ? "recommandation système" : m.raison === "resume" ? "résumé" : "remarque" }), m.action === "export" ? h("button", { class: "nx-btn nx-primaire", type: "button", onclick: (e) => { noyau.exporter(); e.currentTarget.disabled = true; e.currentTarget.textContent = "Export lancé"; } }, "Exporter maintenant") : null, m.raison === "systeme" && m.niveau !== "ok" && m.action !== "export" ? h("button", { class: "nx-lien", type: "button", onclick: () => document.dispatchEvent(new CustomEvent("noyau:ouvrir-securite")) }, "Ouvrir la sécurité") : null, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Ignorer"))));
+      fil.append(h("article", { class: "nx-m nx-noyau nx-init", "data-ton": m.niveau === "critique" ? "preoccupe" : m.niveau === "alerte" ? "vigilant" : "curieux" }, h("p", { texte: m.texte }), h("div", { class: "nx-meta" }, h("span", { class: "nx-etiq" + (m.niveau === "critique" ? " bad" : m.niveau === "alerte" ? " warn" : ""), texte: m.raison === "accueil" ? "accueil" : m.raison === "systeme" ? "recommandation système" : m.raison === "resume" ? "résumé" : m.raison === "curiosite" ? "curiosité" : m.raison === "soir" ? "fin de journée" : "remarque" }), m.action === "revue" ? h("button", { class: "nx-btn nx-primaire", type: "button", onclick: (e) => { e.currentTarget.disabled = true; poser("Revue de fin de journée"); } }, "Faire le point") : null, m.action === "export" ? h("button", { class: "nx-btn nx-primaire", type: "button", onclick: (e) => { noyau.exporter(); e.currentTarget.disabled = true; e.currentTarget.textContent = "Export lancé"; } }, "Exporter maintenant") : null, m.raison === "systeme" && m.niveau !== "ok" && m.action !== "export" ? h("button", { class: "nx-lien", type: "button", onclick: () => document.dispatchEvent(new CustomEvent("noyau:ouvrir-securite")) }, "Ouvrir la sécurité") : null, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Ignorer"))));
       fil.scrollTop = fil.scrollHeight;
     } else if (m.type === "a_valider") majNav();
   });
 
+  document.addEventListener("noyau:initiative", (e) => { const m = e.detail || {}; noyau.cycle.emettre({ type: "initiative", texte: m.texte, raison: m.raison || "systeme", niveau: m.niveau || "info" }); });
   accueilVide(); majBudget(); majNav();
   return {
     racine, poser, note, changerVue,

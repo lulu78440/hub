@@ -37,7 +37,7 @@ async function demarrer() {
   appliquerMoteur();
   noyau.surMessage((m) => {
     if (m.type === "reponse" || m.type === "erreur") rendreInspecteur();
-    if (m.type === "reponse" && !m.refaite) { const t = noyau.inspecteur()[0]; if (t) etat.ajouterMetrique({ ms: t.ms, requetes: t.requetes, tokens: t.tokens, longueur: (m.texte || "").length, confiance: m.confiance, sources: (m.sources || []).length, ton: m.ton, reflexe: !!t.reflexe, moteur: modeMoteur }); }
+    if (m.type === "reponse" && !m.refaite) { const t = noyau.inspecteur()[0]; if (t) etat.ajouterMetrique({ ms: t.ms, requetes: t.requetes, tokens: t.tokens, longueur: (m.texte || "").length, confiance: m.confiance, sources: (m.sources || []).length, ton: m.ton, reflexe: !!t.reflexe, finQuestion: !!t.finQuestion, repete: !!t.repete, moteur: modeMoteur }); }
   });
   window.__noyau = noyau; window.__hub = hub;
   rendreInspecteur(); rendreHub(); rendreMoteur();

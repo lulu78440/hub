@@ -13,7 +13,8 @@ export function monterSavoir(conteneur, noyau) {
   const entete = h("div", { class: "nx-sv-haut" });
   const detail = h("div", { class: "nx-sv-detail", "aria-live": "polite" });
   const suite = h("div", { class: "nx-sv-suite" });
-  racine.append(entete, h("div", { class: "nx-carte-cadre" }, canvas), detail, suite,
+  const cur = h("div", { class: "nx-sv-cur" });
+  racine.append(entete, h("div", { class: "nx-carte-cadre" }, canvas), detail, suite, cur,
     h("details", { class: "nx-aide" }, h("summary", {}, "Comment ce pourcentage est calculé"),
       h("p", {}, "Chaque domaine est découpé en sous-thèmes (le programme). Un sous-thème est couvert à 100 % quand le Noyau a retenu, et que tu as validé, des fiches sourcées qui totalisent 2 points : une fiche vérifiée vaut 1, une fiche non vérifiée 0,5, un fait sur toi 0,5, un souvenir d'échange 0,25."),
       h("p", {}, "Le pourcentage d'un domaine est la moyenne de ses sous-thèmes. Il part de 0 % et ne monte que par ce que tu valides. Il mesure la couverture du programme, pas tout ce qui existe sur le sujet."),
@@ -31,7 +32,13 @@ export function monterSavoir(conteneur, noyau) {
       c.fiches === 0 ? h("p", { class: "nx-dim" }, "Rien n'est encore appris : tout est à 0 %. Choisis un domaine, puis « Étudier » : les propositions arrivent dans « À valider ».") : null].filter(Boolean));
     const p = savoir.prochain(c); suite.textContent = "";
     if (p) suite.append(h("span", { class: "nx-dim" }, "Prochaine étape conseillée : "), h("b", {}, `${p.domaineNom} · ${p.titre}`), h("button", { class: "nx-btn", type: "button", disabled: etudeEnCours, onclick: () => etudier(p.sousTheme) }, "Étudier"));
-    rendreDetail(c);
+    rendreDetail(c); rendreCur();
+  }
+  function rendreCur() {
+    cur.textContent = ""; const on = noyau.reglage("curiosite") === "on", st = noyau.initiative.etatCuriosite();
+    cur.append(h("span", { class: "nx-dim" }, "Curiosité autonome : "), h("b", {}, on ? "active" : "coupée"),
+      h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.reglage("curiosite", on ? "off" : "on"); rendreCur(); } }, on ? "Couper" : "Activer"),
+      h("span", { class: "nx-dim" }, on ? ` Une étude toutes les 30 min au plus, 6 par jour (${st.prog || 0} aujourd'hui), jamais en Focus, la nuit ou écran verrouillé. Elle propose, tu valides.` : " Le Noyau n'étudie que sur ta demande."));
   }
   function rendreDetail(c = savoir.carte()) {
     detail.textContent = "";
