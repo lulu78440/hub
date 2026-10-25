@@ -17,6 +17,9 @@ export const CHANTIERS = [
   { id: "moteurs", nom: "Moteurs et durabilité", etapes: [
     { t: "Moteur Claude avec plafonds séparés", s: "fait" }, { t: "Routage automatique Gemini / Claude selon la complexité et les jetons", s: "fait" }, { t: "Relais gratuit compatible OpenAI (Groq, Mistral, OpenRouter, Cerebras)", s: "fait" },
     { t: "Essayer une vraie clé Claude et un vrai relais", s: "attend", n: "Colle les clés dans Réglages" }] },
+  { id: "orbe", nom: "Orbe et voix", etapes: [
+    { t: "Orbe branchée sur le Noyau (mémoire, outils, barrière)", s: "fait" }, { t: "Vue vocale plein écran (bouton Parler)", s: "fait" }, { t: "Bouton Labo réservé à Lucien, labo fermé au Noyau", s: "fait" },
+    { t: "Essayer la vue vocale sur Android (Chrome)", s: "attend", n: "Bouton « Parler » en haut" }] },
   { id: "visuel", nom: "Visuel", etapes: [
     { t: "Carte neuronale : influx électriques sur les sous-thèmes en cours ou validés", s: "fait" }, { t: "Onglet Visuel du labo : carte, radars des critères, courbes", s: "fait" },
     { t: "Orbe centrale avec flux de données, domaines proches voisins, vue entièrement occupée", s: "fait" }, { t: "Test automatique pour valider un point de connaissance", s: "fait" }] },
@@ -58,5 +61,7 @@ export const PLAN_TEST = [
   ["t-test", "Savoir : « Réaliser le test pour valider ce point » sur un sous-thème et lire le compte rendu"],
   ["t-neurones", "Ouvrir Savoir, valider une fiche et voir le neurone passer de « en cours » à « validé »"],
   ["t-relais", "Réglages : coller une clé de relais gratuit (Groq par exemple) et vérifier qu'il répond quand Gemini est en quota"],
+  ["t-vocal", "Android (Chrome) : bouton « Parler », poser une question à voix haute, entendre la réponse"],
+  ["t-labo-bouton", "Hub : le bouton « Labo » ouvre le laboratoire dans un nouvel onglet"],
   ["t-android", "Ouvrir le hub sur Android et refaire une capture « Note : »"]
 ];

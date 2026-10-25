@@ -1,5 +1,6 @@
 // Noyau · point d'entrée (contrat, section 3). Assemble le cerveau, les mémoires, la barrière, les moteurs et le cycle de pensée.
 // `creerNoyau()` ne dépend que de l'hôte branché (hub réel ou hub simulé du laboratoire) ; `initNoyau()` est l'appel unique de js/main.js.
+import { pont } from "./pont.js";
 import { hote, brancherHub } from "./hote.js";
 import { creerCatalogue } from "./outils.js";
 import { creerBarriere } from "./barriere.js";
@@ -20,7 +21,7 @@ import { creerUsages } from "./usages.js";
 import { creerSauvegarde } from "./sauvegarde.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.7";
+export const VERSION_NOYAU = "noyau-1.8";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
@@ -73,7 +74,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
 
   const usages = creerUsages({ barriere, memoire });
   const cycle = creerCycle({ moteur, barriere, catalogue, memoire, perception, cerveau, etat, budget: budgetTotal, usages });
-  const savoir = creerSavoir({ memoire, barriere });
+  const savoir = creerSavoir({ memoire, barriere, juge: async (sys, txt) => { if (budgetTotal.restant() <= 0) throw new Error("budget du jour épuisé"); return demanderTexte(sys, txt); }, strict: () => hote.reglage.lire("noyau-test-strict", "on") !== "off" });
   const initiative = creerInitiative({ memoire, actualite, etat, barriere, savoir });
   const sommeil = creerSommeil({ memoire, cerveau, etat, budget: budgetTotal, moteur, emettre: cycle.emettre, phase: cycle.phase });
   await cycle.charger();
@@ -144,6 +145,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
 export async function initNoyau() {
   await brancherHub();
   const noyau = await creerNoyau();
+  pont.poser = (texte, origine) => noyau.poser(texte, origine);
   noyau.verrouillePar(() => document.body.classList.contains("locked"));       // écran verrouillé : aucune confirmation ne passe
   const { monterFenetre } = await import("./fenetre.js");
   const ui = monterFenetre(hote.ui.conteneur(), noyau, { orbe: true });
@@ -157,6 +159,9 @@ export async function initNoyau() {
   hote.ui.ajouterMenuFenetre && hote.ui.ajouterMenuFenetre((el) => /^(mails?|noyau|securite|savoir)$/.test(el.dataset.id) ? [] : [{ t: "Résumer avec le Noyau", fn: () => { ui.ouvrir(); noyau.resumerFenetre(el.dataset.id).catch(() => {}); } }]);
   hote.ui.ajouterMenuFond(() => [{ t: "Capture rapide (note)", fn: () => { ui.ouvrir(); document.dispatchEvent(new CustomEvent("noyau:saisir", { detail: { texte: "Note : " } })); } }]);
   document.addEventListener("noyau:ouvrir-savoir", () => sav && sav.ouvrir());
+  const { monterVueVocale } = await import("./vue-vocale.js");
+  const vocale = monterVueVocale(noyau);
+  hote.ui.ajouterMenuFond(() => [{ t: "Parler à l'orbe (vue vocale)", fn: () => vocale.ouvrir() }]);
   document.addEventListener("noyau:ouvrir", () => ui.ouvrir());                          // appui long sur l'orbe
   document.addEventListener("noyau:ouvrir-securite", () => secu && secu.ouvrir());
   // Sentinelle : capteurs, analyse locale toutes les 5 min (sans requête), recommandation de l'orbe toutes les 30 min

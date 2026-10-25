@@ -7,6 +7,7 @@
 //    Les questions (et, si tu le veux, le résumé de ta journée) partent chez Google. Marche aussi sur le téléphone.
 // Chat IA : clic court sur l’orbe (l’appui long ouvre le Noyau, voir js/noyau/). Puis l'entité : réveillée quand l'IA est prête ;
 // clic droit sur une fenêtre → « Demander à l'entité » (résume ce qu'elle voit).
+import { pont } from "../noyau/pont.js";
 import { store } from "../store/storage.js";
 import { prefs } from "../store/prefs.js";
 import { vault } from "../store/vault.js";
@@ -106,6 +107,7 @@ export function initAI({ force }) {
     log.innerHTML = ""; stat.textContent = "";
     const box = el("div", "aimodels");
     say("sys", "Choisis le moteur du chat IA :");
+    if (pont.poser) { const n = el("button", "btn ok", "Noyau · mémoire, outils et vérification (recommandé)"); n.type = "button"; n.addEventListener("click", () => { prefs.set("ia-moteur", "noyau"); ready({ nom: "Noyau", noyau: true }); }); box.append(n); }
     const g = el("button", "btn", "Gemini · ton assistant Google AI Studio (en ligne, clé gratuite)"); g.type = "button"; g.addEventListener("click", geminiSetup); box.append(g);
     if (!lite) {
       if (navigator.gpu) MODELS.forEach((m) => { const b = el("button", "btn", "Local · " + m.nom); b.type = "button"; b.addEventListener("click", () => load(m.id)); box.append(b); });
@@ -173,6 +175,15 @@ export function initAI({ force }) {
   async function ask(q, extra = "") {
     if (!engine) { open(); return; }
     say("me", q); const out = say("ai", "…"); state.energyTarget = 0.8; state.accent = 0x9b72ff;
+    if (engine.noyau) {                                   // l'orbe passe par le Noyau : mémoire, outils, barrière et vérification des sources
+      try {
+        const r = await pont.poser(q, "lucien");
+        out.textContent = (r && r.texte) || "(pas de réponse)";
+        if (r && r.texte) history.push({ role: "user", content: q }, { role: "assistant", content: r.texte });
+      } catch (e) { out.className = "sys"; out.textContent = "Erreur : " + e.message; }
+      finally { state.energyTarget = 0; state.accent = null; }
+      return;
+    }
     try {
       const messages = [{ role: "system", content: await systemText() + (extra ? "\n\n" + extra : "") }, ...history.slice(-8), { role: "user", content: q }];
       const txt = await engine.stream(messages, (t) => { out.textContent = t; log.scrollTop = log.scrollHeight; });
@@ -186,7 +197,8 @@ export function initAI({ force }) {
     if (!engine && !loading) {
       const m = prefs.get("ia-moteur", prefs.get("ia-modele", "") ? "local" : "");
       const key = vault.lsGet(KEY);
-      if (m === "gemini" && key && vault.active) { const eng = geminiEngine(key, prefs.get("ia-gemini-modele", "gemini-flash-latest")); eng.gemini = true; ready(eng); }
+      if (pont.poser && (m === "" || m === "noyau")) ready({ nom: "Noyau", noyau: true });
+      else if (m === "gemini" && key && vault.active) { const eng = geminiEngine(key, prefs.get("ia-gemini-modele", "gemini-flash-latest")); eng.gemini = true; ready(eng); }
       else if (m === "local" && !lite && navigator.gpu && prefs.get("ia-modele", "")) load(prefs.get("ia-modele", ""));
       else chooseModel();
     }

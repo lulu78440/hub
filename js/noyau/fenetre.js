@@ -315,6 +315,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       h("p", { class: "nx-dim", texte: "La clé Gemini est celle de l'orbe (gardée chiffrée par le coffre, verrouillage actif obligatoire). Elle se colle dans le panneau de l'orbe : clic sur l'orbe → engrenage." }),
       bascule("Accueil du jour", "accueil", true, "Une phrase par jour, composée sans requête."),
       bascule("Remarques opportunes", "remarques", true, "Au plus une toutes les 2 heures, jamais en Focus ni la nuit."),
+      bascule("Test de validation exigeant", "test-strict", true, "Un point n'est validé que si un modèle confirme aussi l'exactitude des fiches (1 requête par test). Désactivé : test local seul."),
       bascule("Sommeil", "sommeil", true, "Consolide la mémoire une fois par jour (1 requête)."),
       bascule("Recommandation système toutes les 30 min", "recos", true, "Locale, sans requête Gemini. Silencieuse en Focus, la nuit et écran verrouillé."),
       h("div", { class: "nx-actions" }, h("button", { class: "nx-btn", type: "button", onclick: () => document.dispatchEvent(new CustomEvent("noyau:ouvrir-securite")) }, "Ouvrir la sécurité")),

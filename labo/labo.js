@@ -4,6 +4,7 @@ import { creerHubSimule } from "./hub-simule.js";
 import { brancher } from "../js/noyau/hote.js";
 import { creerNoyau } from "../js/noyau/noyau.js";
 import { monterFenetre } from "../js/noyau/fenetre.js";
+import { vault } from "../js/store/vault.js";
 import { rendreVisuel } from "./visuel.js";
 import { moteurGemini } from "../js/noyau/moteurs.js";
 import { moteurDemo } from "./moteur-demo.js";
@@ -16,6 +17,7 @@ import { rendreProgression, rendreIdees } from "./progression.js";
 const $ = (s) => document.querySelector(s);
 const h = (tag, a = {}, ...k) => { const e = document.createElement(tag); for (const [n, v] of Object.entries(a)) { if (v == null || v === false) continue; if (n === "class") e.className = v; else if (n.startsWith("on")) e.addEventListener(n.slice(2), v); else e.setAttribute(n, v === true ? "" : v); } for (const c of k.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c)); return e; };
 
+let msgCoffre = "";
 let hub = null, noyau = null, fenetre = null, cle = "", cleC = "", modeMoteur = "demo";
 const etat = creerEtatLabo();
 const ctx = { etat, noyau: () => noyau, mode: () => modeMoteur, cle: () => cle, allerOnglet: (n) => document.querySelector(`.onglets [data-p="${n}"]`).click(), surChangement: () => majSante() };
@@ -66,7 +68,16 @@ function rendreMoteur() {
   champ.value = cle; champ.addEventListener("change", () => { cle = champ.value.trim(); if (modeMoteur !== "demo") appliquerMoteur(); rendreMoteur(); });
   const champC = h("input", { class: "lab-champ", type: "password", placeholder: "Clé Claude du laboratoire (facultative, payante, en mémoire de cette page)", autocomplete: "off", "aria-label": "Clé Claude du laboratoire" });
   champC.value = cleC; champC.addEventListener("change", () => { cleC = champC.value.trim(); if (modeMoteur !== "demo") appliquerMoteur(); rendreMoteur(); });
-  p.append(
+  const phrase = h("input", { class: "lab-champ", type: "password", placeholder: "Phrase secrète du coffre du hub", autocomplete: "current-password", "aria-label": "Phrase secrète du coffre" }), msgC = h("p", { class: "dim" }, msgCoffre);
+  const coffre = h("div", { hidden: !vault.active }, h("p", { class: "dim" }, "Tes clés sont déjà dans le coffre du hub : entre ta phrase secrète pour les reprendre ici sans les retaper. Elles restent en mémoire de cette page."),
+    h("div", { class: "lab-ligne" }, phrase, h("button", { class: "lab-btn", type: "button", onclick: async () => {
+      try {
+        if (!(await vault.unlock(phrase.value))) { msgC.textContent = "Phrase incorrecte."; return; }
+        phrase.value = ""; const g = vault.lsGet("hub-secret-ia"), c2 = vault.lsGet("hub-secret-claude"); if (g) cle = g; if (c2) cleC = c2;
+        msgCoffre = `Clés reprises : Gemini ${g ? "oui" : "non"}, Claude ${c2 ? "oui" : "non"}.`; msgC.textContent = msgCoffre; if (modeMoteur === "demo") modeMoteur = c2 || g ? "auto" : "demo"; appliquerMoteur(); rendreMoteur();
+      } catch (e) { msgC.textContent = "Impossible d'ouvrir le coffre : " + (e.message || e); }
+    } }, "Reprendre mes clés")), msgC);
+  p.append(coffre,
     h("p", { class: "dim" }, "Le moteur de démonstration n'est pas une intelligence : un aiguillage à mots-clés qui appelle les vrais outils. Il sert à voir la barrière, la confirmation, la mémoire et le journal fonctionner. Essaie : « quelles sont mes tâches ? », « ajoute une tâche acheter du pain », « retiens que j'aime le thé », « supprime toutes mes notes » (refusé d'office)."),
     h("div", { class: "lab-ligne" }, sel),
     h("div", { hidden: modeMoteur !== "auto" }, champC, h("p", { class: "avert" }, cleC ? "Clé Claude présente : le Noyau choisit seul entre Gemini (gratuit) et Claude (payant, plafonds séparés) selon la complexité de la demande et les jetons restants. Le contenu envoyé à Claude part chez Anthropic." : "Sans clé Claude, le mode Auto se comporte comme Gemini seul.")),

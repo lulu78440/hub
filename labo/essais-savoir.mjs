@@ -37,4 +37,11 @@ await nT.memoire.proposer({ type: "kb", titre: "Fiche sans source", texte: "Une 
 const t2 = await svT.tester("droit.7", { etudierSiVide: false });
 ok(t2.ok && !t2.reussi && t2.valides.length === 0, "fiche sans source : test non réussi, rien n'est validé (" + t2.score + " %)");
 const t3 = await svT.tester("inconnu.9"); ok(!t3.ok, "sous-thème inconnu refusé");
+// ----- contrôle d'exactitude par un modèle (2e étage) -----
+const memT = nT.memoire; const svJ = creerSavoir({ memoire: memT, barriere: nT.barriere, juge: async () => '[{"n":1,"exact":false,"raison":"date erronée"}]', strict: () => true });
+const t4 = await svJ.tester("droit.3"); ok(t4.ok && !t4.reussi && t4.valides.length === 0 && /confirm/.test(t4.raison), "le modèle juge la fiche inexacte : rien n'est validé (" + t4.raison.slice(0, 60) + ")");
+const svJ2 = creerSavoir({ memoire: memT, barriere: nT.barriere, juge: async () => { throw new Error("hors ligne"); }, strict: () => true });
+const t5 = await svJ2.tester("droit.3"); ok(!t5.reussi && /impossible/.test(t5.raison), "modèle indisponible : rien n'est validé en mode exigeant");
+const svJ3 = creerSavoir({ memoire: memT, barriere: nT.barriere, juge: async (sys, txt) => { if (!/Fiche 1/.test(txt) || !/DONNÉES/.test(sys)) throw new Error("prompt inattendu"); return 'Voici : [{"n":1,"exact":true,"raison":"cohérent"},{"n":2,"exact":true,"raison":"ok"},{"n":3,"exact":true},{"n":4,"exact":true}]'; }, strict: () => true });
+const t6 = await svJ3.tester("droit.3"); ok(t6.reussi && t6.controle && t6.controle.every((c) => c.exact) && /exactitude contrôlée/.test(t6.raison), "modèle d'accord : validation avec exactitude contrôlée (" + t6.raison.slice(0, 70) + ")");
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

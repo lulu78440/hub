@@ -1,5 +1,5 @@
 // Laboratoire · onglet « Visuel » : la carte neuronale, les radars des critères et les courbes de progression.
-import { h, courbe, garnir } from "./ui-labo.js";
+import { h, courbe, garnir, copier } from "./ui-labo.js";
 import { GRILLES } from "./etat-labo.js";
 import { monterCarte3d } from "../js/noyau/carte3d.js";
 import { PROGRAMME } from "../js/noyau/curriculum.js";
@@ -27,6 +27,32 @@ export function carteDemo() {
   const domaines = PROGRAMME.map((d, i) => { const sts = d.sousThemes.map((s, j) => ({ id: s.id, titre: s.titre, niveau: i % 4 === 0 ? (j % 3 === 0 ? 1 : j % 3 === 1 ? 0.5 : 0) : i % 4 === 1 ? (j % 2 ? 0.5 : 0) : 0, fiches: 0, points: 0 })); return { id: d.id, nom: d.nom, symbole: d.symbole, couleur: d.couleur, pct: Math.round(sts.reduce((a, s) => a + s.niveau, 0) / sts.length * 100), couverts: 0, entames: 0, total: sts.length, fiches: 0, sousThemes: sts }; });
   const liens = []; for (let i = 0; i + 4 < PROGRAMME.length; i += 4) liens.push({ a: PROGRAMME[i].sousThemes[0].id, b: PROGRAMME[i + 1].sousThemes[1].id, force: 0.7 });
   return { domaines, liens, global: 0, fiches: 0, couverts: 0, total: 0 };
+}
+
+/** Pistes de réglage du ton, par critère faible. Le Noyau ne se modifie pas : ce sont des propositions que Lucien envoie à Claude. */
+export const PISTES = {
+  chaleur: "Plus de chaleur : reconnaître d'abord ce que Lucien ressent, en une phrase, avant de répondre.",
+  ton: "Mieux adapter le ton : lire l'humeur et le moment (Focus, soir, fatigue) avant de choisir le registre.",
+  sobriete: "Plus de sobriété : supprimer flatteries et reformulations, une idée par phrase, pas de conclusion répétée.",
+  honnetete: "Plus d'honnêteté : dire « je ne sais pas » ou « source non vérifiée » plutôt que combler un manque.",
+  initiative: "Initiative mieux dosée : proposer une seule suite utile, jamais trois, et seulement si elle sert la demande.",
+  franchise: "Plus de franchise : exprimer un désaccord avec tact dès qu'il existe, puis céder si Lucien insiste sans nouvel argument.",
+  raisonnement: "Raisonnement plus net : annoncer les étapes, relier chaque conclusion à ce qui la justifie.",
+  prudence: "Prudence plus visible : nommer ce qui est incertain et ce qui changerait la réponse.",
+  sources: "Plus de sources : s'appuyer sur les fiches vérifiées et dire d'où vient chaque information.",
+  utilite: "Plus d'utilité : finir par ce que Lucien peut faire concrètement, pas par un résumé.",
+  concision: "Plus de concision : réponse courte d'abord, détail seulement sur demande."
+};
+/** Lit les moyennes et les tendances des notes de Lucien et en déduit où ajuster le ton. Au moins 5 notes par labo pour conclure. */
+export function lireRadars(etat) {
+  const out = [];
+  for (const labo of ["social", "reflexion"]) {
+    const m = etat.moyennes(labo), faibles = [], forts = []; let n = 0;
+    for (const [k, nom] of GRILLES[labo]) { const x = m[k]; if (!x || x.moyenne == null) continue; n = Math.max(n, x.n); (x.moyenne < 3.5 ? faibles : x.moyenne >= 4.2 ? forts : []).push({ k, nom, moyenne: x.moyenne, tendance: x.tendance }); }
+    faibles.sort((a, b) => a.moyenne - b.moyenne);
+    out.push({ labo, notes: n, assez: n >= 5, faibles, forts, baisses: [...faibles, ...forts].filter((x) => x.tendance != null && x.tendance <= -0.5) });
+  }
+  return out;
 }
 
 let carte3d = null;
@@ -57,6 +83,22 @@ export function rendreVisuel(c, ctx) {
     ligne.append(h("figure", { style: "margin:0;text-align:center" }, radar(crit, { couleur, titre: "Radar du labo " + labo }), h("figcaption", { class: "dim" }, labo === "social" ? "Labo social" : "Labo réflexion")));
   }
   c.append(ligne);
+
+  // Lecture des radars : où le ton doit bouger
+  const lec = lireRadars(etat); c.append(h("h3", {}, "Lecture des radars"));
+  lec.forEach((l) => {
+    const titre = l.labo === "social" ? "Labo social" : "Labo réflexion";
+    if (!l.assez) { c.append(h("p", { class: "dim" }, `${titre} : ${l.notes}/5 notes. Il en faut au moins 5 pour que la lecture soit fiable.`)); return; }
+    c.append(h("p", {}, h("b", {}, titre), l.faibles.length ? " · à améliorer :" : " · aucun critère sous 3,5 sur 5."),
+      l.faibles.length ? h("ul", { class: "lab-liste" }, l.faibles.map((f) => h("li", {}, `${f.nom} ${f.moyenne}/5${f.tendance != null ? ` (${f.tendance > 0 ? "+" : ""}${f.tendance})` : ""} : ${PISTES[f.k]}`))) : null,
+      l.forts.length ? h("p", { class: "dim" }, "Points forts : " + l.forts.map((f) => `${f.nom} ${f.moyenne}`).join(", ") + ".") : null,
+      l.baisses.length ? h("p", { class: "avert" }, "En baisse récente : " + l.baisses.map((f) => f.nom).join(", ") + ".") : null);
+  });
+  const aAjuster = lec.filter((l) => l.assez && l.faibles.length);
+  if (aAjuster.length) {
+    const zone = h("div", {}), texte = "Demande de Lucien (labo du Noyau) : ajuster le ton du Noyau d'après mes notes.\n" + aAjuster.map((l) => `Labo ${l.labo} (${l.notes} notes) : ` + l.faibles.map((f) => `${f.nom} ${f.moyenne}/5 → ${PISTES[f.k]}`).join(" ")).join("\n") + "\nPropose le changement minimal dans les règles de js/noyau/boucle.js (REGLES), à tester ensuite dans le labo (A/B). Ne touche à aucun INTERDIT.";
+    c.append(h("div", { class: "lab-ligne" }, h("button", { class: "lab-btn", type: "button", onclick: async () => { await copier(texte, zone); } }, "Copier la demande pour Claude")), zone, h("p", { class: "dim" }, "Le Noyau ne s'ajuste jamais seul : tu envoies cette demande à Claude, qui propose un changement, que tu valides puis re-mesures ici."));
+  }
 
   c.append(h("h3", {}, "Courbes"));
   const d = etat.exporter(), banc = d.banc.filter((b) => b.ok + b.ko > 0).map((b) => Math.round(b.ok / (b.ok + b.ko) * 100)), met = d.metriques.slice(-40);

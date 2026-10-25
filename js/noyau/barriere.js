@@ -14,12 +14,16 @@ const FAMILLES = [
   { famille: "envoi de message au nom de Lucien", re: /\b(envoie|envoyer|expedie|ecris|ecrire|redige|reponds|repondre|publie|poste|tweete)\b[^.?!]{0,40}\b(mails?|e-?mails?|courriel|messages?|sms|whatsapp|tweet|post|commentaire)\b/ },
   { famille: "sécurité (coffre, clés, synchro, verrouillage)", re: /\b(coffre|phrase secrete|cle de secours|cle (api|gemini|google)|verrouillage|jeton|token|mot de passe|synchro(nisation)?)\b[^.?!]{0,40}\b(desactiv|change|modifi|donne|montre|affiche|revele|dis|copie|envoie|exporte|supprim|enleve|coupe|retire)\w*/ },
   { famille: "sécurité (coffre, clés, synchro, verrouillage)", re: /\b(desactiv|change|modifi|donne|montre|affiche|revele|dis-moi|copie|coupe|retire)\w*\b[^.?!]{0,30}\b(coffre|phrase secrete|cle de secours|cle (api|gemini|google)|verrouillage|jeton|mot de passe)\b/ },
+  { famille: "accès au laboratoire (réservé à Lucien)", re: /\b(labo|laboratoire)\b[^.?!]{0,40}\b(ouvr|ouvre|accede|acces|lance|modifi|change|edit|ecri|lis|lire|regle|contourn)|\b(ouvr|ouvre|accede|lance|modifi|change|edit|lis|lire)\w*\b[^.?!]{0,30}\b(labo|laboratoire)\b/ },
   { famille: "export des données", re: /\b(export\w*|telecharge\w*|sauvegarde\w*)\b[^.?!]{0,40}\b(donnees|memoire|notes|souvenirs|tout|fichier|zip|json)\b/ },
   { famille: "export des données", re: /\bcopie\w*\b[^.?!]{0,30}\b(memoire|donnees|souvenirs)\b[^.?!]{0,30}\b(dehors|exterieur|ailleurs|serveur|cloud|drive|internet)\b/ },
   { famille: "ouverture d'un site extérieur", re: /\b(ouvre|ouvrir|va sur|aller sur|redirige|lance)\b[^.?!]{0,30}(\bsites?\b|\bonglet\b|\blien\b|https?:\/\/|www\.|\.(com|fr|org|net|io)\b)/ },
   { famille: "modification de mon cerveau, de ma mémoire fondatrice ou de mes permissions", re: /\b(modifi|change|reecri|oubli|desactiv|ignor|supprim|contourn|leve|baisse|augmente)\w*\b[^.?!]{0,40}\b(ton cerveau|tes instructions|ta personnalite|tes regles|tes permissions|tes interdits|tes interdictions|tes limites|ton budget|memoire fondatrice|la barriere|les confirmations)\b/ },
   { famille: "modification de mon cerveau, de ma mémoire fondatrice ou de mes permissions", re: /\b(ignore|oublie)\b[^.?!]{0,30}\b(toutes? )?(les |tes |vos |ces )?(instructions|consignes|regles)\b/ }
 ];
+
+/** Toute adresse ou chemin qui vise le laboratoire (page, dossier, fichiers du banc, état). */
+export const VISE_LABO = /(^|[\\/"'\s=?&#])labo(\.html|\/|\\)|hub-simule|noyau-labo-etat|\/labo\b/i;
 
 /** Repère une demande interdite dans un texte de Lucien. Renvoie { famille } ou null. Refus local, avant tout appel au modèle. */
 export function detecterInterdit(texte) {
@@ -77,6 +81,10 @@ export function creerBarriere({ catalogue, confirmer = null, delai = DELAI_CONFI
         return { ok: false, refus: { raison: "inconnu" }, erreur: "Outil inconnu ou interdit : « " + nom + " ». Aucune action n'a été faite." };
       }
       const params = appel.params && typeof appel.params === "object" ? appel.params : {};
+      if (VISE_LABO.test(JSON.stringify(params))) {      // le laboratoire est réservé à Lucien : le Noyau ne peut ni l'ouvrir, ni le lire, ni l'écrire
+        await journalActions.ecrire({ outil: o.nom, niveau: "INTERDIT", params: "accès au laboratoire", statut: "BLOQUÉ_INTERDIT", origine, sortie: [] });
+        return { ok: false, refus: { raison: "interdit" }, erreur: "Le laboratoire est réservé à Lucien : je n'y ai pas accès. Aucune action n'a été faite." };
+      }
       const bad = validerParams(params, o.params);
       const resume = (() => { try { return o.resume(params); } catch (e) { return o.nom; } })();
       if (bad) { await log(o, { params: resume, statut: "ERREUR", origine, erreur: bad }); return { ok: false, erreur: bad }; }
