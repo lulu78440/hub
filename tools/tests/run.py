@@ -8,13 +8,18 @@
 Prérequis : Python 3 + Playwright (pip install playwright && playwright install chromium).
 Serveur local et navigateur headless lancés automatiquement ; données factices ; réseau extérieur bloqué.
 """
-import importlib, os, sys, time, traceback
+import importlib, os, signal, sys, time, traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from hubtest import Hub  # noqa: E402
 
-MODULES = ["t1_sauvegardes", "t2_fonctions", "t3_securite", "t4_limites", "t5_confort"]
+MODULES = ["t1_sauvegardes", "t2_fonctions", "t3_securite", "t4_limites", "t5_confort", "t6_precis"]
+LIMIT = int(os.environ.get("HUB_LIMITE", "420"))     # secondes par test : au-delà, le test est déclaré bloqué (au lieu de geler la suite)
+
+
+def _stuck(*_):
+    raise TimeoutError(f"test bloqué depuis plus de {LIMIT} s")
 
 
 def main():
@@ -34,24 +39,31 @@ def main():
                 continue
             tests.append((m, name, fn))
     h = Hub()
-    ok = fail = 0
+    ok = fail = cases = 0
     t0 = time.time()
+    signal.signal(signal.SIGALRM, _stuck)
     try:
         for m, name, fn in tests:
             t = time.time()
             h.mock = None
+            signal.alarm(getattr(fn, "limite", LIMIT))
             try:
-                fn(h)
+                r = fn(h)
+                n = r if isinstance(r, int) else 1
+                cases += n
                 ok += 1
-                print(f"  OK    {name}  ({time.time() - t:.1f} s)", flush=True)
+                print(f"  OK    {name}  ({time.time() - t:.1f} s" + (f", {n} cas" if n > 1 else "") + ")", flush=True)
             except Exception as e:  # noqa: BLE001
                 fail += 1
+                cases += getattr(e, "cas", 1)
                 print(f"  ÉCHEC {name}  ({time.time() - t:.1f} s)\n        {type(e).__name__}: {str(e)[:600]}", flush=True)
                 if os.environ.get("HUB_TRACE"):
                     traceback.print_exc()
+            finally:
+                signal.alarm(0)
     finally:
         h.close()
-    print(f"\n{ok} réussi(s), {fail} échec(s) sur {len(tests)} test(s) en {time.time() - t0:.0f} s")
+    print(f"\n{ok} réussi(s), {fail} échec(s) sur {len(tests)} test(s) ({cases} cas vérifiés) en {time.time() - t0:.0f} s")
     sys.exit(1 if fail else 0)
 
 
