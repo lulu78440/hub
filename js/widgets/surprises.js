@@ -13,6 +13,7 @@ import { toast } from "../ui/toast.js";
 import { extendMenu } from "../ui/menus.js";
 import { daysFrom, dayKey } from "./when.js";
 import { state, pulse } from "../state.js";
+import { flux } from "./flux.js";   // lecture seule : flux.json déjà gardé par la phase 3 (rien n'est modifié côté actualité)
 
 const ON = (k) => prefs.on("surprise-" + k);
 const pad = (n) => String(n).padStart(2, "0");
@@ -25,6 +26,38 @@ export function moon(d = new Date()) {
   const names = [[0.03, "Nouvelle lune", "🌑"], [0.22, "Premier croissant", "🌒"], [0.28, "Premier quartier", "🌓"], [0.47, "Lune gibbeuse croissante", "🌔"], [0.53, "Pleine lune", "🌕"], [0.72, "Lune gibbeuse décroissante", "🌖"], [0.78, "Dernier quartier", "🌗"], [0.97, "Dernier croissant", "🌘"], [1.01, "Nouvelle lune", "🌑"]];
   const [, name, icon] = names.find(([lim]) => p < lim);
   return { phase: p, name, icon };
+}
+
+// ---------- Briefing : actualité majeure en France et nouveauté des sites suivis (demande de Lucien, 25/10) ----------
+const STOP = new Set("avant apres alors aussi autre avoir cette comme contre depuis donc elles entre encore faire leurs mais meme notre nous pendant peut plus pour quand quel quelle sans selon sont sous tous tout toute toutes votre vous avec dans chez leur etait etre font fait france francais francaise".split(" "));
+const words = (t) => new Set((t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((w) => w.length >= 5 && !STOP.has(w)));
+const fresh = (iso, h) => { const t = Date.parse(iso || ""); return t && Date.now() - t < h * 36e5; };
+const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return ""; } };
+const cut = (t, n) => (t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t);
+/** Le titre « France » le plus repris par les autres sources ces dernières 24 h (sinon le plus récent). */
+function franceHeadline(d) {
+  const all = (d.actus || []).filter((a) => fresh(a.date, 24));
+  const fr = all.filter((a) => a.cat === "FRANCE"); if (!fr.length) return null;
+  const W = all.map((a) => words(a.titre));
+  let best = null, bs = -1;
+  fr.forEach((a) => {
+    const wa = words(a.titre);
+    const echo = all.reduce((n, b, i) => n + (b !== a && b.source !== a.source && [...wa].filter((w) => W[i].has(w)).length >= 2 ? 1 : 0), 0);
+    const score = echo * 3 + (Date.parse(a.date) / 36e5) * 0.02;   // repris ailleurs = majeur ; à égalité, le plus récent
+    if (score > bs) { bs = score; best = a; }
+  });
+  return best;
+}
+/** Nouveauté des sites suivis : article d'un site de la Veille, vidéo d'une chaîne suivie, ou titre venu d'un site des Favoris.
+ *  Seulement si elle est parue depuis le dernier briefing (au plus 36 h) : rien d'ancien, rien d'inventé. */
+async function siteNews(d, since, skip) {
+  const favHosts = new Set((await store.all("favs")).map((f) => host(f.url)).filter(Boolean));
+  const c = [];
+  (d.sites || []).forEach((s) => (s.articles || []).forEach((a) => c.push({ ...a, from: s.nom })));
+  (d.videos || []).forEach((v) => c.push({ ...v, from: v.source || "YouTube", video: true }));
+  (d.actus || []).forEach((a) => { const h = host(a.lien); if (h && favHosts.has(h)) c.push({ ...a, from: a.source || h }); });
+  return c.filter((a) => a.titre && a.lien !== (skip && skip.lien) && fresh(a.date, 36) && Date.parse(a.date) > since)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0] || null;
 }
 
 export function initSurprises({ force, plans, wins }) {
@@ -49,11 +82,25 @@ export function initSurprises({ force, plans, wins }) {
     if (wx && wx.data && wx.data.current) lines.push(`${Math.round(wx.data.current.temperature_2m)}° à ${wx.name || "ta position"} · max ${Math.round(wx.data.daily.temperature_2m_max[0])}°`);
     lines.push(tasks.length ? `${tasks.length} tâche${tasks.length > 1 ? "s" : ""} à faire` + (today.length ? `, dont ${today.length} pour aujourd'hui` : "") + (urgent.length ? ` · ${urgent.length} urgente${urgent.length > 1 ? "s" : ""}` : "") : "Aucune tâche en attente : journée libre");
     lines.push(next ? `Prochain rendez-vous : ${next.start} · ${next.title}` : evs.length ? "Plus de rendez-vous aujourd'hui" : "Aucun rendez-vous aujourd'hui");
+    // Actualité et nouveauté (si le flux est disponible ; 3 s au plus pour l'actualiser)
+    let fr = null, nw = null;
+    try {
+      const d = await Promise.race([flux.refresh(), new Promise((r) => setTimeout(r, 3000))]) || flux.data;
+      if (!force) { prefs.set("briefing-avant", prefs.get("briefing-vu", "0")); prefs.set("briefing-vu", String(Date.now())); }
+      if (d) { fr = franceHeadline(d); nw = await siteNews(d, +prefs.get("briefing-avant", "0") || 0, fr); }
+    } catch (e) { /* pas d'actualité : le briefing reste complet sans elle */ }
+    if (fr) lines.push({ t: `À la une · ${cut(fr.titre, 110)}`, href: fr.lien, src: fr.source });
+    if (nw) lines.push({ t: `${nw.video ? "Nouvelle vidéo" : "Nouveau"} · ${nw.from} : ${cut(nw.titre, 90)}`, href: nw.lien });
     const mo = moon(now); lines.push(`${mo.icon} ${mo.name}`);
     const last = Date.parse(prefs.get("dernier-export", "")) || 0;
     if (!last || Date.now() - last > 7 * 864e5) lines.push("Pense à exporter tes données (Diag)");
     brief.innerHTML = '<span class="bh">BRIEFING · ' + pad(h) + ":" + pad(now.getMinutes()) + "</span>";
-    lines.forEach((l, i) => { const p = document.createElement("p"); p.style.animationDelay = (i * 0.35) + "s"; p.textContent = l; if (i === 0) p.className = "b1"; brief.append(p); });
+    lines.forEach((l, i) => {
+      const p = document.createElement("p"); p.style.animationDelay = (i * 0.35) + "s"; if (i === 0) p.className = "b1";
+      if (typeof l === "string") p.textContent = l;
+      else { const a = document.createElement("a"); a.href = l.href; a.target = "_blank"; a.rel = "noopener"; a.className = "blink"; a.textContent = l.t; if (l.src) a.title = l.src; p.append(a); }
+      brief.append(p);
+    });
     brief.hidden = false; pulse(1.2); sound.play("doux");
     clearTimeout(briefing.t); briefing.t = setTimeout(() => { brief.hidden = true; }, 14000 + lines.length * 400);
   }
@@ -161,6 +208,8 @@ export function initSurprises({ force, plans, wins }) {
   const css = document.createElement("style");
   css.textContent = `html { background: var(--void, #02070d); }
 body.hypertr .win .panel, body.hypertr header.top, body.hypertr .agband, body.hypertr .search, body.hypertr .ticker, body.hypertr .labels, body.hypertr .mthumbs { transition: filter .35s ease, opacity .35s ease; }
+.brief a.blink { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(63,230,255,.55); }
+.brief a.blink:hover { color: #bff8ff; border-bottom-style: solid; }
 body.hyperon .win .panel, body.hyperon header.top, body.hyperon .agband, body.hyperon .search, body.hyperon .ticker, body.hyperon .labels { filter: blur(5px) brightness(1.25) saturate(1.3); opacity: .7; }`;
   document.head.append(css);
   const streaks = Array.from({ length: 160 }, () => ({ a: Math.random() * 6.283, d: Math.random(), s: 0.4 + Math.random() }));
