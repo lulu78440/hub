@@ -70,3 +70,9 @@ Vérifié juste sans correction : fêtes et jours fériés 2015-2045 (304 cas, P
 | # | Gravité | Zone | Problème | Reproduction | Correction | Statut |
 | --- | --- | --- | --- | --- | --- | --- |
 | B29 | important | Verrouillage · clés IA (main 7.15+) | Sur main, désactiver le verrouillage remet en clair dans le stockage du navigateur les clés `hub-secret-claude` et `hub-secret-libre` (relais) ajoutées par le Noyau ; la correction B9 ne retire que `hub-secret-ia` (Gemini). Même défaut que B9, pour les clés venues après. | Lecture de `vault.js · destroy()` sur la fusion d'essai du 25/10 (`if (k !== "hub-secret-ia")`). Test `t7_charte.py · test_charte_b29_cles_ia_retirees` (rouge sur main tant que non corrigé). | Proposée : dans `destroy()`, ne remettre en clair aucune clé `hub-secret-…` (préfixe), comme pour l'export. Écrite sur banc-essai : `vault.js · destroy()` retire `hub-secret-ia`, `-claude` et `-libre` (jetons des mails gardés, par conception). | corrigé (banc-essai) |
+
+### Blocs passés au banc (étape test-blocs)
+
+| Bloc | Poste | Base testée | Résultat | Détail |
+| --- | --- | --- | --- | --- |
+| 7.21.0 · import du catalogue par lien (`#catalogue=`) | Références (arbitré par la Commande) | main c611939 | **réussi · aucun défaut** | `t8_blocs.py` : 19 cas de lecture stricte (http, javascript:, data:, espace, un seul lien http parmi des bons, 500/501 éléments, plus de 200 Ko, UTF-8 et base64 abîmés, autre format, sections mal formées : tout ou rien) ; de bout en bout (6 cas) : adresse effacée dès l'ouverture, « Annuler » bouton par défaut (Entrée n'importe rien), Importer ajoute, réouverture sans doublon, nom piégé affiché en texte. Reste à faire par Lucien : un essai réel sur Brave avec un vrai lien du catalogue. |
