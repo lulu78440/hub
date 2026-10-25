@@ -108,10 +108,10 @@ def test_charte_fiche_de_manuel_par_fonction(h):
 
 
 def test_charte_b29_cles_ia_retirees(h):
-    """B29 : désactiver le verrouillage ne doit laisser en clair aucune clé d IA (Gemini, Claude, relais)."""
+    """B29 : désactiver le verrouillage ne doit laisser en clair aucune clé d IA (Gemini, Claude, relais, Groq, Mistral, OpenRouter)."""
     d = h.device(); p = d.page()
     enable_vault(p)
-    keys = ["hub-secret-ia", "hub-secret-claude", "hub-secret-libre"]   # clés IA : exigent le verrouillage (les jetons des mails, eux, restent sur l appareil par conception)
+    keys = ["hub-secret-ia", "hub-secret-claude", "hub-secret-libre", "hub-secret-ia-groq", "hub-secret-ia-mistral", "hub-secret-ia-openrouter"]   # clés IA : exigent le verrouillage (les jetons des mails, eux, restent sur l appareil par conception)
     ev(p, "const { vault } = await import('/js/store/vault.js'); for (const k of arg) vault.lsSet(k, 'valeur-factice-' + k); await vault.flush();", keys)
     ev(p, "const s = await import('/js/store/storage.js'); const { vault } = await import('/js/store/vault.js'); await s.migrate(async () => { await s.plainAll(); await vault.destroy(); });")
     left = ev(p, "return Object.keys(localStorage).filter(k => k.startsWith('hub-secret') && (localStorage.getItem(k) || '').includes('valeur-factice'));")
