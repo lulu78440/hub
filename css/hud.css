@@ -1051,3 +1051,24 @@ body.lite #b-outils { display: none !important; }
 .o-tile:hover:not(:disabled), .o-tile:focus-visible { border-color: var(--cyan); color: #fff; outline: none; }
 .o-tile.on { border-color: rgba(63, 230, 255, .5); box-shadow: inset 3px 0 0 var(--cyan); }
 .o-tile:disabled { opacity: .45; cursor: default; }
+
+/* ---------- Points de réglage des éléments fixes (ergo-points, PC) ----------
+   Chaque élément fixe expose des variables --ui-… : valeurs sans unité (px ou facteur), bornées ici en CSS (clamp), donc une valeur
+   hors limites est ramenée dans la plage au lieu de casser l'écran. Les valeurs par défaut reproduisent l'apparence d'origine.
+   Elles se posent sur <html> (document.documentElement.style.setProperty) : c'est ce que fait la couche de réglages du Noyau. */
+:root {
+  --ui-haut-marge: 12;       --ui-haut-ecart: 14;       --ui-haut-fond: .75;
+  --ui-horloge-y: 10;        --ui-horloge-dx: 0;        --ui-horloge-echelle: 1;     --ui-horloge-opacite: 1;
+  --ui-recherche-dy: 0;      --ui-recherche-dx: 0;      --ui-recherche-largeur: 600; --ui-recherche-echelle: 1;  --ui-recherche-opacite: 1;
+  --ui-bandeau-hauteur: 40;  --ui-bandeau-texte: 16;    --ui-bandeau-fond: .92;      --ui-bandeau-vitesse: 90;
+  --ui-orbe-dx: 0;           --ui-orbe-dy: 0;           --ui-orbe-echelle: 1;
+}
+body:not(.lite) .top { padding-block: clamp(4px, calc(var(--ui-haut-marge) * 1px), 28px) 10px; gap: clamp(6px, calc(var(--ui-haut-ecart) * 1px), 40px); background: linear-gradient(rgba(2,6,13,clamp(0, var(--ui-haut-fond), 1)), transparent); }
+body:not(.lite) .clock { top: clamp(0px, calc(var(--ui-horloge-y) * 1px), 50px); margin-left: clamp(-300px, calc(var(--ui-horloge-dx) * 1px), 300px); scale: clamp(.6, var(--ui-horloge-echelle), 1.6); transform-origin: 50% 0; opacity: clamp(.3, var(--ui-horloge-opacite), 1); }
+/* Recherche : dy > 0 la descend (vers le bandeau d'actualité), dy < 0 la remonte. Plage -300 à +8 px (le maximum suit la hauteur du bandeau : au-delà elle le toucherait). */
+body:not(.lite) .search { margin-top: clamp(-300px, calc(var(--ui-recherche-dy) * 1px), calc(48px - clamp(32px, calc(var(--ui-bandeau-hauteur) * 1px), 52px))); margin-left: clamp(-400px, calc(var(--ui-recherche-dx) * 1px), 400px); max-width: clamp(280px, calc(var(--ui-recherche-largeur) * 1px), 600px); scale: clamp(.7, var(--ui-recherche-echelle), 1.3); transform-origin: 50% 100%; opacity: clamp(.3, var(--ui-recherche-opacite), 1); }
+body:not(.lite) .ticker { height: calc(clamp(32px, calc(var(--ui-bandeau-hauteur) * 1px), 52px) + env(safe-area-inset-bottom, 0px)); background: rgba(2,9,18,clamp(.4, var(--ui-bandeau-fond), 1)); }
+body:not(.lite) .ticker .it { font-size: clamp(12px, calc(var(--ui-bandeau-texte) * 1px), 24px); }
+body:not(.lite) .ticker .run { animation-duration: clamp(30s, calc(var(--ui-bandeau-vitesse) * 1s), 300s); }
+/* Orbe : le noyau suit le cadre invisible #anchor, on le décale et on l'agrandit sans toucher à ses visuels. */
+body:not(.lite) .anchor { translate: clamp(-300px, calc(var(--ui-orbe-dx) * 1px), 300px) clamp(-200px, calc(var(--ui-orbe-dy) * 1px), 200px); scale: clamp(.6, var(--ui-orbe-echelle), 1.4); }
