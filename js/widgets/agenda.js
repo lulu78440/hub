@@ -9,6 +9,7 @@ import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { state, pulse } from "../state.js";
 import { setLabel } from "../ui/labels.js";
+import { inReserve, onReserve } from "../ui/reserve.js";
 
 const C = "events";
 const DAY0 = 8 * 60, SPAN = 14 * 60;            // bande du jour : 08:00 → 22:00
@@ -29,7 +30,7 @@ export function initAgenda() {
   const dayEvents = (k) => events.filter((e) => e.date === k).sort(byTime);
   const dayTasks = (k) => tasks.filter((t) => t.due === k && !t.done);
 
-  async function load() { events = await store.all(C); tasks = await store.all("tasks"); renderAll(); }
+  async function load() { events = await store.all(C); tasks = inReserve("tasks") ? [] : await store.all("tasks"); renderAll(); }
   function renderAll() { views.forEach((v) => v.render()); band.render(); }
 
   async function save(e) { const i = events.findIndex((x) => x.id === e.id); if (i < 0) events.push(e); else events[i] = e; renderAll(); await store.put(C, e); pulse(0.6); }
@@ -261,7 +262,7 @@ export function initAgenda() {
   let lastDay = dayKey();
   setInterval(() => { if (dayKey() !== lastDay) { lastDay = dayKey(); renderAll(); } else band.render(); }, 30e3);
 
-  store.on(C, load); store.on("tasks", load);
+  store.on(C, load); store.on("tasks", load); onReserve(load);
   load();
   return { openDrawer, closeDrawer };
 }

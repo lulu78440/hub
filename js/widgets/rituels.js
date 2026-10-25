@@ -10,6 +10,7 @@ import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { dayKey, addDays, fromKey } from "./when.js";
 import { state, pulse } from "../state.js";
+import { inReserve, onReserve } from "../ui/reserve.js";
 
 const CFG = "rituels-config";
 const COLORS = ["#ffb347", "#9b72ff", "#3fe6ff", "#4fe3a8", "#ff6b9a", "#ffe066"];
@@ -52,7 +53,7 @@ export function initRituels({ force, plans } = {}) {
   }
   function applyMood() {
     const m = MOODS.find((x) => x.v === today().mood);
-    state.mood = m && prefs.on("rituels-teinte") ? m.col : null;
+    state.mood = m && prefs.on("rituels-teinte") && !inReserve("rituels") ? m.col : null;
   }
 
   function ringsSVG(size) {
@@ -156,7 +157,7 @@ export function initRituels({ force, plans } = {}) {
   const anchor = document.getElementById("anchor");
   if (force && force.addLayer) force.addLayer((g, dt) => {
     t0 += dt; if (flash) flash.t += dt;
-    if (!prefs.on("rituels-anneaux") || (plans && plans.zoom < 0.8)) return;
+    if (!prefs.on("rituels-anneaux") || inReserve("rituels") || (plans && plans.zoom < 0.8)) return;
     const r0 = anchor.getBoundingClientRect(), cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2, R = Math.max(50, Math.min(r0.width, r0.height) * 0.3);
     const d = today();
     habits.forEach((h, i) => {

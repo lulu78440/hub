@@ -1,6 +1,6 @@
 // Phase 4 · Surprises (inventées avec Opus, dévoilées à la livraison). Chacune se coupe dans Diag → Surprises.
 // 1. Briefing holographique : à la première ouverture du jour, le noyau te résume la journée (météo, tâches, rendez-vous, lune, sauvegarde).
-// 2. Constellation des exploits : chaque tâche cochée allume une étoile durable autour du noyau (survol = la tâche et sa date).
+// 2. Constellation des exploits : chaque Focus terminé allume une étoile durable autour du noyau (survol = la tâche et sa date).
 // 3. Mode Focus : un minuteur de concentration (25 ou 50 min) dessiné en anneau autour de l'orbe ; tout le reste s'estompe.
 // 4. Hyperespace : maintiens la barre Espace sur le fond (ou ↑ ↑ ↓ ↓ ← → ← → B A, ou « hyper ») et le hub passe en vitesse lumière.
 // 5. Phase de la lune, calculée sur l'appareil, dans le briefing et la météo.
@@ -11,6 +11,7 @@ import { sound } from "../device/sound.js";
 import { notify } from "../device/notify.js";
 import { toast } from "../ui/toast.js";
 import { extendMenu } from "../ui/menus.js";
+import { inReserve } from "../ui/reserve.js";
 import { daysFrom, dayKey } from "./when.js";
 import { state, pulse } from "../state.js";
 // Lecture seule : flux.json déjà gardé par la phase 3 (rien n'est modifié côté actualité)
@@ -73,7 +74,7 @@ export function initSurprises({ force, plans, wins }) {
     prefs.set("briefing-jour", dayKey());
     const now = new Date(), h = now.getHours();
     const hello = h < 12 ? "Bonjour" : h < 18 ? "Bon après-midi" : "Bonsoir";
-    const tasks = (await store.all("tasks")).filter((t) => !t.done);
+    const tasks = inReserve("tasks") ? [] : (await store.all("tasks")).filter((t) => !t.done);
     const today = tasks.filter((t) => t.due && daysFrom(t.due) <= 0), urgent = tasks.filter((t) => t.prio);
     const m = now.getHours() * 60 + now.getMinutes();
     const evs = (await store.all("events")).filter((e) => e.date === dayKey() && e.start).sort((a, b) => a.start.localeCompare(b.start));
@@ -81,7 +82,7 @@ export function initSurprises({ force, plans, wins }) {
     let wx = null; try { wx = JSON.parse(prefs.get("meteo-cache", "null")); } catch (e) { wx = null; }
     const lines = [`${hello} Lucien · ${new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(now)}`];
     if (wx && wx.data && wx.data.current) lines.push(`${Math.round(wx.data.current.temperature_2m)}° à ${wx.name || "ta position"} · max ${Math.round(wx.data.daily.temperature_2m_max[0])}°`);
-    lines.push(tasks.length ? `${tasks.length} tâche${tasks.length > 1 ? "s" : ""} à faire` + (today.length ? `, dont ${today.length} pour aujourd'hui` : "") + (urgent.length ? ` · ${urgent.length} urgente${urgent.length > 1 ? "s" : ""}` : "") : "Aucune tâche en attente : journée libre");
+    if (!inReserve("tasks")) lines.push(tasks.length ? `${tasks.length} tâche${tasks.length > 1 ? "s" : ""} à faire` + (today.length ? `, dont ${today.length} pour aujourd'hui` : "") + (urgent.length ? ` · ${urgent.length} urgente${urgent.length > 1 ? "s" : ""}` : "") : "Aucune tâche en attente : journée libre");
     lines.push(next ? `Prochain rendez-vous : ${next.start} · ${next.title}` : evs.length ? "Plus de rendez-vous aujourd'hui" : "Aucun rendez-vous aujourd'hui");
     // Actualité et nouveauté (si le flux est disponible ; 3 s au plus pour l'actualiser)
     let fr = null, nw = null;
@@ -132,17 +133,19 @@ export function initSurprises({ force, plans, wins }) {
 
   // ---------- 2. Constellation des exploits ----------
   let stars = [];
-  async function loadStars() {
-    const done = (await store.all("tasks")).filter((t) => t.done && t.doneAt).sort((a, b) => a.doneAt - b.doneAt).slice(-120);
-    let saved = {}; try { saved = JSON.parse(prefs.get("constellation", "{}")) || {}; } catch (e) { saved = {}; }
-    // Étoiles déjà nées gardées (même si la tâche a été effacée), nouvelles ajoutées
-    done.forEach((t) => { if (!saved[t.id]) { const a = Math.random() * 6.283, r = 1.25 + Math.random() * 0.55; saved[t.id] = { a, r, y: (Math.random() - 0.5) * 0.9, at: t.doneAt, n: t.text.slice(0, 60), born: Date.now() }; } });
-    const ids = Object.keys(saved).sort((a, b) => saved[a].at - saved[b].at).slice(-150);
-    saved = Object.fromEntries(ids.map((id) => [id, saved[id]]));
-    prefs.set("constellation", JSON.stringify(saved));
+  // Refonte (25/10) : une étoile naît à chaque Focus terminé (plus à chaque tâche cochée). Les étoiles déjà nées sont gardées.
+  function readStars() { let saved = {}; try { saved = JSON.parse(prefs.get("constellation", "{}")) || {}; } catch (e) { saved = {}; } return saved; }
+  function loadStars() {
+    const saved = readStars(), ids = Object.keys(saved).sort((a, b) => saved[a].at - saved[b].at).slice(-150);
     stars = ids.map((id) => ({ ...saved[id], id }));
   }
-  store.on("tasks", loadStars); loadStars();
+  function addFocusStar(min) {
+    const saved = readStars(), id = "f" + Date.now(), a = Math.random() * 6.283, r = 1.25 + Math.random() * 0.55;
+    saved[id] = { a, r, y: (Math.random() - 0.5) * 0.9, at: Date.now(), n: "Focus " + min + " min", born: Date.now() };
+    const keep = Object.keys(saved).sort((x, y) => saved[x].at - saved[y].at).slice(-150);
+    prefs.set("constellation", JSON.stringify(Object.fromEntries(keep.map((k) => [k, saved[k]])))); loadStars();
+  }
+  loadStars();
   // Ajustement validé par Lucien (25/10) : étoiles plus grandes et plus lumineuses, rangées dans un anneau autour de l'orbe
   // (jamais sur les fenêtres : bornées par la zone de l'orbe), groupées par 5 en figures reliées par des traits.
   // Place calculée depuis l'identifiant de la tâche : stable d'une ouverture à l'autre.
@@ -193,8 +196,9 @@ export function initSurprises({ force, plans, wins }) {
   function stopFocus(done) {
     if (!focus) return;
     document.body.classList.remove("focus"); if (focus.win) focus.win.classList.remove("focused");
+    const minutes = Math.round(focus.total / 60e3);
     focus = null;
-    if (done) { sound.play("rappel"); toast("Focus terminé : bravo, fais une pause", { ms: 6000 }); if (document.hidden) notify.show("Hub · Focus terminé", "Bravo : fais une pause", "hub-focus"); pulse(1.5); }
+    if (done) { addFocusStar(minutes);  sound.play("rappel"); toast("Focus terminé : bravo, fais une pause", { ms: 6000 }); if (document.hidden) notify.show("Hub · Focus terminé", "Bravo : fais une pause", "hub-focus"); pulse(1.5); }
   }
   // Ajustement validé par Lucien (25/10) : anneau plus épais et lumineux, compte à rebours qui tourne autour de l'orbe
   // (écrit le long du cercle, il suit la tête de l'anneau), voile sombre uniforme au lieu du flou.
@@ -404,7 +408,7 @@ body.hyperon .win .panel, body.hyperon header.top, body.hyperon .agband, body.hy
   extendMenu("fond", () => (focus ? [{ t: "Arrêter le Focus", fn: () => stopFocus(false) }] : [{ t: "Focus 25 min", fn: () => startFocus(25) }, { t: "Focus 50 min", fn: () => startFocus(50) }])
     .concat([{ t: "Revoir le briefing du jour", fn: () => briefing(true) }]));
   extendMenu("fenetre", (el) => focus ? [] : [{ t: "Focus 25 min sur cette fenêtre", fn: () => startFocus(25, el) }]);
-  const list = [["briefing", "Briefing holographique du matin"], ["constellation", "Constellation des tâches accomplies"], ["focus", "Mode Focus autour de l'orbe"], ["hyper", "Hyperespace (maintenir la barre Espace)"], ["lune", "Pleine lune dans le ciel 3D"]];
+  const list = [["briefing", "Briefing holographique du matin"], ["constellation", "Constellation des Focus terminés"], ["focus", "Mode Focus autour de l'orbe"], ["hyper", "Hyperespace (maintenir la barre Espace)"], ["lune", "Pleine lune dans le ciel 3D"]];
   const box = document.getElementById("surprises");
   if (box) {
     list.forEach(([k, label]) => {

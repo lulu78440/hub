@@ -51,6 +51,8 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
       { t: "Exporter (fichier de sauvegarde)", fn: data.exportFile },
       { t: "Importer un export…", fn: data.importFile },
       { t: "Importer le Coffre du Hub (ajoute sans effacer)…", fn: data.importCoffre },
+      ...(wins.reservedEls().length ? ["-", { t: "Fonctions en réserve (" + wins.reservedEls().length + ")…", fn: () => level([{ h: "Fonctions en réserve" }, { note: "Rangées hors de la vue, code gardé" },
+        ...wins.reservedEls().map((el) => ({ t: "Remettre « " + wins.title(el) + " » dans le hub", fn: () => wins.setReserve(el, false) })), "-", { t: "‹ Retour", fn: () => level([{ h: "Hub · plus" }, ...bgMenu(t, x, y, true)]) }]) }] : []),
       "-", { t: "‹ Retour", fn: () => level(bgMenu(t, x, y)) }];
     if (back) return plus;
     const it = [{ h: "Hub" }, ...head];

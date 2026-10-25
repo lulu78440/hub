@@ -1,5 +1,6 @@
 // Légendes flottantes autour du noyau (v8) : Météo, Tâches, Agenda… avec de vraies données.
 // Les widgets donnent leur valeur avec setLabel(clé, texte) ; une valeur vide masque la légende.
+import { inReserve, onReserve } from "./reserve.js";
 const DEFS = [["meteo", "Météo", "var(--cyan)"], ["tasks", "Tâches", "var(--amber)"], ["agenda", "Agenda", "var(--violet)"]];
 const vals = {};
 let els = null, root = null;
@@ -18,8 +19,9 @@ function ensure() {
 export function setLabel(key, text) {
   ensure(); vals[key] = text || "";
   const L = els.find((x) => x.key === key); if (!L) return;
-  L.b.textContent = vals[key]; L.el.hidden = !vals[key];
+  L.b.textContent = vals[key]; L.el.hidden = !vals[key] || (key === "tasks" && inReserve("tasks"));
 }
+onReserve(() => { if (els) els.forEach((L) => { L.el.hidden = !vals[L.key] || (L.key === "tasks" && inReserve("tasks")); }); });
 /** À chaque image : pts = positions projetées (core.project), zoom = zoom du plan (les légendes s'effacent en reculant). */
 export function updateLabels(pts, zoom = 1) {
   ensure();

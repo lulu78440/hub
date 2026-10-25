@@ -10,6 +10,7 @@ import { notify } from "../device/notify.js";
 import { buzz } from "../device/vibrate.js";
 import { toast } from "../ui/toast.js";
 import { state, pulse } from "../state.js";
+import { inReserve } from "../ui/reserve.js";
 
 const KV = "rappels", SNOOZE = 10 * 60e3, MAX_LATE = 24 * 3600e3, TICK = 15e3;
 const pad = (n) => String(n).padStart(2, "0");
@@ -23,7 +24,7 @@ async function collect() {
     const startMs = fromKey(e.date).getTime() + toMin(e.start) * 60e3;
     out.push({ key: e.id + "@" + startMs + "@" + e.remind, at: startMs - e.remind * 60e3, kind: "event", title: e.title, when: startMs, before: e.remind });
   }
-  for (const t of await store.all("tasks")) {
+  for (const t of (inReserve("tasks") ? [] : await store.all("tasks"))) {
     if (!t.remindAt || t.done) continue;
     const [k, h] = t.remindAt.split("T"), at = fromKey(k).getTime() + toMin(h) * 60e3;
     out.push({ key: t.id + "@" + at, at, kind: "task", title: t.text, when: at, before: 0, prio: t.prio });

@@ -6,42 +6,43 @@ import { state, pulse } from "../state.js";
 import { prefs } from "../store/prefs.js";
 import { toast } from "./toast.js";
 import { initTuiles } from "./tuiles.js";
+import { inReserve, setReserve as setRes, onReserve } from "./reserve.js";
 
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 const MIN = { w: 220, h: 120 };
 const STORE = "disposition-pc-v1";          // clé hub-disposition-pc-v1 dans le stockage de l'appareil
 const PINNED_BY_DEFAULT = ["video"];
-const LAYOUT_V = 2;                          // v2 : la Progression quitte le centre (mini barre en haut, détail au plan 2)
+const LAYOUT_V = 3;                          // v3 (refonte) : plan 1 = Favoris, Musique, Vidéo, Notes ; plan 2 = Mon PC, Progression, Page en direct, Noyau
 const FOCUS = { max: 1.45, w: 0.62, h: 0.86, hold: 550, move: 6, z: 9000 };   // « Ramener vers moi » (p2-focus)
 const ACCENTS = { cyan: 0x3fe6ff, violet: 0x9b72ff, amber: 0xffb347 };
 const PIN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4z"/><path d="M12 13v8"/></svg>';
 
-/** Disposition d'origine (v8) : colonnes gauche et droite, noyau et recherche au centre, d'autres fenêtres hors champ. */
+/** Disposition d'origine (v3, refonte) : plan 1 = Favoris et Musique à gauche, Vidéo et Notes à droite ; plan 2 (mur de la salle) = Mon PC,
+ *  Progression, Page en direct, Noyau. Les fonctions en réserve gardent une place hors champ. */
 function defaults(W, H) {
-  const T = 124, B = H - 52, g = 14, side = 16, mid = 18;     // T : place du bandeau et de l'agenda (2.4) ; B : place du bandeau d'actualité (phase 3)
+  const T = 124, B = H - 52, g = 14, side = 16, mid = 18;     // T : place du bandeau et de l'agenda ; B : place du bandeau d'actualité
   const Lw = clamp(W * 0.23, 280, 380), Rw = clamp(W * 0.27, 320, 440);
   const Rx = W - side - Rw, Lx = side;
-  const wh = clamp((B - T) * 0.3, 150, 200);
   const L = {};
-  L.pc = { x: Lx, y: T, w: Lw, h: B - T - g - wh };
-  L.watch = { x: Lx, y: B - wh, w: Lw, h: wh };
+  const lh = B - T - g, fh = Math.round(lh * 0.58);
+  L.favs = { x: Lx, y: T, w: Lw, h: fh };
+  L.music = { x: Lx, y: T + fh + g, w: Lw, h: lh - fh };
   const vh = (Rw - 36) * 9 / 16 + 76;
   L.video = { x: Rx, y: T, w: Rw, h: vh };
-  L.tasks = { x: Rx, y: B - 240, w: Rw, h: 240 };
-  L.web = { x: Rx, y: T + vh + g, w: Rw, h: Math.max(B - 240 - g - (T + vh + g), MIN.h) };
+  L.notes = { x: Rx, y: T + vh + g, w: Rw, h: Math.max(B - (T + vh + g), MIN.h) };
+  L.pc = { x: -(Lw + 50), y: T, w: Lw, h: 430 };
+  L.progress = { x: -(Lw + 50), y: T + 450, w: Lw, h: 330 };
+  L.web = { x: W + 50, y: T, w: Rw + 40, h: 520 };
+  L.noyau = { x: W + 50, y: T + 540, w: Math.max(Rw, 440), h: 560 };
+  L.tasks = { x: -(Lw + 50), y: T + 800, w: Lw, h: 300 };
+  L.watch = { x: -(Lw + 50), y: T + 1120, w: Lw, h: 200 };
+  L.rituels = { x: -(Lw + 50), y: T + 1340, w: Lw, h: 330 };
+  L.mails = { x: W + 50, y: T + 1120, w: Rw, h: 280 };
+  L.radar = { x: W + 50, y: T + 1420, w: Rw, h: 440 };
+  L.securite = { x: W + 50, y: T + 1880, w: Math.max(Rw, 440), h: 600 };
+  L.savoir = { x: W + 50, y: T + 2500, w: Math.max(Rw, 460), h: 760 };
   const x0 = Lx + Lw + mid, x1 = Rx - mid, mw = x1 - x0;
-  const th = clamp((mw - 36 - 32) / 5 * 9 / 16, 50, 110);
-  L.progress = { x: -(Lw + 50), y: T + 990, w: Lw, h: 330 };
-  L.music = { x: -(Lw + 50), y: T, w: Lw, h: 250 };
-  L.favs = { x: -(Lw + 50), y: T + 270, w: Lw, h: 340 };
-  L.rituels = { x: -(Lw + 50), y: T + 630, w: Lw, h: 330 };
-  L.notes = { x: W + 50, y: T, w: Rw, h: 300 };
-  L.mails = { x: W + 50, y: T + 320, w: Rw, h: 280 };
-  L.noyau = { x: W + 50, y: T + 1080, w: Math.max(Rw, 440), h: 560 };
-  L.securite = { x: W + 50, y: T + 1660, w: Math.max(Rw, 440), h: 600 };
-  L.savoir = { x: W + 50, y: T + 2280, w: Math.max(Rw, 460), h: 760 };
-  L.radar = { x: W + 50, y: T + 620, w: Rw, h: 440 };
-  const sw = Math.min(600, mw), sy = B - 96;     // la recherche descend à la place libérée par la Progression ; l'orbe prend le reste
+  const sw = Math.min(600, mw), sy = B - 96;     // la recherche descend en bas du centre ; l'orbe prend le reste
   return { L, search: { x: x0 + (mw - sw) / 2, y: sy, w: sw }, anchor: { left: x0, top: T, width: mw, height: Math.max(sy - T - 6, 140) } };
 }
 
@@ -82,13 +83,13 @@ export function createWindows({ world, plans, force }) {
   function load() {
     try {
       const d = JSON.parse(prefs.get(STORE, "null")); if (!d || typeof d !== "object") return null;
-      if (d._v !== LAYOUT_V) { delete d.progress; d._v = LAYOUT_V; }      // ancienne place de la Progression : elle prend la nouvelle
+      if (d._v !== LAYOUT_V) return null;      // v3 : nouvelle disposition d'origine (les places mémorisées avant la refonte ne s'appliquent plus)
       return d;
     } catch (e) { return null; }
   }
   function save() {
     const out = { _v: LAYOUT_V };
-    els.forEach((el) => { const s = S[el.dataset.id]; out[el.dataset.id] = { x: s.tx / W, y: s.ty / H, w: s.w / W, h: s.h / H, pin: s.pin, hid: !!s.hid, red: !!s.red, wa: s.wa, wy: Math.round(s.wy || 0) }; });
+    els.forEach((el) => { const s = S[el.dataset.id]; out[el.dataset.id] = { x: s.tx / W, y: s.ty / H, w: s.w / W, h: s.h / H, pin: s.pin, hid: !!s.hid && !s.res, red: !!s.red, wa: s.wa, wy: Math.round(s.wy || 0) }; });
     prefs.set(STORE, JSON.stringify(out));
   }
   const applySize = (el, s) => { el.style.width = s.w + "px"; el.style.height = s.h + "px"; };
@@ -100,11 +101,12 @@ export function createWindows({ world, plans, force }) {
     const D = defaults(W, H), saved = reset ? null : load();
     els.forEach((el) => {
       const id = el.dataset.id, d = D.L[id] || { x: W / 2 - 150, y: H / 2 - 100, w: 300, h: 200 }, sv = saved && saved[id], prev = S[id];
-      const s = prev || { cx: 0, cy: 0, ry: 0, rz: 0, vx: 0, hover: false, drag: false, pin: PINNED_BY_DEFAULT.includes(id), hid: false, max: null, last: "", fx: 0, fy: 0, fk: 1, fxT: 0, fyT: 0, fkT: 1, foc: false, red: false, bvx: 0, bvy: 0, settle: 0, wa: null, wy: 0, waAuto: 0, isWall: false, lastOp: "" };
+      const s = prev || { cx: 0, cy: 0, ry: 0, rz: 0, vx: 0, hover: false, drag: false, pin: PINNED_BY_DEFAULT.includes(id), hid: false, max: null, last: "", fx: 0, fy: 0, fk: 1, fxT: 0, fyT: 0, fkT: 1, foc: false, red: false, bvx: 0, bvy: 0, settle: 0, wa: null, wy: 0, waAuto: 0, isWall: false, lastOp: "", res: false };
       if (sv) { s.tx = sv.x * W; s.ty = sv.y * H; s.w = Math.max(sv.w * W, MIN.w); s.h = Math.max(sv.h * H, MIN.h); s.pin = !!sv.pin; s.hid = !!sv.hid; s.red = !!sv.red; s.wa = typeof sv.wa === "number" ? sv.wa : null; s.wy = +sv.wy || 0; }
       else { s.tx = d.x; s.ty = d.y; s.w = d.w; s.h = d.h; if (reset) { s.pin = PINNED_BY_DEFAULT.includes(id); s.hid = false; s.max = null; s.red = false; s.wa = null; s.wy = 0; } }
       if (!prev) { s.cx = s.tx; s.cy = s.ty; }       // ensuite, chaque changement de place glisse en douceur
       S[id] = s;
+      s.res = inReserve(id); if (s.res) s.hid = true;
       el.classList.toggle("hid", s.hid); el.classList.toggle("reduced", s.red);
       applySize(el, s); applyPin(el, s);
     });
@@ -142,7 +144,16 @@ export function createWindows({ world, plans, force }) {
     else { bringFront(el); pulse(0.8); }
     save();
   }
-  const hiddenEls = () => els.filter((el) => S[el.dataset.id] && S[el.dataset.id].hid);
+  const hiddenEls = () => els.filter((el) => S[el.dataset.id] && S[el.dataset.id].hid && !S[el.dataset.id].res);
+  const reservedEls = () => els.filter((el) => S[el.dataset.id] && S[el.dataset.id].res);
+  /** Ranger une fonction en réserve ou la remettre dans le hub. */
+  function setReserve(el, on) {
+    const id = el.dataset.id, s = S[id]; if (!s) return;
+    setRes(id, on); s.res = on;
+    if (on) { s.hover = false; s.hid = true; el.classList.add("hid"); }
+    else { s.hid = false; el.classList.remove("hid"); if (planOf(el) !== 1) toPlan1(el); bringFront(el); pulse(0.8); toast("« " + title(el) + " » remise dans le hub"); }
+    wallSig = ""; save();
+  }
 
   /** 1 si la fenêtre est dans l'écran du hub, 2 si elle attend hors champ. */
   function planOf(el) {
@@ -407,5 +418,5 @@ export function createWindows({ world, plans, force }) {
   }
   const tuiles = initTuiles({ els, rescale });
   function reset() { const D = layout(W, H, true); save(); return D; }
-  return { layout, update, reset, planOf, focus, unfocus, get focused() { return focusEl; }, toggleMax, togglePin, personnaliser: (el) => tuiles.open(el), setReduced, toggleReduced, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
+  return { layout, update, reset, planOf, focus, unfocus, get focused() { return focusEl; }, toggleMax, togglePin, reservedEls, setReserve, personnaliser: (el) => tuiles.open(el), setReduced, toggleReduced, setHidden, bringFront, hiddenEls, title, get dragEl() { return dragEl; }, elById, S, get core() { return core; }, get size() { return { W, H }; }, nextZ: () => ++zTop };
 }
