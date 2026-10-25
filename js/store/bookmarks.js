@@ -19,7 +19,7 @@ export function parseBookmarks(html) {
       }
     }
   }
-  const root = doc.querySelector("dl");
+  const root = doc.querySelector("dl") || doc.body;          // fichier sans dossier racine : les liens sont directement dans la page
   if (root) walk(root, []);
   return out;
 }
