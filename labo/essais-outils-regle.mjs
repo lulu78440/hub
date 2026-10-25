@@ -1,0 +1,22 @@
+// Laboratoire · essais de la règle « aucun outil sans validation » : `node labo/essais-outils-regle.mjs`
+import { creerCatalogue, appliquerRegle, listeOutils, OUTILS_VALIDES, OUTILS_PROPOSES } from "../js/noyau/outils.js";
+let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
+const cat = creerCatalogue({ raccourcis: () => ({}) });
+ok(cat.length === Object.keys(OUTILS_VALIDES).length, `le catalogue en service = la liste validée (${cat.length} outils)`);
+ok(cat.every((o) => OUTILS_VALIDES[o.nom] === o.niveau), "chaque outil a exactement le niveau validé");
+ok(cat.every((o) => o.niveau === "LIBRE" || o.niveau === "CONFIRMATION"), "aucun outil INTERDIT dans le catalogue (jamais présenté au modèle)");
+const faux = { nom: "supprimer_tout", niveau: "LIBRE", description: "x", params: { type: "object", properties: {} }, exec: async () => ({}) };
+let r = appliquerRegle([...cat, faux]);
+ok(r.catalogue.length === cat.length && r.ecartes.length === 1 && r.ecartes[0].nom === "supprimer_tout", "un outil ajouté sans validation est écarté : " + JSON.stringify(r.ecartes));
+const eleve = { ...cat[0], niveau: "CONFIRMATION" }, abaisse = { ...cat.find((o) => o.niveau === "CONFIRMATION"), niveau: "LIBRE" };
+r = appliquerRegle([eleve, abaisse]);
+ok(r.catalogue.length === 0 && r.ecartes.length === 2, "un niveau modifié sans validation (dans un sens ou l'autre) fait écarter l'outil");
+const nouveau = { ...faux, nom: "nouvel_outil" };
+r = appliquerRegle([nouveau], { ...OUTILS_VALIDES, nouvel_outil: "LIBRE" });
+ok(r.catalogue.length === 1, "une fois validé (ajouté à la liste avec son niveau), l'outil entre");
+const liste = listeOutils(cat);
+ok(liste.length === cat.length + OUTILS_PROPOSES.length, "liste visible : outils actifs + propositions");
+ok(liste.filter((l) => l.statut === "validé").length === cat.length, "tous les outils actifs sont « validé »");
+const prop = liste.find((l) => l.nom === "consulter_manuel");
+ok(prop && /en attente/.test(prop.statut) && !cat.some((o) => o.nom === "consulter_manuel"), "consulter_manuel est proposé, pas actif");
+console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

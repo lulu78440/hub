@@ -63,6 +63,36 @@ export function validerParams(params, schema) {
   return null;
 }
 
+// ---------- Règle « aucun outil sans validation de Lucien » (lab-outils-regle) ----------
+// Aucune nouvelle fonction du hub n'entre automatiquement dans les outils de l'IA. Un poste qui veut donner un outil au Noyau le PROPOSE
+// avec son niveau (LIBRE = lecture seule, CONFIRMATION = dès qu'il y a une écriture, INTERDIT = sensible : jamais présenté) ; Lucien valide ;
+// seulement alors le nom et le niveau sont ajoutés ci-dessous. Un outil absent de cette liste, ou dont le niveau diffère, est écarté du catalogue.
+// Liste de départ = les 34 outils déjà en service et validés par Lucien au fil des étapes N3 à N20 (voir docs/labo-auto/decisions.md).
+export const OUTILS_VALIDES = {
+  heure: "LIBRE", calculer: "LIBRE", chercher_memoire: "LIBRE", lire_taches: "LIBRE", lire_agenda: "LIBRE", lire_notes: "LIBRE", lire_favoris: "LIBRE", lire_meteo: "LIBRE", lire_rituels: "LIBRE", lire_actus: "LIBRE", lire_veille: "LIBRE", lire_fenetre: "LIBRE", lire_journal: "LIBRE", chercher_sources: "LIBRE", afficher: "LIBRE", lancer_focus: "LIBRE",
+  ajouter_tache: "CONFIRMATION", modifier_tache: "CONFIRMATION", cocher_tache: "CONFIRMATION", ajouter_evenement: "CONFIRMATION", modifier_evenement: "CONFIRMATION", ajouter_note: "CONFIRMATION", modifier_note: "CONFIRMATION", ajouter_favori: "CONFIRMATION", modifier_favori: "CONFIRMATION", creer_rappel: "CONFIRMATION", memoriser: "CONFIRMATION", apprendre: "CONFIRMATION", lire_page: "CONFIRMATION", lire_mails: "CONFIRMATION", jouer_media: "CONFIRMATION", regler_rituel: "CONFIRMATION", personnaliser_hub: "CONFIRMATION", creer_raccourci: "CONFIRMATION"
+};
+/** Outils proposés par les postes, EN ATTENTE de validation : ils ne sont pas actifs (voir docs/labo-auto/outils-propose.md). */
+export const OUTILS_PROPOSES = [
+  { nom: "consulter_manuel", niveau: "LIBRE", poste: "Labo", pourquoi: "Lecture seule du manuel public du hub ; ne donne aucun droit sur les fonctions décrites." }
+];
+/** Ne garde que les outils validés au bon niveau. Renvoie { catalogue, ecartes } ; rien n'est jamais ajouté ni élevé de niveau. */
+export function appliquerRegle(outils, valides = OUTILS_VALIDES) {
+  const catalogue = [], ecartes = [];
+  for (const o of outils) {
+    if (!Object.prototype.hasOwnProperty.call(valides, o.nom)) ecartes.push({ nom: o.nom, raison: "non validé par Lucien" });
+    else if (valides[o.nom] !== o.niveau) ecartes.push({ nom: o.nom, raison: `niveau ${o.niveau} différent du niveau validé ${valides[o.nom]}` });
+    else catalogue.push(o);
+  }
+  return { catalogue, ecartes };
+}
+/** Liste visible (laboratoire) : chaque outil actif avec son niveau, puis les propositions en attente. */
+export function listeOutils(outils, valides = OUTILS_VALIDES, proposes = OUTILS_PROPOSES) {
+  const actifs = outils.map((o) => ({ nom: o.nom, niveau: o.niveau, statut: valides[o.nom] === o.niveau ? "validé" : "écarté", description: String(o.description || "").slice(0, 120) }));
+  const nonActifs = proposes.filter((p) => !outils.some((o) => o.nom === p.nom)).map((p) => ({ nom: p.nom, niveau: p.niveau, statut: "proposé · en attente de Lucien", description: p.pourquoi }));
+  return [...actifs, ...nonActifs];
+}
+
 const S = (description, extra = {}) => ({ type: "string", description, ...extra });
 const O = (properties = {}, required = []) => ({ type: "object", properties, required });
 
@@ -218,7 +248,9 @@ export function creerCatalogue(ctx = {}) {
       exec: async (p) => rac().executerOutil(p) }
   ];
   for (const o of T) o.params = o.params || O();
-  return T;
+  const { catalogue, ecartes } = appliquerRegle(T);
+  if (ecartes.length && typeof console !== "undefined") console.warn("[Noyau] outils écartés (règle de validation) :", ecartes.map((e) => `${e.nom} (${e.raison})`).join(", "));
+  return catalogue;
 }
 
 /** Outil interne : fin obligatoire de chaque tour (contrat 4.2). Il n'agit pas sur le hub. */
