@@ -1,0 +1,49 @@
+diff --git a/js/widgets/moteurs/at-radar-donnees.js b/js/widgets/moteurs/at-radar-donnees.js
+index 3f13dfe..c5e9ded 100644
+--- a/js/widgets/moteurs/at-radar-donnees.js
++++ b/js/widgets/moteurs/at-radar-donnees.js
+@@ -27,6 +27,10 @@ export function controler(exportHub, { maintenant = Date.now(), ageMaxJours = 7
+   const ajoute = (gravite, collection, id, type, message) => P.push({ gravite, collection, id: id == null ? null : String(id), type, message });
+   let d = exportHub;
+   if (typeof d === "string") { try { d = JSON.parse(d.replace(/^﻿/, "")); } catch (e) { d = null; } }
++  if (d && typeof d === "object" && d.format === "hub-donnees-chiffre") {
++    ajoute("avertissement", "export", null, "chiffre", "Export chiffré (verrouillage actif) : son contenu ne peut être contrôlé qu'une fois ouvert dans le hub avec la phrase secrète.");
++    return rapport(P, {});
++  }
+   if (!d || typeof d !== "object" || d.format !== "hub-donnees" || !d.data || typeof d.data !== "object" || Array.isArray(d.data)) {
+     ajoute("erreur", "export", null, "format", "Ce fichier n'est pas un export du hub.");
+     return rapport(P, {});
+diff --git a/js/widgets/moteurs/bud-csv.js b/js/widgets/moteurs/bud-csv.js
+index 2eb1008..36f62cb 100644
+--- a/js/widgets/moteurs/bud-csv.js
++++ b/js/widgets/moteurs/bud-csv.js
+@@ -64,14 +64,14 @@ export function lireMontant(v) {
+   if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
+   const [e, d = ""] = s.split(".");
+   const c = Number(e) * 100 + Number((d + "00").slice(0, 2));
+-  return neg ? -c : c;
++  return neg && c ? -c : c;                                                        // jamais de « -0 »
+ }
+ 
+ /** « 05/03/2026 », « 5/3/26 », « 05-03-2026 », « 05.03.2026 » ou « 2026-03-05 » → « 2026-03-05 », ou null. */
+ export function lireDate(v) {
+   const s = String(v || "").trim();
+   let j, m, a, r;
+-  if ((r = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) [a, m, j] = [+r[1], +r[2], +r[3]];
++  if ((r = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T ]\d)/))) [a, m, j] = [+r[1], +r[2], +r[3]];
+   else if ((r = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2}|\d{4})$/))) { j = +r[1]; m = +r[2]; a = +r[3]; if (r[3].length === 2) a += a >= 70 ? 1900 : 2000; }
+   else return null;
+   const d = new Date(Date.UTC(a, m - 1, j));
+@@ -80,9 +80,9 @@ export function lireDate(v) {
+ }
+ 
+ const ALIAS = {
+-  date: ["date", "date operation", "date de l operation", "date comptable", "date de comptabilisation", "date op"],
+-  libelle: ["libelle", "libelle operation", "libelle de l operation", "intitule", "description", "detail", "details", "libelle simplifie", "nature de l operation"],
+-  montant: ["montant", "montant eur", "montant euros", "montant en euros", "somme"],
++  date: ["date", "dateop", "date operation", "date de l operation", "date comptable", "date de comptabilisation", "date op"],
++  libelle: ["libelle", "label", "libelle operation", "libelle de l operation", "intitule", "description", "detail", "details", "libelle simplifie", "nature de l operation"],
++  montant: ["montant", "amount", "montant eur", "montant euros", "montant en euros", "somme"],
+   debit: ["debit", "debit eur", "debit euros", "debits"],
+   credit: ["credit", "credit eur", "credit euros", "credits"],
+ };
