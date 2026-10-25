@@ -8,11 +8,26 @@ import { moteurGemini } from "../js/noyau/moteurs.js";
 import { moteurDemo } from "./moteur-demo.js";
 import { lancerBanc } from "./banc.js";
 import { SOURCES, interroger } from "../js/noyau/sources.js";
+import { creerEtatLabo } from "./etat-labo.js";
+import { rendreLabo } from "./labos.js";
+import { rendreProgression, rendreIdees } from "./progression.js";
 
 const $ = (s) => document.querySelector(s);
 const h = (tag, a = {}, ...k) => { const e = document.createElement(tag); for (const [n, v] of Object.entries(a)) { if (v == null || v === false) continue; if (n === "class") e.className = v; else if (n.startsWith("on")) e.addEventListener(n.slice(2), v); else e.setAttribute(n, v === true ? "" : v); } for (const c of k.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(c)); return e; };
 
 let hub = null, noyau = null, fenetre = null, cle = "", modeMoteur = "demo";
+const etat = creerEtatLabo();
+const ctx = { etat, noyau: () => noyau, mode: () => modeMoteur, cle: () => cle, allerOnglet: (n) => document.querySelector(`.onglets [data-p="${n}"]`).click(), surChangement: () => majSante() };
+function majSante() {
+  const t = etat.tendanceBanc(), el = $("#sante"); if (!el) return;
+  el.textContent = t ? `Santé : ${t.taux} %${t.regression ? " · régression" : ""}` : "Santé : non mesurée"; el.className = "lab-sante-badge" + (t ? (t.regression || t.taux < 90 ? " mal" : " bon") : "");
+}
+const labos = {};
+function rendrePanneau(n) {
+  if (n === "progression") rendreProgression($("#p-progression"), ctx);
+  else if (n === "idees") rendreIdees($("#p-idees"), ctx);
+  else if (n === "social" || n === "reflexion") { if (!labos[n]) labos[n] = rendreLabo($("#p-" + n), n, ctx); else labos[n].rafraichir(); }
+}
 
 async function demarrer() {
   hub = creerHubSimule({ cle: cle || null });
@@ -20,7 +35,10 @@ async function demarrer() {
   noyau.verrouillePar(() => false);
   fenetre = monterFenetre($("#noyau-mount"), noyau);
   appliquerMoteur();
-  noyau.surMessage((m) => { if (m.type === "reponse" || m.type === "erreur") rendreInspecteur(); });
+  noyau.surMessage((m) => {
+    if (m.type === "reponse" || m.type === "erreur") rendreInspecteur();
+    if (m.type === "reponse" && !m.refaite) { const t = noyau.inspecteur()[0]; if (t) etat.ajouterMetrique({ ms: t.ms, requetes: t.requetes, tokens: t.tokens, longueur: (m.texte || "").length, confiance: m.confiance, sources: (m.sources || []).length, ton: m.ton, reflexe: !!t.reflexe, moteur: modeMoteur }); }
+  });
   window.__noyau = noyau; window.__hub = hub;
   rendreInspecteur(); rendreHub(); rendreMoteur();
 }
@@ -34,6 +52,7 @@ function appliquerMoteur() {
 document.querySelectorAll(".onglets button").forEach((b) => b.addEventListener("click", () => {
   document.querySelectorAll(".onglets button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   document.querySelectorAll(".panneau").forEach((p) => p.classList.toggle("on", p.id === "p-" + b.dataset.p));
+  rendrePanneau(b.dataset.p);
 }));
 
 // ----- Moteur -----
@@ -67,6 +86,8 @@ function rendreBanc() {
       if (r.ecarts && r.ecarts.length) liste.append(h("div", { class: "ecarts" }, r.ecarts.map((e) => h("div", {}, e))));
     });
     bilan.hidden = false; bilan.textContent = `${out.ok} réussi(s), ${out.ko} raté(s), ${out.sautes} sauté(s) sur ${out.total}.`;
+    const parFamille = {}; out.resultats.forEach((r) => { const f = (parFamille[r.famille] = parFamille[r.famille] || { ok: 0, ko: 0, sautes: 0 }); r.ok === true ? f.ok++ : r.ok === false ? f.ko++ : f.sautes++; });
+    etat.ajouterBanc({ ok: out.ok, ko: out.ko, sautes: out.sautes, total: out.total, ms: out.resultats.reduce((a, r) => a + (r.ms || 0), 0), version: (noyau && noyau.version) || "", echecs: out.resultats.filter((r) => r.ok === false).map((r) => r.id), parFamille, reel: !!(reel && cle) }); majSante();
     b1.disabled = b2.disabled = false;
     await demarrer();                       // le banc a branché ses propres hubs : on remet le bac à sable
   };
@@ -142,4 +163,4 @@ function rendreSources() {
 }
 
 rendreBanc(); rendreSources();
-await demarrer();
+await demarrer(); majSante(); rendrePanneau("progression");

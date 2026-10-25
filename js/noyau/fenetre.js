@@ -56,7 +56,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     [["Briefing", "Briefing", true], ["Revue du soir", "Revue de fin de journée", true], ["Note…", "Note : ", false], ["Rappel…", "Rappelle-moi ", false], ["Chercher partout…", "Cherche partout ", false]]
       .map(([nom, texte, direct]) => h("button", { class: "nx-puce nx-raccourci", type: "button", onclick: () => { if (direct) poser(texte); else { saisie.value = texte; ajuster(); saisie.focus(); saisie.setSelectionRange(texte.length, texte.length); } } }, nom)));
   const chat = h("section", { class: "nx-vue nx-chat", "data-nom": "chat" }, fil, rapide, form);
-  document.addEventListener("noyau:saisir", (e) => { saisie.value = (e.detail && e.detail.texte) || ""; ajuster(); saisie.focus(); });
+  document.addEventListener("noyau:saisir", (e) => { const d = e.detail || {}; saisie.value = d.texte || ""; ajuster(); if (d.envoyer && d.texte) poser(d.texte); else saisie.focus(); });
 
   function accueilVide() {
     if (fil.children.length) return;

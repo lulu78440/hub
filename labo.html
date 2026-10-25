@@ -20,7 +20,7 @@ main{display:grid;grid-template-columns:minmax(320px,520px) minmax(300px,1fr);ga
 .cadre{border:1px solid rgba(63,230,255,.22);background:rgba(4,16,25,.7);padding:12px 14px;min-width:0}
 .cadre>h2{margin:0 0 8px;font-family:var(--display);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--cyan)}
 #noyau-mount{height:min(78vh,720px);min-height:480px}
-.onglets{display:flex;gap:2px;border-bottom:1px solid rgba(63,230,255,.18);margin-bottom:10px}
+.onglets{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid rgba(63,230,255,.18);margin-bottom:10px}
 .onglets button{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);padding:8px 12px;font:inherit;cursor:pointer}
 .onglets button[aria-pressed=true]{color:var(--cyan);border-bottom-color:var(--cyan)}
 .panneau{display:none}.panneau.on{display:block}
@@ -37,26 +37,51 @@ main{display:grid;grid-template-columns:minmax(320px,520px) minmax(300px,1fr);ga
 pre.i{margin:6px 0;padding:8px;max-height:260px;overflow:auto;background:rgba(2,6,13,.7);border:1px solid rgba(63,230,255,.15);font:12px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
 details{margin:8px 0}summary{cursor:pointer;color:var(--cyan)}
 .avert{padding:8px 10px;border:1px solid rgba(255,179,71,.4);color:var(--amber);font-size:13px;margin:8px 0}
+.lab-sante-badge{padding:2px 10px;border:1px solid rgba(63,230,255,.35);font-size:13px;color:var(--dim)}.lab-sante-badge.bon{color:var(--ok);border-color:rgba(79,227,168,.5)}.lab-sante-badge.mal{color:var(--amber);border-color:rgba(255,179,71,.5)}
+h3{margin:16px 0 6px;font-family:var(--display);font-weight:500;font-size:12px;letter-spacing:.06em;color:var(--cyan)}h4{margin:12px 0 4px;font-size:14px;color:var(--ink)}
+.lab-haut{color:var(--ok)}.lab-bas{color:var(--amber)}
+.lab-sante b{font-size:28px;margin-right:6px}
+.lab-barre{display:inline-block;vertical-align:middle;width:90px;height:6px;background:rgba(255,255,255,.08);margin-left:6px}.lab-barre i{display:block;height:100%}
+.lab-etape{display:flex;gap:10px;align-items:baseline;padding:3px 0;font-size:14px}
+.lab-st{flex:none;width:76px;font-size:12px;padding:0 6px;border:1px solid rgba(63,230,255,.25);color:var(--dim);text-align:center}.lab-st.fait{color:var(--ok);border-color:rgba(79,227,168,.45)}.lab-st.en_cours,.lab-st.prochain{color:var(--cyan)}.lab-st.attend{color:var(--amber);border-color:rgba(255,179,71,.45)}
+.lab-liste{margin:4px 0;padding-left:20px;font-size:14px}.lab-liste li{margin:3px 0}
+.lab-sit{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(63,230,255,.1);font-size:14px}
+.lab-crit{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:5px 0;font-size:14px}
+.lab-notes{display:inline-flex;gap:4px}.lab-n{width:36px;height:36px;background:transparent;border:1px solid rgba(63,230,255,.3);color:var(--ink);font:inherit;cursor:pointer}.lab-n[aria-pressed=true]{background:rgba(63,230,255,.18);border-color:var(--cyan);color:var(--cyan)}
+.lab-moy{display:grid;grid-template-columns:110px 1fr 70px 60px;gap:8px;align-items:center;padding:3px 0;font-size:14px}.lab-moy .lab-barre{width:100%;margin:0}
+.lab-ab{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lab-idee{border:1px solid rgba(63,230,255,.18);padding:6px 10px;margin:8px 0}.lab-idee p{margin:4px 0}
+.lab-court{width:auto}
+textarea.lab-champ{resize:vertical}label.dim{display:block;margin-top:6px;font-size:12px}
+@media(max-width:860px){.lab-ab{grid-template-columns:1fr}.lab-moy{grid-template-columns:90px 1fr 60px 50px}}
 @media(max-width:860px){main{grid-template-columns:1fr;padding:10px}#noyau-mount{height:80vh}.res .id{display:none}}
 </style>
 </head>
 <body>
-<header><h1>NOYAU · LABORATOIRE</h1><p>Le Noyau sur un hub fictif : aucune donnée réelle, rien n'est enregistré. Les mêmes modules que dans le hub, la même barrière de permissions.</p></header>
+<header><h1>NOYAU · LABORATOIRE</h1><span id="sante" class="lab-sante-badge" role="status" title="Pourcentage de scénarios réussis au dernier banc">Santé : non mesurée</span><p>Le Noyau sur un hub fictif : aucune donnée réelle, rien n'est enregistré. Les mêmes modules que dans le hub, la même barrière de permissions.</p></header>
 <main>
   <section class="cadre"><h2>Le Noyau</h2><div id="noyau-mount"></div></section>
   <section class="cadre">
     <div class="onglets" role="tablist">
-      <button type="button" data-p="moteur" aria-pressed="true">Moteur</button>
+      <button type="button" data-p="progression" aria-pressed="true">Progression</button>
+      <button type="button" data-p="social" aria-pressed="false">Labo social</button>
+      <button type="button" data-p="reflexion" aria-pressed="false">Labo réflexion</button>
+      <button type="button" data-p="moteur" aria-pressed="false">Moteur</button>
       <button type="button" data-p="banc" aria-pressed="false">Banc d'essai</button>
       <button type="button" data-p="sources" aria-pressed="false">Sources</button>
       <button type="button" data-p="inspect" aria-pressed="false">Inspecteur</button>
       <button type="button" data-p="hub" aria-pressed="false">Hub fictif</button>
+      <button type="button" data-p="idees" aria-pressed="false">Idées &amp; état</button>
     </div>
-    <div class="panneau on" id="p-moteur"></div>
+    <div class="panneau on" id="p-progression"></div>
+    <div class="panneau" id="p-social"></div>
+    <div class="panneau" id="p-reflexion"></div>
+    <div class="panneau" id="p-moteur"></div>
     <div class="panneau" id="p-banc"></div>
     <div class="panneau" id="p-sources"></div>
     <div class="panneau" id="p-inspect"></div>
     <div class="panneau" id="p-hub"></div>
+    <div class="panneau" id="p-idees"></div>
   </section>
 </main>
 <script type="module" src="labo/labo.js"></script>

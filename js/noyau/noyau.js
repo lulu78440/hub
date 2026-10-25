@@ -19,7 +19,7 @@ import { creerSavoir } from "./savoir.js";
 import { creerUsages } from "./usages.js";
 import { resumerLocalement } from "./recherche.js";
 
-export const VERSION_NOYAU = "noyau-1.0";
+export const VERSION_NOYAU = "noyau-1.2";
 
 export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmation } = {}) {
   journalActions.oublier(); journalMemoire.oublier();
@@ -75,6 +75,8 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
     /** La fenêtre du hub branche ici sa confirmation ; sans elle, toute action à confirmer est refusée. */
     confirmerAvec(fn) { confirmerUI = fn; }, verrouillePar(fn) { verrou = fn; },
     definirMoteur(m) { surcharge = m; },
+    /** Laboratoire seulement : ajoute une consigne d'essai à l'instruction système (comparateur A/B). */
+    definirVariante: (t) => cycle.definirVariante(t), oublierConversation: () => cycle.oublierConversation(),
     moteurActuel: () => moteur().nom,
     inspecteur: () => cycle.inspecteur(),
     journal: (opt) => journalActions.lire(opt), journalMemoire: (opt) => journalMemoire.lire(opt),

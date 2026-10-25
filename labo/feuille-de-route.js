@@ -1,0 +1,38 @@
+// Laboratoire · feuille de route du Noyau. Chaque chantier a ses étapes ; le pourcentage est le nombre d'étapes faites sur le total.
+// Une étape peut être « mesurée » : elle ne passe à « faite » que quand la mesure réelle du labo atteint la cible (notes, banc, comparaisons).
+// statut : fait | en_cours | prochain | attend (c'est à Lucien de faire quelque chose).
+export const CHANTIERS = [
+  { id: "base", nom: "Noyau de base", etapes: [
+    { t: "Cycle réflexe → rappel → modèle → outils → vérification", s: "fait" }, { t: "Barrière de permissions (libre / confirmation / interdit)", s: "fait" },
+    { t: "Mémoire à 5 types et boîte « À valider »", s: "fait" }, { t: "Mode réduit sans modèle", s: "fait" }, { t: "Fusion dans le hub (Noyau 1.0)", s: "fait" }, { t: "Test sur Android", s: "attend", n: "À faire par Lucien" }] },
+  { id: "savoir", nom: "Savoir et références", etapes: [
+    { t: "30 sources publiques dans 15 domaines", s: "fait" }, { t: "Carte 3D du savoir (16 domaines, 110 sous-thèmes)", s: "fait" }, { t: "Étudier un sous-thème avec validation de Lucien", s: "fait" },
+    { t: "Curiosité autonome guidée par le programme", s: "prochain" }, { t: "Import de la mémoire v3.8", s: "attend", n: "Optionnel, par Lucien" }, { t: "Premier domaine couvert à 25 %", s: "attend", n: "Dépend de ce que tu valides dans la fenêtre Savoir" }] },
+  { id: "securite", nom: "Sécurité", etapes: [
+    { t: "Sentinelle : journal, empreintes des fichiers, activité du dépôt", s: "fait" }, { t: "Audit du code avec correctifs validés par Lucien", s: "fait" }, { t: "Recommandation système toutes les 30 min", s: "fait" },
+    { t: "Alerte quand un fichier sensible change sans commit connu", s: "prochain" }] },
+  { id: "usages", nom: "Usages du quotidien", etapes: [
+    { t: "Briefing et revue du soir", s: "fait" }, { t: "Capture rapide « Note : », « Tâche : », « Retiens que »", s: "fait" }, { t: "Rappels en français", s: "fait" },
+    { t: "Résumé de fenêtre, recherche globale, mode hors ligne, rappel de sauvegarde", s: "fait" }, { t: "Suggestion du soir proposant la revue", s: "prochain" }] },
+  { id: "qualite", nom: "Qualité mesurée (laboratoire)", etapes: [
+    { t: "Banc d'essai mécanique sans erreur", s: "mesure", mesure: "banc_vert", cible: 1 }, { t: "Historique du banc avec détection de régression", s: "fait" },
+    { t: "Deux labos (social, réflexion) avec grille de notes", s: "fait" }, { t: "Comparateur A/B de consignes", s: "fait" },
+    { t: "30 réponses notées par Lucien, labo social", s: "mesure", mesure: "notes_social", cible: 30 }, { t: "30 réponses notées par Lucien, labo réflexion", s: "mesure", mesure: "notes_reflexion", cible: 30 },
+    { t: "20 comparaisons A/B tranchées", s: "mesure", mesure: "ab", cible: 20 }, { t: "Banc réel (Gemini) lancé au moins une fois", s: "mesure", mesure: "banc_reel", cible: 1 }] }
+];
+
+/** Calcule l'avancement réel. `etat` = creerEtatLabo(). Renvoie les chantiers avec leurs étapes résolues et leur pourcentage. */
+export function avancement(etat) {
+  const banc = etat.banc(), dernier = banc[banc.length - 1];
+  const mesures = { banc_vert: dernier && dernier.ko === 0 && dernier.ok > 0 ? 1 : 0, notes_social: etat.notes("social").length, notes_reflexion: etat.notes("reflexion").length, ab: etat.ab().length, banc_reel: banc.filter((b) => b.reel).length };
+  const chantiers = CHANTIERS.map((c) => {
+    const etapes = c.etapes.map((e) => {
+      if (e.s !== "mesure") return { ...e, fait: e.s === "fait", avance: e.s === "fait" ? 1 : 0 };
+      const v = mesures[e.mesure] || 0, a = Math.min(1, v / e.cible);
+      return { ...e, fait: a >= 1, avance: a, valeur: v, s: a >= 1 ? "fait" : v > 0 ? "en_cours" : "prochain" };
+    });
+    return { id: c.id, nom: c.nom, etapes, pct: Math.round((etapes.reduce((a, e) => a + e.avance, 0) / etapes.length) * 100) };
+  });
+  const total = chantiers.reduce((a, c) => a + c.etapes.length, 0), faites = chantiers.reduce((a, c) => a + c.etapes.reduce((x, e) => x + e.avance, 0), 0);
+  return { chantiers, pct: Math.round((faites / total) * 100), suivantes: chantiers.flatMap((c) => c.etapes.filter((e) => e.s === "prochain" || e.s === "en_cours").map((e) => ({ chantier: c.nom, ...e }))).slice(0, 6), attendent: chantiers.flatMap((c) => c.etapes.filter((e) => e.s === "attend").map((e) => ({ chantier: c.nom, ...e }))) };
+}

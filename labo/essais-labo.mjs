@@ -1,0 +1,34 @@
+// Laboratoire · essais de la mémoire du labo : `node labo/essais-labo.mjs`
+import { creerEtatLabo, GRILLES } from "./etat-labo.js";
+let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
+let t = new Date(2026, 9, 26, 9, 0); const maint = () => new Date(t);
+const m = new Map(); const sto = { lire: (k) => m.get(k) ?? null, ecrire: (k, v) => m.set(k, v), persistant: true };
+let e = creerEtatLabo(sto, maint);
+ok(e.sante() === null && e.tendanceBanc() === null, "départ : aucune mesure, aucune santé inventée");
+e.ajouterBanc({ ok: 30, ko: 2, sautes: 6, total: 38, echecs: ["a1", "a2"] }); t = new Date(+t + 864e5);
+e.ajouterBanc({ ok: 31, ko: 1, sautes: 6, total: 38, echecs: ["a1"] }); let tb = e.tendanceBanc();
+ok(tb.taux === 97 && !tb.regression && tb.tauxPrecedent === 94, `santé 97 % (avant 94 %), pas de régression`);
+t = new Date(+t + 864e5); e.ajouterBanc({ ok: 29, ko: 3, sautes: 6, total: 38, echecs: ["a1", "b7", "b8"] }); tb = e.tendanceBanc();
+ok(tb.regression && tb.nouveauxEchecs.join() === "b7,b8", "régression détectée avec les nouveaux échecs : " + tb.nouveauxEchecs);
+let err = null; try { e.ajouterNote({ labo: "social", criteres: {} }); } catch (x) { err = x; } ok(err, "note vide refusée");
+try { e.ajouterNote({ labo: "inconnu", criteres: { a: 3 } }); err = null; } catch (x) { err = x; } ok(err, "labo inconnu refusé");
+for (const v of [3, 3, 3, 4, 4, 2, 2, 2, 1, 2]) { t = new Date(+t + 6e4); e.ajouterNote({ labo: "social", situation: "s-stress", criteres: { chaleur: v, sobriete: 5, ton: 4 } }); }
+const mo = e.moyennes("social"); ok(mo.chaleur.n === 10 && mo.chaleur.moyenne === 2.6, "moyenne chaleur 2,6 sur 10 notes : " + mo.chaleur.moyenne);
+ok(mo.chaleur.tendance === -1.6, "tendance : les 5 dernières contre les 5 précédentes (" + mo.chaleur.tendance + ")");
+ok(mo.honnetete.moyenne === null && mo.honnetete.n === 0, "critère jamais noté : pas de moyenne inventée");
+for (let i = 0; i < 4; i++) e.ajouterMetrique({ ms: 800 + i * 100, requetes: 1, longueur: 200, confiance: "haute", sources: i % 2, reflexe: false });
+e.ajouterMetrique({ ms: 3, requetes: 0, longueur: 20, reflexe: true }); const rm = e.resumeMetriques();
+ok(rm.n === 5 && rm.pctReflexe === 20 && rm.latenceMediane === 950 && rm.pctHauteAvecSource === 50, "métriques : " + JSON.stringify({ ...rm, ms: undefined }));
+e.ajouterAB({ situation: "s-stress", a: "sobre", b: "chaleureux", choix: "b" }); e.ajouterAB({ situation: "s-joie", a: "sobre", b: "chaleureux", choix: "egal" });
+ok(JSON.stringify(e.scoreAB()) === JSON.stringify({ n: 2, a: 0, b: 1, egal: 1 }), "score A/B");
+try { e.ajouterAB({ situation: "x", choix: "z" }); err = null; } catch (x) { err = x; } ok(err, "choix A/B invalide refusé");
+const i1 = e.ajouterIdee({ type: "social", texte: "Moins de « bien sûr » en début de réponse" }); e.changerIdee(i1.id, "demandee");
+ok(e.idees()[0].statut === "demandee", "idée : statut modifiable");
+const bil = e.bilanSemaine({ carte: { global: 3, domaines: [{ pct: 0 }, { pct: 5 }] } });
+ok(bil.runs === 3 && bil.regressions >= 1 && bil.notes === 10 && bil.suggestions.some((s) => /réflexion/.test(s) && /5 réponses/.test(s)) && bil.suggestions.some((s) => /Point faible/.test(s)) && bil.suggestions.some((s) => /baisse/.test(s)), "bilan : suggestions fondées sur les mesures\n   - " + bil.suggestions.join("\n   - "));
+const e2 = creerEtatLabo(sto, maint); ok(e2.banc().length === 3 && e2.notes().length === 10, "persistance : rechargé depuis le stockage");
+const ex = e.exporter(); const e3 = creerEtatLabo({ lire: () => null, ecrire: () => {} }, maint); const aj = e3.importer(ex); ok(aj.banc === 3 && aj.notes === 10, "import dans un labo vide");
+const aj2 = e3.importer(ex); ok(aj2.banc === 0 && aj2.notes === 0 && e3.notes().length === 10, "réimport : aucun doublon");
+try { e3.importer({ v: 9 }); err = null; } catch (x) { err = x; } ok(err, "fichier étranger refusé");
+ok(Object.keys(GRILLES).join() === "social,reflexion", "deux grilles : social et réflexion");
+console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);
