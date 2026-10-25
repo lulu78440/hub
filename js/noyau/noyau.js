@@ -14,6 +14,7 @@ import { creerInitiative } from "./initiative.js";
 import { creerSommeil } from "./sommeil.js";
 import { journalActions, journalMemoire } from "./journal.js";
 import * as imp from "./import38.js";
+import { creerSentinelle } from "./sentinelle.js";
 
 export const VERSION_NOYAU = "noyau-1.0";
 
@@ -45,7 +46,12 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   await cycle.charger();
 
   const signalerAValider = () => cycle.emettre({ type: "a_valider", n: memoire.aValider().length });
+  const demanderTexte = async (systeme, texte) => { const r = await moteur().generer({ systeme, messages: [{ role: "user", texte }], outils: [], temperature: 0.2 }); return String(r.texte || "").trim() || "(pas de réponse)"; };
+  const sentinelle = creerSentinelle({ demander: demanderTexte });
   const noyau = {
+    sentinelle, demanderTexte,
+    /** Recommandation système de l'orbe : locale, sans requête ; montrée dans l'échange du Noyau. */
+    async recommander() { const r = await sentinelle.recommandation(); cycle.emettre({ type: "initiative", texte: r.texte, raison: "systeme", niveau: r.niveau }); if (r.niveau === "critique" || r.niveau === "alerte") hote.ui.toast("Sécurité : " + r.texte.slice(0, 90)); return r; },
     version: VERSION_NOYAU, memoire, cerveau, etat, budget, barriere, catalogue, cycle, initiative, sommeil, actualite, perception,
     /** Pose une question. origine : lucien, voix, initiative, autonome. */
     async poser(texte, origine = "lucien") { const r = await cycle.penser({ texte: String(texte).slice(0, 2000), origine }); signalerAValider(); return r; },
@@ -85,7 +91,19 @@ export async function initNoyau() {
   noyau.verrouillePar(() => document.body.classList.contains("locked"));       // écran verrouillé : aucune confirmation ne passe
   const { monterFenetre } = await import("./fenetre.js");
   const ui = monterFenetre(hote.ui.conteneur(), noyau, { orbe: true });
-  hote.ui.ajouterMenuFond(() => [{ t: "Ouvrir le Noyau", fn: () => ui.ouvrir() }]);
+  const { monterSecurite } = await import("./securite.js");
+  const zoneSecu = document.querySelector('.win[data-id="securite"] .pb');
+  const secu = zoneSecu ? monterSecurite(zoneSecu, noyau.sentinelle) : null;
+  hote.ui.ajouterMenuFond(() => [{ t: "Ouvrir le Noyau", fn: () => ui.ouvrir() }, ...(secu ? [{ t: "Ouvrir la sécurité", fn: () => secu.ouvrir() }] : [])]);
+  document.addEventListener("noyau:ouvrir", () => ui.ouvrir());                          // appui long sur l'orbe
+  document.addEventListener("noyau:ouvrir-securite", () => secu && secu.ouvrir());
+  // Sentinelle : capteurs, analyse locale toutes les 5 min (sans requête), recommandation de l'orbe toutes les 30 min
+  noyau.sentinelle.surveiller();
+  const calme = () => !document.hidden && !document.body.classList.contains("locked") && !document.body.classList.contains("focus") && (() => { const h = new Date().getHours(); return h >= 7 && h < 23; })();
+  setTimeout(() => noyau.sentinelle.veille().catch(() => {}), 8000);
+  setInterval(() => { if (!document.hidden) noyau.sentinelle.veille().then((c) => { if (c.some((x) => x.niveau === "critique")) hote.ui.orbe({ phase: "attend", humeur: "vigilant" }); }).catch(() => {}); }, 5 * 60e3);
+  setTimeout(() => { if (calme() && noyau.reglage("recos") !== "off") noyau.recommander().catch(() => {}); }, 90 * 1000);
+  setInterval(() => { if (calme() && noyau.reglage("recos") !== "off") noyau.recommander().catch(() => {}); }, 30 * 60e3);
   // Veille : accueil du jour, remarques opportunes (toutes les 5 min, au plus une par 2 h), sommeil au premier moment calme
   let dernierGeste = Date.now();
   ["pointerdown", "keydown", "wheel"].forEach((e) => addEventListener(e, () => { dernierGeste = Date.now(); }, { passive: true }));

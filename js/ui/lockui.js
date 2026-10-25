@@ -81,8 +81,8 @@ function askUnlock(mode) {
         const v = i.value;
         const good = mode === "start" ? await (rescue ? vault.unlockRescue(v) : vault.unlock(v)) : await (rescue ? vault.checkRescue(v) : vault.check(v));
         ok.disabled = false;
-        if (!good) { fails++; if (fails >= 5) { waitUntil = Date.now() + 30000 * (fails - 4); } msg.textContent = rescue ? "Clé de secours incorrecte." : "Phrase incorrecte."; i.select(); return; }
-        fails = 0;
+        if (!good) { document.dispatchEvent(new CustomEvent("hub:unlock", { detail: { ok: false, secours: !!rescue } })); fails++; if (fails >= 5) { waitUntil = Date.now() + 30000 * (fails - 4); } msg.textContent = rescue ? "Clé de secours incorrecte." : "Phrase incorrecte."; i.select(); return; }
+        fails = 0; document.dispatchEvent(new CustomEvent("hub:unlock", { detail: { ok: true, secours: !!rescue } }));
         if (rescue) {
           const p = await askNew(card, "Nouvelle phrase secrète", "La clé de secours a servi : choisis une nouvelle phrase. Une nouvelle clé de secours sera ensuite créée (l'ancienne ne marchera plus).", false);
           card.innerHTML = ""; card.append(el("b", "lh", "Nouvelle clé…"), el("p", "lp", "Tes données sont rechiffrées. Ne ferme pas l'onglet."));

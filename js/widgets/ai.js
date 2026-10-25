@@ -5,7 +5,7 @@
 //    Clé API gratuite, sans carte bancaire, collée par Lucien et gardée CHIFFRÉE sur l'appareil par le coffre
 //    (le verrouillage doit être actif) ; jamais dans le code ni dans le dépôt, jamais exportée ni synchronisée.
 //    Les questions (et, si tu le veux, le résumé de ta journée) partent chez Google. Marche aussi sur le téléphone.
-// Le noyau d'abord : clic sur l'orbe → « Parler au noyau ». Puis l'entité : réveillée quand l'IA est prête ;
+// Chat IA : clic court sur l’orbe (l’appui long ouvre le Noyau, voir js/noyau/). Puis l'entité : réveillée quand l'IA est prête ;
 // clic droit sur une fenêtre → « Demander à l'entité » (résume ce qu'elle voit).
 import { store } from "../store/storage.js";
 import { prefs } from "../store/prefs.js";
@@ -67,8 +67,8 @@ function geminiEngine(key, model) {
 export function initAI({ force }) {
   const lite = state.lite;
   let engine = null, loading = false, history = [];
-  const panel = document.createElement("div"); panel.className = "aip"; panel.hidden = true; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Parler au noyau");
-  panel.innerHTML = '<div class="aih"><b>NOYAU · IA</b><span class="ais"></span><button type="button" class="btn aicfg" aria-label="Choisir le moteur" title="Choisir le moteur">⚙</button><button type="button" class="btn aix" aria-label="Fermer">✕</button></div><div class="ailog" aria-live="polite"></div><form class="addrow aiq" autocomplete="off"><input class="inl" type="text" maxlength="1200" placeholder="Pose ta question… (Entrée)" aria-label="Question"></form>';
+  const panel = document.createElement("div"); panel.className = "aip"; panel.hidden = true; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Chat IA");
+  panel.innerHTML = '<div class="aih"><b>CHAT IA</b><span class="ais"></span><button type="button" class="btn aicfg" aria-label="Choisir le moteur" title="Choisir le moteur">⚙</button><button type="button" class="btn aix" aria-label="Fermer">✕</button></div><div class="ailog" aria-live="polite"></div><form class="addrow aiq" autocomplete="off"><input class="inl" type="text" maxlength="1200" placeholder="Pose ta question… (Entrée)" aria-label="Question"></form>';
   document.body.append(panel);
   const log = panel.querySelector(".ailog"), stat = panel.querySelector(".ais"), form = panel.querySelector(".aiq"), inp = form.querySelector("input");
   const say = (who, text) => { const p = document.createElement("p"); p.className = who; p.textContent = text; log.append(p); log.scrollTop = log.scrollHeight; return p; };
@@ -105,7 +105,7 @@ export function initAI({ force }) {
   function chooseModel() {
     log.innerHTML = ""; stat.textContent = "";
     const box = el("div", "aimodels");
-    say("sys", "Choisis le moteur du noyau :");
+    say("sys", "Choisis le moteur du chat IA :");
     const g = el("button", "btn", "Gemini · ton assistant Google AI Studio (en ligne, clé gratuite)"); g.type = "button"; g.addEventListener("click", geminiSetup); box.append(g);
     if (!lite) {
       if (navigator.gpu) MODELS.forEach((m) => { const b = el("button", "btn", "Local · " + m.nom); b.type = "button"; b.addEventListener("click", () => load(m.id)); box.append(b); });
@@ -201,20 +201,31 @@ export function initAI({ force }) {
   // Clic court sur l'orbe (l'appui long reste pour l'énergie de la souris)
   const anchor = document.getElementById("anchor");
   let down = null, clickT = 0;
-  addEventListener("pointerdown", (e) => { if (e.button === 0 && onBackground(e.target)) down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+  const surOrbe = (x, y) => { const r = anchor.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = Math.max(40, Math.min(r.width, r.height) * 0.3); return Math.hypot(x - cx, y - cy) < R; };
+  let longT = 0;
+  addEventListener("pointerdown", (e) => {
+    if (e.button === 0 && onBackground(e.target)) {
+      down = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false, long: false };
+      // Appui long sur l'orbe (0,6 s sans bouger) : ouvre la fenêtre du Noyau (le vrai assistant, avec ses outils)
+      clearTimeout(longT);
+      if (surOrbe(e.clientX, e.clientY)) { const d = down; longT = setTimeout(() => { if (down === d && !d.moved) { d.long = true; clearTimeout(clickT); document.dispatchEvent(new CustomEvent("noyau:ouvrir")); } }, 600); }
+    }
+  });
+  addEventListener("pointermove", (e) => { if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8) down.moved = true; });
   addEventListener("pointerup", (e) => {
+    clearTimeout(longT);
     if (!down) return; const d = down; down = null;
+    if (d.long) return;
     if (performance.now() - d.t > 450 || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) return;
-    const r = anchor.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = Math.max(40, Math.min(r.width, r.height) * 0.3);
-    if (Math.hypot(e.clientX - cx, e.clientY - cy) < R && prefs.on("ia")) { clearTimeout(clickT); clickT = setTimeout(open, 300); }   // attend : un double-clic change de plan
+    if (surOrbe(e.clientX, e.clientY) && prefs.on("ia")) { clearTimeout(clickT); clickT = setTimeout(open, 300); }   // attend : un double-clic change de plan
   });
   addEventListener("dblclick", () => clearTimeout(clickT));
-  extendMenu("fond", () => prefs.on("ia") ? [{ t: "Parler au noyau (IA)", fn: open }] : []);
+  extendMenu("fond", () => prefs.on("ia") ? [{ t: "Chat IA (orbe)", fn: open }] : []);
   const box = document.getElementById("surprises");
   if (box) {
     const lab = el("label", "chkl"), cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = prefs.on("ia");
     cb.addEventListener("change", () => { prefs.setOn("ia", cb.checked); if (!cb.checked) close(); });
-    lab.append(cb, document.createTextNode(" IA du noyau (clic sur l'orbe)")); box.append(lab);
+    lab.append(cb, document.createTextNode(" Chat IA (clic sur l'orbe) · Noyau (appui long)")); box.append(lab);
   }
   extendMenu("fenetre", (w) => !prefs.on("ia") ? [] : [{ t: "Demander à l'entité", fn: () => { open(); const title = w.querySelector("h2").textContent, txt = (w.querySelector(".pb") || w).innerText.slice(0, 1500); if (engine) ask(`Que vois-tu dans la fenêtre « ${title} » ? Résume l'essentiel en 3 points.`, `Contenu de la fenêtre « ${title} » :\n${txt}`); } }]);
   return { open, ask, get ready() { return !!engine; } };

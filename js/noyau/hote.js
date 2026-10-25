@@ -15,9 +15,13 @@
 export const hote = { pret: false, nom: "(non branché)" };
 
 /** Branche un hôte (hub réel ou hub simulé du laboratoire). */
+const reseauLog = [];
 export function brancher(impl) {
   Object.keys(hote).forEach((k) => delete hote[k]);
-  Object.assign(hote, impl, { pret: true });
+  const f = impl.fetch;
+  // Chaque connexion vers un autre site est notée (nom du site et heure seulement) : la fenêtre Sécurité les montre.
+  const note = (u) => { try { const x = new URL(String(u), typeof location !== "undefined" ? location.href : "http://local/"); if (typeof location === "undefined" || x.host !== location.host) { reseauLog.push({ hote: x.hostname, quand: new Date().toISOString() }); if (reseauLog.length > 400) reseauLog.shift(); } } catch (e) { /* adresse illisible */ } };
+  Object.assign(hote, impl, { pret: true, reseauJournal: () => reseauLog.slice(), fetch: f ? (u, o) => { note(u); return f(u, o); } : f });
   return hote;
 }
 
@@ -72,6 +76,15 @@ export async function brancherHub() {
         }
         return { ok: false, erreur: "Action « " + nom + " » non branchée dans cette version du hub." };
       }
+    },
+    racine: () => new URL("./", location.href).href,
+    systeme: async () => {
+      let swVersion = null;
+      try { const reg = navigator.serviceWorker && navigator.serviceWorker.controller; if (reg) swVersion = await new Promise((ok) => { const mc = new MessageChannel(); mc.port1.onmessage = (e) => ok(e.data && e.data.version); reg.postMessage({ type: "VERSION" }, [mc.port2]); setTimeout(() => ok(null), 1500); }); } catch (e) { swVersion = null; }
+      let persistant, quotaPct = null;
+      try { persistant = !!(navigator.storage && navigator.storage.persisted && await navigator.storage.persisted()); const q = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (q && q.quota) quotaPct = Math.round((q.usage / q.quota) * 100); } catch (e) { persistant = undefined; }
+      const { VERSION } = await import("../version.js");
+      return { verrou: vault.active, deverrouille: vault.unlocked, cleIA: !!vault.lsGet("hub-secret-ia"), dernierExport: prefs.get("dernier-export", ""), version: VERSION, swVersion, stockagePersistant: persistant, quotaPct };
     },
     ui: {
       toast: (m) => toastMod.toast(m),

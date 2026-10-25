@@ -125,3 +125,15 @@
 
 @media (max-width:520px){.nx{font-size:16px}.nx-m{max-width:100%}.nx-pouls i:nth-child(n+19){display:none}.nx-d-boutons{flex-direction:column-reverse}.nx-dialogue .nx-btn{width:100%}}
 @media (prefers-reduced-motion:reduce){.nx-pouls i,.nx-points i,.nx-icone.on,.nx-anneau .reste{animation:none!important}.nx-pouls i{height:8px}}
+
+/* Fenêtre Sécurité */
+.nx-secu .nx-vue{display:none}
+.nx-secu[data-vue="ensemble"] [data-nom="ensemble"],.nx-secu[data-vue="activite"] [data-nom="activite"],.nx-secu[data-vue="code"] [data-nom="code"],.nx-secu[data-vue="correctifs"] [data-nom="correctifs"]{display:block}
+.nx-haut{margin:0 0 4px;border-top:0;border-bottom:1px solid var(--n-line);padding:0 0 4px}
+.nx-ctl{border-left-width:3px}
+.nx-ctl[data-niv="ok"]{border-left-color:var(--n-ok)}.nx-ctl[data-niv="info"]{border-left-color:var(--n-cyan)}.nx-ctl[data-niv="alerte"]{border-left-color:var(--n-amber)}.nx-ctl[data-niv="critique"]{border-left-color:var(--n-red)}
+.nx-puce.info{color:var(--n-cyan);border-color:rgba(63,230,255,.4)}
+.nx-code{margin:6px 0;padding:8px;max-height:160px;overflow:auto;background:rgba(2,6,13,.7);border:1px solid var(--n-line);font:12px/1.5 var(--mono,"IBM Plex Mono",monospace);white-space:pre-wrap;overflow-wrap:anywhere}
+.nx-code.nx-long{max-height:300px}
+.nx-aide{margin:8px 0;padding:6px 10px;border:1px dashed var(--n-line);font-size:13px}.nx-aide summary{cursor:pointer;color:var(--n-cyan)}
+.nx-analyse{margin-top:6px}

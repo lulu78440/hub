@@ -37,6 +37,7 @@ function defaults(W, H) {
   L.notes = { x: W + 50, y: T, w: Rw, h: 300 };
   L.mails = { x: W + 50, y: T + 320, w: Rw, h: 280 };
   L.noyau = { x: W + 50, y: T + 1080, w: Math.max(Rw, 440), h: 560 };
+  L.securite = { x: W + 50, y: T + 1660, w: Math.max(Rw, 440), h: 600 };
   L.radar = { x: W + 50, y: T + 620, w: Rw, h: 440 };
   const sw = Math.min(600, mw), sy = B - 96;     // la recherche descend à la place libérée par la Progression ; l'orbe prend le reste
   return { L, search: { x: x0 + (mw - sw) / 2, y: sy, w: sw }, anchor: { left: x0, top: T, width: mw, height: Math.max(sy - T - 6, 140) } };

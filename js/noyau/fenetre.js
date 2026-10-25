@@ -252,6 +252,8 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       bascule("Accueil du jour", "accueil", true, "Une phrase par jour, composée sans requête."),
       bascule("Remarques opportunes", "remarques", true, "Au plus une toutes les 2 heures, jamais en Focus ni la nuit."),
       bascule("Sommeil", "sommeil", true, "Consolide la mémoire une fois par jour (1 requête)."),
+      bascule("Recommandation système toutes les 30 min", "recos", true, "Locale, sans requête Gemini. Silencieuse en Focus, la nuit et écran verrouillé."),
+      h("div", { class: "nx-actions" }, h("button", { class: "nx-btn", type: "button", onclick: () => document.dispatchEvent(new CustomEvent("noyau:ouvrir-securite")) }, "Ouvrir la sécurité")),
       bascule("Curiosité (mode autonome)", "curiosite", false, "Hub ouvert seulement. 1 recherche par 30 min, sans requête Gemini."),
       bascule("Lire mes réponses à voix haute", "voix-auto", false),
       h("div", { class: "nx-actions" },
@@ -330,7 +332,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     } else if (m.type === "erreur") { /* le texte de la réponse en mode réduit explique déjà */ }
     else if (m.type === "initiative") {
       fil.querySelector(".nx-vide")?.remove();
-      fil.append(h("article", { class: "nx-m nx-noyau nx-init", "data-ton": "curieux" }, h("p", { texte: m.texte }), h("div", { class: "nx-meta" }, h("span", { class: "nx-etiq", texte: m.raison === "accueil" ? "accueil" : "remarque" }), h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Ignorer"))));
+      fil.append(h("article", { class: "nx-m nx-noyau nx-init", "data-ton": m.niveau === "critique" ? "preoccupe" : m.niveau === "alerte" ? "vigilant" : "curieux" }, h("p", { texte: m.texte }), h("div", { class: "nx-meta" }, h("span", { class: "nx-etiq" + (m.niveau === "critique" ? " bad" : m.niveau === "alerte" ? " warn" : ""), texte: m.raison === "accueil" ? "accueil" : m.raison === "systeme" ? "recommandation système" : "remarque" }), m.raison === "systeme" && m.niveau !== "ok" ? h("button", { class: "nx-lien", type: "button", onclick: () => document.dispatchEvent(new CustomEvent("noyau:ouvrir-securite")) }, "Ouvrir la sécurité") : null, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Ignorer"))));
       fil.scrollTop = fil.scrollHeight;
     } else if (m.type === "a_valider") majNav();
   });
