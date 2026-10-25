@@ -13,7 +13,8 @@ import { toast } from "../ui/toast.js";
 import { extendMenu } from "../ui/menus.js";
 import { daysFrom, dayKey } from "./when.js";
 import { state, pulse } from "../state.js";
-import { flux } from "./flux.js";   // lecture seule : flux.json déjà gardé par la phase 3 (rien n'est modifié côté actualité)
+// Lecture seule : flux.json déjà gardé par la phase 3 (rien n'est modifié côté actualité)
+import { flux } from "./flux.js";
 
 const ON = (k) => prefs.on("surprise-" + k);
 const pad = (n) => String(n).padStart(2, "0");
@@ -116,29 +117,47 @@ export function initSurprises({ force, plans, wins }) {
     const ids = Object.keys(saved).sort((a, b) => saved[a].at - saved[b].at).slice(-150);
     saved = Object.fromEntries(ids.map((id) => [id, saved[id]]));
     prefs.set("constellation", JSON.stringify(saved));
-    stars = ids.map((id) => saved[id]);
+    stars = ids.map((id) => ({ ...saved[id], id }));
   }
   store.on("tasks", loadStars); loadStars();
+  // Ajustement validé par Lucien (25/10) : étoiles plus grandes et plus lumineuses, rangées dans un anneau autour de l'orbe
+  // (jamais sur les fenêtres : bornées par la zone de l'orbe), groupées par 5 en figures reliées par des traits.
+  // Place calculée depuis l'identifiant de la tâche : stable d'une ouverture à l'autre.
+  const hash = (str, k) => { let h = 2166136261 ^ k; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return ((h >>> 0) % 10000) / 10000; };
   let hoverStar = null, t0 = 0;
   force.addLayer((g, dt, F) => {
     t0 += dt;
     if (!ON("constellation") || !stars.length || plans.zoom < 0.8) return;
-    const c = core();
+    const c = core(), box = anchor.getBoundingClientRect();
+    const inner = c.R * 1.45, outerX = Math.max(inner + 20, Math.min(box.width / 2 - 14, c.R * 2.7)), outerY = Math.max(30, Math.min(box.height / 2 - 14, outerX * 0.55));
+    const spin = t0 * 0.02, pos = [];
+    stars.forEach((s, i) => {
+      const grp = Math.floor(i / 5), k = i % 5, id = s.id || String(s.at);
+      const base = hash("g" + grp, 7) * 6.283, a = base + (k - 2) * 0.16 + (hash(id, 1) - 0.5) * 0.12 + spin;
+      const f = 0.15 + hash(id, 2) * 0.85, rx = inner + (outerX - inner) * f, ry = inner * 0.55 + (outerY - inner * 0.55) * f;
+      pos.push({ x: c.x + Math.cos(a) * rx, y: c.y + Math.sin(a) * ry, grp });
+    });
+    // Figures : traits entre les étoiles d'un même groupe
+    g.lineWidth = 1.2;
+    for (let i = 1; i < pos.length; i++) if (pos[i].grp === pos[i - 1].grp) {
+      g.strokeStyle = "rgba(255,190,110,.32)"; g.beginPath(); g.moveTo(pos[i - 1].x, pos[i - 1].y); g.lineTo(pos[i].x, pos[i].y); g.stroke();
+    }
     hoverStar = null;
     stars.forEach((s, i) => {
-      const a = s.a + t0 * 0.03, x = c.x + Math.cos(a) * c.R * s.r * 1.9, y = c.y + s.y * c.R + Math.sin(a) * c.R * s.r * 0.55;
-      const fresh = Math.max(0, 1 - (Date.now() - s.born) / 4000), tw = 0.6 + 0.4 * Math.sin(t0 * 2 + i * 1.7);
-      const near = F.fin && Math.hypot(F.fmx - x, F.fmy - y) < 10; if (near) hoverStar = { s, x, y };
-      const rad = (near ? 3.6 : 1.8) + fresh * 6;
-      const gr = g.createRadialGradient(x, y, 0, x, y, rad * 3); gr.addColorStop(0, `rgba(255,236,190,${(0.9 * tw).toFixed(2)})`); gr.addColorStop(1, "rgba(255,179,71,0)");
-      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad * 3, 0, 6.283); g.fill();
-      if (i > 0 && i % 3 !== 0) { const p = stars[i - 1], pa = p.a + t0 * 0.03, px = c.x + Math.cos(pa) * c.R * p.r * 1.9, py = c.y + p.y * c.R + Math.sin(pa) * c.R * p.r * 0.55; g.strokeStyle = "rgba(255,179,71,.12)"; g.lineWidth = 1; g.beginPath(); g.moveTo(px, py); g.lineTo(x, y); g.stroke(); }
+      const { x, y } = pos[i];
+      const fresh = Math.max(0, 1 - (Date.now() - (s.born || 0)) / 4000), tw = 0.75 + 0.25 * Math.sin(t0 * 2 + i * 1.7);
+      const near = F.fin && Math.hypot(F.fmx - x, F.fmy - y) < 14; if (near) hoverStar = { s, x, y };
+      const rad = (near ? 5 : 3) + fresh * 8;
+      const gr = g.createRadialGradient(x, y, 0, x, y, rad * 3.4);
+      gr.addColorStop(0, `rgba(255,248,225,${tw.toFixed(2)})`); gr.addColorStop(0.3, `rgba(255,200,120,${(0.55 * tw).toFixed(2)})`); gr.addColorStop(1, "rgba(255,179,71,0)");
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad * 3.4, 0, 6.283); g.fill();
+      g.fillStyle = "#fff8e6"; g.beginPath(); g.arc(x, y, rad * 0.45, 0, 6.283); g.fill();
     });
     if (hoverStar) {
       const d = new Date(hoverStar.s.at), txt = "★ " + hoverStar.s.n + " · " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1);
       g.font = "500 12px 'IBM Plex Mono', monospace"; const w = g.measureText(txt).width + 14;
-      g.fillStyle = "rgba(3,13,24,.92)"; g.fillRect(hoverStar.x + 10, hoverStar.y - 22, w, 20);
-      g.fillStyle = "#ffd9a8"; g.fillText(txt, hoverStar.x + 17, hoverStar.y - 8);
+      g.fillStyle = "rgba(3,13,24,.92)"; g.fillRect(hoverStar.x + 12, hoverStar.y - 24, w, 20);
+      g.fillStyle = "#ffd9a8"; g.fillText(txt, hoverStar.x + 19, hoverStar.y - 10);
     }
   });
 
@@ -156,14 +175,34 @@ export function initSurprises({ force, plans, wins }) {
     focus = null;
     if (done) { sound.play("rappel"); toast("Focus terminé : bravo, fais une pause", { ms: 6000 }); if (document.hidden) notify.show("Hub · Focus terminé", "Bravo : fais une pause", "hub-focus"); pulse(1.5); }
   }
+  // Ajustement validé par Lucien (25/10) : anneau plus épais et lumineux, compte à rebours qui tourne autour de l'orbe
+  // (écrit le long du cercle, il suit la tête de l'anneau), voile sombre uniforme au lieu du flou.
   force.addLayer((g) => {
     if (!focus) return;
     const left = focus.end - Date.now(); if (left <= 0) { stopFocus(true); return; }
-    const c = core(), p = 1 - left / focus.total, R = c.R * 1.25;
-    g.lineWidth = 4; g.strokeStyle = "rgba(255,179,71,.18)"; g.beginPath(); g.arc(c.x, c.y, R, 0, 6.283); g.stroke();
-    g.strokeStyle = "rgba(255,200,120,.95)"; g.beginPath(); g.arc(c.x, c.y, R, -Math.PI / 2, -Math.PI / 2 + p * 6.283); g.stroke();
-    const mm = Math.floor(left / 60e3), ss = Math.floor(left / 1e3) % 60;
-    g.font = "700 22px Orbitron, sans-serif"; g.textAlign = "center"; g.fillStyle = "rgba(255,230,190,.95)"; g.fillText(pad(mm) + ":" + pad(ss), c.x, c.y + R + 34); g.textAlign = "start";
+    const c = core(), p = 1 - left / focus.total, R = c.R * 1.25, a0 = -Math.PI / 2, head = a0 + p * 6.283;
+    g.save(); g.lineCap = "round";
+    g.lineWidth = 9; g.strokeStyle = "rgba(255,179,71,.14)"; g.beginPath(); g.arc(c.x, c.y, R, 0, 6.283); g.stroke();
+    if (p > 0.001) {
+      g.lineWidth = 14; g.strokeStyle = "rgba(255,179,71,.18)"; g.beginPath(); g.arc(c.x, c.y, R, a0, head); g.stroke();   // lueur
+      g.lineWidth = 6; g.strokeStyle = "rgba(255,206,130,.98)"; g.beginPath(); g.arc(c.x, c.y, R, a0, head); g.stroke();
+    }
+    const hx = c.x + Math.cos(head) * R, hy = c.y + Math.sin(head) * R;
+    const hg = g.createRadialGradient(hx, hy, 0, hx, hy, 18); hg.addColorStop(0, "rgba(255,248,225,1)"); hg.addColorStop(1, "rgba(255,179,71,0)");
+    g.fillStyle = hg; g.beginPath(); g.arc(hx, hy, 18, 0, 6.283); g.fill();
+    // Compte à rebours écrit le long du cercle, centré sur la tête de l'anneau, à l'extérieur
+    const mm = Math.floor(left / 60e3), ss = Math.floor(left / 1e3) % 60, txt = pad(mm) + ":" + pad(ss);
+    g.font = "700 24px Orbitron, sans-serif"; g.fillStyle = "rgba(255,232,195,.98)"; g.textAlign = "center"; g.textBaseline = "middle";
+    const Rt = R + 30, widths = [...txt].map((ch) => g.measureText(ch).width + 2), total = widths.reduce((x, y) => x + y, 0);
+    // Moitié haute : lettres dans le sens des aiguilles ; moitié basse : sens inverse, pour rester lisible (jamais à l'envers)
+    const low = Math.sin(head) > 0, dir = low ? -1 : 1, Rl = low ? Rt + 8 : Rt;
+    let ang = head - dir * total / 2 / Rl;
+    [...txt].forEach((ch, i) => {
+      const m = ang + dir * widths[i] / 2 / Rl;
+      g.save(); g.translate(c.x + Math.cos(m) * Rl, c.y + Math.sin(m) * Rl); g.rotate(m + (low ? -Math.PI / 2 : Math.PI / 2)); g.fillText(ch, 0, 0); g.restore();
+      ang += dir * widths[i] / Rl;
+    });
+    g.restore();
   });
   setInterval(() => { if (focus && focus.end <= Date.now()) stopFocus(true); }, 1000);   // aussi quand le dessin est coupé (onglet caché)
 
@@ -210,6 +249,8 @@ export function initSurprises({ force, plans, wins }) {
 body.hypertr .win .panel, body.hypertr header.top, body.hypertr .agband, body.hypertr .search, body.hypertr .ticker, body.hypertr .labels, body.hypertr .mthumbs { transition: filter .35s ease, opacity .35s ease; }
 .brief a.blink { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(63,230,255,.55); }
 .brief a.blink:hover { color: #bff8ff; border-bottom-style: solid; }
+body.focus:not(.lite) .win:not(.focused) .panel { filter: brightness(.38) saturate(.6) !important; opacity: .7 !important; }
+body.focus:not(.lite) .win:not(.focused):hover .panel { filter: none !important; opacity: 1 !important; }
 body.hyperon .win .panel, body.hyperon header.top, body.hyperon .agband, body.hyperon .search, body.hyperon .ticker, body.hyperon .labels { filter: blur(5px) brightness(1.25) saturate(1.3); opacity: .7; }`;
   document.head.append(css);
   const streaks = Array.from({ length: 160 }, () => ({ a: Math.random() * 6.283, d: Math.random(), s: 0.4 + Math.random() }));
