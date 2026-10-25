@@ -146,8 +146,8 @@
     "ergo-outils"
   ],
   "prochaine": {
-    "id": "ergo-mobile",
-    "texte": "Adaptation mobile"
+    "id": "ergo-recette",
+    "texte": "Recette de la refonte (Banc de test)"
   },
   "built": [
     "ns-int",
@@ -172,9 +172,10 @@
     "ergo-plan",
     "ergo-visuel",
     "ergo-fusion",
-    "ergo-outils"
+    "ergo-outils",
+    "ergo-mobile"
   ],
-  "maj": "2026-10-25T17:46:00+01:00",
+  "maj": "2026-10-25T17:58:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",

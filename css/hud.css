@@ -1036,7 +1036,6 @@ body.lite .lvl-gauge { display: none; }
 
 /* ---------- Refonte · ergo-outils : fenêtre Outils (PC) ---------- */
 body:not(.lite) #fs, body:not(.lite) #b-diag { display: none !important; }
-body.lite #b-outils { display: none !important; }
 .outils { position: fixed; z-index: 12; top: 78px; right: 12px; bottom: 56px; width: 360px; overflow: auto; padding: 12px 14px 16px; background: rgba(3, 13, 24, .97); border: 1px solid var(--cyan); clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 30px rgba(63, 230, 255, .15); font-family: var(--ui); color: var(--ink); display: grid; align-content: start; gap: 14px; }
 .outils[hidden] { display: none; }
 .o-head { display: flex; justify-content: space-between; align-items: center; }
@@ -1072,3 +1071,16 @@ body:not(.lite) .ticker .it { font-size: clamp(12px, calc(var(--ui-bandeau-texte
 body:not(.lite) .ticker .run { animation-duration: clamp(30s, calc(var(--ui-bandeau-vitesse) * 1s), 300s); }
 /* Orbe : le noyau suit le cadre invisible #anchor, on le décale et on l'agrandit sans toucher à ses visuels. */
 body:not(.lite) .anchor { translate: clamp(-300px, calc(var(--ui-orbe-dx) * 1px), 300px) clamp(-200px, calc(var(--ui-orbe-dy) * 1px), 200px); scale: clamp(.6, var(--ui-orbe-echelle), 1.4); }
+
+/* ---------- Refonte · ergo-mobile ---------- */
+body.lite .win.mred .in > :not(.ph) { display: none; }
+body.lite .win.mred .ph { opacity: .85; }
+body.lite .win.mred .ph::after { content: "＋"; align-self: center; margin: 0 12px 0 4px; color: var(--a, var(--cyan)); font-size: 18px; }
+body.lite .ph { cursor: pointer; }
+body.lite .outils { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 82vh; padding: 12px 14px calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 60; clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%, 0 14px); box-shadow: 0 -10px 40px rgba(0, 0, 0, .65); overscroll-behavior: contain; }
+body.lite .o-tile { min-height: 52px; }
+body.lite .o-x { width: 44px; height: 44px; }
+body.lite .outils section { margin-top: 12px; }
+body.lite .top > .actions { flex-wrap: wrap; max-width: 100%; row-gap: 8px; order: 1; }
+body.lite .top > .actions .btn { padding: 10px 12px; }
+body.lite .bar-in { min-width: 0; padding-inline: 14px; } body.lite .bar input { width: 100%; }

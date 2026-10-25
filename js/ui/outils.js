@@ -1,7 +1,8 @@
 // Fenêtre « Outils » (refonte, 25/10) : les fonctions rares, rangées en groupes de tuiles dans un panneau à droite (PC).
 // Bouton Outils de la barre du haut, touche O, ligne « Outils… » du menu du fond. Les tuiles reprennent les lignes de menu des widgets
 // (Focus, briefing, image, crépuscule…) au lieu de les réécrire, donc rien ne se perd : ce qu'aucune tuile ne reprend va dans « Autres actions ».
-// Réglages et diagnostic (l'ancien Diag) reste à une tuile ; la touche D l'ouvre toujours directement. Mobile : rien pour l'instant (ergo-mobile).
+// Réglages et diagnostic (l'ancien Diag) reste à une tuile ; la touche D l'ouvre toujours directement.
+// Mobile (ergo-mobile) : même panneau, en feuille collée en bas de l'écran ; les fenêtres rares se masquent avec le réglage mobile existant.
 import { state } from "../state.js";
 import { prefs } from "../store/prefs.js";
 import { sound } from "../device/sound.js";
@@ -11,7 +12,8 @@ import { PAR_DEFAUT } from "./reserve.js";
 const $ = (id) => document.getElementById(id);
 
 export function initOutils({ wins, entity, cursor, resetLayout, data, menus, test }) {
-  if (state.lite) return { open() {}, close() {} };
+  const lite = state.lite, mob = menus && menus.mob;
+  if (lite && !mob) return { open() {}, close() {} };
   const btn = $("b-outils");
   const box = document.createElement("aside"); box.className = "outils"; box.id = "outils"; box.hidden = true; box.setAttribute("aria-label", "Outils");
   document.body.append(box);
@@ -27,8 +29,42 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, tes
   /** Une tuile : { t: titre, s: état en petit, fn, keep: ne pas fermer après, off }. Les lignes de menu reprises sont marquées « utilisées ». */
   const fromLine = (re, label, st) => { const l = find(re); if (!l) return null; used.add(l); return { t: label || l.t, s: st ? st() : "", fn: l.fn }; };
 
+  function groupsMobile() {
+    const L = mob.list(), by = (id) => L.find((w) => w.id === id), nHid = L.filter((w) => w.hid).length, nRed = L.filter((w) => w.red).length;
+    const G = [];
+    G.push({ h: "Gestes", tiles: [
+      fromLine(/^Focus 25|^Arrêter le Focus/), fromLine(/^Focus 50/), fromLine(/^Revoir le briefing/, "Revoir le briefing"),
+      fromLine(/^Capture rapide/), fromLine(/image ici/i, "Ajouter une image"),
+      { t: "Plein écran", s: "", fn: () => $("fs").click() },
+      fromLine(/^Verrouiller maintenant/, "Verrouiller", () => "actif") ] });
+    G.push({ h: "Fenêtres rangées", tiles: [
+      { t: "Tout réduire", s: "à leur nom", keep: true, off: nRed >= L.length - nHid, fn: () => mob.setAllRed(true) },
+      { t: "Tout rouvrir", s: nRed ? nRed + " réduite(s)" : "aucune réduite", keep: true, off: !nRed, fn: () => mob.setAllRed(false) },
+      { t: "Fenêtres masquées", s: nHid ? nHid + " masquée(s)" : "aucune", keep: true, off: !nHid, fn: () => { showHidden = !showHidden; render(); } },
+      { t: "Ordre d'origine", s: "remet tout", fn: () => $("mlayout-reset").click() } ] });
+    G.push({ h: "Fonctions rarement utilisées", note: "Masque ou remet la fenêtre dans la page. Ton choix est gardé.", tiles: PAR_DEFAUT.map((id) => {
+      const w = by(id); if (!w) return null;
+      return { t: w.title, s: w.hid ? "masquée" : "dans la page", keep: true, on: !w.hid, fn: () => mob.setHidden(id, !w.hid) };
+    }) });
+    G.push({ h: "Ambiance", tiles: [
+      fromLine(/crépuscule/i, "Crépuscule", () => (document.body.classList.contains("dusk-on") ? "actif" : "auto")),
+      entity && typeof entity.setOn === "function" ? { t: "Entité", s: entity.on ? "visible" : "masquée", keep: true, fn: () => entity.setOn(!entity.on) } : null,
+      { t: "Son des rappels", s: sound.on ? "actif" : "coupé", keep: true, fn: () => sound.set(!sound.on) },
+      { t: "Tester un rappel", s: "", fn: test } ] });
+    G.push({ h: "Données", tiles: [
+      { t: "Exporter", s: ago(prefs.get("dernier-export", "")), fn: data.exportFile },
+      { t: "Importer un export", s: "", fn: data.importFile },
+      { t: "Coffre du Hub", s: "ajoute sans effacer", fn: data.importCoffre },
+      { t: "Synchro PC / téléphone", s: "réglages", fn: () => $("b-diag").click() } ] });
+    G.push({ h: "Réglages et diagnostic", tiles: [{ t: "Réglages et diagnostic…", s: "", fn: () => $("b-diag").click() }] });
+    const rest = cache.filter((l) => !used.has(l));
+    if (rest.length) G.push({ h: "Autres actions", list: true, tiles: rest.map((l) => ({ t: l.t, s: l.k || "", fn: l.fn })) });
+    return G;
+  }
+
   function groups() {
     used.clear(); cache = lines();
+    if (lite) return groupsMobile();
     const hidden = wins.hiddenEls(), prog = wins.elById("progress"), mails = wins.elById("mails");
     const G = [];
     G.push({ h: "Gestes", tiles: [
@@ -86,7 +122,8 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, tes
       sec.append(grid);
       if (g.h === "Fenêtres rangées" && showHidden) {
         const list = document.createElement("div"); list.className = "o-grid list";
-        wins.hiddenEls().forEach((el) => { const b = document.createElement("button"); b.type = "button"; b.className = "o-tile"; b.textContent = "Afficher « " + wins.title(el) + " »"; b.addEventListener("click", () => { wins.setHidden(el, false); render(); }); list.append(b); });
+        const hl = lite ? mob.list().filter((w) => w.hid).map((w) => ({ title: w.title, show: () => mob.setHidden(w.id, false) })) : wins.hiddenEls().map((el) => ({ title: wins.title(el), show: () => wins.setHidden(el, false) }));
+        hl.forEach((h) => { const b = document.createElement("button"); b.type = "button"; b.className = "o-tile"; b.textContent = "Afficher « " + h.title + " »"; b.addEventListener("click", () => { h.show(); render(); }); list.append(b); });
         sec.append(list);
       }
       box.append(sec);

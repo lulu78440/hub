@@ -82,23 +82,25 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
   // ---------- Mobile ----------
   const fondLines = () => lines(hooks.fond ? hooks.fond(document.body, innerWidth / 2, innerHeight / 2) : []);   // pour la fenêtre Outils
   if (!state.lite) return { menu, fondLines };
+  // ---------- Mobile (ergo-mobile) : toucher le titre réduit la fenêtre à son nom ; appui long = menu ; Outils en feuille (ui/outils.js) ----------
   const mwins = [...document.querySelectorAll("#world .win:not(.pc-only)")];
   const byId = (id) => mwins.find((w) => w.dataset.id === id);
   const original = mwins.map((w) => w.dataset.id).sort((a, b) => (+getComputedStyle(byId(a)).order || 0) - (+getComputedStyle(byId(b)).order || 0));
-  let order = original.slice(), hid = [];
+  let order = original.slice(), hid = [], red = [];
   try {
     const d = JSON.parse(prefs.get(MOB_STORE, "null"));
     if (d && Array.isArray(d.order)) {
       order = d.order.filter((id) => byId(id));
       original.forEach((id) => { if (!order.includes(id)) order.push(id); });   // fenêtre ajoutée par une nouvelle version
       hid = (Array.isArray(d.hid) ? d.hid : []).filter((id) => byId(id));
+      red = (Array.isArray(d.red) ? d.red : []).filter((id) => byId(id));
     }
   } catch (e) { /* disposition illisible : ordre d'origine */ }
 
   const bar = $("mlayout"), chips = $("mlayout-hidden");
   const titleOf = (id) => byId(id).querySelector("h2").textContent;
   function apply() {
-    order.forEach((id, i) => { const w = byId(id); w.style.order = String(3 + i); w.classList.toggle("mhid", hid.includes(id)); });
+    order.forEach((id, i) => { const w = byId(id); w.style.order = String(3 + i); w.classList.toggle("mhid", hid.includes(id)); w.classList.toggle("mred", red.includes(id)); });
     chips.innerHTML = "";
     hid.forEach((id) => {
       const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.textContent = "+ " + titleOf(id);
@@ -107,8 +109,9 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     });
     bar.classList.toggle("has-hidden", hid.length > 0);
   }
-  function save() { prefs.set(MOB_STORE, JSON.stringify({ order, hid })); apply(); }
+  function save() { prefs.set(MOB_STORE, JSON.stringify({ order, hid, red })); apply(); }
   function moveTo(id, to) { const from = order.indexOf(id); order.splice(from, 1); order.splice(Math.max(0, Math.min(to, order.length)), 0, id); save(); }
+  function setRed(id, on) { const i = red.indexOf(id); if (on && i < 0) red.push(id); else if (!on && i >= 0) red.splice(i, 1); else return; save(); }
   function visibleIndex(id) { return order.filter((x) => !hid.includes(x)).indexOf(id); }
   function stepTo(id, dir) {       // monter / descendre d'une fenêtre visible, en sautant les masquées
     const vis = order.filter((x) => !hid.includes(x)), i = vis.indexOf(id), j = i + dir;
@@ -135,13 +138,14 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     const vis = order.filter((x) => !hid.includes(x)).length, i = visibleIndex(id);
     return [{ h: "Fenêtre · " + titleOf(id) },
       { t: "Ramener vers moi", fn: () => mFocus(id) },
+      { t: red.includes(id) ? "Rouvrir" : "Réduire à son nom", fn: () => setRed(id, !red.includes(id)) },
       { t: "Monter", fn: () => stepTo(id, -1), off: i <= 0 },
       { t: "Descendre", fn: () => stepTo(id, 1), off: i >= vis - 1 },
       { t: "Tout en haut", fn: () => { moveTo(id, 0); byId(id).scrollIntoView({ block: "center" }); }, off: i <= 0 },
       { t: "Masquer la fenêtre", fn: () => { hid.push(id); save(); toast("« " + titleOf(id) + " » masquée · réaffiche-la en bas de la page"); } },
       "-", { t: "Fermer", fn: () => {} }];
   }
-  $("mlayout-reset").addEventListener("click", () => { order = original.slice(); hid = []; save(); toast("Ordre d'origine restauré"); });
+  $("mlayout-reset").addEventListener("click", () => { order = original.slice(); hid = []; red = []; save(); toast("Ordre d'origine restauré"); });
 
   // Appui long sur la barre de titre
   let timer = 0, start = null;
@@ -156,9 +160,17 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     });
     const stop = () => { ph.classList.remove("pressing"); cancel(); };
     ph.addEventListener("pointermove", (e) => { if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) stop(); });
-    ph.addEventListener("pointerup", stop); ph.addEventListener("pointercancel", stop); ph.addEventListener("pointerleave", stop);
+    ph.addEventListener("pointerup", (e) => {
+      const tap = timer && start && !e.target.closest("button, a, input, select, textarea") && Math.hypot(e.clientX - start.x, e.clientY - start.y) <= 10;
+      stop(); if (tap) setRed(w.dataset.id, !red.includes(w.dataset.id));
+    }); ph.addEventListener("pointercancel", stop); ph.addEventListener("pointerleave", stop);
   });
   addEventListener("scroll", () => menu.close(), { passive: true });
   apply();
-  return { menu };
+  const mob = {
+    list: () => order.map((id) => ({ id, title: titleOf(id), hid: hid.includes(id), red: red.includes(id) })),
+    setHidden: (id, on) => { const i = hid.indexOf(id); if (on && i < 0) hid.push(id); else if (!on && i >= 0) hid.splice(i, 1); else return; save(); },
+    setRed, setAllRed: (on) => { red = on ? order.filter((id) => !hid.includes(id)) : []; save(); },
+  };
+  return { menu, fondLines, mob };
 }
