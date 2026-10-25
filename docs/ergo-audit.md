@@ -139,6 +139,17 @@ Mesure chez Lucien à refaire après allègement ; dans le navigateur de test (r
 - Mobile : Noyau, Sécurité et Savoir n'ont pas de rang défini, ils passent donc en tête de page, avant Vidéo et Tâches.
 - PC : Sécurité et Savoir restent hors de l'écran même au plan 2.
 
-## 11. Questions à Lucien
+## 11. Réponses de Lucien (25/10)
 
-Posées dans la discussion ; réponses notées ici avant ergo-plan.
+| Question | Réponse |
+| --- | --- |
+| Utilisé au moins chaque semaine | Agenda (bande + calendrier), Favoris, Notes ; Vidéo, Musique, Page en direct, bandeau d'actualité ; Mon PC + plan 3 ; Chat IA (clic sur l'orbe), fenêtre Noyau (appui long), vue vocale (🎙 Parler) |
+| Non utilisé | Tâches, Veille, Radar des dates, Rituels, Sécurité, Savoir |
+| Que faire des non-utilisés | **Les retirer de l'appli, mais garder leur code** pour un ajout futur (rien n'est effacé, ni le code ni les données) |
+| Barre du haut, à garder en vue | mini barre de progression, vignettes des mods, bouton Labo (le compteur img/s peut sortir de la vue) |
+| Surprises gardées actives | toutes : briefing du matin, Focus, Hyperespace, constellation + pleine lune |
+| Effets visuels | **ne pas toucher au fond ni à l'orbe** : la refonte porte sur les fenêtres, les applications internes et les menus |
+
+Conséquences à trancher dans ergo-plan :
+- Sans fenêtre Tâches, la constellation des tâches accomplies (gardée) n'a plus de source ; les échéances et rappels de tâches disparaissent aussi de l'agenda, du briefing et de la légende.
+- Sécurité et Savoir sont des fenêtres du Noyau (poste Labo) : la Refonte peut les retirer de la mise en page du hub ; elles resteraient accessibles depuis le Labo.

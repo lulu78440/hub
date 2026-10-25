@@ -91,6 +91,18 @@
     "p6-ent-ia",
     "p6-ent-pc"
    ]
+  },
+  {
+   "cle": "R",
+   "nom": "Refonte · ergonomie",
+   "etapes": [
+    "ergo-audit",
+    "ergo-plan",
+    "ergo-visuel",
+    "ergo-fusion",
+    "ergo-outils",
+    "ergo-mobile"
+   ]
   }
  ],
  "faites": [
@@ -150,9 +162,10 @@
   "p2-coffre",
   "p2-geo",
   "p2-focus",
-  "p2-plan2"
+  "p2-plan2",
+  "ergo-audit"
  ],
- "maj": "2026-10-25T14:27:00+01:00",
+ "maj": "2026-10-25T15:50:00+01:00",
  "par": "Claude",
  "titres": {
   "p2-focus": "Ramener vers moi",
@@ -168,6 +181,7 @@
   "p6-ent-ia": "Entité : intelligence",
   "p7-1": "Rituels",
   "p7-2": "Radar des dates",
-  "p7-voix": "Recherche vocale"
+  "p7-voix": "Recherche vocale",
+  "ergo-audit": "Audit de l'interface"
  }
 }

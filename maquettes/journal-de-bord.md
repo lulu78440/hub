@@ -221,6 +221,14 @@ Décisions (24/10) :
 - **Budget (24/10)** : Flash-Lite par défaut, 40 requêtes par jour (réglable), pas de bascule silencieuse de modèle. Mode autonome : 1 recherche / 30 min, 20 / jour, sans Gemini, fiches « À valider ».
 - **Cerveau humain (24/10, contrat v2)** : l'impression d'humanité vient de mécanismes réels (mémoire qui se souvient, se ravive et s'estompe ; sommeil qui consolide ; personnalité constante ; franchise ; initiative mesurée), jamais de scores. Le Noyau ne prétend pas être humain si on le lui demande. Rien n'est jamais effacé par le Noyau ; tout changement de mémoire passe par la boîte « À valider ». Actualité : titres du flux du hub dans la perception, réponses datées et sourcées. Mémoire fondatrice : à compléter par Lucien dans le cerveau privé.
 
+## Refonte · ergonomie (poste Refonte, 25/10)
+
+Charte des postes du 25/10 : ce poste est le seul à modifier l'interface (fichiers `css/`, `js/ui/`, mise en page d'`index.html`). Sauvegarde avant la refonte : branche **`version-7.14.0`** (pointe sur l'état de `main` du 25/10, code 7.15.0).
+
+| Date | Étape | Ce qui a été fait | Statut |
+| --- | --- | --- | --- |
+| 25/10 | ergo-audit | Inventaire complet dans `docs/ergo-audit.md` : 18 fenêtres, environ 150 entrées de menu, Diag (14 lignes, 14 boutons, 9 réglages), une vingtaine d'effets, doublons (Progression ×3, Météo ×3, Mon PC / plan 3, trois entrées vers le Noyau, 7 réglages en double Diag / clic droit), textes périmés. Bugs relevés : « Verrouiller maintenant » absent du clic droit (`widgets/images.js:124`, à corriger en ergo-fusion) ; rapport de veille du Noyau (`noyau/noyau.js:217`, poste Labo, signalé). Réponses de Lucien : retirer de l'appli Tâches, Veille, Radar, Rituels, Sécurité, Savoir en gardant leur code ; garder progression, mods et Labo dans la barre du haut ; garder toutes les surprises ; **ne pas toucher au fond ni à l'orbe**. Aucun code du hub modifié. | Livrée, à valider |
+
 ## Décisions prises
 
 - **Coffre du Hub** (24/10, ajouté depuis la discussion de cadrage) : `js/ui/coffre.js`, version 7.1.1. Bouton Diag « Importer le Coffre du Hub » et ligne du menu « Mes données » : lit `coffre-hub.json` (artifact Coffre du Hub) et ajoute sans effacer (sites → Favoris, radios → Musique, vidéos YouTube → À suivre, autres vidéos et playlists → Favoris, musique / autres / sources de veille → notes). Le lecteur vidéo « à part entière » reste à concevoir avec Lucien.
