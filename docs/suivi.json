@@ -1,6 +1,6 @@
 {
   "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
-  "releve": "2026-10-25T22:40:00+01:00",
+  "releve": "2026-10-26T00:20:00+01:00",
   "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
   "phases": [
     {
@@ -139,7 +139,9 @@
         "lab-modeles",
         "lab-badge",
         "lab-verrou",
-        "lab-voix"
+        "lab-voix",
+        "lab-secours",
+        "lab-csp"
       ]
     }
   ],
@@ -223,10 +225,12 @@
     "ergo-points",
     "ergo-visuel",
     "lab-contradictions",
+    "lab-csp",
     "lab-decisions",
     "lab-manuel",
     "lab-n8n-routines",
     "lab-offline",
+    "lab-secours",
     "ns-branch",
     "ns-int",
     "ns-perm",
@@ -255,7 +259,7 @@
     "test-statuts",
     "test-suite"
   ],
-  "maj": "2026-10-25T22:40:00+01:00",
+  "maj": "2026-10-26T00:20:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",
@@ -303,6 +307,8 @@
     "lab-modeles": "Gérer les modèles",
     "lab-badge": "Badge honnête",
     "lab-verrou": "IA et verrouillage",
-    "lab-voix": "Voix locale"
+    "lab-voix": "Voix locale",
+    "lab-secours": "IA de secours en ligne : Groq, OpenRouter, Mistral (7.35.0)",
+    "lab-csp": "Politique de sécurité CSP + referrer (B15, 7.34.0)"
   }
 }
