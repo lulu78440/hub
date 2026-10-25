@@ -94,7 +94,7 @@ async function start() {
   initAlertsUI(reminders);
   const weather = initWeather();
   initFavs();
-  if (!state.lite) initMyPC({ plans, wins });
+  const pc = state.lite ? null : initMyPC({ plans, wins });
   const images = initImages({ world: $("world"), plans, force, wins });
   initProgress();
   document.addEventListener("hub:focus-win", (e) => { const w = wins.elById(e.detail); if (w && !state.lite) wins.focus(w); });
@@ -151,7 +151,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, quality, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
+  window.__hub = { state, quality, pc, commandes: pc && pc.commandes, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;

@@ -250,5 +250,5 @@ export function initBureau({ desk, plans, apps, quick, ico, openWindows, hubApps
   extendMenu("desk", () => ["-", ...lignes()]);           // clic droit sur un panneau du bureau
 
   render();
-  return { add, remove, list: () => icons.map((i) => ({ id: i.id, ...info(i) })), open: (id) => { const i = byId(id); if (i) run(i); }, picker, arrange, reset };
+  return { add, remove, catalogue: () => cat.map((c) => ({ k: c.k, name: c.name })), list: () => icons.map((i) => ({ id: i.id, k: i.k, ...info(i) })), open: (id) => { const i = byId(id); if (i) run(i); }, picker, arrange, reset };
 }

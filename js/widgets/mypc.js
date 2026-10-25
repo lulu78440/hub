@@ -9,6 +9,7 @@ import { pulse } from "../state.js";
 import { initBureau } from "../ui/bureau.js";
 import { initApps, HUB_APPS } from "../ui/bureau-apps.js";
 import { createDirect } from "../ui/direct.js";
+import { createCommandes } from "../ui/commandes.js";
 import { prefs } from "../store/prefs.js";
 
 const ICO = {
@@ -238,8 +239,9 @@ export function initMyPC({ plans, wins }) {
   desk.dataset.menu = "desk";
   const direct = createDirect();
   const appli = initApps({ desk, panels: P, wins, plans, direct });
-  initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows, hubApps: HUB_APPS, openApp: appli.open });   // icônes flottantes (remplacent l'ancienne barre d'applis)
+  const bureau = initBureau({ desk, plans, apps: APPS, quick: QUICK, ico: ICO, openWindows, hubApps: HUB_APPS, openApp: appli.open });   // icônes flottantes (remplacent l'ancienne barre d'applis)
 
   renderDirs(); renderRecent(); reload();
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshRecent(); });
+  return { direct, commandes: createCommandes({ appli, bureau, plans, direct }) };   // commandes pour l'orbe (ui/commandes.js, p3-ia)
 }

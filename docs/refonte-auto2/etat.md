@@ -22,3 +22,6 @@ Lasso + sélection multiple + menu de groupe (bureau.js). Testé PC : lasso, dé
 
 ## 26/10 00:50 · 7.32.0 · p3-direct (built)
 Écran en direct (direct.js). Testé PC avec faux écran : coupé par défaut, démarrage, vidéo reçue, pastille visible au plan 1, arrêt par la pastille, redémarrage, fermeture de la fenêtre coupe le partage, aucune erreur. Non testable ici : le vrai sélecteur d'écran de Brave (à essayer par Lucien).
+
+## 26/10 01:20 · 7.33.0 · p3-ia (built)
+Commandes pour l'orbe (commandes.js + docs/refonte-auto2/commandes-orbe.md). Testé : liste, commande ou paramètre inconnu refusés, libres exécutées, confirmation (refus, autorisation, Échap, demande simultanée), écran en direct via confirmation, événement `hub:commande`, journal, aucune erreur. À brancher par le Labo.

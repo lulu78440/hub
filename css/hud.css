@@ -1226,3 +1226,10 @@ body.room:not(.lite):not(.q-allege):not(.q-minimal) .world:has(.win.p2:hover) .w
 .dwin .dmsg { margin: 8px 12px 0; font-size: 12px; color: var(--dim); }
 .dwin .dbody .dnrow { margin: 8px 12px 12px; }
 @media (prefers-reduced-motion: reduce) { .live-stop .dot { animation: none; } }
+
+/* ---------- Plan 3 · demande de confirmation du Noyau (p3-ia) ---------- */
+.cmd-confirm { z-index: 70; width: min(440px, calc(100vw - 32px)); }
+.cmd-confirm .cc-t { margin: 12px 0 4px; font-size: 15px; color: var(--ink); }
+.cmd-confirm .cc-d { margin: 0 0 8px; font-size: 12px; color: var(--dim); }
+.cmd-confirm .bp-act { gap: 10px; }
+.cmd-confirm .cc-no:focus-visible, .cmd-confirm .cc-yes:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
