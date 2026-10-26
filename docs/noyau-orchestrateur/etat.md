@@ -8,7 +8,11 @@
 | 2 · Composants affichables | construit (déjà dans `main`) ; relecture visuelle par Lucien et test Android encore attendus |
 | **3 · Registre d'outils** | **construit sur `labo-orchestrateur3`, à relire par Lucien** (détail ci-dessous) |
 | **4 · Fiabilité et panneaux** | **construit sur `labo-orchestrateur4` (7.39.0), à relire par Lucien** (détail en bas) |
-| 5 et suivants | non commencés |
+| **4b · Annulation propre** | **construit sur `labo-orchestrateur5` (7.41.0)** : le signal passe de `boucle.js` à `executerPlan`, étapes annulées = « non exécutées » |
+| **5 · Modules dynamiques** | **construit sur `labo-orchestrateur5`** : spécification v1 (`modules/spec.js`), versions, modifier / différence en code (pas de bouton) |
+| **8 · Workflows** | **construit sur `labo-orchestrateur5`** : `workflows.js`, `plans-modeles.js` (5 modèles sans IA), lancement par geste de Lucien, confirmations étape par étape |
+| **9 · Persistance et sessions** | **construit sur `labo-orchestrateur5`** : un document par module (50, 10 versions), cache local des jeux, sessions (30), espaces (10), reprise après rechargement |
+| 6, 7 (suite), 10 | non commencés (7 : trois sources du lot 3 seulement) |
 
 ## Lot 3 · ce qui est construit (26/10)
 **Principe : le modèle passe des références aux données, jamais des chiffres.** Un outil de données range un jeu vérifié en mémoire de la page et ne rend au modèle qu'une référence `jeu:xxxxxxxx` avec un résumé calculé par le hub (unité, période, source, date, premier, dernier et extrêmes). Une référence inconnue ou mal écrite est refusée ; un nombre à la place d'une référence est refusé par le validateur.
@@ -78,3 +82,19 @@ Nouveaux : `essais-fiabilite.mjs` (50), `essais-plans-qualite.mjs` (32), `essais
 - Essai sur Brave PC et Android : voir les trois vues (`afficherSources()`, `afficherPanneaux(spec)` depuis la console ou le labo, graphe après un vrai plan), seuils de fraîcheur, attente de la file en vrai.
 - Aucune entrée de palette ni bouton « Sources » / « Annuler le plan » : à la Refonte (hors de mes fichiers).
 - Lots 5 à 9 : modules dynamiques, plus de sources, workflows, persistance.
+
+## Lots 4b, 5, 8 et 9 · ce qui est construit (26/10, branche `labo-orchestrateur5`, version 7.41.0, depuis `main` 7.40.1)
+Détail des choix, des écarts et des retours en arrière : `decisions.md` (section « Lots 5, 8 et 9 »). **Aucun outil nouveau, niveaux inchangés (45 outils)** ; `enregistrer_module` reste CONFIRMATION ; rien ne part vers l'extérieur ; tout marche sans IA et sans WebGL.
+- **Annulation** (`annulation.js`, `execution.js`, `boucle.js`) : signal ouvert par plan, passé à `executerPlan` ; bilan « non exécutées ». Le bouton de la Refonte 4 reste compatible (non modifié) ; chemin plus propre à la Refonte décrit dans `decisions.md`.
+- **Modules** (`modules/spec.js`, `modules/stockage.js`, `modules.js`) : `kv/noyau-module-<id>`, 50 modules, 10 versions, données gardées pour les 2 dernières ; ancien format lu sans être modifié.
+- **Gestes de Lucien** (`modules/gestes-lucien.js`, offerts par `hote.ui.orchestrateur.gestes()`) : restaurer une version, retirer avec sauvegarde, exporter / importer, actualiser, espaces, workflows. Aucun outil n'y mène.
+- **Persistance** (`cache-jeux.js`, `sessions.js`, `espaces.js`, `provenance.js`) : cache local IndexedDB non synchronisé, sessions en anneau de 30 sans la demande de Lucien, espaces de travail lus seulement par le Noyau, reprise par `lire_modules(session)` sans réseau.
+- **Workflows** (`workflows.js`, `plans-modeles.js`, offerts par `hote.ui.orchestrateur.workflows()`) : validation par Lucien, budget annoncé, confirmations étape par étape à chaque lancement.
+
+## Essais (lots 4b, 5, 8, 9)
+Nouveaux : `essais-annulation.mjs`, `essais-modules-dynamiques.mjs`, `essais-persistance.mjs`, `essais-workflows.mjs` (résultats exacts dans le compte rendu du poste). `essais-orchestrateur.mjs` mis à jour (nouveau format de module, 50 modules). Faux IndexedDB et hub simulé : aucun vrai service.
+
+## Reste à faire après la 7.41.0
+- **Refonte** : liste « Modules » (versions, restaurer, retirer, exporter, importer, actualiser), « Reprendre la dernière session », espaces, palette « Workflows » et « Modèles de plan », bouton « Annuler » branché sur `annulerPlan()`, formulaire « Modifier » (spécification + différence).
+- **Essai Brave PC et Android** : IndexedDB réel (cache, rechargement de la page puis `lire_modules` avec `session`), taille réelle des documents `kv/noyau-module-*` après synchronisation, un workflow avec une étape CONFIRMATION, annulation d'un workflow.
+- Lot 6 (finitions des graphiques), lot 7 (sources supplémentaires), lot 10 (contrôle automatique « jamais inventé » sur le texte), routine contenant un plan : non commencés.

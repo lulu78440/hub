@@ -31,7 +31,7 @@ export function resoudreRefs(params, indice, resultats, profondeur = 0) {
   return params;
 }
 
-const idPlan = () => "plan-" + (hote.pret && hote.nouvelId ? String(hote.nouvelId("")).replace(/[^a-z0-9]/gi, "").slice(-8) : Math.random().toString(36).slice(2, 10));
+export const idPlan = () => "plan-" + (hote.pret && hote.nouvelId ? String(hote.nouvelId("")).replace(/[^a-z0-9]/gi, "").slice(-8) : Math.random().toString(36).slice(2, 10));
 const SANS_REPRISE = new Set(["annule"]);
 
 /**
@@ -48,16 +48,18 @@ export async function executerPlan(appels, { barriere, origine = "modele", max =
     try { const o = barriere.outil ? barriere.outil(a.nom) : null; await journalActions.ecrire({ outil: a.nom || "(sans nom)", niveau: (o && o.niveau) || "—", params: texte.slice(0, 300), statut: "ERREUR", origine, erreur: texte.slice(0, 200), sortie: [], plan, ...extra }); } catch (e) { /* journal indisponible */ }
   };
   const nbMax = Math.min(appels.length, max);
+  let coupe = false;       // Lot 5 : une étape a rendu la cause « annule » (annulation venue d'un signal que ce plan ne voit pas : bouton de la Refonte) : le reste ne part pas non plus
   for (let i = 0; i < appels.length; i++) {
     const a = appels[i], n = i + 1, dep = dependances(a.params || {});
     if (i >= max) { lignes.push({ n, nom: a.nom, params: a.params, ok: false, saute: true, depend_de: dep, erreur: `Plan limité à ${max} étapes : étape ${n} ignorée.` }); continue; }
-    if (signal && signal.aborted) { const erreur = "Plan annulé : étape non exécutée."; lignes.push({ n, nom: a.nom, params: a.params, ok: false, annule: true, depend_de: dep, erreur }); await noter(a, `étape ${n} : ${erreur}`, { cause: "annule" }); continue; }
+    if ((signal && signal.aborted) || coupe) { const erreur = "Plan annulé : étape non exécutée."; lignes.push({ n, nom: a.nom, params: a.params, ok: false, annule: true, depend_de: dep, erreur, cause: "annule" }); await noter(a, `étape ${n} : ${erreur}`, { cause: "annule" }); continue; }
     let params;
     try { params = resoudreRefs(a.params || {}, n, lignes); }
     catch (e) { const erreur = "Référence refusée : " + e.message; lignes.push({ n, nom: a.nom, params: a.params, ok: false, depend_de: dep, erreur, cause: "dependance" }); await noter(a, `étape ${n} non exécutée : ${e.message}`, { cause: "dependance" }); continue; }
     let res = await barriere.executer({ outil: a.nom, params }, { origine, plan, signal });
     let l = { n, nom: a.nom, params, ok: !!res.ok, donnees: res.donnees, erreur: res.erreur || null, refus: res.refus ? res.refus.raison : null, depend_de: dep, essais: res.essais || 1, cause: res.cause || null };
-    if (!l.ok && !l.refus && a.secours && a.secours.nom && !SANS_REPRISE.has(l.cause) && !(signal && signal.aborted)) {
+    if (!l.ok && !l.refus && l.cause === "annule") { l.annule = true; coupe = true; }     // annulée en cours de route : « non exécutée », pas « en échec »
+    if (!l.ok && !l.refus && a.secours && a.secours.nom && !SANS_REPRISE.has(l.cause) && !l.annule && !(signal && signal.aborted)) {
       let ps; try { ps = resoudreRefs(a.secours.params || {}, n, lignes); } catch (e) { ps = null; }
       if (ps) {
         const r2 = await barriere.executer({ outil: a.secours.nom, params: ps }, { origine, plan, signal });
