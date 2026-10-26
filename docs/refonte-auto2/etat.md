@@ -25,3 +25,6 @@ Lasso + sélection multiple + menu de groupe (bureau.js). Testé PC : lasso, dé
 
 ## 26/10 01:20 · 7.33.0 · p3-ia (built)
 Commandes pour l'orbe (commandes.js + docs/refonte-auto2/commandes-orbe.md). Testé : liste, commande ou paramètre inconnu refusés, libres exécutées, confirmation (refus, autorisation, Échap, demande simultanée), écran en direct via confirmation, événement `hub:commande`, journal, aucune erreur. À brancher par le Labo.
+
+## 26/10 08:45 · 7.36.2 · recette A1 et A3
+Main (7.35.0) fusionné dans refonte-auto2. A1 (contraste du bouton Écran en direct) et A3 (menu d'appui long du téléphone : Personnaliser… ajouté, Fermer retiré, panneau Personnaliser limité à la taille du texte sur téléphone) corrigés. Étapes déjà faites sur cette branche et absentes de main : p3-lasso (7.31.0), p3-direct (7.32.0), p3-ia (7.33.0). Reste : p3-mobile (à préciser avec Lucien). Suite complète du Banc relancée avant livraison.

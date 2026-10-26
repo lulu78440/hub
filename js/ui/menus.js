@@ -139,11 +139,11 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
     return [{ h: "Fenêtre · " + titleOf(id) },
       { t: "Ramener vers moi", fn: () => mFocus(id) },
       { t: red.includes(id) ? "Rouvrir" : "Réduire à son nom", fn: () => setRed(id, !red.includes(id)) },
+      { t: "Personnaliser…", fn: () => wins.personnaliser(byId(id)) },
       { t: "Monter", fn: () => stepTo(id, -1), off: i <= 0 },
       { t: "Descendre", fn: () => stepTo(id, 1), off: i >= vis - 1 },
       { t: "Tout en haut", fn: () => { moveTo(id, 0); byId(id).scrollIntoView({ block: "center" }); }, off: i <= 0 },
-      { t: "Masquer la fenêtre", fn: () => { hid.push(id); save(); toast("« " + titleOf(id) + " » masquée · réaffiche-la en bas de la page"); } },
-      "-", { t: "Fermer", fn: () => {} }];
+      { t: "Masquer la fenêtre", fn: () => { hid.push(id); save(); toast("« " + titleOf(id) + " » masquée · réaffiche-la en bas de la page"); } }];
   }
   $("mlayout-reset").addEventListener("click", () => { order = original.slice(); hid = []; red = []; save(); toast("Ordre d'origine restauré"); });
 
