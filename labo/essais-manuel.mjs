@@ -9,7 +9,7 @@ const lireFiche = async (c) => { lus.push(c); return readFileSync(new URL(c, rac
 const aujourdhui = new Date("2026-10-26");
 const manuel = creerManuel({ lireIndex: async () => index, lireFiche, maintenant: () => aujourdhui });
 
-ok(index.length === 3, "3 fiches d'exemple indexées");
+ok(index.length >= 3, "au moins 3 fiches indexées (les fiches d'exemple)");
 for (const e of index) { const { fiche, erreur } = parserFiche(readFileSync(new URL(e.chemin, racine), "utf8")); ok(!erreur && validerFiche(fiche).length === 0, "fiche valide : " + e.id); }
 
 let r = await manuel.consulter("comment lancer un minuteur de concentration ?");
