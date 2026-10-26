@@ -34,6 +34,8 @@ import { initNoyau } from "./noyau/noyau.js";
 import { gate, initLockUI } from "./ui/lockui.js";
 import { initRituels } from "./widgets/rituels.js";
 import { initRadar } from "./widgets/radar.js";
+import { initBudget } from "./widgets/budget.js";
+import { initAchats } from "./widgets/achats.js";
 import { initDusk } from "./ui/dusk.js";
 import { updateLabels } from "./ui/labels.js";
 import { createForce } from "./fx/force.js";
@@ -125,6 +127,7 @@ async function start() {
   initNoyau().catch((e) => console.warn("Noyau :", e));
   const rituels = initRituels({ force, plans });
   const radar = initRadar({ force, plans });
+  const budget = initBudget(), achats = initAchats();   // Atelier : fenêtres Budget et Achats (widgets/budget.js, widgets/achats.js)
   initDusk();
   $("b-backup").addEventListener("click", () => backup.test());
 
@@ -167,7 +170,7 @@ async function start() {
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
   run();
   document.body.classList.add("ready");
-  window.__hub = { state, quality, pc, commandes: pc && pc.commandes, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar };   // pour les essais en console
+  window.__hub = { state, quality, pc, commandes: pc && pc.commandes, pulse, plans, force, wins, data, reminders, weather, surprises, ai, rituels, radar, budget, achats };   // pour les essais en console
 
   // 3) La 3D arrive ensuite ; si elle échoue, le hub reste utilisable.
   let THREE;

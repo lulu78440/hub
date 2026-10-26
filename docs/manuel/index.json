@@ -1,5 +1,38 @@
 [
  {
+  "id": "achats",
+  "nom": "Achats (garanties, retours, colis)",
+  "utilite": "Retenir la fin de garantie et le délai de retour de chaque achat, et reconnaître le transporteur d'un numéro de colis.",
+  "mots": [
+   "achat",
+   "garantie",
+   "retour",
+   "colis",
+   "suivi",
+   "facture",
+   "rétractation"
+  ],
+  "maj": "2026-10-26",
+  "chemin": "docs/manuel/fiches/achats.md"
+ },
+ {
+  "id": "budget",
+  "nom": "Budget (enveloppes et relevé bancaire)",
+  "utilite": "Importer le relevé CSV de ta banque, classer les dépenses et suivre des enveloppes mensuelles avec report du reste.",
+  "mots": [
+   "budget",
+   "enveloppes",
+   "relevé",
+   "banque",
+   "csv",
+   "dépenses",
+   "courses",
+   "épargne"
+  ],
+  "maj": "2026-10-26",
+  "chemin": "docs/manuel/fiches/budget.md"
+ },
+ {
   "id": "focus",
   "nom": "Mode Focus",
   "utilite": "Se concentrer 25 ou 50 minutes ; le reste du hub s'estompe.",
