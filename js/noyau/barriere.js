@@ -6,6 +6,7 @@ import { normaliser } from "./recherche.js";
 import { journalActions } from "./journal.js";
 import { validerParams } from "./outils.js";
 import { validerSortie } from "./registre.js";
+import { creerFileHotes, executerAvecReprise, causeDe, DELAI_DEFAUT_MS } from "./fiabilite.js";
 
 export const DELAI_CONFIRMATION = 60000;
 
@@ -65,9 +66,11 @@ function avecDelai(promesse, ms) {
  *  - confirmer(demande) : fournie par la fenêtre du hub ; absente = tout refuser ;
  *  - delai : durée avant expiration (60 s ; réduite dans les essais).
  */
-export function creerBarriere({ catalogue, confirmer = null, delai = DELAI_CONFIRMATION, verrouille = () => false }) {
+export function creerBarriere({ catalogue, confirmer = null, delai = DELAI_CONFIRMATION, verrouille = () => false, file = null, surAttente = null, pauseReprise = undefined, pause = undefined }) {
   const parNom = new Map(catalogue.map((o) => [o.nom, o]));
-  const log = (o, extra) => journalActions.ecrire({ outil: o.nom, niveau: o.niveau || "?", origine: "modele", sortie: [], ...extra });
+  const logBase = (o, extra) => journalActions.ecrire({ outil: o.nom, niveau: o.niveau || "?", origine: "modele", sortie: [], ...extra });
+  // Lot 4 : une file d'attente par hôte (limite par minute de l'outil), partagée par tous les appels de cette barrière.
+  const fileHotes = file || creerFileHotes({ surAttente, ...(pause ? { pause } : {}) });
 
   return {
     /** Outils présentés au modèle : LIBRE et CONFIRMATION seulement (les INTERDITS n'existent pas ici). */
@@ -75,16 +78,17 @@ export function creerBarriere({ catalogue, confirmer = null, delai = DELAI_CONFI
     outil: (nom) => parNom.get(nom),
 
     /** Exécute un appel d'outil demandé par le modèle (ou par Lucien). Ne lève jamais d'exception. */
-    async executer(appel, { origine = "modele" } = {}) {
+    async executer(appel, { origine = "modele", plan = null, signal = null } = {}) {
+      const log = (o, extra) => logBase(o, plan ? { plan, ...extra } : extra);     // les lignes d'outil d'un plan portent l'identifiant du plan
       const nom = appel && typeof appel.outil === "string" ? appel.outil : "";
       const o = parNom.get(nom);
       if (!o) {
-        await journalActions.ecrire({ outil: nom || "(sans nom)", niveau: "INTERDIT", params: "outil inconnu ou interdit", statut: "BLOQUÉ_INTERDIT", origine, sortie: [] });
+        await journalActions.ecrire({ outil: nom || "(sans nom)", niveau: "INTERDIT", params: "outil inconnu ou interdit", statut: "BLOQUÉ_INTERDIT", origine, sortie: [], ...(plan ? { plan } : {}) });
         return { ok: false, refus: { raison: "inconnu" }, erreur: "Outil inconnu ou interdit : « " + nom + " ». Aucune action n'a été faite." };
       }
       const params = appel.params && typeof appel.params === "object" ? appel.params : {};
       if (VISE_LABO.test(JSON.stringify(params))) {      // le laboratoire est réservé à Lucien : le Noyau ne peut ni l'ouvrir, ni le lire, ni l'écrire
-        await journalActions.ecrire({ outil: o.nom, niveau: "INTERDIT", params: "accès au laboratoire", statut: "BLOQUÉ_INTERDIT", origine, sortie: [] });
+        await journalActions.ecrire({ outil: o.nom, niveau: "INTERDIT", params: "accès au laboratoire", statut: "BLOQUÉ_INTERDIT", origine, sortie: [], ...(plan ? { plan } : {}) });
         return { ok: false, refus: { raison: "interdit" }, erreur: "Le laboratoire est réservé à Lucien : je n'y ai pas accès. Aucune action n'a été faite." };
       }
       const bad = validerParams(params, o.params);
@@ -92,16 +96,26 @@ export function creerBarriere({ catalogue, confirmer = null, delai = DELAI_CONFI
       if (bad) { await log(o, { params: resume, statut: "ERREUR", origine, erreur: bad }); return { ok: false, erreur: bad }; }
       const sortieDe = (r) => { const s = typeof o.sortie === "function" ? o.sortie(params) : []; const extra = r && Array.isArray(r._sorties) ? r._sorties : []; return [...new Set([...(s || []), ...extra])]; };
       const lancer = async (statut) => {
+        // Lot 4 : délai (l'appel est coupé), file d'attente par hôte, un seul nouvel essai pour une lecture idempotente qui échoue par réseau ou délai.
+        const lim = o.limites || {};
+        let hotes = []; try { hotes = typeof o.hote_de === "function" ? o.hote_de(params) : (o.hotes || []); } catch (e) { hotes = o.hotes || []; }
+        const lecture = !!(o.drapeaux && o.drapeaux.idempotent === true && o.drapeaux.lecture_seule === true);
+        let attente = 0;
         try {
-          const r = await o.exec(params, {});
+          const { valeur: r, essais } = await executerAvecReprise((sig) => o.exec(params, { signal: sig }), {
+            delaiMs: lim.delai_ms || DELAI_DEFAUT_MS, repetable: lecture && hotes.length > 0, signal, ...(pauseReprise != null ? { pauseReprise } : {}), ...(pause ? { pause } : {}),
+            avantEssai: hotes.length ? async () => { for (const h of hotes) { const a = await fileHotes.acquerir(h, lim.max_par_minute, { signal }); attente += a.attente_ms; } } : null
+          });
           const mauvaise = o.sortie_schema ? validerSortie(r, o.sortie_schema) : null;     // résultat non conforme à ce que l'outil déclare : erreur claire, rien n'est donné au modèle
           if (mauvaise) throw new Error(mauvaise);
           const sortie = sortieDe(r); if (r && r._sorties) delete r._sorties;
-          await log(o, { params: resume, statut, origine, sortie });
-          return { ok: true, donnees: r, sortie };
+          await log(o, { params: resume + (essais > 1 ? " (2e essai réussi)" : ""), statut, origine, sortie, ...(essais > 1 ? { essais } : {}), ...(attente ? { attente_ms: attente } : {}) });
+          return { ok: true, donnees: r, sortie, essais, attente_ms: attente };
         } catch (e) {
-          await log(o, { params: resume, statut: "ERREUR", origine, erreur: String(e && e.message || e).slice(0, 200) });
-          return { ok: false, erreur: String(e && e.message || e).slice(0, 200) };
+          const cause = (e && e.cause_fiabilite) || causeDe(e);
+          const msg = String(e && e.message || e).slice(0, 200);
+          await log(o, { params: resume, statut: "ERREUR", origine, erreur: msg, cause, ...(e && e.essais > 1 ? { essais: e.essais } : {}) });
+          return { ok: false, erreur: msg, cause, essais: (e && e.essais) || 1 };
         }
       };
 

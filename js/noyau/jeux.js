@@ -8,7 +8,7 @@ import { verifierJeu, dateTexte } from "./modules/composants.js";
 export const RE_REF = /^jeu:[a-z0-9]{6,16}$/;
 export const MAX_JEUX = 30;
 
-export function creerJeux({ nouvelId = () => Math.random().toString(36).slice(2, 10) } = {}) {
+export function creerJeux({ nouvelId = () => Math.random().toString(36).slice(2, 10), maintenant = () => new Date() } = {}) {
   const m = new Map();      // ordre d'insertion = ordre d'ancienneté (le plus ancien part le premier)
   const idPropre = () => { for (let i = 0; i < 20; i++) { const id = "jeu:" + String(nouvelId("")).toLowerCase().replace(/[^a-z0-9]/g, "").slice(-10).padStart(6, "0"); if (!m.has(id) && RE_REF.test(id)) return id; } throw new Error("Impossible de nommer le jeu"); };
   return {
@@ -16,7 +16,7 @@ export function creerJeux({ nouvelId = () => Math.random().toString(36).slice(2,
     deposer(brut, { origine = null } = {}) {
       const jeu = verifierJeu(brut);
       const ref = idPropre();
-      m.set(ref, { jeu, origine });
+      m.set(ref, { jeu, origine, depose: maintenant().getTime() });
       while (m.size > MAX_JEUX) m.delete(m.keys().next().value);
       return { ref, jeu };
     },
@@ -27,6 +27,8 @@ export function creerJeux({ nouvelId = () => Math.random().toString(36).slice(2,
       if (!e) throw new Error(`Jeu inconnu : « ${ref} ». Il n'existe pas ou n'est plus en mémoire : refais d'abord lire_serie.`);
       return e.jeu;
     },
+    /** Instant (ms) où le jeu est entré en mémoire : sert à dire « chargé il y a … » (la date de la donnée est dans sa source). */
+    depose(ref) { const e = m.get(ref); return e ? e.depose : null; },
     origine(ref) { const e = m.get(ref); return e ? e.origine : null; },
     existe: (ref) => m.has(ref),
     refs: () => [...m.keys()],

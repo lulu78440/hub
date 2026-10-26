@@ -7,7 +7,8 @@
 | 1 · Audit | fait (`audit.md`) |
 | 2 · Composants affichables | construit (déjà dans `main`) ; relecture visuelle par Lucien et test Android encore attendus |
 | **3 · Registre d'outils** | **construit sur `labo-orchestrateur3`, à relire par Lucien** (détail ci-dessous) |
-| 4 et suivants | non commencés (la part « plans » du lot 4 est faite ici sous une forme simple ; délais et file par hôte restent à faire) |
+| **4 · Fiabilité et panneaux** | **construit sur `labo-orchestrateur4` (7.39.0), à relire par Lucien** (détail en bas) |
+| 5 et suivants | non commencés |
 
 ## Lot 3 · ce qui est construit (26/10)
 **Principe : le modèle passe des références aux données, jamais des chiffres.** Un outil de données range un jeu vérifié en mémoire de la page et ne rend au modèle qu'une référence `jeu:xxxxxxxx` avec un résumé calculé par le hub (unité, période, source, date, premier, dernier et extrêmes). Une référence inconnue ou mal écrite est refusée ; un nombre à la place d'une référence est refusé par le validateur.
@@ -61,3 +62,19 @@ Un seul tour de modèle peut demander jusqu'à **6 outils** (avant : 4 outils pa
 - Relecture visuelle par Lucien (courbe à deux séries, tableau, chiffre clé dans la vraie fenêtre) et essai Android.
 - Lot 4 : délai par outil (`AbortSignal`), file par hôte, un seul nouvel essai sur erreur réseau d'un outil idempotent, validation d'un plan en une fois, plan à confirmations vu en entier.
 - Lots 5 et suivants : panneau hôte de la Refonte (`orch-hote`), persistance des espaces de travail, plus de sources.
+
+## Lot 4 · ce qui est construit (26/10, branche `labo-orchestrateur4`, version 7.39.0)
+- **Fiabilité** (`js/noyau/fiabilite.js`, `barriere.js`) : délai par outil avec coupure du réseau (`AbortSignal`), file d'attente par hôte (limite par minute, attente annoncée, 20 s au plus), un seul nouvel essai pour une lecture idempotente en erreur de réseau ou de délai. Journal : `cause`, `essais`, `attente_ms`, `plan`.
+- **Plans** (`execution.js`) : identifiant de plan sur chaque ligne du journal, étape dépendante d'un échec journalisée comme « non exécutée », bilan chiffré, annulation par signal, étape de secours écrite par le code, `verifierPlan` (références circulaires repérées avant exécution).
+- **Panneaux partagés** (`panneaux.js`, `modules/vues-orch.js`) : une plage de temps et 3 genres de variables (colonne, lissage, échelle) commandent tous les panneaux ; badge de fraîcheur sur chaque panneau.
+- **Fraîcheur** (`modules/fraicheur.js`) : niveau jugé selon le rythme de la série, forme ET mots, ligne ajoutée au pied de sources de chaque composant ; bandeau « Sources de données » (répond, en échec avec raison, coupée, pas encore appelée).
+- **Graphe de plan** (`modules/plan-graphe.js`) : SVG en lecture seule, affiché dans la fenêtre pour tout plan de 2 étapes ou plus.
+- Aucun outil nouveau, niveaux inchangés. Détail des choix : `decisions.md`.
+
+## Essais du lot 4
+Nouveaux : `essais-fiabilite.mjs` (50), `essais-plans-qualite.mjs` (32), `essais-panneaux.mjs` (110). Bilan complet dans le compte rendu du poste ; vérification visuelle sous Chromium (PC 1100 px et mobile 390 px, sans défilement horizontal de la page).
+
+## Reste à faire après le lot 4
+- Essai sur Brave PC et Android : voir les trois vues (`afficherSources()`, `afficherPanneaux(spec)` depuis la console ou le labo, graphe après un vrai plan), seuils de fraîcheur, attente de la file en vrai.
+- Aucune entrée de palette ni bouton « Sources » / « Annuler le plan » : à la Refonte (hors de mes fichiers).
+- Lots 5 à 9 : modules dynamiques, plus de sources, workflows, persistance.
