@@ -1,6 +1,6 @@
 /* Service worker du Hub : cache hors ligne versionné.
    Pour publier une nouvelle version : changer VERSION (et mettre à jour js/version.js). */
-const VERSION = "7.37.0";
+const VERSION = "7.38.0";
 const CACHE = "hub-" + VERSION;
 const ROOT = new URL("./", self.location).href;
 const PRECACHE = [
