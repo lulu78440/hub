@@ -477,7 +477,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
 
   document.addEventListener("noyau:initiative", (e) => { const m = e.detail || {}; noyau.cycle.emettre({ type: "initiative", texte: m.texte, raison: m.raison || "systeme", niveau: m.niveau || "info" }); });
   accueilVide(); majBudget(); majNav();
-  return {
+  const api = {
     racine, poser, note, changerVue,
     ouvrir() { const w = conteneur.closest(".win"); if (w) { document.dispatchEvent(new CustomEvent("hub:focus-win", { detail: w.dataset.id })); w.classList.remove("hid"); } saisie.focus(); },
     rafraichir() { majBudget(); majNav(); },
@@ -491,4 +491,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       return el;
     }
   };
+  // Point d'accroche pour l'outil afficher_module (orchestrateur) : lui seul peut poser un composant dans l'échange, et seulement par la barrière.
+  if (hote.ui) hote.ui.afficherComposant = (type, jeu, options) => api.afficherComposant(type, jeu, options);
+  return api;
 }

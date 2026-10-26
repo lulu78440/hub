@@ -6,6 +6,9 @@ import { jetons, Index } from "./recherche.js";
 import { interroger, DOMAINES, SOURCES } from "./sources.js";
 import { journalActions } from "./journal.js";
 import { creerPerso } from "./perso.js";
+import { validerParams, controlerCatalogue } from "./registre.js";
+import { filtrerMotsCles } from "./sources.js";
+export { validerParams };
 
 const pad = (n) => String(n).padStart(2, "0");
 export const cleJour = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -48,21 +51,6 @@ export function calculer(expr) {
   return Math.round(v * 1e10) / 1e10;
 }
 
-// ---------- Validation légère des paramètres (selon le schéma de l'outil) ----------
-export function validerParams(params, schema) {
-  const p = params && typeof params === "object" ? params : {};
-  for (const k of schema.required || []) if (p[k] === undefined || p[k] === null || p[k] === "") return `Paramètre manquant : ${k}`;
-  for (const [k, def] of Object.entries(schema.properties || {})) {
-    const v = p[k]; if (v === undefined || v === null) continue;
-    if (def.type === "string" && typeof v !== "string") return `${k} doit être du texte`;
-    if (def.type === "integer" && !Number.isInteger(v)) return `${k} doit être un nombre entier`;
-    if (def.type === "boolean" && typeof v !== "boolean") return `${k} doit être vrai ou faux`;
-    if (def.enum && !def.enum.includes(v)) return `${k} : valeur permise ${def.enum.join(", ")}`;
-    if (def.type === "string" && v.length > (def.maxLength || 2000)) return `${k} est trop long`;
-  }
-  return null;
-}
-
 // ---------- Règle « aucun outil sans validation de Lucien » (lab-outils-regle) ----------
 // Aucune nouvelle fonction du hub n'entre automatiquement dans les outils de l'IA. Un poste qui veut donner un outil au Noyau le PROPOSE
 // avec son niveau (LIBRE = lecture seule, CONFIRMATION = dès qu'il y a une écriture, INTERDIT = sensible : jamais présenté) ; Lucien valide ;
@@ -73,7 +61,9 @@ export const OUTILS_VALIDES = {
   heure: "LIBRE", calculer: "LIBRE", chercher_memoire: "LIBRE", lire_taches: "LIBRE", lire_agenda: "LIBRE", lire_notes: "LIBRE", lire_favoris: "LIBRE", lire_meteo: "LIBRE", lire_rituels: "LIBRE", lire_actus: "LIBRE", lire_veille: "LIBRE", lire_fenetre: "LIBRE", lire_journal: "LIBRE", chercher_sources: "LIBRE", afficher: "LIBRE", lancer_focus: "LIBRE",
   ajouter_tache: "CONFIRMATION", modifier_tache: "CONFIRMATION", cocher_tache: "CONFIRMATION", ajouter_evenement: "CONFIRMATION", modifier_evenement: "CONFIRMATION", ajouter_note: "CONFIRMATION", modifier_note: "CONFIRMATION", ajouter_favori: "CONFIRMATION", modifier_favori: "CONFIRMATION", creer_rappel: "CONFIRMATION", memoriser: "CONFIRMATION", apprendre: "CONFIRMATION", lire_page: "CONFIRMATION", lire_mails: "CONFIRMATION", jouer_media: "CONFIRMATION", regler_rituel: "CONFIRMATION", personnaliser_hub: "CONFIRMATION", creer_raccourci: "CONFIRMATION",
   // Validés le 25/10 (21 h 05), pas encore branchés : voir OUTILS_A_BRANCHER.
-  consulter_manuel: "LIBRE", chercher_decisions: "LIBRE", lire_contradictions: "LIBRE", proposer_decision: "CONFIRMATION", creer_routine: "CONFIRMATION"
+  consulter_manuel: "LIBRE", chercher_decisions: "LIBRE", lire_contradictions: "LIBRE", proposer_decision: "CONFIRMATION", creer_routine: "CONFIRMATION",
+  // Validés par Lucien le 26/10 (orchestrateur, lot 3) : le modèle passe des références (« jeu:… »), jamais des chiffres.
+  chercher_donnees: "LIBRE", lire_serie: "LIBRE", transformer_donnees: "LIBRE", afficher_module: "LIBRE", lire_modules: "LIBRE", enregistrer_module: "CONFIRMATION"
 };
 /**
  * Outils VALIDÉS par Lucien mais pas encore actifs. Vide depuis le branchement des 5 outils du 25/10 (labo-auto2) ; un futur outil validé non branché s'y inscrit.
@@ -108,6 +98,15 @@ export function creerCatalogue(ctx = {}) {
   let _perso = null; const perso = () => (_perso = _perso || creerPerso());
   const rac = () => { if (!ctx.raccourcis) throw new Error("Raccourcis indisponibles"); return ctx.raccourcis(); };
   const st = () => hote.stockage;
+  // Orchestrateur : modules chargés à la demande (import dynamique) et mémoire de jeux unique pour ce catalogue.
+  let _orch = null;
+  const orch = async () => _orch || (_orch = await (async () => {
+    const [J, D, T2, M] = await Promise.all([import("./jeux.js"), import("./donnees.js"), import("./transformer.js"), import("./modules.js")]);
+    const jeux = ctx.jeux || J.creerJeux();
+    const coupees = (k, d) => { try { const v = JSON.parse(hote.reglage.lire(k, "[]")); return Array.isArray(v) ? v : d; } catch (e) { return d; } };
+    return { J, M, T: T2, jeux, donnees: D.creerDonnees({ fetch: (u, op) => hote.fetch(u, op), maintenant: () => hote.maintenant(), jeux, reglage: coupees }), modules: M.creerModules({ stockage: hote.stockage, maintenant: () => hote.maintenant() }) };
+  })());
+
   const now = () => hote.maintenant();
   const agir = async (nom, p) => { const r = await hote.hub.agir(nom, p); if (r && r.ok === false) throw new Error(r.erreur || "Action impossible"); return r; };
   const ligneTache = (t) => ({ id: t.id, texte: t.text, faite: !!t.done, urgente: !!t.prio, echeance: t.due || null, rappel: t.remindAt || null, faite_le: t.doneAt ? cleJour(new Date(t.doneAt)) : null });
@@ -283,10 +282,67 @@ export function creerCatalogue(ctx = {}) {
         const pb = validerRoutine(r, { barriere: { outil: (n) => T.some((o) => o.nom === n) } }); if (pb.length) throw new Error("Routine refusée : " + pb.join(" ; "));
         const doc = (await st().lire("kv", "noyau-routines")) || { id: "noyau-routines", lignes: [] }; const i = doc.lignes.findIndex((x) => x.id === r.id);
         if (i < 0 && doc.lignes.length >= 15) throw new Error("15 routines au plus"); if (i < 0) doc.lignes.push(r); else doc.lignes[i] = r; await st().ecrire("kv", doc);
-        return { routine: { id: r.id, nom: r.nom, etapes: etapes.map((e) => e.outil) }, remplacee: i >= 0, lancee: false }; } }
+        return { routine: { id: r.id, nom: r.nom, etapes: etapes.map((e) => e.outil) }, remplacee: i >= 0, lancee: false }; } },
+    // ----- Orchestrateur, lot 3 (validés le 26/10) : jeux de données par RÉFÉRENCES, modules d'affichage -----
+    // Principe : aucun chiffre ne passe par le modèle. Un outil de données dépose un jeu vérifié dans la mémoire de la page (jeux.js) et ne rend au modèle
+    // qu'une référence « jeu:… » avec un résumé calculé par le hub. Les étapes suivantes reçoivent la référence (ou « $N.jeu » = résultat de l'étape N d'un plan).
+    { nom: "chercher_donnees", niveau: "LIBRE", categorie: "donnees", description: "Cherche des séries de données chiffrées publiques (statistiques) : source « dbnomics » (INSEE, Eurostat, BCE… ; d'abord les jeux de données, puis avec jeu_de_donnees les séries d'un jeu) ou « banque_mondiale » (indicateurs par pays) ou « publie » (séries publiées par la tâche GitHub, si elle est activée). Seuls des mots-clés sortent. Rend des IDENTIFIANTS à passer à lire_serie, jamais de chiffres.",
+      params: O({ requete: S("Quelques mots-clés", { maxLength: 120 }), source: S("Source", { enum: ["dbnomics", "banque_mondiale", "publie"] }), jeu_de_donnees: S("DBnomics seulement : FOURNISSEUR/JEU (ex. INSEE/IPC-2015) pour lister ses séries", { maxLength: 100, pattern: "^[A-Za-z0-9_-]{1,40}/[A-Za-z0-9_.-]{1,60}$" }) }, ["requete"]),
+      drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: true, idempotent: true }, hotes: ["api.db.nomics.world", "api.worldbank.org", "raw.githubusercontent.com"], limites: { delai_ms: 12000, max_par_minute: 30, taille_max: 2000000 },
+      sortie_schema: { type: "object", properties: { source: S("") }, required: ["source"] },
+      resume: (p) => `Chercher des données (${p.source || "dbnomics"}) : « ${court(p.requete, 60)} »`, sortie: (p) => [({ banque_mondiale: "api.worldbank.org", publie: "raw.githubusercontent.com" })[p.source] || "api.db.nomics.world"],
+      exec: async (p) => { if (!hote.enLigne() && p.source !== "banque_mondiale") throw new Error("Hors ligne : les sources de données ne sont pas joignables.");
+        const o = await orch(); const mots = filtrerMotsCles(p.requete, ctx.interdits ? await ctx.interdits() : []);
+        if (!mots.motsCles) throw new Error("Aucun mot-clé utilisable après filtrage (mots privés retirés).");
+        return { mots_cles_envoyes: mots.motsCles, retires_avant_envoi: mots.retires, ...(await o.donnees.chercher({ requete: mots.motsCles, source: p.source || "dbnomics", jeu_de_donnees: p.jeu_de_donnees || "" })) }; } },
+    { nom: "lire_serie", niveau: "LIBRE", categorie: "donnees", description: "Télécharge UNE série précise et la range en mémoire : tu reçois une RÉFÉRENCE « jeu:… » et un résumé (unité, période, source, date de mise à jour, extrêmes), jamais le tableau. Passe ensuite la référence à transformer_donnees, afficher_module ou enregistrer_module (dans un plan : « $1.jeu » pour le résultat de l'étape 1). Identifiants : DBnomics FOURNISSEUR/JEU/SÉRIE (ex. INSEE/IPC-2015/M.00.SO.SO.ENSEMBLE.FE) ; banque_mondiale PAYS/INDICATEUR (ex. FR/SP.POP.TOTL) ; publie un nom de série.",
+      params: O({ source: S("Source", { enum: ["dbnomics", "banque_mondiale", "publie"] }), identifiant: S("Identifiant de la série (voir chercher_donnees)", { maxLength: 200 }), debut: S("Début : AAAA ou AAAA-MM (facultatif)", { maxLength: 7 }), fin: S("Fin : AAAA ou AAAA-MM (facultatif)", { maxLength: 7 }) }, ["source", "identifiant"]),
+      drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: true, idempotent: true }, hotes: ["api.db.nomics.world", "api.worldbank.org", "raw.githubusercontent.com"], limites: { delai_ms: 12000, max_par_minute: 30, taille_max: 2000000 },
+      sortie_schema: { type: "object", properties: { jeu: S("") }, required: ["jeu"] },
+      resume: (p) => `Lire la série « ${court(p.identifiant, 80)} » (${p.source})`, sortie: (p) => [({ banque_mondiale: "api.worldbank.org", publie: "raw.githubusercontent.com" })[p.source] || "api.db.nomics.world"],
+      exec: async (p) => { if (!hote.enLigne()) throw new Error("Hors ligne : la série n'est pas joignable.");
+        const o = await orch(); const r = await o.donnees.lire({ source: p.source, identifiant: p.identifiant, debut: p.debut || "", fin: p.fin || "" }); return { jeu: r.ref, resume: r.resume }; } },
+    { nom: "transformer_donnees", niveau: "LIBRE", categorie: "donnees", description: "Calcule à partir d'un jeu (référence « jeu:… ») un NOUVEAU jeu, avec la source d'origine conservée. Le calcul est fait par le hub, jamais par toi. Opérations : periode (debut, fin), colonnes (liste), variation (mode precedente ou depuis_debut, en %), indice100 (base 100 à la première valeur), moyenne_mobile (n), derniers (n lignes), comparer (avec = autre jeu de même unité ; donne une courbe à deux séries). Rend une nouvelle référence : « $N.jeu » dans un plan.",
+      params: O({ jeu: S("Référence du jeu : « jeu:… » reçue d'un outil, ou « $N.jeu » (résultat de l'étape N du plan)", { pattern: "^jeu:[a-z0-9]{6,16}$", maxLength: 40 }), operation: S("Opération", { enum: ["periode", "colonnes", "variation", "indice100", "moyenne_mobile", "derniers", "comparer"] }),
+        debut: S("periode : début AAAA, AAAA-MM ou AAAA-MM-JJ", { maxLength: 10 }), fin: S("periode : fin", { maxLength: 10 }), colonnes: { type: "array", maxItems: 8, items: { type: "string", maxLength: 32 }, description: "Identifiants de colonnes (facultatif)" },
+        mode: S("variation : precedente ou depuis_debut", { enum: ["precedente", "depuis_debut"] }), n: { type: "integer", minimum: 1, maximum: 500, description: "moyenne_mobile : fenêtre (2 à 24) ; derniers : nombre de lignes" },
+        avec: S("comparer : référence du second jeu", { pattern: "^jeu:[a-z0-9]{6,16}$", maxLength: 40 }) }, ["jeu", "operation"]),
+      drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: false, idempotent: true }, limites: { delai_ms: 5000 },
+      sortie_schema: { type: "object", properties: { jeu: S("") }, required: ["jeu"] },
+      resume: (p) => `Transformer le jeu (${p.operation})`,
+      exec: async (p) => { const o = await orch(); const j = o.jeux.lire(p.jeu), autre = p.operation === "comparer" ? o.jeux.lire(p.avec) : null;
+        const brut = o.T.transformer(j, { operation: p.operation, debut: p.debut, fin: p.fin, colonnes: p.colonnes, mode: p.mode, n: p.n }, autre); const r = o.jeux.deposer(brut, { origine: { de: p.jeu, operation: p.operation } });
+        return { jeu: r.ref, resume: o.J.resumeJeu(r.ref, r.jeu) }; } },
+    { nom: "afficher_module", niveau: "LIBRE", categorie: "affichage", description: "Affiche dans la fenêtre du Noyau un graphique ou un tableau d'un jeu (référence « jeu:… ») : vue courbe, barres, tableau ou chiffre_cle. Éphémère : rien n'est enregistré. La source, la date et l'unité sont toujours affichées ; un jeu sans source est refusé. Tu peux aussi réafficher un module enregistré (paramètre module). Choisis les colonnes seulement si tu en as besoin (x, y, series, categorie, valeur) : sinon le hub les choisit.",
+      params: O({ jeu: S("Référence du jeu : « jeu:… » ou « $N.jeu » dans un plan", { pattern: "^jeu:[a-z0-9]{6,16}$", maxLength: 40 }), module: S("Identifiant d'un module enregistré (à la place de jeu)", { maxLength: 40 }), vue: S("Type de vue", { enum: ["courbe", "barres", "tableau", "chiffre_cle"] }), titre: S("Titre affiché", { maxLength: 80 }),
+        x: S("Colonne de l'axe x (date)", { maxLength: 32 }), y: S("Colonne de l'axe y (nombre)", { maxLength: 32 }), series: S("Colonne qui distingue les séries (texte)", { maxLength: 32 }), categorie: S("barres : colonne des catégories", { maxLength: 32 }), valeur: S("barres ou chiffre_cle : colonne des valeurs", { maxLength: 32 }) }, ["vue"]),
+      drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: false, idempotent: false }, limites: { delai_ms: 5000 },
+      sortie_schema: { type: "object", properties: { affiche: { type: "boolean" } }, required: ["affiche"] },
+      resume: (p) => `Afficher ${p.vue}${p.titre ? " « " + court(p.titre, 50) + " »" : ""}`,
+      exec: async (p) => { if (!p.jeu === !p.module) throw new Error("Indique soit « jeu », soit « module » (un seul).");
+        const o = await orch(); let j, titre = p.titre || "", vue = p.vue, opts = { x: p.x, y: p.y, series: p.series, categorie: p.categorie, valeur: p.valeur };
+        if (p.module) { const m = await o.modules.lire(p.module); j = m.jeu; titre = titre || m.titre; opts = { ...m.options, ...Object.fromEntries(Object.entries(opts).filter(([, v]) => v)) }; } else j = o.jeux.lire(p.jeu);
+        const options = o.M.optionsParDefaut(vue, j, opts);
+        const ouvrir = hote.ui && hote.ui.afficherComposant; if (typeof ouvrir !== "function") throw new Error("La fenêtre du Noyau n'est pas ouverte : rien n'a été affiché.");
+        const el = ouvrir(vue, j, { ...options, titre: titre || j.titre || undefined });
+        if (el && el.classList && el.classList.contains("nxc-refus")) throw new Error(el.getAttribute("data-raison") || "Affichage refusé.");
+        return { affiche: true, vue, jeu: p.jeu || null, module: p.module || null, source: j.source.nom, periode: j.source.periode, donnees_du: j.source.maj, unite: j.unite, exemple: j.exemple }; } },
+    { nom: "lire_modules", niveau: "LIBRE", categorie: "affichage", description: "Liste les modules (graphiques ou tableaux) que Lucien a enregistrés : identifiant, titre, vue, source, période. Aucune valeur chiffrée. Pour en réafficher un : afficher_module avec le paramètre module.",
+      params: O(), drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: false, idempotent: true }, limites: { delai_ms: 3000 },
+      sortie_schema: { type: "object", properties: { modules: { type: "array", maxItems: 20, items: { type: "object" } } }, required: ["modules"] },
+      resume: () => "Lire la liste des modules enregistrés", exec: async () => { const o = await orch(); return { modules: await o.modules.lister(), maximum: o.M.MAX_MODULES }; } },
+    { nom: "enregistrer_module", niveau: "CONFIRMATION", categorie: "affichage", description: "Enregistre (ou remplace, même identifiant) un module : une vue d'un jeu, avec sa source et sa copie des données. UNIQUEMENT quand Lucien le demande. Lucien voit la source et la période avant d'accepter. Pas de suppression ni d'export possibles pour toi.",
+      params: O({ id: S("Identifiant : minuscules, chiffres, tirets (2 à 40)", { maxLength: 40, pattern: "^[a-z0-9][a-z0-9-]{1,39}$" }), titre: S("Titre du module", { maxLength: 80 }), vue: S("Type de vue", { enum: ["courbe", "barres", "tableau", "chiffre_cle"] }),
+        jeu: S("Référence du jeu : « jeu:… » ou « $N.jeu » dans un plan", { pattern: "^jeu:[a-z0-9]{6,16}$", maxLength: 40 }), x: S("Colonne x", { maxLength: 32 }), y: S("Colonne y", { maxLength: 32 }), series: S("Colonne des séries", { maxLength: 32 }), categorie: S("Colonne des catégories", { maxLength: 32 }), valeur: S("Colonne des valeurs", { maxLength: 32 }) }, ["id", "titre", "vue", "jeu"]),
+      drapeaux: { lecture_seule: false, reversible: true, monde_ouvert: false, idempotent: true }, limites: { delai_ms: 5000, taille_max: 250000 },
+      sortie_schema: { type: "object", properties: { id: S("") }, required: ["id"] },
+      resume: (p) => { let j = null; try { j = _orch && _orch.jeux.lire(p.jeu); } catch (e) { j = null; } return `Enregistrer le module « ${court(p.titre, 60)} » (${p.vue}, id ${court(p.id, 40)})` + (j ? ` — source : ${court(j.source.nom, 80)} ; période : ${court(j.source.periode, 40)} ; données du ${j.source.maj}${j.exemple ? " ; EXEMPLE" : ""}` : ""); },
+      exec: async (p) => { const o = await orch(); const j = o.jeux.lire(p.jeu); const r = await o.modules.enregistrer({ id: p.id, titre: p.titre, vue: p.vue, jeu: j, options: { x: p.x, y: p.y, series: p.series, categorie: p.categorie, valeur: p.valeur } }); return { id: r.id, titre: r.titre, vue: r.vue, remplace: r.remplace, enregistre: true }; } }
   ];
   for (const o of T) o.params = o.params || O();
-  const { catalogue, ecartes } = appliquerRegle(T);
+  const coherence = controlerCatalogue(T, OUTILS_VALIDES), incoherents = new Set(coherence.problemes.map((x) => x.nom));
+  if (incoherents.size && typeof console !== "undefined") console.warn("[Noyau] outils écartés (cohérence du registre) :", coherence.problemes.map((x) => `${x.nom} (${x.raison})`).join(" ; "));
+  const { catalogue, ecartes } = appliquerRegle(T.filter((o) => !incoherents.has(o.nom)));
   if (ecartes.length && typeof console !== "undefined") console.warn("[Noyau] outils écartés (règle de validation) :", ecartes.map((e) => `${e.nom} (${e.raison})`).join(", "));
   return catalogue;
 }
