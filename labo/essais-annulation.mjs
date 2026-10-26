@@ -1,6 +1,6 @@
 // Laboratoire · annulation propre d'un plan (orchestrateur, lot 5) : `node labo/essais-annulation.mjs`
 // Le signal d'annulation passe de boucle.js à executerPlan : les étapes annulées sont « non exécutées » dans le bilan, jamais « en échec ».
-// Le contournement de Refonte 4 (js/ui/noyau-controles.js, qui enveloppe la barrière) reste compatible. Hub, réseau et moteur simulés.
+// Refonte 6 (7.43.0) : le bouton « Annuler le plan » de js/ui/noyau-controles.js lit planEnCours() et appelle annulerPlan() ; il n'enveloppe plus la barrière. Hub, réseau et moteur simulés.
 import { installer } from "./faux-dom.js";
 import { creerHubSimule } from "./hub-simule.js";
 import { creerNoyau } from "../js/noyau/noyau.js";
@@ -38,18 +38,19 @@ const ctl = new AbortController();
 lignes = await executerPlan([{ nom: "heure", params: {} }, { nom: "heure", params: {} }, { nom: "heure", params: {} }], { barriere: catalogueOk, signal: ctl.signal, id: "plan-apres-1", apres: (l, i) => { if (i === 0) ctl.abort(); } });
 ok(lignes[0].ok && lignes[1].annule && lignes[2].annule && lignes.bilan.reussies === 1 && lignes.bilan.non_executees === 2 && lignes.bilan.en_echec === 0, "annulation après l'étape 1 : 1 réussie, 2 non exécutées, 0 en échec");
 
-// ===== 3. Compatible avec le bouton « Annuler le plan » de la Refonte 4 (il enveloppe la barrière et fournit SON signal)
+// ===== 3. Le bouton « Annuler le plan » de la Refonte 6 : planEnCours() / annulerPlan(), aucune enveloppe de la barrière
 const { monterControles } = await import("../js/ui/noyau-controles.js");
 function h(tag, attrs = {}, ...enf) { const e = doc.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) { if (v == null || v === false) continue; if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? "" : v); } for (const x of enf.flat()) if (x != null && x !== false) e.append(typeof x === "string" ? doc.createTextNode(x) : x); return e; }
 const racine = h("div", { class: "nx" }); racine.dataset = { vue: "chat" }; racine.closest = () => null; racine.querySelector = (s) => (s === ".nx-etat" ? null : racine.parClasse(s.slice(1))[0] || null); racine.prepend = (e) => { e.parentNode = racine; racine.enfants = [e, ...(racine.enfants || [])]; };
 appelsReseau = 0; coupes = 0;
 const c = monterControles({ racine, api: { afficherSources: async () => {}, changerVue() {} }, noyau: n, h });
-ok(c && n.barriere.__vuesPlan === true, "le module de la Refonte a enveloppé la barrière (marqueur __vuesPlan)");
-const p2 = executerPlan(appels, { barriere: n.barriere, origine: "modele", id: "plan-bouton" });
+ok(c && !n.barriere.__vuesPlan, "le module de la Refonte n'enveloppe plus la barrière (pas de marqueur __vuesPlan)");
+const sigB = ouvrirSignal("plan-bouton");
+const p2 = executerPlan(appels, { barriere: n.barriere, origine: "modele", id: "plan-bouton", signal: sigB });
 await attendre(400); c.bAnnuler.click();
-lignes = await p2;
+lignes = await p2; fermerSignal("plan-bouton");
 ok(coupes === 1 && appelsReseau === 1, "bouton : l'appel en cours est coupé, rien d'autre ne part");
-ok(lignes.every((l) => !l.ok && l.annule === true && l.cause === "annule"), "bouton : les 3 étapes sont marquées annulées par executerPlan (qui reconnaît la cause « annule »)");
+ok(lignes.every((l) => !l.ok && l.annule === true && l.cause === "annule"), "bouton : les 3 étapes sont marquées annulées par executerPlan (signal de annulation.js)");
 ok(lignes.bilan.non_executees === 3 && lignes.bilan.en_echec === 0, "bouton : bilan 3 non exécutées, 0 en échec (avant : toutes « en échec »)");
 j = (await journalActions.lire({ limite: 200 })).filter((l) => l.plan === "plan-bouton");
 ok(j.filter((l) => l.cause === "annule").length === 3, "bouton : une ligne de journal par étape, sans doublon (" + j.filter((l) => l.cause === "annule").length + ")");
@@ -60,7 +61,7 @@ const hub2 = creerHubSimule({ vide: true, fetch: (u, o) => { appelsReseau++; if 
 let tour = 0; appelsReseau = 0;
 const script = [{ appels: [...appels, { nom: "afficher_module", params: { jeu: "$3.jeu", vue: "courbe" } }] }, { appels: [{ nom: "repondre", params: { texte: "Plan annulé, rien n'est affiché.", ton: "calme", confiance: "moyenne", sources: [] } }] }];
 const n2 = await creerNoyau({ moteur: { nom: "moteur simulé", generer: async () => { const s = script[tour++]; return { texte: "", appels: s.appels, brut: null, usage: { total: 10 }, ms: 1 }; } } });
-ok(!n2.barriere.__vuesPlan, "cycle de pensée sans bouton monté : la barrière n'est pas enveloppée");
+ok(!n2.barriere.__vuesPlan, "cycle de pensée : la barrière n'est pas enveloppée, boucle.js passe son propre signal");
 const rep = await n2.poser("Lis trois séries et trace la troisième");
 const tr = n2.cycle.inspecteur()[0];
 ok(tr.outils.length === 4 && tr.outils.every((o) => !o.ok), "le cycle a reçu 4 étapes toutes non réussies (annulées)");
