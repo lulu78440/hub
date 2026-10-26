@@ -2,7 +2,7 @@
 // Liste FIXE et publique de sources, sans clé, sans compte, lecture seule. Chaque réponse est contrôlée (taille, forme, valeurs) avant de devenir
 // un jeu : une réponse vide ou inattendue donne une ERREUR claire, jamais un zéro par défaut. Le modèle ne reçoit que des références (jeux.js).
 // ⚠ CORS et formats : écrits d'après la documentation des sources ; l'atelier n'a pas accès à ces sites (proxy 403). Chaque source doit être
-// essayée en direct par Lucien (labo → Sources, sur Brave PC puis Android) avant d'être considérée comme sûre. Voir docs/noyau-orchestrateur/lot3-etat.md.
+// essayée en direct par Lucien (labo → Sources, sur Brave PC puis Android) avant d'être considérée comme sûre. Voir docs/noyau-orchestrateur/etat.md.
 import { resumeJeu } from "./jeux.js";
 
 export const SOURCES_DONNEES = Object.freeze([

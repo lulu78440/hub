@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Essai réel · sources de données (Labo)</title>
+<style>
+:root{color-scheme:dark;--void:#02060d;--ink:#dff6fd;--dim:#7ea3b6;--cyan:#3fe6ff;--ok:#4fe3a8;--red:#ff4d6a}
+body{margin:0;background:var(--void);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif;padding:16px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+main{max-width:720px;margin:0 auto;display:grid;gap:14px}h1{font-size:20px;margin:0}p,li{color:var(--dim)}
+button{background:#06121d;color:var(--ink);border:1px solid #1d4256;padding:10px 14px;font:inherit;cursor:pointer;min-height:44px}button:hover,button:focus-visible{border-color:var(--cyan);color:var(--cyan);outline:none}
+.r{border:1px solid #14394d;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere;font:13px ui-monospace,Consolas,monospace}.ok{border-color:var(--ok)}.ko{border-color:var(--red)}
+</style></head><body><main>
+<h1>Essai réel des sources de données</h1>
+<p>Cette page interroge VRAIMENT DBnomics et la Banque mondiale depuis ton navigateur, avec le même code que le Noyau. Elle ne garde rien, n'utilise aucune clé et ne touche pas à tes données. Ouvre-la dans Brave sur le PC, puis sur Android, et relève le résultat de chaque ligne : « accessible » prouve que le navigateur accepte la réponse (CORS) et que le format est celui attendu.</p>
+<p>La liste d'adresses autorisées du hub (CSP) accepte déjà toute adresse https : l'essai est donc représentatif. Un jour, la liste des sites contactés par les outils pourra la durcir.</p>
+<div><button id="b1" type="button">Tester DBnomics (série INSEE)</button> <button id="b2" type="button">Tester la Banque mondiale (population)</button> <button id="b3" type="button">Tester la recherche DBnomics</button></div>
+<div id="sortie" aria-live="polite"></div>
+<script type="module">
+import { creerDonnees } from "../js/noyau/donnees.js";
+import { creerJeux } from "../js/noyau/jeux.js";
+const d = creerDonnees({ fetch: (u, o) => fetch(u, o), maintenant: () => new Date(), jeux: creerJeux() });
+const sortie = document.getElementById("sortie");
+function ligne(ok, texte) { const e = document.createElement("div"); e.className = "r " + (ok ? "ok" : "ko"); e.textContent = texte; sortie.prepend(e); }
+async function essai(nom, f) { const t0 = performance.now(); try { const r = await f(); ligne(true, `✓ ${nom} : accessible en ${Math.round(performance.now() - t0)} ms\n${r}`); } catch (e) { ligne(false, `✗ ${nom} : ${e.message}\n(code : ${e.code || "inconnu"} · ${Math.round(performance.now() - t0)} ms)`); } }
+document.getElementById("b1").onclick = () => essai("DBnomics · INSEE/IPC-2015", async () => { const r = await d.lire({ source: "dbnomics", identifiant: "INSEE/IPC-2015/M.00.SO.SO.ENSEMBLE.FE", debut: "2024" }); return `${r.jeu.lignes.length} lignes · ${r.jeu.source.periode} · données du ${r.jeu.source.maj}\n${r.jeu.source.nom}\nlicence : ${r.jeu.source.licence}`; });
+document.getElementById("b2").onclick = () => essai("Banque mondiale · FR/SP.POP.TOTL", async () => { const r = await d.lire({ source: "banque_mondiale", identifiant: "FR/SP.POP.TOTL", debut: "2010" }); return `${r.jeu.lignes.length} lignes · ${r.jeu.source.periode} · données du ${r.jeu.source.maj}\n${r.jeu.source.nom}`; });
+document.getElementById("b3").onclick = () => essai("DBnomics · recherche « prix consommation »", async () => { const r = await d.chercher({ requete: "prix consommation", source: "dbnomics" }); return r.resultats.length + " jeux de données trouvés, par exemple : " + (r.resultats[0] ? r.resultats[0].jeu_de_donnees : "(aucun)"); });
+</script></main></body></html>
