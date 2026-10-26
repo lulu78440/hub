@@ -278,3 +278,45 @@ body.lite .win.nx-win .ph{cursor:default}
 .nx-vues-annuler[hidden]{display:none}
 .nx-vues-etat{flex:1 1 140px;min-width:0;font-size:13px;color:var(--n-dim,var(--n-ink));overflow-wrap:anywhere}
 .nx-vues-etat:empty{display:none}
+
+/* Refonte 6 (7.43.0) : panneau « Modules, espaces et workflows » (js/ui/noyau-gestes.js). Contrastes : texte clair / bordures cyan sur le fond sombre du Noyau ; l'état est toujours dit en mots. */
+.ng{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ng-tete{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.ng-h{margin:0;font-size:17px;font-weight:600;letter-spacing:.03em;color:var(--n-ink)}
+.ng-titre{margin:6px 0 2px;font-size:15px;font-weight:600;color:var(--n-cyan);border-bottom:1px solid var(--n-line);padding-bottom:4px}
+.ng-sous-titre{margin:8px 0 4px;font-size:14px;font-weight:600;color:var(--n-ink)}
+.ng-aide,.ng-vide,.ng-meta{color:var(--n-dim);font-size:13px;margin:2px 0;overflow-wrap:anywhere}
+.ng-meta{display:block}
+.ng-etat{margin:0;min-height:1.4em;font-size:14px;color:var(--n-ink);overflow-wrap:anywhere}
+.ng-etat:empty{display:none}
+.ng-etat:not(:empty)::before{content:"● ";color:var(--n-cyan)}
+.ng-annuler{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ng-annuler:empty{display:none}
+.ng-btn{min-height:44px;min-width:44px;padding:0 14px;font-size:14px}
+.ng-btn:focus-visible,.ng-champ:focus-visible{outline:2px solid var(--n-cyan);outline-offset:2px}
+.ng-danger{border-style:dashed;border-width:2px}
+.ng-danger::before{content:"✕ ";font-size:.85em}
+.ng-liste{list-style:none;margin:6px 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ng-ligne{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--n-line);background:var(--n-card);min-width:0}
+.ng-version{background:transparent}
+.ng-sous{margin:4px 0 0}
+.ng-info{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ng-nom{overflow-wrap:anywhere}
+.ng-boutons{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ng-zone{flex:1 1 100%;min-width:0}
+.ng-zone:empty{display:none}
+.ng-etiq{align-self:flex-start;padding:0 6px;border:1px solid var(--n-line);color:var(--n-ink);font-size:12px}
+.ng-confirme,.ng-validation{padding:10px;border:2px solid var(--n-amber);background:rgba(255,179,71,.06);display:flex;flex-direction:column;gap:6px}
+.ng-confirme p,.ng-validation p{margin:0;overflow-wrap:anywhere}
+.ng-etapes{margin:2px 0;padding-left:22px;display:flex;flex-direction:column;gap:3px;overflow-wrap:anywhere}
+.ng-form{margin:8px 0 0;padding:8px 10px;border:1px solid var(--n-line);display:flex;flex-direction:column;gap:6px;min-width:0}
+.ng-form legend{padding:0 6px;color:var(--n-ink);font-size:14px}
+.ng-label{font-size:13px;color:var(--n-ink)}
+.ng-champ{min-height:44px;max-width:100%;box-sizing:border-box}
+.ng-champ-bloc{display:flex;flex-direction:column;gap:2px}
+.ng-coches{border:1px solid var(--n-line);padding:6px 8px;margin:0;min-width:0}
+.ng-coche{display:flex;align-items:center;gap:8px;min-height:44px}
+.ng-coche input{width:22px;height:22px;flex:none}
+.ng-coche label{flex:1;min-width:0;overflow-wrap:anywhere;padding:8px 0}
+.ng-budget{font-size:14px}
+@media (max-width:520px){.ng-boutons{width:100%}.ng-boutons .ng-btn{flex:1 1 140px}.ng-h{font-size:16px}}

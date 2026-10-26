@@ -5,6 +5,7 @@ import { installer, Elem } from "./faux-dom.js";
 import { creerHubSimule } from "./hub-simule.js";
 import { creerNoyau } from "../js/noyau/noyau.js";
 import { executerPlan } from "../js/noyau/execution.js";
+import { ouvrirSignal, fermerSignal } from "../js/noyau/annulation.js";
 let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
 const doc = installer(); const ecoutes = {};
 doc.addEventListener = (t, f) => { (ecoutes[t] ||= []).push(f); }; doc.dispatchEvent = (e) => { (ecoutes[e.type] || []).forEach((f) => f(e)); return true; };
@@ -32,11 +33,12 @@ const d2 = { vue: "autre", pris: false }; doc.dispatchEvent(new CustomEvent("noy
 
 // Plan de 3 étapes : la 1re reste en attente réseau ; on annule pendant ce temps
 const appels = [1, 2, 3].map((k) => ({ nom: "lire_serie", params: { source: "dbnomics", identifiant: "INSEE/POP/V" + k } }));
-const p = executerPlan(appels, { barriere: n.barriere, origine: "modele" });
+const sigV = ouvrirSignal("plan-vues");
+const p = executerPlan(appels, { barriere: n.barriere, origine: "modele", signal: sigV, id: "plan-vues" });
 await new Promise((r) => setTimeout(r, 400));
 ok(!cache(c.bAnnuler), "pendant le plan : « Annuler le plan » visible");
 c.bAnnuler.click();
-const lignes = await p;
+const lignes = await p; fermerSignal("plan-vues");
 ok(coupes === 1 && appelsReseau === 1, "l'appel en cours est coupé, aucune autre requête n'est partie (" + appelsReseau + " requête)");
 ok(lignes.length === 3 && !lignes[0].ok && lignes[1].cause === "annule" && lignes[2].cause === "annule", "étapes 2 et 3 : non exécutées, cause « annule »");
 const lg = await hub.hote.stockage.lire("kv", "noyau-journal"); const journal = lg ? lg.lignes : [];

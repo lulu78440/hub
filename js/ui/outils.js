@@ -43,7 +43,9 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, qua
 
   /** Vue « Sources » du Noyau (état et fraîcheur des sources de données) : lecture seule. Si la fenêtre du Noyau n'est pas chargée, on le dit. */
   const ouvrirSources = () => { const d = { vue: "sources", pris: false }; document.dispatchEvent(new CustomEvent("noyau:vue", { detail: d })); if (!d.pris) toast("Le Noyau n'est pas encore chargé : ouvre sa fenêtre puis réessaie."); };
-  const grpNoyau = () => ({ h: "Noyau", note: "Lecture seule : aucun appel vers un service.", tiles: [{ t: "Sources de données", s: "état et fraîcheur", fn: ouvrirSources }] });
+  /** Panneau « Modules, espaces et workflows » (js/ui/noyau-gestes.js) : chaque geste y demande un vrai clic de Lucien. */
+  const ouvrirGestes = () => { const d = { vue: "gestes", pris: false }; document.dispatchEvent(new CustomEvent("noyau:vue", { detail: d })); if (!d.pris) toast("Le Noyau n'est pas encore chargé : ouvre sa fenêtre puis réessaie."); };
+  const grpNoyau = () => ({ h: "Noyau", note: "Les sources sont en lecture seule. Les modules, espaces et workflows n'agissent que sur ton clic.", tiles: [{ t: "Sources de données", s: "état et fraîcheur", fn: ouvrirSources }, { t: "Modules, espaces, workflows", s: "gérer, rouvrir, lancer", fn: ouvrirGestes }] });
 
   function groupsMobile() {
     const L = mob.list(), by = (id) => L.find((w) => w.id === id), nHid = L.filter((w) => w.hid).length, nRed = L.filter((w) => w.red).length;
