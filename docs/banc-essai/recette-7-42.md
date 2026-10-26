@@ -6,7 +6,7 @@ Chromium sans carte graphique : la 3D est coupée dans ces essais (comme dans to
 
 ## Résumé
 
-1. Suite Python complète : **64 réussis, 1 échec sur 65** (2 040 cas, 768 s). L'échec est `test_refonte5_r2_echap_apres_clic_sur_la_barre_de_titre` : défaut du **test** (attente de 1,5 s trop courte pour le fondu d'ouverture de la fenêtre), pas du hub. Avec 6 s d'attente, le correctif R2 fonctionne (3 essais sur 3 pas de souci, focus dans la fenêtre, Échap la réduit). Rejoué seul : échec 6 fois sur 6 avec 1,5 s, donc ce n'est pas un échec de charge.
+1. Suite Python complète : **64 réussis, 1 échec sur 65** (2 040 cas, 768 s). L'échec est `test_refonte5_r2_echap_apres_clic_sur_la_barre_de_titre` : défaut du **test** (attente de 1,5 s trop courte pour le fondu d'ouverture de la fenêtre), pas du hub. Avec 6 s d'attente, le correctif R2 fonctionne (2 essais sur 2 : focus dans la fenêtre, Échap la réduit). Rejoué seul : échec 6 fois sur 6 avec 1,5 s, donc ce n'est pas un échec de charge.
 2. `node labo/essais*.mjs` : **44 fichiers, tous au vert** (`essais.mjs` : 44 réussis, 0 raté, 15 sautés faute de moteur réel, inchangé). `node tools/tests/atelier/tout.mjs` : « Tous les moteurs de l'Atelier : Tout est bon ».
 3. Parcours Playwright (PC 1440×900, téléphone 390×844, hors ligne, Noyau, `?pc` `?mobile` `?auto`, données chiffrées) : **57 points, 55 OK, 2 à corriger (une seule cause), 0 non vérifiable parmi les points déroulés** ; non vérifiables listés plus bas.
 4. **Anomalie importante BUD-1** : dans Budget, un **deuxième import de relevé touchant un mois déjà enregistré efface en mémoire durable les opérations du premier** (visibles jusqu'au rechargement, perdues après). Reproduit PC et téléphone. Détail plus bas.
@@ -35,7 +35,7 @@ Statuts : OK, à corriger (KO), non vérifiable (NV).
 | # | Point | Statut | Détail |
 | --- | --- | --- | --- |
 | R1 | `fermer_appli("direct")` coupe le partage sans fenêtre ouverte | OK | `test_refonte5_r1_fermer_direct_coupe_le_partage_sans_fenetre` vert. Partage simulé (flux canvas). |
-| R2 | Échap réduit la fenêtre après un clic sur sa barre de titre | OK (le correctif) / à corriger (le test) | Fonctionne dès que la fenêtre a fini son fondu d'ouverture (3/3 avec 6 s d'attente). Le test n'attend que 1,5 s : T1. |
+| R2 | Échap réduit la fenêtre après un clic sur sa barre de titre | OK (le correctif) / à corriger (le test) | Fonctionne dès que la fenêtre a fini son fondu d'ouverture (2/2 avec 6 s d'attente). Le test n'attend que 1,5 s : T1. |
 
 ### Budget (PC 1440×900 et téléphone 390×844, mêmes résultats)
 | # | Point | PC | Tél. | Détail |
