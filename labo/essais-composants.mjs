@@ -195,7 +195,9 @@ ok(innerHTMLTente === 0, "toujours aucune écriture innerHTML (démonstration co
 
 // ---------- 10. Pas d'outil pour le Noyau dans ce lot
 const src = (await import("node:fs")).readFileSync(new URL("../js/noyau/outils.js", import.meta.url), "utf8");
-ok(!/afficher_module|transformer_donnees|composants\.js/.test(src), "aucun nouvel outil du Noyau (afficher_module attend la validation de Lucien)");
+// Lot 3 (26/10) : afficher_module est validé par Lucien (LIBRE). outils.js ne doit toujours pas IMPORTER composants.js au démarrage (chargé à la demande) et rien d'autre ne peut afficher un composant.
+ok(!/^import .*composants\.js/m.test(src), "outils.js n'importe pas composants.js au démarrage (chargé à la demande, par jeux.js)");
+ok(/nom: "afficher_module", niveau: "LIBRE"/.test(src), "afficher_module existe, en accès libre, comme validé le 26/10");
 const code = (await import("node:fs")).readFileSync(new URL("../js/noyau/modules/composants.js", import.meta.url), "utf8").split("\n").filter((l) => !/^\s*(\/\/|\/\*\*|\*)/.test(l)).join("\n");
 ok(!/innerHTML|outerHTML|insertAdjacentHTML|\beval\(|new Function|WebGL|getContext\(|fetch\(|import\(/.test(code), "composants.js : ni innerHTML, ni eval, ni WebGL, ni réseau");
 

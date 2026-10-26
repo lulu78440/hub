@@ -5,6 +5,7 @@
 import { normaliser } from "./recherche.js";
 import { journalActions } from "./journal.js";
 import { validerParams } from "./outils.js";
+import { validerSortie } from "./registre.js";
 
 export const DELAI_CONFIRMATION = 60000;
 
@@ -93,6 +94,8 @@ export function creerBarriere({ catalogue, confirmer = null, delai = DELAI_CONFI
       const lancer = async (statut) => {
         try {
           const r = await o.exec(params, {});
+          const mauvaise = o.sortie_schema ? validerSortie(r, o.sortie_schema) : null;     // résultat non conforme à ce que l'outil déclare : erreur claire, rien n'est donné au modèle
+          if (mauvaise) throw new Error(mauvaise);
           const sortie = sortieDe(r); if (r && r._sorties) delete r._sorties;
           await log(o, { params: resume, statut, origine, sortie });
           return { ok: true, donnees: r, sortie };

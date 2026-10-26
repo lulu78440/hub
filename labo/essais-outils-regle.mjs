@@ -3,7 +3,7 @@ import { creerCatalogue, appliquerRegle, listeOutils, OUTILS_VALIDES, OUTILS_PRO
 let ko = 0; const ok = (c, m) => { if (!c) { ko++; console.log("✗ " + m); } else console.log("✓ " + m); };
 const cat = creerCatalogue({ raccourcis: () => ({}) });
 const aBrancher = new Set(OUTILS_A_BRANCHER.map((o) => o.nom));
-ok(cat.length === 39 && cat.length === Object.keys(OUTILS_VALIDES).length - aBrancher.size, `le catalogue en service = les 34 outils confirmés + les 5 validés le 25/10 (${cat.length} outils)`);
+ok(cat.length === 45 && cat.length === Object.keys(OUTILS_VALIDES).length - aBrancher.size, `le catalogue en service = les 34 confirmés + les 5 du 25/10 + les 6 de l'orchestrateur du 26/10 (${cat.length} outils)`);
 ok(Object.keys(OUTILS_VALIDES).every((n) => cat.some((o) => o.nom === n) || aBrancher.has(n)), "chaque outil validé est soit en service, soit listé « à brancher »");
 ok(cat.every((o) => OUTILS_VALIDES[o.nom] === o.niveau), "chaque outil a exactement le niveau validé");
 ok(cat.every((o) => o.niveau === "LIBRE" || o.niveau === "CONFIRMATION"), "aucun outil INTERDIT dans le catalogue (jamais présenté au modèle)");
@@ -31,4 +31,7 @@ ok(liste.length === cat.length + OUTILS_A_BRANCHER.length + OUTILS_PROPOSES.leng
 ok(liste.filter((l) => l.statut === "validé").length === cat.length, "tous les outils actifs sont « validé »");
 const prop = liste.find((l) => l.nom === "consulter_manuel");
 ok(prop && prop.statut === "validé", "consulter_manuel apparaît « validé » (actif)");
+const orch = { chercher_donnees: "LIBRE", lire_serie: "LIBRE", transformer_donnees: "LIBRE", afficher_module: "LIBRE", lire_modules: "LIBRE", enregistrer_module: "CONFIRMATION" };
+ok(Object.entries(orch).every(([n, niv]) => OUTILS_VALIDES[n] === niv && cat.some((o) => o.nom === n && o.niveau === niv)), "les 6 outils de l'orchestrateur (26/10) sont validés, actifs, au niveau demandé : 5 LIBRE et enregistrer_module en CONFIRMATION");
+ok(Object.keys(OUTILS_VALIDES).length === 45, "la liste validée compte exactement 45 outils (aucun autre ajout)");
 console.log(ko ? `\n${ko} échec(s)` : "\nTout est bon."); process.exit(ko ? 1 : 0);

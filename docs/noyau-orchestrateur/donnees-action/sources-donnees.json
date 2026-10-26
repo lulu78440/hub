@@ -1,0 +1,8 @@
+{
+  "_lisez_moi": "Liste FIXE et PUBLIQUE des séries publiées (jamais de clé, jamais de compte). Chaque entrée : id (minuscules, chiffres, tirets), nom, kind (banque_mondiale ou dbnomics), puis pays + indicateur (banque_mondiale) ou serie FOURNISSEUR/JEU/SÉRIE (dbnomics). actif:false = ignorée. Une série dbnomics doit être vérifiée en direct avant d'être activée.",
+  "series": [
+    { "id": "population-france", "nom": "Population de la France", "kind": "banque_mondiale", "pays": "FR", "indicateur": "SP.POP.TOTL", "unite": "habitants", "actif": true },
+    { "id": "pib-france", "nom": "PIB de la France (dollars courants)", "kind": "banque_mondiale", "pays": "FR", "indicateur": "NY.GDP.MKTP.CD", "unite": "USD courants", "actif": true },
+    { "id": "ipc-france-exemple", "nom": "Indice des prix à la consommation, France (EXEMPLE à vérifier)", "kind": "dbnomics", "serie": "INSEE/IPC-2015/M.00.SO.SO.ENSEMBLE.FE", "actif": false }
+  ]
+}
