@@ -1,11 +1,11 @@
 // Tuiles personnalisables (PC) : style de chaque fenêtre (Normal = l'apparence d'origine, Hologramme 3D, Fin, Verre, Minimal),
 // effets Constellation / Halo / Énergie, taille du texte. Réglages par fenêtre, gardés sur l'appareil (clé hub-tuiles-pc-v1,
 // donc aussi dans l'export). Tout est en CSS (css/hud.css) ; ce fichier pose les classes, les calques et le panneau « Personnaliser… ».
-// Mobile : rien (la disposition empilée reste maîtresse).
+// Téléphone : seulement la taille du texte (clé hub-tuiles-mob-v1) ; styles et effets restent au PC, la disposition empilée reste maîtresse.
 import { state, pulse } from "../state.js";
 import { prefs } from "../store/prefs.js";
 
-const KEY = "tuiles-pc-v1";
+const KEY = state.lite ? "tuiles-mob-v1" : "tuiles-pc-v1";
 const STYLES = [["normal", "Normal"], ["holo", "Hologramme 3D"], ["fin", "Fin"], ["verre", "Verre"], ["minimal", "Minimal"]];
 const FX = [["cst", "Constellation"], ["halo", "Halo"], ["energy", "Énergie"]];
 const SIZES = [[0.9, "90 %"], [1, "100 %"], [1.15, "115 %"], [1.3, "130 %"]];
@@ -15,7 +15,7 @@ const HOLO_LAYERS = ["back", "scan", "glass", "c1", "c2", "c3", "c4", "beam", "e
 
 /** `rescale(el, k)` : agrandit ou réduit la fenêtre quand la taille du texte change (fournie par windows.js). */
 export function initTuiles({ els, rescale }) {
-  if (state.lite) return { open() {}, get() { return DEF; } };
+  const lite = state.lite;
   let cfg = {};
   try { const d = JSON.parse(prefs.get(KEY, "{}")); if (d && typeof d === "object") cfg = d; } catch (e) { cfg = {}; }
   const get = (id) => ({ ...DEF, ...(cfg[id] || {}) });
@@ -57,6 +57,7 @@ export function initTuiles({ els, rescale }) {
 
   function apply(el) {
     const c = get(idOf(el)), cl = el.classList;
+    if (lite) { if (c.fs !== 1) { el.dataset.fs = "1"; el.style.setProperty("--fs", c.fs); } else { delete el.dataset.fs; el.style.removeProperty("--fs"); } return; }
     STYLES.forEach(([k]) => { if (k !== "normal") cl.toggle("t-" + k, c.style === k); });
     cl.toggle("fx-halo", !!c.halo); cl.toggle("fx-energy", !!c.energy); cl.toggle("fx-cst", !!c.cst);
     if (c.style === "holo") ensureHolo(el);
@@ -64,13 +65,13 @@ export function initTuiles({ els, rescale }) {
     if (c.cst) drawConst(el);
     if (c.fs !== 1) { el.dataset.fs = "1"; el.style.setProperty("--fs", c.fs); } else { delete el.dataset.fs; el.style.removeProperty("--fs"); }
   }
-  els.forEach((el) => { ro.observe(el); apply(el); });
+  els.forEach((el) => { if (!lite) ro.observe(el); apply(el); });
 
   function set(el, patch) {
     const id = idOf(el), before = get(id), next = { ...before, ...patch };
     if (JSON.stringify(next) === JSON.stringify(DEF)) delete cfg[id]; else cfg[id] = next;
     save(); apply(el);
-    if (next.fs !== before.fs) rescale(el, next.fs / before.fs);
+    if (next.fs !== before.fs && !lite) rescale(el, next.fs / before.fs);
     pulse(0.4);
   }
 
@@ -84,7 +85,8 @@ export function initTuiles({ els, rescale }) {
     const el = cur; if (!el) return;
     const c = get(idOf(el)); box.innerHTML = "";
     const h = document.createElement("div"); h.className = "ptit"; h.textContent = "Personnaliser · " + el.querySelector("h2").textContent;
-    box.append(h,
+    if (lite) box.append(h, row("Taille du texte", SIZES.map(([v, l]) => btn(l, c.fs === v, () => { set(el, { fs: v }); render(); }))));
+    else box.append(h,
       row("Style", STYLES.map(([k, l]) => btn(k === "normal" ? "Normal (actuel)" : l, c.style === k, () => { set(el, { style: k }); render(); }))),
       row("Effets", FX.map(([k, l]) => btn(l, c[k], () => { set(el, { [k]: !c[k] }); render(); }))),
       row("Taille du texte", SIZES.map(([v, l]) => btn(l, c.fs === v, () => { set(el, { fs: v }); render(); }))));
@@ -93,6 +95,7 @@ export function initTuiles({ els, rescale }) {
     box.append(f);
   }
   function place() {
+    if (lite) return;   // téléphone : feuille collée en bas (css/mobile.css)
     const r = cur.getBoundingClientRect(), b = box.getBoundingClientRect();
     let x = r.right + 12; if (x + b.width > innerWidth - 8) x = r.left - b.width - 12; if (x < 8) x = Math.max(8, Math.min(r.left + 16, innerWidth - b.width - 8));
     box.style.left = x + "px"; box.style.top = Math.max(8, Math.min(r.top, innerHeight - b.height - 8)) + "px";

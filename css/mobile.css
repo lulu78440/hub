@@ -21,3 +21,8 @@ body.lite .hints { display: none; }
 body.lite .bar input { font-size: 18px; padding: 12px 0; }
 body.lite .fps { text-shadow: 0 0 4px var(--void), 0 0 8px var(--void); }
 body.lite .win { pointer-events: auto; }
+
+/* Personnaliser… sur téléphone (recette A3) : feuille collée en bas, taille du texte seulement */
+body.lite .perso { left: 8px; right: 8px; bottom: 8px; top: auto; width: auto; max-height: 60vh; overflow: auto; }
+body.lite .win[data-fs] .in > * { zoom: var(--fs, 1); }
+body.lite .perso .opt { min-height: 44px; }

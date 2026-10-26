@@ -16,3 +16,15 @@
 
 ## 25/10 22:50 · 7.30.0 · p3-fenetres (built)
 Pile de focus + réduction animée vers l'icône (bureau-apps.js). Testé : PC (ouvrir, focus, réduire, rouvrir par icône, Échap, fermer), mouvement réduit (instantané), rechargement (état gardé), aucune erreur console nouvelle. Mobile : le bureau est réservé au PC, donc sans effet. Suite : p3-lasso.
+
+## 26/10 00:20 · 7.31.0 · p3-lasso (built)
+Lasso + sélection multiple + menu de groupe (bureau.js). Testé PC : lasso, déplacement de groupe, menu, alignement, Échap, Ctrl+A, Maj+clic, clic simple (ouvre et désélectionne), aucune erreur. Mobile : bureau réservé au PC. Suite : p3-direct, p3-ia, p3-mobile, puis lv-bus.
+
+## 26/10 00:50 · 7.32.0 · p3-direct (built)
+Écran en direct (direct.js). Testé PC avec faux écran : coupé par défaut, démarrage, vidéo reçue, pastille visible au plan 1, arrêt par la pastille, redémarrage, fermeture de la fenêtre coupe le partage, aucune erreur. Non testable ici : le vrai sélecteur d'écran de Brave (à essayer par Lucien).
+
+## 26/10 01:20 · 7.33.0 · p3-ia (built)
+Commandes pour l'orbe (commandes.js + docs/refonte-auto2/commandes-orbe.md). Testé : liste, commande ou paramètre inconnu refusés, libres exécutées, confirmation (refus, autorisation, Échap, demande simultanée), écran en direct via confirmation, événement `hub:commande`, journal, aucune erreur. À brancher par le Labo.
+
+## 26/10 08:45 · 7.36.2 · recette A1 et A3
+Main (7.35.0) fusionné dans refonte-auto2. A1 (contraste du bouton Écran en direct) et A3 (menu d'appui long du téléphone : Personnaliser… ajouté, Fermer retiré, panneau Personnaliser limité à la taille du texte sur téléphone) corrigés. Étapes déjà faites sur cette branche et absentes de main : p3-lasso (7.31.0), p3-direct (7.32.0), p3-ia (7.33.0). Reste : p3-mobile (à préciser avec Lucien). Suite complète du Banc relancée avant livraison.

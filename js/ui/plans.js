@@ -47,7 +47,7 @@ export function createPlans({ world, anchor, desk }) {
   });
   [1, 2, 3].forEach((n) => $("plan" + n).addEventListener("click", () => goPlan(n)));
   $("back-hub").addEventListener("click", () => goPlan(1));
-  $("live-btn").addEventListener("click", () => toast("Écran en direct : prévu plus tard, avec l'appli Windows."));
+  $("live-btn").addEventListener("click", () => document.dispatchEvent(new CustomEvent("hub:direct", { detail: "toggle" })));   // partage d'écran : ui/direct.js (p3-direct)
   addEventListener("keydown", (e) => {
     if (state.lite || e.ctrlKey || e.metaKey || e.altKey || e.target.isContentEditable || (e.target.closest && e.target.closest("input, textarea"))) return;
     if (e.key === "1" || e.key === "2" || e.key === "3") { goPlan(+e.key); if (e.key === "2") setYaw(0); }
