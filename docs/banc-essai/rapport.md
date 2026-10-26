@@ -1,5 +1,14 @@
 # Banc d'essai · rapport
 
+## recette 7.42 · recette de main 7.42.0 depuis 7.40.1 (26/10, poste Banc de test) : faite sur `banc-recette3`
+
+1. Main 7.42.0 (067fab8). Rien modifié dans `js/`, `css/`, `index.html` ; rien fusionné. Détail, tableau point par point et liste des essais pour Lucien : `recette-7-42.md` ; captures Budget et Achats dans `recette3/`.
+2. Suite complète **64/65** (2 040 cas, 768 s) : le seul échec est le **test** R2 (attente fixe de 1,5 s plus courte que le fondu d'ouverture de la fenêtre) ; le correctif R2 fonctionne avec une attente suffisante. 44 fichiers `labo/essais*.mjs` et `tools/tests/atelier/tout.mjs` : tous verts (`essais.mjs` : 44 réussis, 0 raté, 15 sautés faute de moteur réel).
+3. Playwright (PC 1440x900, mobile 390x844, hors ligne, données chiffrées, Noyau, `?pc` `?mobile` `?auto`) : **57 points, 55 OK, 2 à corriger (une seule cause)**, 0 erreur console, 0 violation CSP.
+4. **BUD-1 (importante)** : Budget, un second import de relevé sur un mois déjà enregistré remplace le document du mois (`sauverOps` écrit seulement les nouvelles opérations) : les opérations précédentes disparaissent au rechargement. Reproduit PC et téléphone ; à corriger avant un usage réel. T1 (mineure, banc) : attente du test R2.
+5. Noyau : 45 outils, niveaux inchangés, `enregistrer_module` en CONFIRMATION, 16 noms de gestes refusés, aucun geste de suppression, export, restauration ou lancement atteignable par le modèle. Hors ligne : les 18 nouveaux fichiers sont en cache, rechargement réseau coupé correct. Données chiffrées : rien de lisible dans IndexedDB, `localStorage` ni l'export.
+6. Non vérifiable ici : relevé bancaire réel, sélecteur de fichier Android, lien de colis réel, IndexedDB réel de Brave, workflow avec confirmation (pas encore d'interface), sources de données réelles.
+
 ## ergo-recette · recette finale de la refonte (26/10, poste Banc de test) : faite sur `banc-recette`
 
 1. Main 7.35.0 (b774e1e), rien modifié dans `js/`, `css/`, `index.html` ; rien fusionné. Détail et liste des essais pour Lucien : `recette-refonte.md`, captures dans `recette/`.
