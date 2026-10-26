@@ -41,6 +41,10 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, qua
     } catch (e) { return []; }
   }
 
+  /** Vue « Sources » du Noyau (état et fraîcheur des sources de données) : lecture seule. Si la fenêtre du Noyau n'est pas chargée, on le dit. */
+  const ouvrirSources = () => { const d = { vue: "sources", pris: false }; document.dispatchEvent(new CustomEvent("noyau:vue", { detail: d })); if (!d.pris) toast("Le Noyau n'est pas encore chargé : ouvre sa fenêtre puis réessaie."); };
+  const grpNoyau = () => ({ h: "Noyau", note: "Lecture seule : aucun appel vers un service.", tiles: [{ t: "Sources de données", s: "état et fraîcheur", fn: ouvrirSources }] });
+
   function groupsMobile() {
     const L = mob.list(), by = (id) => L.find((w) => w.id === id), nHid = L.filter((w) => w.hid).length, nRed = L.filter((w) => w.red).length;
     const G = [];
@@ -51,6 +55,7 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, qua
       { t: "Internet", s: "recherche", fn: () => { const q = $("q"); if (q) { scrollTo({ top: 0, behavior: state.reduce ? "auto" : "smooth" }); q.focus({ preventScroll: true }); } } },
       fen("mails", "Mails", "dans le hub"), fen("favs", "Favoris"), fen("video", "Vidéo"), fen("web", "Page en direct"), fen("notes", "Notes"), fen("music", "Musique"),
       ...liensBureau() ] });
+    G.push(grpNoyau());
     G.push({ h: "Gestes", tiles: [
       fromLine(/^Focus 25|^Arrêter le Focus/), fromLine(/^Focus 50/), fromLine(/^Revoir le briefing/, "Revoir le briefing"),
       fromLine(/^Capture rapide/), fromLine(/image ici/i, "Ajouter une image"),
@@ -86,6 +91,7 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, qua
     if (lite) return groupsMobile();
     const hidden = wins.hiddenEls(), prog = wins.elById("progress"), mails = wins.elById("mails");
     const G = [];
+    G.push(grpNoyau());
     G.push({ h: "Gestes", tiles: [
       fromLine(/^Focus 25|^Arrêter le Focus/), fromLine(/^Focus 50/), fromLine(/^Revoir le briefing/, "Revoir le briefing"),
       fromLine(/^Capture rapide/), fromLine(/image ici/i, "Ajouter une image"),

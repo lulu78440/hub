@@ -268,3 +268,13 @@ body.lite .win.nx-win .ph{cursor:default}
 .nxg-noeud{color:var(--c-ink,#dff6fd)}.nxg-reussie{color:var(--c-ok,#4fe3a8)}.nxg-echec{color:var(--c-red,#ff4d6a)}.nxg-refusee,.nxg-annulee{color:var(--c-amber,#ffb347)}.nxg-non_executee,.nxg-ignoree,.nxg-prevue{color:var(--c-dim,#7ea3b6)}
 .nxg-noeud .nxg-sous{opacity:.85}
 .nxg-repli{margin:6px 0}.nxg-repli>summary{cursor:pointer;color:var(--c-cyan);min-height:28px}.nxg-liste{margin:4px 0 0;padding-left:20px;font-size:13px}
+
+/* Refonte 4 (7.40.0) : barre « Sources » / « Annuler le plan » de la fenêtre du Noyau (js/ui/noyau-controles.js). Libellés en toutes lettres, pas de couleur seule. */
+.nx-vues{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--n-line)}
+.nx-vues-btn{min-height:44px;min-width:44px;padding:0 14px;font:inherit;font-size:14px}
+.nx-vues-btn:focus-visible{outline:2px solid var(--n-cyan);outline-offset:2px}
+.nx-vues-annuler{border-style:dashed;border-width:2px;color:var(--n-ink)}
+.nx-vues-annuler::before{content:"■ ";font-size:.8em}
+.nx-vues-annuler[hidden]{display:none}
+.nx-vues-etat{flex:1 1 140px;min-width:0;font-size:13px;color:var(--n-dim,var(--n-ink));overflow-wrap:anywhere}
+.nx-vues-etat:empty{display:none}

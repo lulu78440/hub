@@ -508,5 +508,7 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   };
   // Point d'accroche pour l'outil afficher_module (orchestrateur) : lui seul peut poser un composant dans l'échange, et seulement par la barrière.
   if (hote.ui) { hote.ui.afficherComposant = (type, jeu, options) => api.afficherComposant(type, jeu, options); hote.ui.afficherPlan = (a, l, t) => api.afficherPlan(a, l, t).catch(() => null); }
+  // Refonte 4 : boutons « Sources » et « Annuler le plan » (js/ui/noyau-controles.js). Un échec de chargement ne gêne pas la fenêtre.
+  import("../ui/noyau-controles.js").then((m) => m.monterControles({ racine, api, noyau, h })).catch(() => {});
   return api;
 }
