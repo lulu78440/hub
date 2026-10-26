@@ -73,7 +73,8 @@ def test_refonte5_r1_fermer_direct_coupe_le_partage_sans_fenetre(h):
 def test_refonte5_r2_echap_apres_clic_sur_la_barre_de_titre(h):
     p = _bureau(h)
     _cmd(p, "ouvrir_appli", {"app": "internet"})
-    p.wait_for_timeout(1500)
+    p.wait_for_selector('.dwin[data-app="internet"] .ph', state="visible", timeout=15000)   # fondu d'ouverture : jusqu'à ~4 s sur une machine chargée
+    p.wait_for_timeout(500)
     p.evaluate("document.querySelectorAll('.brief').forEach(b => { b.hidden = true; })")   # le message du jour couvre le haut du bureau
     p.click('.dwin[data-app="internet"] .ph', position={"x": 60, "y": 10}, force=True)
     foc = p.evaluate("(() => { const a = document.activeElement; return a === document.body ? 'BODY' : (a.closest('.dwin') ? 'fenetre' : a.tagName); })()")
