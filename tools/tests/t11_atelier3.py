@@ -283,6 +283,51 @@ def test_atelier3_donnees_chiffrees_si_verrouillage(h):
     return 1
 
 
+def test_atelier4_budget_import_ajoute_sans_effacer(h):
+    """BUD-1 (7.42.1), verrouillage actif : 2 opérations d'octobre, puis 1 autre d'octobre, puis les mêmes ré-importées, puis rechargement :
+    les 3 sont là (avant la correction, il n'en restait qu'une), sans doublon, pied de fenêtre = magasin, toujours chiffré. Achats : deux achats gardés."""
+    T = "Date;Libellé;Montant\r\n"
+    f1 = T + "05/10/2026;CB PHARMACIE FICTIVE;-9,90\r\n12/10/2026;PRLV GAZ FICTIF;-40,00\r\n"
+    f2 = T + "20/10/2026;CB LIBRAIRIE FICTIVE;-15,00\r\n"
+    d, p = _pret(h, True, vault=True)
+    _ouvrir(p, "budget", True)
+    w = p.locator('.win[data-id="budget"]')
+    def envoyer(csv):
+        p.set_input_files('.win[data-id="budget"] input[type=file]', files=[{"name": "r.csv", "mimeType": "text/csv", "buffer": csv.encode("utf-8")}])
+        p.wait_for_timeout(700)
+    envoyer(f1)
+    envoyer(f2)
+    _assert(_in("3 opérations sur l'appareil", w.inner_text()), f"pied : 3 opérations attendues : {w.inner_text()[-300:]}")
+    envoyer(f1)
+    t = w.inner_text()
+    _assert(_in("0 opération ajoutée", t) and _in("2 déjà connues", t), f"ré-import : rien d'ajouté : {t[:300]}")
+    brut = ev(p, """return await new Promise((res) => { const r = indexedDB.open('hub'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').getAll(); q.onsuccess = () => res(JSON.stringify(q.result)); }; });""")
+    for secret in ("PHARMACIE", "LIBRAIRIE", "GAZ FICTIF"):
+        _assert(secret not in brut, f"« {secret} » lisible en clair dans IndexedDB")
+    _ouvrir(p, "achats", True)
+    a = p.locator('.win[data-id="achats"]')
+    for nom in ("Casque fictif", "Four fictif"):
+        if not a.locator('[data-k="f-nom"]').is_visible():
+            a.locator("summary", has_text="Nouvel achat").click()
+        a.locator('[data-k="f-nom"]').fill(nom)
+        a.locator('[data-k="f-nom"]').press("Enter")
+        p.wait_for_timeout(600)
+    p.reload()
+    unlock_page(p, PHRASE)
+    p.wait_for_function("window.__hub && document.body.classList.contains('ready')", timeout=60000)
+    p.wait_for_timeout(1500)
+    n = ev(p, "const s = await import('/js/store/storage.js'); const kv = await s.store.all('kv'); return [kv.filter(x => x.id.startsWith('budget-ops-')).flatMap(x => x.operations).length, kv.filter(x => x.id.startsWith('achat-')).length];")
+    _assert(n == [3, 2], f"magasin après rechargement : 3 opérations et 2 achats attendus, obtenu {n}")
+    _ouvrir(p, "budget", True)
+    _assert(_in("3 opérations sur l'appareil", p.locator('.win[data-id="budget"]').inner_text()), "après rechargement : 3 opérations au pied")
+    _ouvrir(p, "achats", True)
+    t = p.locator('.win[data-id="achats"]').inner_text()
+    _assert("Casque fictif" in t and "Four fictif" in t, f"les deux achats doivent être relus : {t[:300]}")
+    _assert(not d.errors, f"erreurs de console : {d.errors}")
+    d.close()
+    return 1
+
+
 def test_atelier3_clavier_et_csp(h):
     """Tabulation : les commandes des deux fenêtres reçoivent le focus dans l'ordre ; aucune violation de la politique de sécurité."""
     d, p = _pret(h, False)

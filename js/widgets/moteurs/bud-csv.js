@@ -125,11 +125,37 @@ export function importerReleve(entree, options = {}) {
     }
     if (!date) { ignorees.push({ ligne: L[i].n, raison: l.some((x) => /solde|total/i.test(x)) ? "ligne de solde ou de total" : "date illisible" }); continue; }
     if (montant == null) { ignorees.push({ ligne: L[i].n, raison: "montant illisible" }); continue; }
-    const base = `${date}|${norm(libelle)}|${montant}`, n = (vus.get(base) || 0) + 1;   // deux cafés identiques le même jour restent deux opérations
+    const base = cleOperation({ date, libelle, montant }, 0), n = (vus.get(base) || 0) + 1;   // deux cafés identiques le même jour restent deux opérations
     vus.set(base, n);
-    operations.push({ id: "op-" + empreinte(base + "|" + n), date, libelle, montant, ligne: L[i].n });
+    operations.push({ id: "op-" + empreinte(cleOperation({ date, libelle, montant }, n)), date, libelle, montant, ligne: L[i].n });
   }
   return { operations, ignorees, colonnes: col, separateur };
+}
+
+/** Clé stable d'une opération (BUD-1) : date | libellé normalisé | montant en centimes | rang (2e achat identique le même jour = rang 2).
+ *  Elle est calculée à la lecture du relevé et gardée dans « id » (empreinte de cette clé) : la même opération relue dans un autre fichier retrouve le même id. */
+export const cleOperation = (o, rang = 1) => `${o.date}|${norm(o.libelle || "")}|${o.montant}|${rang}`;
+
+/** Fusionne les opérations d'un mois : tout l'existant est gardé tel quel (choix manuel compris), seules les opérations dont l'id est inconnu s'ajoutent. */
+export function fusionner(existantes, ajoutees) {
+  const sortie = (existantes || []).slice(), connus = new Set(sortie.map((o) => o.id));
+  for (const o of ajoutees || []) if (!connus.has(o.id)) { connus.add(o.id); sortie.push(o); }
+  return sortie;
+}
+
+/** Écrit des opérations dans le magasin, un document « <prefixe>AAAA-MM » par mois, SANS jamais remplacer l'existant :
+ *  le document du mois est relu, fusionné, puis réécrit. mag = { get(id), put(doc) }. Renvoie le nombre d'opérations réellement ajoutées. */
+export async function enregistrerOps(mag, liste, prefixe = "budget-ops-") {
+  const parMois = {};
+  for (const o of liste || []) (parMois[o.date.slice(0, 7)] = parMois[o.date.slice(0, 7)] || []).push(o);
+  let ajoutees = 0;
+  for (const [m, l] of Object.entries(parMois)) {
+    const doc = await mag.get(prefixe + m), avant = doc && Array.isArray(doc.operations) ? doc.operations : [];
+    const apres = fusionner(avant, l);
+    ajoutees += apres.length - avant.length;
+    if (apres.length !== avant.length || !doc) await mag.put({ ...(doc || {}), id: prefixe + m, operations: apres });
+  }
+  return ajoutees;
 }
 
 /** Ne garde que les opérations nouvelles (identifiant pas encore connu). */

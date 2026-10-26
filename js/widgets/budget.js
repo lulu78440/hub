@@ -3,12 +3,14 @@
 // Données (collection kv, donc chiffrées si le verrouillage est actif, exportées et synchronisées comme le reste) :
 //   « budget-etat » = { enveloppes: [{ id, nom }], allocations: { "AAAA-MM": { idEnveloppe: centimes } }, regles: [règle] } ;
 //   « budget-ops-AAAA-MM » = { operations: [{ id, date, libelle, montant (centimes), categorieManuelle? }] }.
+// Un import AJOUTE au document du mois (relu, fusionné par id, réécrit) : il ne le remplace jamais. Clé d'une opération (id = empreinte de la clé) :
+// date | libellé normalisé | montant en centimes | rang (le 2e achat identique le même jour a le rang 2). Voir cleOperation dans moteurs/bud-csv.js.
 // Le fichier du relevé n'est jamais envoyé nulle part ni gardé : seules les opérations lues sont enregistrées. Rien n'est retiré sans second geste.
 import { store } from "../store/storage.js";
 import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { dayKey } from "./when.js";
-import { importerReleve, nouvelles, categoriser, suggererRegle } from "./moteurs/bud-csv.js";
+import { importerReleve, nouvelles, categoriser, suggererRegle, enregistrerOps } from "./moteurs/bud-csv.js";
 import { calculerMois, allouer, reprendreMoisPrecedent, bilanTexte, euros, moisSuivant, moisPrecedent, nomMois } from "./moteurs/bud-enveloppes.js";
 import { h, lireEuros, euroChamp, boutonDeuxTemps, garderFocus, poserStyle } from "./atelier-outils.js";
 
@@ -36,15 +38,14 @@ export function initBudget() {
     const tout = await store.all("kv");
     const e = tout.find((x) => x.id === ETAT);
     etat = e ? { ...etatVide(), ...e, enveloppes: Array.isArray(e.enveloppes) ? e.enveloppes : [], regles: Array.isArray(e.regles) ? e.regles : [], allocations: e.allocations && typeof e.allocations === "object" ? e.allocations : {} } : etatVide();
-    ops = tout.filter((x) => typeof x.id === "string" && x.id.startsWith(OPS) && Array.isArray(x.operations)).flatMap((x) => x.operations);
+    ops = opsDe(tout);
     pret = true; if (!saisie) dessiner();
   }
+  const opsDe = (tout) => tout.filter((x) => typeof x.id === "string" && x.id.startsWith(OPS) && Array.isArray(x.operations)).flatMap((x) => x.operations);
+  const relireOps = async () => { ops = opsDe(await store.all("kv")); };   // la mémoire repart toujours du magasin (le pied et les doublons s'y fient)
   const sauverEtat = async () => { etat.id = ETAT; await ecrire(() => store.put("kv", etat)); };
-  async function sauverOps(liste) {   // réécrit les mois touchés
-    const parMois = {};
-    for (const o of liste) (parMois[o.date.slice(0, 7)] = parMois[o.date.slice(0, 7)] || []).push(o);
-    for (const [m, l] of Object.entries(parMois)) await ecrire(() => store.put("kv", { id: OPS + m, operations: l }));
-  }
+  /** Ajoute au document de chaque mois touché, sans le remplacer (BUD-1) : relu dans le magasin, fusionné par id, réécrit. */
+  const sauverOps = (liste) => ecrire(() => enregistrerOps({ get: (id) => store.get("kv", id), put: (d) => store.put("kv", d) }, liste, OPS));
   const classees = () => categoriser(ops, etat.regles).operations;
 
   function calcul() {
@@ -58,10 +59,11 @@ export function initBudget() {
     if (f.size > MAX_OCTETS) { statut = "Fichier trop gros (3 Mo au plus). Exporte un relevé plus court."; dessiner(); return; }
     try {
       const lu = importerReleve(new Uint8Array(await f.arrayBuffer()));
+      await relireOps();
       const nouv = nouvelles(ops, lu.operations);
       if (ops.length + nouv.length > MAX_OPS) { statut = "Trop d'opérations gardées (" + MAX_OPS + " au plus)."; dessiner(); return; }
       const a = nouv.map((o) => ({ id: o.id, date: o.date, libelle: o.libelle.slice(0, 200), montant: o.montant }));
-      ops = ops.concat(a); await sauverOps(a);
+      await sauverOps(a); await relireOps();
       const dates = a.map((o) => o.date).sort();
       if (dates.length) mois = dates[dates.length - 1].slice(0, 7);
       const deja = lu.operations.length - nouv.length;
@@ -95,8 +97,12 @@ export function initBudget() {
   }
   async function classer(op, categorie) {
     if (!categorie) return;
-    ops = ops.map((o) => (o.id === op.id ? { ...o, categorieManuelle: categorie } : o));
-    await ecrire(() => store.put("kv", { id: OPS + op.date.slice(0, 7), operations: ops.filter((o) => o.date.slice(0, 7) === op.date.slice(0, 7)) }));
+    await ecrire(async () => {   // on retouche l'opération dans le document du mois relu, sans toucher aux autres
+      const id = OPS + op.date.slice(0, 7), doc = await store.get("kv", id);
+      const liste = doc && Array.isArray(doc.operations) ? doc.operations : [];
+      await store.put("kv", { ...(doc || {}), id, operations: liste.map((o) => (o.id === op.id ? { ...o, categorieManuelle: categorie } : o)) });
+    });
+    await relireOps();
     const s = suggererRegle(op.libelle, categorie);
     suggestion = s && !etat.regles.some((r) => r.id === s.id) ? s : null;
     statut = "Classé dans « " + categorie + " »."; dessiner();
