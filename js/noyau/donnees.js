@@ -57,16 +57,30 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
     l.push(t); appels.set(s.hote, l);
   };
 
-  async function chercherJSON(url, s) {
+  // Lot 4 : état de chaque source (dernier succès, dernière erreur, date de mise à jour de la dernière donnée reçue), pour montrer sa fraîcheur.
+  const etats = new Map();
+  const noter = (s, champs) => etats.set(s.id, { ...(etats.get(s.id) || {}), ...champs });
+  const iso = () => maintenant().toISOString();
+
+  async function chercherJSON(url, s, signal = null) {
+    try { const r = await chercherJSONBrut(url, s, signal); noter(s, { dernier_ok: iso(), erreur: null, erreur_code: null }); return r; }
+    catch (e) { noter(s, { derniere_erreur: iso(), erreur: String(e && e.message || e).slice(0, 160), erreur_code: (e && e.code) || "erreur" }); throw e; }
+  }
+  async function chercherJSONBrut(url, s, signal = null) {
+    if (signal && signal.aborted) echec("Appel annulé.", "annule");
     const u = new URL(url);
     if (u.protocol !== "https:" || u.hostname !== s.hote) echec("Adresse refusée : seul l'hôte de la source est permis.", "hote");
     controler(s);
     const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
     const minuterie = ctl ? setTimeout(() => ctl.abort(), delai) : null;
+    const relais = ctl && signal ? () => ctl.abort() : null; if (relais) signal.addEventListener("abort", relais, { once: true });     // l'annulation de l'appelant coupe la requête
     let rep;
     try { rep = await fetch(url, ctl ? { signal: ctl.signal, headers: { accept: "application/json" } } : { headers: { accept: "application/json" } }); }
-    catch (e) { echec(e && e.name === "AbortError" ? `${s.nom} met trop de temps à répondre (plus de ${Math.round(delai / 1000)} s).` : `${s.nom} est injoignable (réseau coupé, site hors service ou accès bloqué par le navigateur).`, "reseau"); }
-    finally { if (minuterie) clearTimeout(minuterie); }
+    catch (e) {
+      if (signal && signal.aborted) echec("Appel annulé.", "annule");
+      echec(e && e.name === "AbortError" ? `${s.nom} met trop de temps à répondre (plus de ${Math.round(delai / 1000)} s).` : `${s.nom} est injoignable (réseau coupé, site hors service ou accès bloqué par le navigateur).`, "reseau");
+    }
+    finally { if (minuterie) clearTimeout(minuterie); if (relais) signal.removeEventListener("abort", relais); }
     if (!rep || !rep.ok) echec(`${s.nom} a répondu par une erreur${rep && rep.status ? " (" + rep.status + ")" : ""}${rep && rep.status === 404 && s.id === "publie" ? " : la série n'est pas publiée (la tâche GitHub n'est pas activée ?)" : ""}.`, "http");
     let texte; try { texte = await rep.text(); } catch (e) { echec(`Réponse de ${s.nom} illisible.`, "format"); }
     if (texte.length > MAX_OCTETS) echec(`Réponse de ${s.nom} trop volumineuse (plus de ${MAX_OCTETS / 1e6} Mo) : refusée.`, "taille");
@@ -75,7 +89,7 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
   const ajouterParam = (base, o) => base + "?" + Object.entries(o).filter(([, v]) => v !== "" && v != null).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
 
   // ------------------------------------------------------------------ chercher_donnees
-  async function chercher({ requete, source: id = "dbnomics", jeu_de_donnees = "" } = {}) {
+  async function chercher({ requete, source: id = "dbnomics", jeu_de_donnees = "", signal = null } = {}) {
     const s = source(id), q = propre(requete, 120);
     if (q.length < 2) echec("Requête trop courte.", "requete");
     const mots = sansAccent(q).split(/[^a-z0-9]+/).filter((m) => m.length > 1);
@@ -84,7 +98,7 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
       return { source: s.nom, licence: s.licence, resultats: r.slice(0, 8).map((i) => ({ identifiant: "FR/" + i.code, indicateur: i.nom, unite: i.unite })), note: "Identifiant = PAYS/INDICATEUR : remplace FR par le code du pays (DE, ES, US…). Liste locale d'indicateurs courants." };
     }
     if (s.id === "publie") {
-      const rep = await chercherJSON(racinePubliee + "index.json", s);
+      const rep = await chercherJSON(racinePubliee + "index.json", s, signal);
       const l = Array.isArray(rep && rep.series) ? rep.series : echec("Index des séries publiées : forme inattendue.", "format");
       const r = l.filter((x) => x && typeof x.id === "string" && RE_SERIE.publie.test(x.id) && mots.some((m) => sansAccent(String(x.nom) + " " + String(x.id)).includes(m)));
       return { source: s.nom, licence: s.licence, resultats: r.slice(0, 8).map((x) => ({ identifiant: x.id, titre: propre(x.nom), actualise: propre(x.maj, 20) })) };
@@ -93,11 +107,11 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
     let r;
     if (jeu_de_donnees) {
       if (!/^[A-Za-z0-9_-]{1,40}\/[A-Za-z0-9_.-]{1,60}$/.test(jeu_de_donnees)) echec("jeu_de_donnees : format FOURNISSEUR/JEU attendu (ex. INSEE/IPC-2015).", "requete");
-      const rep = await chercherJSON(ajouterParam(`https://${s.hote}/v22/series/${jeu_de_donnees}`, { q, limit: 8, observations: 0, metadata: 0 }), s);
+      const rep = await chercherJSON(ajouterParam(`https://${s.hote}/v22/series/${jeu_de_donnees}`, { q, limit: 8, observations: 0, metadata: 0 }), s, signal);
       const docs = rep && rep.series && Array.isArray(rep.series.docs) ? rep.series.docs : echec("Réponse DBnomics : forme inattendue (liste de séries absente).", "format");
       r = docs.filter((d) => d && typeof d.series_code === "string").slice(0, 8).map((d) => ({ identifiant: `${jeu_de_donnees}/${d.series_code}`, titre: propre(d.series_name) }));
     } else {
-      const rep = await chercherJSON(ajouterParam(`https://${s.hote}/v22/search`, { q, limit: 8, offset: 0 }), s);
+      const rep = await chercherJSON(ajouterParam(`https://${s.hote}/v22/search`, { q, limit: 8, offset: 0 }), s, signal);
       const docs = rep && rep.results && Array.isArray(rep.results.docs) ? rep.results.docs : echec("Réponse DBnomics : forme inattendue (résultats absents).", "format");
       r = docs.filter((d) => d && typeof d.provider_code === "string" && typeof d.code === "string").slice(0, 8).map((d) => ({ jeu_de_donnees: `${d.provider_code}/${d.code}`, titre: propre(d.name) }));
     }
@@ -109,7 +123,7 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
     const d0 = debut ? debut : "0000", d1 = fin ? fin : "9999-99-99";
     return lignes.filter((l) => l[0].slice(0, d0.length) >= d0 && l[0].slice(0, d1.length) <= d1);
   };
-  async function lire({ source: id, identifiant, debut = "", fin = "" } = {}) {
+  async function lire({ source: id, identifiant, debut = "", fin = "", signal = null } = {}) {
     const s = source(id);
     if (typeof identifiant !== "string" || !RE_SERIE[s.id].test(identifiant)) echec(`Identifiant de série invalide pour ${s.nom} (exemple : ${s.exemple_serie}).`, "requete");
     for (const p of [debut, fin]) if (p && !RE_PERIODE.test(p)) echec("Période : AAAA ou AAAA-MM.", "requete");
@@ -117,7 +131,7 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
     let lignes, nomSerie, unite = "unité non précisée", maj = null, licence = s.licence, periodeNote = "", url;
     if (s.id === "dbnomics") {
       url = `https://${s.hote}/v22/series/${identifiant}?observations=1`;
-      const rep = await chercherJSON(url, s);
+      const rep = await chercherJSON(url, s, signal);
       const d = rep && rep.series && Array.isArray(rep.series.docs) ? rep.series.docs[0] : null;
       if (!d || !Array.isArray(d.period) || !Array.isArray(d.value) || d.period.length !== d.value.length) echec("Réponse DBnomics : forme inattendue (période et valeurs absentes ou de tailles différentes).", "format");
       let trim = false, sem = false;
@@ -133,7 +147,7 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
     } else if (s.id === "banque_mondiale") {
       const [pays, ind] = identifiant.split("/");
       url = ajouterParam(`https://${s.hote}/v2/country/${pays}/indicator/${ind}`, { format: "json", per_page: 200, date: (debut || fin) ? `${(debut || "1960").slice(0, 4)}:${(fin || String(maintenant().getUTCFullYear())).slice(0, 4)}` : "" });
-      const rep = await chercherJSON(url, s);
+      const rep = await chercherJSON(url, s, signal);
       if (Array.isArray(rep) && rep[0] && rep[0].message) echec("La Banque mondiale refuse cette demande : " + propre(JSON.stringify(rep[0].message), 140), "http");
       const rows = Array.isArray(rep) && Array.isArray(rep[1]) ? rep[1] : null;
       if (!rows) echec("Réponse Banque mondiale : forme inattendue (liste d'observations absente).", "format");
@@ -144,9 +158,10 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
       const lu = rep[0] && typeof rep[0].lastupdated === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rep[0].lastupdated) ? rep[0].lastupdated : null; maj = lu;
     } else {
       url = racinePubliee + identifiant + ".json";
-      const rep = await chercherJSON(url, s);
+      const rep = await chercherJSON(url, s, signal);
       if (!rep || !Array.isArray(rep.lignes) || !Array.isArray(rep.colonnes) || typeof rep.unite !== "string" || !rep.source) echec("Série publiée : forme inattendue.", "format");
       const brut = jeux.deposer({ ...rep, source: { ...rep.source, requete } }, { origine: { source: s.id, identifiant } });     // déjà au format jeu : vérifié par le magasin
+      noterMaj(s, brut.jeu);
       return { ref: brut.ref, jeu: brut.jeu, resume: resumeJeu(brut.ref, brut.jeu) };
     }
     lignes = filtrerPeriode(lignes, debut, fin);
@@ -162,8 +177,17 @@ export function creerDonnees({ fetch, maintenant = () => new Date(), jeux, regla
       source: { nom: ((n) => `${`${s.nom} · ${identifiant}`.slice(0, 120 - n.length)}${n}`)(`${periodeNote}${majConnue ? "" : " · mise à jour de la source inconnue (date de la requête)"}`), maj: maj || requete, periode: `${premiere} → ${derniere}`.slice(0, 60), url: url.split("?")[0], licence: licence.slice(0, 80), requete, verifie: true },
       exemple: false
     }, { origine: { source: s.id, identifiant, debut, fin } });
+    noterMaj(s, jeu);
     return { ref, jeu, resume: resumeJeu(ref, jeu) };
   }
 
-  return { chercher, lire, sources: () => SOURCES_DONNEES.map((s) => ({ id: s.id, nom: s.nom, hote: s.hote, licence: s.licence, acces: s.acces, coupee: coupees().includes(s.id), exemple: s.exemple_serie })) };
+  // Mise à jour de la dernière série lue (pour la fraîcheur de la source) : appelée après chaque lecture réussie.
+  const noterMaj = (s, jeu) => noter(s, { derniere_maj: jeu && jeu.source ? jeu.source.maj : null, derniere_serie: jeu && jeu.source ? jeu.source.periode : null });
+
+  return {
+    chercher, lire,
+    sources: () => SOURCES_DONNEES.map((s) => ({ id: s.id, nom: s.nom, hote: s.hote, licence: s.licence, acces: s.acces, coupee: coupees().includes(s.id), exemple: s.exemple_serie })),
+    /** État de chaque source : { id, nom, hote, coupee, dernier_ok, derniere_erreur, erreur, derniere_maj }. Rien n'est inventé : une source jamais appelée n'a que des null. */
+    etatSources: () => SOURCES_DONNEES.map((s) => ({ id: s.id, nom: s.nom, hote: s.hote, coupee: coupees().includes(s.id), dernier_ok: null, derniere_erreur: null, erreur: null, erreur_code: null, derniere_maj: null, derniere_serie: null, ...(etats.get(s.id) || {}) }))
+  };
 }

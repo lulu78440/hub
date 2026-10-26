@@ -6,6 +6,8 @@
 // L'export (CSV, SVG) ne part que d'un vrai clic de Lucien (event.isTrusted) : le Noyau ne peut pas le déclencher.
 // Aucun outil du Noyau n'appelle ces composants dans ce lot : ils sont appelables par le code (labo, fenêtre du Noyau).
 
+import { evaluerFraicheur, horloge } from "./fraicheur.js";
+
 const NS = "http://www.w3.org/2000/svg";
 export const LIMITE_POINTS = 5000;          // par série ; au-delà, agrégation par moyenne, annoncée
 export const MAX_SERIES = 6;
@@ -282,14 +284,41 @@ const uid = (p) => `nxc-${p}-${++compteur}`;
 const coupe = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
 const f1 = (v) => (Math.round(v * 10) / 10).toString();
 
+/**
+ * Fraîcheur d'un jeu (lot 4) : une forme ET des mots (jamais la couleur seule), plus le détail en infobulle.
+ * À jour = disque plein · en retard = demi-disque · ancien = cercle vide · inconnu = « ? » · exemple = losange.
+ */
+export function badgeFraicheur(jeu, { chargeMs = null, maintenant = horloge.maintenant(), court = false } = {}) {
+  const j = jeuSur(jeu), f = evaluerFraicheur(j, { maintenant, chargeMs });
+  const contour = (extra) => s("circle", { cx: 6, cy: 6, r: 4.6, fill: "none", stroke: "currentColor", "stroke-width": 1.4, ...extra });
+  const formes = {
+    a_jour: [s("circle", { cx: 6, cy: 6, r: 5, fill: "currentColor" })],
+    en_retard: [contour({}), s("path", { d: "M6 1.4a4.6 4.6 0 0 0 0 9.2z", fill: "currentColor" })],
+    ancien: [contour({})],
+    inconnu: [contour({ "stroke-dasharray": "2 1.6" }), s("text", { x: 6, y: 8.6, "text-anchor": "middle", "font-size": 7, fill: "currentColor", texte: "?" })],
+    exemple: [s("path", { d: "M6 1 11 6 6 11 1 6z", fill: "none", stroke: "currentColor", "stroke-width": 1.4 })]
+  };
+  const svg = s("svg", { class: "nxf-forme", viewBox: "0 0 12 12", width: 12, height: 12, "aria-hidden": "true", focusable: "false" }, ...(formes[f.niveau] || formes.inconnu));
+  const detail = [f.resume, f.retard_texte, f.cadence ? `rythme ${f.cadence}` : null, f.charge_texte].filter(Boolean).join(" · ");
+  return h("span", { class: `nxf nxf-${f.niveau}`, title: detail, "data-niveau": f.niveau },
+    svg, h("span", { class: "nxf-mot", texte: f.libelle }), court ? null : h("span", { class: "nxf-age", texte: " · " + f.resume }));
+}
+/** Ligne de fraîcheur du pied de sources : badge, dernière donnée, rythme, âge du chargement. */
+export function ligneFraicheur(jeu, opts = {}) {
+  const j = jeuSur(jeu), f = evaluerFraicheur(j, { maintenant: opts.maintenant || horloge.maintenant(), chargeMs: opts.chargeMs ?? null });
+  const bits = [f.derniere_donnee ? `Dernière donnée : ${f.derniere_donnee}${f.cadence ? " (série " + f.cadence + ")" : ""}` : null, f.charge_texte].filter(Boolean);
+  return h("p", { class: "nxc-fraicheur" }, badgeFraicheur(j, { ...opts, court: false }), bits.length ? h("span", { class: "nxc-discret", texte: " · " + bits.join(" · ") }) : null);
+}
+
 /** Pied de sources obligatoire : source (lien ouvert seulement par un clic), mise à jour, unité, période, licence, « non vérifié ». */
-export function piedSources(jeu) {
+export function piedSources(jeu, opts = {}) {
   const j = jeuSur(jeu), s0 = j.source;
   const nom = s0.url ? h("a", { href: s0.url, target: "_blank", rel: "noopener noreferrer", texte: s0.nom }) : h("span", { texte: s0.nom });
   return h("footer", { class: "nxc-pied", "aria-label": "Sources" },
     j.exemple ? h("p", { class: "nxc-exemple", texte: "EXEMPLE · données factices" }) : null,
     h("p", {}, h("b", { texte: "Source : " }), nom, s0.verifie ? null : h("span", { class: "nxc-nonverifie", texte: " · non vérifié" })),
     h("p", {}, h("b", { texte: "Mise à jour : " }), dateTexte(s0.maj), " · ", h("b", { texte: "Unité : " }), j.unite, " · ", h("b", { texte: "Période : " }), s0.periode),
+    ligneFraicheur(j, opts),
     s0.licence || s0.requete ? h("p", { class: "nxc-discret" }, s0.licence ? `Licence : ${s0.licence}` : "", s0.licence && s0.requete ? " · " : "", s0.requete ? `Requête du ${dateTexte(s0.requete)}` : "") : null);
 }
 

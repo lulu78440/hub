@@ -35,7 +35,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   await Promise.all([memoire.charger(), cerveau.charger()]);
   const actualite = creerActualite({ memoire }), perception = creerPerception({ actualite, etat });
   let racRef = null;
-  const catalogue = creerCatalogue({ memoire, interdits: async () => memoire.motsPrives(), raccourcis: () => racRef });
+  const catalogue = creerCatalogue({ memoire, interdits: async () => memoire.motsPrives(), raccourcis: () => racRef, exposer: (api) => { if (hote.ui) hote.ui.orchestrateur = api; } });
   let confirmerUI = null, surcharge = moteurImpose, geminiCache = null, local = null, verrou = () => false;
   const budgetClaude = creerBudget({ cleReglage: "noyau-budget-claude", cleMax: "noyau-plafond-claude", plafondParDefaut: PLAFOND_CLAUDE_DEFAUT }), jetonsClaude = creerBudgetJetons();
   const budgetLibre = creerBudget({ cleReglage: "noyau-budget-libre", cleMax: "noyau-plafond-libre", plafondParDefaut: PLAFOND_LIBRE_DEFAUT });
@@ -47,7 +47,7 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   const serviceUtilisable = (id) => !!cleService(id) && serviceAutorise(id);
   /** Ce qui reste de requêtes, tous moteurs utilisables confondus : le cycle et le sommeil ne s'arrêtent que si plus aucun moteur n'est disponible. */
   const budgetTotal = { restant: () => budget.restant() + (cleLibre() ? budgetLibre.restant() : 0) + (cleClaude() && jetonsClaude.restant() > 500 ? budgetClaude.restant() : 0) + IDS_SECOURS.reduce((t, id) => t + (serviceUtilisable(id) ? budgetsSecours[id].restant() : 0), 0), plafond: () => budget.plafond(), utilisees: () => budget.utilisees() };
-  const barriere = creerBarriere({ catalogue, confirmer: (d) => (confirmerUI ? confirmerUI(d) : false), delai: delaiConfirmation, verrouille: () => verrou() });
+  const barriere = creerBarriere({ catalogue, confirmer: (d) => (confirmerUI ? confirmerUI(d) : false), delai: delaiConfirmation, verrouille: () => verrou(), surAttente: (a) => { try { if (hote.ui && hote.ui.toast) hote.ui.toast(`File d'attente pour ${a.hote} : environ ${Math.ceil(a.ms / 1000)} s (limite par minute)`); } catch (e) { /* l'annonce ne doit rien casser */ } } });
   racRef = creerRaccourcis({ barriere });
 
   let claudeCache = null, autoCache = null, dernierMoteur = "";

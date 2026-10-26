@@ -490,8 +490,23 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       fil.scrollTop = fil.scrollHeight;
       return el;
     }
+    ,
+    /** Lot 4 : montre un élément de l'orchestrateur dans l'échange (lecture seule, aucun appel réseau). Vues chargées à la demande. */
+    async afficherVue(fabrique) {
+      fil.querySelector(".nx-vide")?.remove();
+      const el = await fabrique(await import("./modules/vues-orch.js"));
+      fil.append(h("article", { class: "nx-m nx-noyau nx-module" }, el, h("div", { class: "nx-actions" }, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Fermer"))));
+      fil.scrollTop = fil.scrollHeight;
+      return el;
+    },
+    /** Fraîcheur de chaque source de données (dernière réponse, erreur, dernière donnée lue). */
+    afficherSources() { return api.afficherVue(async (V) => { const o = hote.ui && hote.ui.orchestrateur; if (!o) throw new Error("Orchestrateur non chargé."); const refs = await o.refsJeux(); const jeux = []; for (const r of refs) { try { jeux.push(await o.lireJeu(r)); } catch (e) { /* jeu retiré entre-temps */ } } return V.bandeauSources(await o.etatSources(), { jeuxEnMemoire: jeux }); }); },
+    /** Un jeu de panneaux (spec : titre, plage, variables, panneaux de références « jeu:… »). Refus clair si la spécification est fausse. */
+    afficherPanneaux(spec) { return api.afficherVue(async (V) => { const o = hote.ui && hote.ui.orchestrateur; if (!o) throw new Error("Orchestrateur non chargé."); const cache = new Map(), dep = new Map(); for (const p of (spec && Array.isArray(spec.panneaux) ? spec.panneaux : [])) { try { cache.set(p.jeu, await o.lireJeu(p.jeu)); dep.set(p.jeu, await o.deposeJeu(p.jeu)); } catch (e) { /* signalé dans le panneau */ } } return V.tableauDePanneaux(spec, { lire: (r) => { if (!cache.has(r)) throw new Error(`Jeu inconnu : « ${String(r).slice(0, 20)} ».`); return cache.get(r); }, depose: (r) => dep.get(r) ?? null }); }); },
+    /** Un plan en graphe de nœuds (appels = étapes du plan, lignes = résultat d'executerPlan). */
+    afficherPlan(appels, lignes = null, titre = "Plan") { return api.afficherVue(async (V) => V.grapheDePlan(appels, lignes, { titre })); }
   };
   // Point d'accroche pour l'outil afficher_module (orchestrateur) : lui seul peut poser un composant dans l'échange, et seulement par la barrière.
-  if (hote.ui) hote.ui.afficherComposant = (type, jeu, options) => api.afficherComposant(type, jeu, options);
+  if (hote.ui) { hote.ui.afficherComposant = (type, jeu, options) => api.afficherComposant(type, jeu, options); hote.ui.afficherPlan = (a, l, t) => api.afficherPlan(a, l, t).catch(() => null); }
   return api;
 }

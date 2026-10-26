@@ -178,6 +178,7 @@ export function creerCycle(deps) {
         const resultats = [];
         // Plan : les étapes s'enchaînent dans l'ordre par la barrière ; « $N.champ » reprend le résultat de l'étape N (références, jamais de chiffres).
         const faites = await executerPlan(r.appels, { barriere, origine, max: MAX_OUTILS_PAR_APPEL, apres: () => phase("cherche") });
+        if (faites.length >= 2 && hote.ui && typeof hote.ui.afficherPlan === "function") { try { hote.ui.afficherPlan(r.appels.slice(0, MAX_OUTILS_PAR_APPEL), faites, "Plan de la demande"); } catch (e) { /* l'affichage du plan ne doit jamais gêner la réponse */ } }
         faites.forEach((res, k) => {
           const a = r.appels[k];
           if (!res.saute) utilises.push(a.nom);

@@ -102,10 +102,18 @@ export function creerCatalogue(ctx = {}) {
   let _orch = null;
   const orch = async () => _orch || (_orch = await (async () => {
     const [J, D, T2, M] = await Promise.all([import("./jeux.js"), import("./donnees.js"), import("./transformer.js"), import("./modules.js")]);
-    const jeux = ctx.jeux || J.creerJeux();
+    const jeux = ctx.jeux || J.creerJeux({ maintenant: () => hote.maintenant() });
     const coupees = (k, d) => { try { const v = JSON.parse(hote.reglage.lire(k, "[]")); return Array.isArray(v) ? v : d; } catch (e) { return d; } };
     return { J, M, T: T2, jeux, donnees: D.creerDonnees({ fetch: (u, op) => hote.fetch(u, op), maintenant: () => hote.maintenant(), jeux, reglage: coupees }), modules: M.creerModules({ stockage: hote.stockage, maintenant: () => hote.maintenant() }) };
   })());
+
+  // Lot 4 : lectures pour les vues de fraîcheur et de panneaux (aucun droit nouveau : ce sont des lectures de la mémoire de la page).
+  if (typeof ctx.exposer === "function") ctx.exposer({
+    etatSources: async () => (await orch()).donnees.etatSources(),
+    lireJeu: async (ref) => (await orch()).jeux.lire(ref),
+    refsJeux: async () => (await orch()).jeux.refs(),
+    deposeJeu: async (ref) => (await orch()).jeux.depose(ref)
+  });
 
   const now = () => hote.maintenant();
   const agir = async (nom, p) => { const r = await hote.hub.agir(nom, p); if (r && r.ok === false) throw new Error(r.erreur || "Action impossible"); return r; };
@@ -291,17 +299,19 @@ export function creerCatalogue(ctx = {}) {
       drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: true, idempotent: true }, hotes: ["api.db.nomics.world", "api.worldbank.org", "raw.githubusercontent.com"], limites: { delai_ms: 12000, max_par_minute: 30, taille_max: 2000000 },
       sortie_schema: { type: "object", properties: { source: S("") }, required: ["source"] },
       resume: (p) => `Chercher des données (${p.source || "dbnomics"}) : « ${court(p.requete, 60)} »`, sortie: (p) => [({ banque_mondiale: "api.worldbank.org", publie: "raw.githubusercontent.com" })[p.source] || "api.db.nomics.world"],
-      exec: async (p) => { if (!hote.enLigne() && p.source !== "banque_mondiale") throw new Error("Hors ligne : les sources de données ne sont pas joignables.");
+      hote_de: (p) => (p.source === "banque_mondiale" && !(p.identifiant) ? [] : [({ banque_mondiale: "api.worldbank.org", publie: "raw.githubusercontent.com" })[p.source] || "api.db.nomics.world"]),
+      exec: async (p, c = {}) => { if (!hote.enLigne() && p.source !== "banque_mondiale") throw new Error("Hors ligne : les sources de données ne sont pas joignables.");
         const o = await orch(); const mots = filtrerMotsCles(p.requete, ctx.interdits ? await ctx.interdits() : []);
         if (!mots.motsCles) throw new Error("Aucun mot-clé utilisable après filtrage (mots privés retirés).");
-        return { mots_cles_envoyes: mots.motsCles, retires_avant_envoi: mots.retires, ...(await o.donnees.chercher({ requete: mots.motsCles, source: p.source || "dbnomics", jeu_de_donnees: p.jeu_de_donnees || "" })) }; } },
+        return { mots_cles_envoyes: mots.motsCles, retires_avant_envoi: mots.retires, ...(await o.donnees.chercher({ requete: mots.motsCles, source: p.source || "dbnomics", jeu_de_donnees: p.jeu_de_donnees || "", signal: c.signal })) }; } },
     { nom: "lire_serie", niveau: "LIBRE", categorie: "donnees", description: "Télécharge UNE série précise et la range en mémoire : tu reçois une RÉFÉRENCE « jeu:… » et un résumé (unité, période, source, date de mise à jour, extrêmes), jamais le tableau. Passe ensuite la référence à transformer_donnees, afficher_module ou enregistrer_module (dans un plan : « $1.jeu » pour le résultat de l'étape 1). Identifiants : DBnomics FOURNISSEUR/JEU/SÉRIE (ex. INSEE/IPC-2015/M.00.SO.SO.ENSEMBLE.FE) ; banque_mondiale PAYS/INDICATEUR (ex. FR/SP.POP.TOTL) ; publie un nom de série.",
       params: O({ source: S("Source", { enum: ["dbnomics", "banque_mondiale", "publie"] }), identifiant: S("Identifiant de la série (voir chercher_donnees)", { maxLength: 200 }), debut: S("Début : AAAA ou AAAA-MM (facultatif)", { maxLength: 7 }), fin: S("Fin : AAAA ou AAAA-MM (facultatif)", { maxLength: 7 }) }, ["source", "identifiant"]),
       drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: true, idempotent: true }, hotes: ["api.db.nomics.world", "api.worldbank.org", "raw.githubusercontent.com"], limites: { delai_ms: 12000, max_par_minute: 30, taille_max: 2000000 },
       sortie_schema: { type: "object", properties: { jeu: S("") }, required: ["jeu"] },
       resume: (p) => `Lire la série « ${court(p.identifiant, 80)} » (${p.source})`, sortie: (p) => [({ banque_mondiale: "api.worldbank.org", publie: "raw.githubusercontent.com" })[p.source] || "api.db.nomics.world"],
-      exec: async (p) => { if (!hote.enLigne()) throw new Error("Hors ligne : la série n'est pas joignable.");
-        const o = await orch(); const r = await o.donnees.lire({ source: p.source, identifiant: p.identifiant, debut: p.debut || "", fin: p.fin || "" }); return { jeu: r.ref, resume: r.resume }; } },
+      hote_de: (p) => (p.source === "banque_mondiale" && !(p.identifiant) ? [] : [({ banque_mondiale: "api.worldbank.org", publie: "raw.githubusercontent.com" })[p.source] || "api.db.nomics.world"]),
+      exec: async (p, c = {}) => { if (!hote.enLigne()) throw new Error("Hors ligne : la série n'est pas joignable.");
+        const o = await orch(); const r = await o.donnees.lire({ source: p.source, identifiant: p.identifiant, debut: p.debut || "", fin: p.fin || "", signal: c.signal }); return { jeu: r.ref, resume: r.resume }; } },
     { nom: "transformer_donnees", niveau: "LIBRE", categorie: "donnees", description: "Calcule à partir d'un jeu (référence « jeu:… ») un NOUVEAU jeu, avec la source d'origine conservée. Le calcul est fait par le hub, jamais par toi. Opérations : periode (debut, fin), colonnes (liste), variation (mode precedente ou depuis_debut, en %), indice100 (base 100 à la première valeur), moyenne_mobile (n), derniers (n lignes), comparer (avec = autre jeu de même unité ; donne une courbe à deux séries). Rend une nouvelle référence : « $N.jeu » dans un plan.",
       params: O({ jeu: S("Référence du jeu : « jeu:… » reçue d'un outil, ou « $N.jeu » (résultat de l'étape N du plan)", { pattern: "^jeu:[a-z0-9]{6,16}$", maxLength: 40 }), operation: S("Opération", { enum: ["periode", "colonnes", "variation", "indice100", "moyenne_mobile", "derniers", "comparer"] }),
         debut: S("periode : début AAAA, AAAA-MM ou AAAA-MM-JJ", { maxLength: 10 }), fin: S("periode : fin", { maxLength: 10 }), colonnes: { type: "array", maxItems: 8, items: { type: "string", maxLength: 32 }, description: "Identifiants de colonnes (facultatif)" },
