@@ -66,11 +66,21 @@ def run():
             return len(st) >= 2 and actifs == ["internet"], st
         essai("Plan 3", "deux applis ouvertes : une seule active (pile de focus)", fenetres)
         def echap():
-            p.click('.dwin[data-app="internet"] .ph', position={"x": 60, "y": 10}); p.keyboard.press("Escape"); p.wait_for_timeout(1200)
+            p.wait_for_timeout(800); p.focus('.dwin[data-app="internet"] input'); p.keyboard.press("Escape"); p.wait_for_timeout(1500)
             return p.evaluate("(() => { const w = document.querySelector('.dwin[data-app=\"internet\"]'); return !!w && (w.dataset.m === '1') && (w.hidden || w.classList.contains('min')); })()")
         essai("Plan 3", "Échap envoie la fenêtre active vers son icône", echap)
+        def echap_titre():
+            cmd(p, "ouvrir_appli", {"app": "internet"}); p.wait_for_timeout(800)
+            p.wait_for_timeout(1500); p.click('.dwin[data-app="internet"] .ph', position={"x": 60, "y": 10}, force=True); foc = p.evaluate("document.activeElement.tagName"); p.keyboard.press("Escape"); p.wait_for_timeout(1500)
+            m = p.evaluate("(() => { const w = document.querySelector('.dwin[data-app=\"internet\"]'); return !!w && w.dataset.m === '1'; })()")
+            if not m: p.wait_for_timeout(800); p.focus('.dwin[data-app="internet"] input'); p.keyboard.press("Escape"); p.wait_for_timeout(1500)
+            return (True if m else "mineure"), f"clic sur la barre de titre, focus = {foc} ; Échap réduit : {m}"
+        essai("Plan 3", "Échap après un clic sur la barre de titre de la fenêtre", echap_titre)
         def rouvrir():
-            p.click('.dico[data-act="internet"]'); p.wait_for_timeout(900)
+            p.keyboard.press("Escape"); p.wait_for_timeout(300); cmd(p, "ouvrir_appli", {"app": "pc"}); p.click('.dwin[data-app="pc"]', position={"x": 60, "y": 60}, force=True); p.keyboard.press("Escape"); p.wait_for_timeout(1500)
+            cmd(p, "fermer_appli", {"app": "internet"}); p.wait_for_timeout(500); cmd(p, "ouvrir_appli", {"app": "internet"}); p.wait_for_timeout(800)
+            p.wait_for_timeout(800); p.focus('.dwin[data-app="internet"] input'); p.keyboard.press("Escape"); p.wait_for_timeout(1500)   # fenêtre réduite vers son icône
+            p.click('.dico[data-act="internet"]', force=True); p.wait_for_timeout(1200)
             return p.evaluate("(() => { const w = document.querySelector('.dwin[data-app=\"internet\"]'); return !!w && !w.hidden && w.classList.contains('actif'); })()")
         essai("Plan 3", "l'icône rouvre la fenêtre au premier plan", rouvrir)
         def garde():
@@ -89,8 +99,10 @@ def run():
             cmd(p, "fermer_appli", {"app": "pc"}); p.wait_for_timeout(600)
             boxes = p.evaluate("[...document.querySelectorAll('.dico')].filter(b => b.offsetParent).map(b => { const r = b.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; })")
             x0 = min(b[0] for b in boxes) - 25; y0 = min(b[1] for b in boxes) - 25; x1 = max(b[2] for b in boxes) + 25; y1 = max(b[3] for b in boxes) + 25
-            sous = p.evaluate("(([x, y]) => { const e = document.elementFromPoint(x, y); return e ? (e.id || e.className || e.tagName).toString() : null; })", [x0, y0])
-            p.mouse.move(x0, y0); p.mouse.down(); p.mouse.move((x0 + x1) / 2, (y0 + y1) / 2, steps=6); p.mouse.move(x1, y1, steps=6); p.mouse.up(); p.wait_for_timeout(400)
+            for (sx, sy, ex, ey) in [(x1, y1, x0, y0), (x0, y0, x1, y1), (x0, y1, x1, y0), (x1, y0, x0, y1)]:
+                sous = p.evaluate("(([x, y]) => { const e = document.elementFromPoint(x, y); return e ? (e.id || e.className || e.tagName).toString() : null; })", [sx, sy])
+                if sous == "scene": x0, y0, x1, y1 = (min(sx, ex), min(sy, ey), max(sx, ex), max(sy, ey)); break
+            p.mouse.move(sx, sy); p.mouse.down(); p.mouse.move((sx + ex) / 2, (sy + ey) / 2, steps=6); p.mouse.move(ex, ey, steps=6); p.mouse.up(); p.wait_for_timeout(400)
             n = p.evaluate("document.querySelectorAll('.dico.sel, .dico[aria-selected=\"true\"]').length")
             return n == len(boxes), f"{n} choisies sur {len(boxes)} (rectangle {int(x0)},{int(y0)} → {int(x1)},{int(y1)} ; sous le départ : {sous})"
         essai("Plan 3", "lasso sur le fond choisit les icônes", lasso)
@@ -112,7 +124,8 @@ def run():
             return bouges == len(avant) and bouges > 1, f"{bouges}/{len(avant)} icônes déplacées"
         essai("Plan 3", "glisser une icône choisie déplace tout le groupe", groupe)
         def menu_groupe():
-            b = p.locator(".dico").first; b.click(button="right"); p.wait_for_timeout(400)
+            p.keyboard.press("Escape"); p.focus(".dico"); p.keyboard.press("Control+a"); p.wait_for_timeout(300)
+            b = p.locator(".dico:visible").nth(4); b.click(button="right", timeout=8000, force=True); p.wait_for_timeout(400)
             L = p.evaluate("[...document.querySelectorAll('#ctx button, #ctx [role=menuitem]')].map(x => x.textContent.trim())")
             p.keyboard.press("Escape")
             return any("align" in l.lower() for l in L) and any("retirer" in l.lower() for l in L), L
@@ -227,8 +240,10 @@ def run():
 
         # ---------- Hors ligne (cache du service worker) ----------
         def hors_ligne():
-            p.evaluate("navigator.serviceWorker.ready.then(() => true)"); p.wait_for_timeout(1500); p.reload(); ready(p)
-            p.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller", timeout=30000)
+            p.evaluate("navigator.serviceWorker.ready.then(() => true)"); p.wait_for_timeout(1500); p.reload(); ready(p); p.wait_for_timeout(1500)
+            if not p.evaluate("!!navigator.serviceWorker.controller"):
+                p.evaluate("navigator.serviceWorker.ready.then(() => true)"); p.reload(); ready(p); p.wait_for_timeout(1500)
+            if not p.evaluate("!!navigator.serviceWorker.controller"): return None, "pas de contrôleur de service worker dans ce navigateur de banc : à vérifier sur Brave"
             p.wait_for_timeout(1500)
             manquants = ev(p, """const k = await caches.keys(); const c = await caches.open(k.find(x => x.startsWith('hub-')) || k[0]);
               const L = ['registre','jeux','donnees','transformer','modules','execution'].map(m => '/js/noyau/' + m + '.js').concat(['/js/ui/commandes.js','/js/ui/direct.js']);

@@ -1,0 +1,248 @@
+[
+ {
+  "zone": "PC",
+  "point": "version 7.38.x affichée",
+  "statut": "OK",
+  "detail": "7.38.1"
+ },
+ {
+  "zone": "PC",
+  "point": "commandes pour l'orbe exposées (window.__hub.commandes)",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Plan 3",
+  "point": "bureau : icônes Fichiers, Ce PC, Internet, Mails, Écran",
+  "statut": "OK",
+  "detail": "['fichiers', 'pc', 'internet', 'mails', 'Paramètres', 'Calculatrice', 'Capture', 'Brave', 'direct']"
+ },
+ {
+  "zone": "Plan 3",
+  "point": "deux applis ouvertes : une seule active (pile de focus)",
+  "statut": "OK",
+  "detail": "[['fichiers', False], ['internet', True]]"
+ },
+ {
+  "zone": "Plan 3",
+  "point": "Échap envoie la fenêtre active vers son icône",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Plan 3",
+  "point": "Échap après un clic sur la barre de titre de la fenêtre",
+  "statut": "ANOMALIE MINEURE",
+  "detail": "clic sur la barre de titre, focus = BODY ; Échap réduit : False"
+ },
+ {
+  "zone": "Plan 3",
+  "point": "l'icône rouvre la fenêtre au premier plan",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Plan 3",
+  "point": "état des fenêtres gardé après rechargement (hub-bureau-fen-v1)",
+  "statut": "OK",
+  "detail": "{'cle': True, 'apres': [['fichiers', True], ['pc', False], ['internet', False]]}"
+ },
+ {
+  "zone": "Plan 3",
+  "point": "lasso sur le fond choisit les icônes",
+  "statut": "OK",
+  "detail": "9 choisies sur 9 (rectangle 316,513 → 992,792 ; sous le départ : scene)"
+ },
+ {
+  "zone": "Plan 3",
+  "point": "Échap désélectionne",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Plan 3",
+  "point": "Ctrl + A choisit toutes les icônes",
+  "statut": "OK",
+  "detail": "9/9"
+ },
+ {
+  "zone": "Plan 3",
+  "point": "glisser une icône choisie déplace tout le groupe",
+  "statut": "OK",
+  "detail": "9/9 icônes déplacées"
+ },
+ {
+  "zone": "Plan 3",
+  "point": "clic droit sur une icône choisie : menu de groupe (aligner, retirer…)",
+  "statut": "OK",
+  "detail": "['Aligner en ligne', 'Aligner en colonne', 'Taillemoyenne', 'Couleurcyan', 'Retirer du bureau (9)', 'Désélectionner']"
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "coupé par défaut (aucun partage demandé au chargement)",
+  "statut": "OK",
+  "detail": "0"
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "commande de l'orbe : confirmation (Refuser par défaut), puis partage et pastille « Couper »",
+  "statut": "OK",
+  "detail": "{'bouton par défaut': 'Refuser', 'res': {'nom': 'ecran_direct_demarrer', 'ok': True, 'message': 'Écran en direct démarré'}, 'pastille': True}"
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "pastille « Couper » visible aux plans 1 et 2",
+  "statut": "OK",
+  "detail": "[True, True]"
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "flux ni enregistré (MediaRecorder) ni envoyé (aucune requête sortante)",
+  "statut": "OK",
+  "detail": "{'MediaRecorder': 0, 'bloquees': []}"
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "arrêt depuis la barre du navigateur (piste terminée) : partage coupé, pastille retirée",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "fermer la fenêtre « Écran » ouverte coupe le partage",
+  "statut": "OK",
+  "detail": "pistes encore actives : 0"
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "commande fermer_appli « direct » alors que la fenêtre n'est pas ouverte : le partage reste-t-il actif ?",
+  "statut": "ANOMALIE MINEURE",
+  "detail": "fenêtre ouverte au démarrage par la commande : False ; fermer_appli → « Déjà fermée : direct » ; partage encore actif : True"
+ },
+ {
+  "zone": "Écran en direct",
+  "point": "Entrée sur la confirmation = Refuser (aucun partage demandé)",
+  "statut": "OK",
+  "detail": "{'nom': 'ecran_direct_demarrer', 'ok': False, 'refuse': True, 'raison': 'refusé par Lucien'}"
+ },
+ {
+  "zone": "Commandes",
+  "point": "11 commandes ; confirmation pour retirer une icône, démarrer l'écran, lancer un jeu ; jeux indisponibles",
+  "statut": "OK",
+  "detail": "{'n': 11, 'confirmation': ['ecran_direct_demarrer', 'jeu_lancer', 'retirer_icone'], 'indisponibles': ['catalogue_ouvrir', 'jeu_lancer']}"
+ },
+ {
+  "zone": "Commandes",
+  "point": "8 appels piégés ou hors contrat refusés sans confirmation ni exécution",
+  "statut": "OK",
+  "detail": "{'commande inconnue': False, 'paramètre hors liste': False, 'paramètre en trop': False, 'injection dans un paramètre': False, 'plan hors bornes': False, 'paramètres en liste': False, 'jeu réservé': False, 'catalogue réservé': False}"
+ },
+ {
+  "zone": "Commandes",
+  "point": "commandes libres (aller_plan, etat_bureau) : exécutées, l'état ne montre jamais le contenu de l'écran",
+  "statut": "OK",
+  "detail": "{'plan': 1, 'etat': ['plan', 'applis_ouvertes', 'icones', 'ecran_direct']}"
+ },
+ {
+  "zone": "Commandes",
+  "point": "retirer une icône : refusé par Lucien = rien retiré",
+  "statut": "OK",
+  "detail": "{'res': {'nom': 'retirer_icone', 'ok': False, 'refuse': True, 'raison': 'refusé par Lucien'}, 'icones': [9, 9]}"
+ },
+ {
+  "zone": "Commandes",
+  "point": "chaque appel est journalisé",
+  "statut": "OK",
+  "detail": "25"
+ },
+ {
+  "zone": "Commandes",
+  "point": "accès par l'événement hub:commande",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Noyau lot 3",
+  "point": "les 6 modules se chargent dans le hub",
+  "statut": "OK",
+  "detail": "{'registre': 6, 'jeux': 5, 'donnees': 8, 'transformer': 4, 'modules': 5, 'execution': 3}"
+ },
+ {
+  "zone": "Noyau lot 3",
+  "point": "catalogue d'outils contrôlé par le registre (aucun problème)",
+  "statut": "OK",
+  "detail": "{'ok': True, 'n': 45, 'pb': [], 'hotes': ['api.db.nomics.world', 'api.worldbank.org', 'raw.githubusercontent.com']}"
+ },
+ {
+  "zone": "Noyau lot 3",
+  "point": "fenêtre du Noyau présente, sans erreur",
+  "statut": "OK",
+  "detail": "[]"
+ },
+ {
+  "zone": "PC",
+  "point": "aucune erreur console sur tout le parcours PC",
+  "statut": "OK",
+  "detail": "[]"
+ },
+ {
+  "zone": "PC",
+  "point": "aucune violation CSP sur tout le parcours PC",
+  "statut": "OK",
+  "detail": "[]"
+ },
+ {
+  "zone": "Hors ligne",
+  "point": "modules du lot 3, commandes et écran en direct dans le cache ; chargés hors ligne",
+  "statut": "OK",
+  "detail": "{'absents du cache': [], 'hors ligne': {'registre': 6, 'jeux': 5, 'donnees': 8, 'transformer': 4, 'modules': 5, 'execution': 3}}"
+ },
+ {
+  "zone": "Téléphone",
+  "point": "mode téléphone, pas de défilement horizontal",
+  "statut": "OK",
+  "detail": "[390, 390]"
+ },
+ {
+  "zone": "Téléphone",
+  "point": "feuille Outils : groupe « Applis » en tête",
+  "statut": "OK",
+  "detail": "['Applis', 'Gestes', 'Fenêtres rangées', 'Fonctions rarement utilisées']"
+ },
+ {
+  "zone": "Téléphone",
+  "point": "Applis : Internet et fenêtres du hub ; liens du bureau https seulement, 12 au plus",
+  "statut": "OK",
+  "detail": "{'liens': 12, 'tuiles': ['Internetrecherche', 'Mailsdans le hub', 'Favoris', 'Vidéo', 'Page en direct', 'Notes', 'Musique', 'Lien factice Aexemple.test', '<img src=x onerror=windoexemple.test', 'Lien 0exemple.test']}"
+ },
+ {
+  "zone": "Téléphone",
+  "point": "nom de lien piégé affiché en texte, rien n'est exécuté",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Téléphone",
+  "point": "toucher « Musique » amène la fenêtre sous le doigt",
+  "statut": "OK",
+  "detail": "[235, 844, True]"
+ },
+ {
+  "zone": "Téléphone",
+  "point": "pas de plan 3, pas de bureau, pas d'écran en direct sur téléphone",
+  "statut": "OK",
+  "detail": ""
+ },
+ {
+  "zone": "Téléphone",
+  "point": "aucune erreur console",
+  "statut": "OK",
+  "detail": "[]"
+ },
+ {
+  "zone": "Téléphone",
+  "point": "aucune violation CSP",
+  "statut": "OK",
+  "detail": "[]"
+ }
+]
