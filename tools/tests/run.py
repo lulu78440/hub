@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from hubtest import Hub  # noqa: E402
 
-MODULES = ["t1_sauvegardes", "t2_fonctions", "t3_securite", "t4_limites", "t5_confort", "t6_precis", "t7_charte", "t8_blocs", "t9_csp"]
+MODULES = ["t1_sauvegardes", "t2_fonctions", "t3_securite", "t4_limites", "t5_confort", "t6_precis", "t7_charte", "t8_blocs", "t9_csp", "t10_refonte5"]
 LIMIT = int(os.environ.get("HUB_LIMITE", "420"))     # secondes par test : au-delà, le test est déclaré bloqué (au lieu de geler la suite)
 
 
