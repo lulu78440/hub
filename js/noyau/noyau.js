@@ -35,7 +35,15 @@ export async function creerNoyau({ moteur: moteurImpose = null, delaiConfirmatio
   await Promise.all([memoire.charger(), cerveau.charger()]);
   const actualite = creerActualite({ memoire }), perception = creerPerception({ actualite, etat });
   let racRef = null;
-  const catalogue = creerCatalogue({ memoire, interdits: async () => memoire.motsPrives(), raccourcis: () => racRef, exposer: (api) => { if (hote.ui) hote.ui.orchestrateur = api; } });
+  const catalogue = creerCatalogue({ memoire, interdits: async () => memoire.motsPrives(), raccourcis: () => racRef, exposer: (api) => { if (hote.ui) hote.ui.orchestrateur = {
+    ...api,
+    // Lot 9 : gestes de Lucien (restaurer une version, retirer avec sauvegarde, exporter, importer, actualiser, espaces, workflows) pour les boutons de la Refonte.
+    // Ils ne sont dans AUCUN outil : le modèle n'a pas de chemin vers eux.
+    gestes: async () => { const c = await api.composants(); const { creerGestesLucien } = await import("./modules/gestes-lucien.js"); return creerGestesLucien({ stockage: hote.stockage, modules: c.modules, donnees: c.donnees, jeux: c.jeux, maintenant: () => hote.maintenant(), catalogue: barriere }); },
+    // Lot 8 : workflows enregistrés et modèles de plan. Lancer = geste de Lucien : fenêtre de validation obligatoire, puis chaque étape garde son niveau.
+    workflows: async () => { const W = await import("./workflows.js"), { MODELES_PLANS } = await import("./plans-modeles.js"), wf = W.creerWorkflows({ stockage: hote.stockage, maintenant: () => hote.maintenant() });
+      return { lister: async () => ({ enregistres: await wf.lister(), modeles: MODELES_PLANS.map((m) => ({ id: m.id, nom: m.nom, pourquoi: m.pourquoi, parametres: m.parametres })) }),
+        rejouer: async (id, valeurs, opts = {}) => { const def = MODELES_PLANS.find((m) => m.id === id) || await wf.lire(id); const r = await W.rejouer(def, valeurs, { barriere, ...opts }); if (r.lance && !MODELES_PLANS.some((m) => m.id === id)) await wf.noterLancement(id).catch(() => {}); return r; } }; } }; } });
   let confirmerUI = null, surcharge = moteurImpose, geminiCache = null, local = null, verrou = () => false;
   const budgetClaude = creerBudget({ cleReglage: "noyau-budget-claude", cleMax: "noyau-plafond-claude", plafondParDefaut: PLAFOND_CLAUDE_DEFAUT }), jetonsClaude = creerBudgetJetons();
   const budgetLibre = creerBudget({ cleReglage: "noyau-budget-libre", cleMax: "noyau-plafond-libre", plafondParDefaut: PLAFOND_LIBRE_DEFAUT });

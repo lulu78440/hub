@@ -101,10 +101,14 @@ export function creerCatalogue(ctx = {}) {
   // Orchestrateur : modules chargés à la demande (import dynamique) et mémoire de jeux unique pour ce catalogue.
   let _orch = null;
   const orch = async () => _orch || (_orch = await (async () => {
-    const [J, D, T2, M] = await Promise.all([import("./jeux.js"), import("./donnees.js"), import("./transformer.js"), import("./modules.js")]);
-    const jeux = ctx.jeux || J.creerJeux({ maintenant: () => hote.maintenant() });
+    const [J, D, T2, M, C, S2, E, P] = await Promise.all([import("./jeux.js"), import("./donnees.js"), import("./transformer.js"), import("./modules.js"), import("./cache-jeux.js"), import("./sessions.js"), import("./espaces.js"), import("./provenance.js")]);
+    // Lot 9 : cache LOCAL des jeux (IndexedDB, non synchronisé) : chaque jeu déposé en mémoire y est aussi rangé, pour reprendre un travail après un rechargement.
+    const cache = ctx.cacheJeux || C.creerCacheJeux({ maintenant: () => hote.maintenant() });
+    const jeux = ctx.jeux || J.creerJeux({ maintenant: () => hote.maintenant(), surDepot: (ref, jeu, origine) => { if (origine && origine.repris) return; cache.noter(jeu, origine).catch(() => {}); } });
     const coupees = (k, d) => { try { const v = JSON.parse(hote.reglage.lire(k, "[]")); return Array.isArray(v) ? v : d; } catch (e) { return d; } };
-    return { J, M, T: T2, jeux, donnees: D.creerDonnees({ fetch: (u, op) => hote.fetch(u, op), maintenant: () => hote.maintenant(), jeux, reglage: coupees }), modules: M.creerModules({ stockage: hote.stockage, maintenant: () => hote.maintenant() }) };
+    const reglage = (k, d) => hote.reglage.lire(k, d);
+    return { J, M, T: T2, P, jeux, cache, donnees: D.creerDonnees({ fetch: (u, op) => hote.fetch(u, op), maintenant: () => hote.maintenant(), jeux, reglage: coupees }), modules: M.creerModules({ stockage: hote.stockage, maintenant: () => hote.maintenant() }),
+      sessions: S2.creerSessions({ stockage: hote.stockage, jeux, cache, reglage, maintenant: () => hote.maintenant() }), espaces: E.creerEspaces({ stockage: hote.stockage }) };
   })());
 
   // Lot 4 : lectures pour les vues de fraîcheur et de panneaux (aucun droit nouveau : ce sont des lectures de la mémoire de la page).
@@ -112,7 +116,12 @@ export function creerCatalogue(ctx = {}) {
     etatSources: async () => (await orch()).donnees.etatSources(),
     lireJeu: async (ref) => (await orch()).jeux.lire(ref),
     refsJeux: async () => (await orch()).jeux.refs(),
-    deposeJeu: async (ref) => (await orch()).jeux.depose(ref)
+    deposeJeu: async (ref) => (await orch()).jeux.depose(ref),
+    // Lot 9 : notés par le code du hub après un plan (jamais par un outil). Si l'orchestrateur n'a pas été chargé, aucun outil de données n'a servi : rien à noter.
+    noterSession: async (x) => (_orch ? _orch.sessions.noterPlan(x) : null),
+    sessions: async () => (await orch()).sessions,
+    // Pour les gestes de Lucien (modules/gestes-lucien.js, construits par noyau.js) : jamais pour un outil.
+    composants: async () => orch()
   });
 
   const now = () => hote.maintenant();
@@ -321,7 +330,7 @@ export function creerCatalogue(ctx = {}) {
       sortie_schema: { type: "object", properties: { jeu: S("") }, required: ["jeu"] },
       resume: (p) => `Transformer le jeu (${p.operation})`,
       exec: async (p) => { const o = await orch(); const j = o.jeux.lire(p.jeu), autre = p.operation === "comparer" ? o.jeux.lire(p.avec) : null;
-        const brut = o.T.transformer(j, { operation: p.operation, debut: p.debut, fin: p.fin, colonnes: p.colonnes, mode: p.mode, n: p.n }, autre); const r = o.jeux.deposer(brut, { origine: { de: p.jeu, operation: p.operation } });
+        const brut = o.T.transformer(j, { operation: p.operation, debut: p.debut, fin: p.fin, colonnes: p.colonnes, mode: p.mode, n: p.n }, autre); const r = o.jeux.deposer(brut, { origine: { de: p.jeu, operation: p.operation, ...Object.fromEntries(["debut", "fin", "colonnes", "mode", "n"].filter((k) => p[k] != null).map((k) => [k, p[k]])) } });
         return { jeu: r.ref, resume: o.J.resumeJeu(r.ref, r.jeu) }; } },
     { nom: "afficher_module", niveau: "LIBRE", categorie: "affichage", description: "Affiche dans la fenêtre du Noyau un graphique ou un tableau d'un jeu (référence « jeu:… ») : vue courbe, barres, tableau ou chiffre_cle. Éphémère : rien n'est enregistré. La source, la date et l'unité sont toujours affichées ; un jeu sans source est refusé. Tu peux aussi réafficher un module enregistré (paramètre module). Choisis les colonnes seulement si tu en as besoin (x, y, series, categorie, valeur) : sinon le hub les choisit.",
       params: O({ jeu: S("Référence du jeu : « jeu:… » ou « $N.jeu » dans un plan", { pattern: "^jeu:[a-z0-9]{6,16}$", maxLength: 40 }), module: S("Identifiant d'un module enregistré (à la place de jeu)", { maxLength: 40 }), vue: S("Type de vue", { enum: ["courbe", "barres", "tableau", "chiffre_cle"] }), titre: S("Titre affiché", { maxLength: 80 }),
@@ -331,23 +340,26 @@ export function creerCatalogue(ctx = {}) {
       resume: (p) => `Afficher ${p.vue}${p.titre ? " « " + court(p.titre, 50) + " »" : ""}`,
       exec: async (p) => { if (!p.jeu === !p.module) throw new Error("Indique soit « jeu », soit « module » (un seul).");
         const o = await orch(); let j, titre = p.titre || "", vue = p.vue, opts = { x: p.x, y: p.y, series: p.series, categorie: p.categorie, valeur: p.valeur };
-        if (p.module) { const m = await o.modules.lire(p.module); j = m.jeu; titre = titre || m.titre; opts = { ...m.options, ...Object.fromEntries(Object.entries(opts).filter(([, v]) => v)) }; } else j = o.jeux.lire(p.jeu);
+        if (p.module) { const m = await o.modules.lire(p.module); j = m.jeu; titre = titre || m.titre; const mv = (m.vues || []).find((v) => v.type === vue); opts = { ...(mv ? mv.options : (vue === m.vue ? m.options : {})), ...Object.fromEntries(Object.entries(opts).filter(([, v]) => v)) }; } else j = o.jeux.lire(p.jeu);
         const options = o.M.optionsParDefaut(vue, j, opts);
         const ouvrir = hote.ui && hote.ui.afficherComposant; if (typeof ouvrir !== "function") throw new Error("La fenêtre du Noyau n'est pas ouverte : rien n'a été affiché.");
         const el = ouvrir(vue, j, { ...options, titre: titre || j.titre || undefined });
         if (el && el.classList && el.classList.contains("nxc-refus")) throw new Error(el.getAttribute("data-raison") || "Affichage refusé.");
         return { affiche: true, vue, jeu: p.jeu || null, module: p.module || null, source: j.source.nom, periode: j.source.periode, donnees_du: j.source.maj, unite: j.unite, exemple: j.exemple }; } },
-    { nom: "lire_modules", niveau: "LIBRE", categorie: "affichage", description: "Liste les modules (graphiques ou tableaux) que Lucien a enregistrés : identifiant, titre, vue, source, période. Aucune valeur chiffrée. Pour en réafficher un : afficher_module avec le paramètre module.",
-      params: O(), drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: false, idempotent: true }, limites: { delai_ms: 3000 },
-      sortie_schema: { type: "object", properties: { modules: { type: "array", maxItems: 20, items: { type: "object" } } }, required: ["modules"] },
-      resume: () => "Lire la liste des modules enregistrés", exec: async () => { const o = await orch(); return { modules: await o.modules.lister(), maximum: o.M.MAX_MODULES }; } },
+    { nom: "lire_modules", niveau: "LIBRE", categorie: "affichage", description: "Liste les modules (graphiques ou tableaux) que Lucien a enregistrés (identifiant, titre, vue, source, période, version), ses espaces de travail (groupes de modules) et ses dernières sessions de travail. Aucune valeur chiffrée. Pour réafficher un module : afficher_module avec le paramètre module. Pour REPRENDRE une session après un rechargement (« reprends le graphique d'hier ») : passe son identifiant dans le paramètre session ; les jeux gardés dans le cache de cet appareil sont remis en mémoire (références « jeu:… », avec la date de leur requête) et la vue conseillée est rendue ; ce qui manque est listé avec la façon de le relire. Aucune requête réseau n'est faite ici.",
+      params: O({ session: S("Identifiant d'une session à reprendre (ex. s12), vu dans la liste des sessions", { pattern: "^s[0-9]{1,6}$", maxLength: 8 }) }), drapeaux: { lecture_seule: true, reversible: true, monde_ouvert: false, idempotent: true }, limites: { delai_ms: 5000 },
+      sortie_schema: { type: "object", properties: { modules: { type: "array", maxItems: 50, items: { type: "object" } } }, required: ["modules"] },
+      resume: (p) => (p.session ? `Reprendre la session ${p.session}` : "Lire la liste des modules, espaces et sessions"),
+      exec: async (p) => { const o = await orch();
+        if (p.session) { const r = await o.sessions.reprendre(p.session); return { modules: [], reprise: { session: r.session, jeux: await Promise.all(r.jeux.map(async (j) => ({ ...j, resume: o.J.resumeJeu(j.ref, o.jeux.lire(j.ref)) }))), manquants: r.manquants, vue: r.vue }, maximum: o.M.MAX_MODULES }; }
+        return { modules: await o.modules.lister(), espaces: await o.espaces.lister(), sessions: (await o.sessions.lister()).slice(0, 10), maximum: o.M.MAX_MODULES }; } },
     { nom: "enregistrer_module", niveau: "CONFIRMATION", categorie: "affichage", description: "Enregistre (ou remplace, même identifiant) un module : une vue d'un jeu, avec sa source et sa copie des données. UNIQUEMENT quand Lucien le demande. Lucien voit la source et la période avant d'accepter. Pas de suppression ni d'export possibles pour toi.",
       params: O({ id: S("Identifiant : minuscules, chiffres, tirets (2 à 40)", { maxLength: 40, pattern: "^[a-z0-9][a-z0-9-]{1,39}$" }), titre: S("Titre du module", { maxLength: 80 }), vue: S("Type de vue", { enum: ["courbe", "barres", "tableau", "chiffre_cle"] }),
         jeu: S("Référence du jeu : « jeu:… » ou « $N.jeu » dans un plan", { pattern: "^jeu:[a-z0-9]{6,16}$", maxLength: 40 }), x: S("Colonne x", { maxLength: 32 }), y: S("Colonne y", { maxLength: 32 }), series: S("Colonne des séries", { maxLength: 32 }), categorie: S("Colonne des catégories", { maxLength: 32 }), valeur: S("Colonne des valeurs", { maxLength: 32 }) }, ["id", "titre", "vue", "jeu"]),
       drapeaux: { lecture_seule: false, reversible: true, monde_ouvert: false, idempotent: true }, limites: { delai_ms: 5000, taille_max: 250000 },
       sortie_schema: { type: "object", properties: { id: S("") }, required: ["id"] },
       resume: (p) => { let j = null; try { j = _orch && _orch.jeux.lire(p.jeu); } catch (e) { j = null; } return `Enregistrer le module « ${court(p.titre, 60)} » (${p.vue}, id ${court(p.id, 40)})` + (j ? ` — source : ${court(j.source.nom, 80)} ; période : ${court(j.source.periode, 40)} ; données du ${j.source.maj}${j.exemple ? " ; EXEMPLE" : ""}` : ""); },
-      exec: async (p) => { const o = await orch(); const j = o.jeux.lire(p.jeu); const r = await o.modules.enregistrer({ id: p.id, titre: p.titre, vue: p.vue, jeu: j, options: { x: p.x, y: p.y, series: p.series, categorie: p.categorie, valeur: p.valeur } }); return { id: r.id, titre: r.titre, vue: r.vue, remplace: r.remplace, enregistre: true }; } }
+      exec: async (p) => { const o = await orch(); const j = o.jeux.lire(p.jeu); const r = await o.modules.enregistrer({ id: p.id, titre: p.titre, vue: p.vue, jeu: j, options: { x: p.x, y: p.y, series: p.series, categorie: p.categorie, valeur: p.valeur }, provenance: o.P.provenanceDe((x) => o.jeux.origine(x), p.jeu) }); return { id: r.id, titre: r.titre, vue: r.vue, remplace: r.remplace, version: r.version, enregistre: true }; } }
   ];
   for (const o of T) o.params = o.params || O();
   const coherence = controlerCatalogue(T, OUTILS_VALIDES), incoherents = new Set(coherence.problemes.map((x) => x.nom));

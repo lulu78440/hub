@@ -44,7 +44,7 @@ const appelsReseau = [];
 brancher({ nom: "test", maintenant: () => new Date(), enLigne: () => true, nouvelId: (p = "") => p + Math.random().toString(36).slice(2, 10),
   fetch: async (u) => { appelsReseau.push(String(u)); const corps = /Rennes|RENNES/.test(u) ? dbn2 : dbn; return { ok: true, status: 200, text: async () => JSON.stringify(corps) }; },
   reglage: { lire: (k, d) => d, ecrire: () => {} },
-  stockage: { tout: async (c) => col[c] || [], lire: async (c, id) => (c === "kv" ? kv.get(id) : null), ecrire: async (c, o) => { if (c === "kv") kv.set(o.id, JSON.parse(JSON.stringify(o))); } },
+  stockage: { tout: async (c) => (c === "kv" ? [...kv.values()].map((x) => JSON.parse(JSON.stringify(x))) : col[c] || []), lire: async (c, id) => (c === "kv" ? kv.get(id) : null), ecrire: async (c, o) => { if (c === "kv") kv.set(o.id, JSON.parse(JSON.stringify(o))); } },
   ui: { afficherComposant: (vue, jeu, o) => { affiches.push({ vue, o, lignes: jeu.lignes.length, source: jeu.source.nom }); return { classList: { contains: () => false } }; } } });
 const cat = creerCatalogue({ raccourcis: () => ({}) });
 const T = (n) => cat.find((o) => o.nom === n);
@@ -143,23 +143,23 @@ ok(!res[0].ok && res[1].ok, "un outil inconnu est bloqué sans empêcher de juge
 const ref5 = (await x("lire_serie", { source: "dbnomics", identifiant: "INSEE/POP/V" })).donnees.jeu;
 reponseConf = false; confirmations.length = 0;
 r = await x("enregistrer_module", { id: "pop-versailles", titre: "Population de Versailles", vue: "courbe", jeu: ref5 });
-ok(!r.ok && r.refus && !kv.has("noyau-modules") && confirmations.length === 1, "Lucien refuse : rien n'est enregistré");
+ok(!r.ok && r.refus && ![...kv.keys()].some((k) => /^noyau-module/.test(k)) && confirmations.length === 1, "Lucien refuse : rien n'est enregistré");
 ok(/Population de Versailles/.test(confirmations[0].resume) && /source : /.test(confirmations[0].resume) && /période : 2000/.test(confirmations[0].resume) && confirmations[0].niveau === "CONFIRMATION", "la demande d'accord montre le titre, la source, la période et la date des données : " + confirmations[0].resume.slice(0, 160));
 reponseConf = true;
 r = await x("enregistrer_module", { id: "pop-versailles", titre: "Population de Versailles", vue: "courbe", jeu: ref5 });
-ok(r.ok && r.donnees.enregistre && kv.get("noyau-modules").lignes.length === 1, "Lucien accepte : module enregistré avec la copie de son jeu");
+ok(r.ok && r.donnees.enregistre && kv.get("noyau-module-pop-versailles").versions.length === 1 && !kv.has("noyau-modules"), "Lucien accepte : module enregistré avec la copie de son jeu");
 r = await x("lire_modules", {}); ok(r.ok && r.donnees.modules.length === 1 && r.donnees.modules[0].source && !JSON.stringify(r.donnees).includes("85800") && !JSON.stringify(r.donnees).includes("86000"), "lire_modules : liste sans aucune valeur chiffrée");
 const nb1 = affiches.length; r = await x("afficher_module", { module: "pop-versailles", vue: "tableau" }); ok(r.ok && affiches.length === nb1 + 1 && affiches[nb1].vue === "tableau", "un module enregistré se réaffiche par son identifiant");
 r = await x("afficher_module", { module: "n-existe-pas", vue: "courbe" }); ok(!r.ok && /Module inconnu/.test(r.erreur), "module inconnu refusé");
 r = await x("afficher_module", { jeu: ref5, module: "pop-versailles", vue: "courbe" }); ok(!r.ok && /un seul/.test(r.erreur), "jeu ET module en même temps : refusé");
 r = await x("enregistrer_module", { id: "Pas Valable", titre: "x", vue: "courbe", jeu: ref5 }); ok(!r.ok && /format non valide/.test(r.erreur), "identifiant de module invalide refusé");
-r = await x("enregistrer_module", { id: "pop-versailles", titre: "Titre modifié", vue: "barres", jeu: ref5 }); ok(r.ok && r.donnees.remplace && kv.get("noyau-modules").lignes.length === 1 && kv.get("noyau-modules").lignes[0].titre === "Titre modifié", "même identifiant : le module est remplacé, pas dupliqué");
-for (let i = 0; i < 25; i++) { r = await x("enregistrer_module", { id: "m-" + i, titre: "M", vue: "tableau", jeu: ref5 }); if (!r.ok) break; }
-ok(kv.get("noyau-modules").lignes.length === 20 && /20 modules au plus/.test(r.erreur), "20 modules au plus : le 21e est refusé, et il n'existe aucun outil pour en supprimer");
+r = await x("enregistrer_module", { id: "pop-versailles", titre: "Titre modifié", vue: "barres", jeu: ref5 }); ok(r.ok && r.donnees.remplace && kv.get("noyau-module-pop-versailles").versions.length === 2 && kv.get("noyau-module-pop-versailles").versions[1].titre === "Titre modifié" && [...kv.keys()].filter((k) => /^noyau-module-/.test(k)).length === 1, "même identifiant : nouvelle version, l'ancienne gardée, pas de doublon");
+for (let i = 0; i < 55; i++) { r = await x("enregistrer_module", { id: "m-" + i, titre: "M", vue: "tableau", jeu: ref5 }); if (!r.ok) break; }
+ok([...kv.keys()].filter((k) => /^noyau-module-/.test(k)).length === 50 && /50 modules au plus/.test(r.erreur), "50 modules au plus : le 21e est refusé, et il n'existe aucun outil pour en supprimer");
 ok(!cat.some((o) => /supprimer|effacer|exporter|retirer/.test(o.nom) && /module/.test(o.nom + o.description)), "aucun outil de suppression ni d'export de module (gestes de Lucien seulement)");
-const alteree = JSON.parse(JSON.stringify(kv.get("noyau-modules"))); alteree.lignes[0].jeu.lignes = [["2000", "pas un nombre"]];       // stockage altéré à la main, relu à l'ouverture suivante
+const alteree = JSON.parse(JSON.stringify(kv.get("noyau-module-pop-versailles"))); alteree.versions[alteree.versions.length - 1].jeux.j1.lignes = [["2000", "pas un nombre"]];       // stockage altéré à la main, relu à l'ouverture suivante
 const relu = creerModules({ stockage: { lire: async () => alteree, ecrire: async () => {} } });
-await leve(() => relu.lire(alteree.lignes[0].id), /nombre attendu/, "un module altéré dans le stockage est refusé à la lecture (jeu re-vérifié), pas affiché");
+await leve(() => relu.lire(alteree.module_id), /nombre attendu/, "un module altéré dans le stockage est refusé à la lecture (jeu re-vérifié), pas affiché");
 const M = creerModules({ stockage: { lire: async () => null, ecrire: async () => {} } });
 await leve(() => M.enregistrer({ id: "x1", titre: "t", vue: "courbe", jeu: { unite: "u", colonnes: [{ id: "v", libelle: "V", type: "nombre" }], lignes: [[1]] } }), /source manquante/, "un module sans source ne peut pas être enregistré");
 await leve(() => M.enregistrer({ id: "x1", titre: "t", vue: "radar", jeu: A }), /Vue inconnue/, "vue hors liste refusée");

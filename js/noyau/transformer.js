@@ -7,7 +7,7 @@ export const OPERATIONS = ["periode", "colonnes", "variation", "indice100", "moy
 export class RefusTransformation extends Error { constructor(m) { super(m); this.name = "RefusTransformation"; } }
 const refus = (m) => { throw new RefusTransformation(m); };
 
-const axe = (j) => { const c = j.colonnes.find((x) => x.type === "date"); if (!c) refus("ce jeu n'a pas de colonne de dates : cette opération est impossible"); return c; };
+export const axe = (j) => { const c = j.colonnes.find((x) => x.type === "date"); if (!c) refus("ce jeu n'a pas de colonne de dates : cette opération est impossible"); return c; };
 const nombres = (j) => j.colonnes.filter((c) => c.type === "nombre");
 const coupe = (s, n) => String(s).slice(0, n);
 const id = (base, suf) => coupe(base, 31 - suf.length) + suf;
@@ -23,7 +23,7 @@ const periodeDe = (j, lignes) => {
   const a = axe(j); const d = lignes.map((l) => l[a.i]).filter(Boolean);
   return d.length ? (d[0] === d[d.length - 1] ? d[0] : `${d[0]} → ${d[d.length - 1]}`) : "aucune donnée";
 };
-function deriver(j, etiquette, { colonnes = j.colonnes, lignes, unite = j.unite, titre = j.titre } = {}) {
+export function deriver(j, etiquette, { colonnes = j.colonnes, lignes, unite = j.unite, titre = j.titre } = {}) {
   const s = j.source;
   const nom = coupe(`${s.nom} · ${etiquette} (calculé par le hub)`, 120);
   const cols = colonnes.map((c, i) => ({ id: c.id, libelle: coupe(c.libelle, 60), type: c.type }));

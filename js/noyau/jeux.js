@@ -8,16 +8,17 @@ import { verifierJeu, dateTexte } from "./modules/composants.js";
 export const RE_REF = /^jeu:[a-z0-9]{6,16}$/;
 export const MAX_JEUX = 30;
 
-export function creerJeux({ nouvelId = () => Math.random().toString(36).slice(2, 10), maintenant = () => new Date() } = {}) {
+export function creerJeux({ nouvelId = () => Math.random().toString(36).slice(2, 10), maintenant = () => new Date(), surDepot = null } = {}) {
   const m = new Map();      // ordre d'insertion = ordre d'ancienneté (le plus ancien part le premier)
   const idPropre = () => { for (let i = 0; i < 20; i++) { const id = "jeu:" + String(nouvelId("")).toLowerCase().replace(/[^a-z0-9]/g, "").slice(-10).padStart(6, "0"); if (!m.has(id) && RE_REF.test(id)) return id; } throw new Error("Impossible de nommer le jeu"); };
   return {
     /** Vérifie le jeu (schéma strict, source obligatoire) puis le range. Renvoie { ref, jeu }. */
     deposer(brut, { origine = null } = {}) {
-      const jeu = verifierJeu(brut);
+      const jeu = brut && brut.verifie === true && Object.isFrozen(brut) ? brut : verifierJeu(brut);     // un jeu déjà vérifié (donc gelé) n'est pas re-vérifié : lot 9, reprise depuis le cache
       const ref = idPropre();
       m.set(ref, { jeu, origine, depose: maintenant().getTime() });
       while (m.size > MAX_JEUX) m.delete(m.keys().next().value);
+      if (surDepot) { try { surDepot(ref, jeu, origine); } catch (e) { /* le cache ne gêne jamais le dépôt */ } }       // lot 9 : cache local (non synchronisé)
       return { ref, jeu };
     },
     /** Le jeu derrière une référence, ou une erreur claire (jamais un jeu « par défaut »). */

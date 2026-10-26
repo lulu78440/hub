@@ -6,7 +6,8 @@ import { hote } from "./hote.js";
 import { jetons, normaliser, resumerLocalement } from "./recherche.js";
 import { OUTIL_REPONDRE, calculer } from "./outils.js";
 import { detecterInterdit, encadrer } from "./barriere.js";
-import { executerPlan, MAX_ETAPES } from "./execution.js";
+import { executerPlan, MAX_ETAPES, idPlan } from "./execution.js";
+import { ouvrirSignal, fermerSignal } from "./annulation.js";
 import { journalActions } from "./journal.js";
 import { ErreurNoyau } from "./moteurs.js";
 import { badgeReponse } from "./ia-regles.js";
@@ -177,7 +178,11 @@ export function creerCycle(deps) {
         messages.push({ role: "assistant", texte: r.texte, appels: r.appels, brut: r.brut });
         const resultats = [];
         // Plan : les étapes s'enchaînent dans l'ordre par la barrière ; « $N.champ » reprend le résultat de l'étape N (références, jamais de chiffres).
-        const faites = await executerPlan(r.appels, { barriere, origine, max: MAX_OUTILS_PAR_APPEL, apres: () => phase("cherche") });
+        // Lot 5 : le signal d'annulation est passé à executerPlan (étapes annulées = « non exécutées » dans le bilan). Si le bouton « Annuler le plan » de la Refonte 4
+        // a enveloppé la barrière (barriere.__vuesPlan), c'est lui qui fournit le signal : on ne passe pas le nôtre, sinon son bouton ne servirait plus ; executerPlan reconnaît alors la cause « annule ».
+        const idP = idPlan(), signal = barriere.__vuesPlan ? null : ouvrirSignal(idP);
+        let faites; try { faites = await executerPlan(r.appels, { barriere, origine, max: MAX_OUTILS_PAR_APPEL, id: idP, signal, apres: () => phase("cherche") }); } finally { fermerSignal(idP); }
+        if (hote.ui && hote.ui.orchestrateur && typeof hote.ui.orchestrateur.noterSession === "function") { try { await hote.ui.orchestrateur.noterSession({ appels: r.appels.slice(0, MAX_OUTILS_PAR_APPEL), lignes: faites }); } catch (e) { /* la session est une aide à la reprise : elle ne gêne jamais la réponse */ } }
         if (faites.length >= 2 && hote.ui && typeof hote.ui.afficherPlan === "function") { try { hote.ui.afficherPlan(r.appels.slice(0, MAX_OUTILS_PAR_APPEL), faites, "Plan de la demande"); } catch (e) { /* l'affichage du plan ne doit jamais gêner la réponse */ } }
         faites.forEach((res, k) => {
           const a = r.appels[k];
