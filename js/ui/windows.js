@@ -41,6 +41,8 @@ function defaults(W, H) {
   L.radar = { x: W + 50, y: T + 1420, w: Rw, h: 440 };
   L.securite = { x: W + 50, y: T + 1880, w: Math.max(Rw, 440), h: 600 };
   L.savoir = { x: W + 50, y: T + 2500, w: Math.max(Rw, 460), h: 760 };
+  L.budget = { x: W + 50, y: T + 3280, w: Math.max(Rw, 440), h: 640 };      // Atelier 7.41 : Budget et Achats attendent au mur du plan 2
+  L.achats = { x: W + 50, y: T + 3940, w: Math.max(Rw, 440), h: 600 };
   const x0 = Lx + Lw + mid, x1 = Rx - mid, mw = x1 - x0;
   const sw = Math.min(600, mw), sy = B - 96;     // la recherche descend en bas du centre ; l'orbe prend le reste
   return { L, search: { x: x0 + (mw - sw) / 2, y: sy, w: sw }, anchor: { left: x0, top: T, width: mw, height: Math.max(sy - T - 6, 140) } };
