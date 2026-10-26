@@ -17,6 +17,7 @@ const plus = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); retu
 export function creerHubSimule(o = {}) {
   let t = (o.maintenant || new Date(2026, 9, 26, 9, 0, 0)).getTime();
   let nid = 0, enLigne = o.enLigne !== false, cle = o.cle || null, cleC = o.cleClaude || null, cleL = o.cleLibre || null;
+  const clesS = { ...(o.clesServices || {}) };          // IA de secours (groq, openrouter, mistral) : chaînes factices seulement
   const coll = { notes: new Map(), tasks: new Map(), events: new Map(), favs: new Map(), kv: new Map(), images: new Map() };
   const regl = new Map(), ecouteurs = {}, appels = [], toasts = [], orbe = [];
   let live = {}, dossierFictif = null, droitFictif = "granted"; const fichiers = [];
@@ -61,7 +62,7 @@ export function creerHubSimule(o = {}) {
       surChangement: (c, f) => { (ecouteurs[c] = ecouteurs[c] || []).push(f); return () => { ecouteurs[c] = ecouteurs[c].filter((g) => g !== f); }; }
     },
     reglage: { lire: (k, d) => (regl.has(k) ? regl.get(k) : d), ecrire: (k, v) => { regl.set(k, String(v)); } },
-    secret: { cle: () => cle, protege: () => true, cleClaude: () => cleC, definirCleClaude: (k) => { cleC = k || null; }, cleLibre: () => cleL, definirCleLibre: (k) => { cleL = k || null; } },
+    secret: { cle: () => cle, protege: () => true, cleClaude: () => cleC, definirCleClaude: (k) => { cleC = k || null; }, cleLibre: () => cleL, definirCleLibre: (k) => { cleL = k || null; }, cleService: (id) => clesS[id] || null, definirCleService: (id, k) => { if (!['groq', 'openrouter', 'mistral'].includes(id)) throw new Error('Service inconnu.'); if (k) clesS[id] = k; else delete clesS[id]; } },
     hub: {
       styleNoyau: (css) => { appels.push({ style: css }); }, disposer: async (id, d, o = {}) => { appels.push({ disposer: id, d, o }); if (id === "inconnue") return { ok: false, erreur: "Fenêtre inconnue" }; return { ok: true, avant: { x: 0.1, y: 0.1, w: 0.3, h: 0.3, pin: false, hid: false } }; }, remettreDisposition: async () => { appels.push({ remettre: 1 }); },
       actus: () => actus, meteo: () => meteo, contexteLive: () => live,

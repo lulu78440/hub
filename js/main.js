@@ -47,7 +47,23 @@ const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 
 // Même règle que les maquettes : mobile si écran étroit ou tactile principal.
-state.lite = matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+// ?pc ou ?mobile dans l'adresse force la disposition (gardée sur cet appareil) ; ?auto revient au choix automatique.
+const disposition = (() => {
+  let v = null;
+  try {
+    const q = new URLSearchParams(location.search);
+    v = q.has("pc") ? "pc" : q.has("mobile") ? "mobile" : q.has("auto") ? "auto" : null;
+    if (v === "auto") localStorage.removeItem("hub-disposition");
+    else if (v) localStorage.setItem("hub-disposition", v);
+    else v = localStorage.getItem("hub-disposition");
+  } catch (e) { /* stockage indisponible : choix automatique */ }
+  return v === "pc" || v === "mobile" ? v : null;
+})();
+state.lite = disposition ? disposition === "mobile" : matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+if (disposition) {
+  const css = document.querySelector('link[href="css/mobile.css"]');
+  if (css) css.media = disposition === "mobile" ? "all" : "not all";
+}
 state.reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.body.classList.toggle("lite", state.lite);
 initDiag(state);

@@ -83,7 +83,11 @@ async function mergeIn(remote) {
       if (uni) { uni._m = Math.max(Date.now(), l._m || 0, r._m || 0); toPut.push(uni); continue; }
       if (!l || (r._m || 0) > (l._m || 0)) toPut.push(r);
     }
-    for (const [id, t] of Object.entries(rt)) { const l = local.get(id); if (l && t >= (l._m || 0)) toDel.push(id); }
+    // Suppression venue de l'autre appareil : comparée à la version retenue ICI après fusion (une note supprimée puis
+    // remise avec « Annuler » là-bas est plus récente que sa trace de suppression : elle doit rester).
+    const kept = new Map(toPut.map((x) => [x.id, x]));
+    for (const [id, t] of Object.entries(rt)) { const cur = kept.get(id) || local.get(id); if (cur && t >= (cur._m || 0)) { toDel.push(id); kept.delete(id); } }
+    toPut.length = 0; toPut.push(...kept.values());
     if (toPut.length) { await store.putMany(k, toPut, true); changes += toPut.length; }
     if (toDel.length) { await store.delMany(k, toDel, true); changes += toDel.length; }
     // On garde aussi les traces de suppression de l'autre appareil (pour les transmettre à un 3e)
@@ -92,6 +96,8 @@ async function mergeIn(remote) {
   try { localStorage.setItem("hub-synchro-suppressions", JSON.stringify(lt)); } catch (e) { /* plein */ }
   return changes;
 }
+
+let running = null;
 
 export const sync = {
   get configured() { const c = config(); return !!(c && c.token && c.phrase && c.gist); },
@@ -113,8 +119,13 @@ export const sync = {
     return { created };
   },
   forget() { saveConfig(null); localStorage.removeItem("hub-synchro-etat"); },
-  /** Tire, fusionne, pousse. Renvoie { pulled, pushed }. */
-  async run() {
+  /** Tire, fusionne, pousse. Renvoie { pulled, pushed }. Une seule synchro à la fois, tous onglets confondus
+   *  (deux onglets du hub ouverts : leurs synchros automatiques ne doivent pas se croiser et écraser le Gist). */
+  run() {
+    if (navigator.locks) return navigator.locks.request("hub-synchro", () => this._run());
+    const p = (running || Promise.resolve()).catch(() => {}).then(() => this._run()); running = p; return p;
+  },
+  async _run() {
     const c = config(); if (!c) throw new Error("Synchro non configurée");
     const remote = await readRemote(c);
     const pulled = remote ? await mergeIn(remote) : 0;

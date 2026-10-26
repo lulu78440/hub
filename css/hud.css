@@ -589,7 +589,7 @@ body.lite .gchip { padding: 7px 10px; font-size: 11px; }
 .ticker .it b { font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: .12em; padding: 2px 7px; color: var(--void); background: var(--c, var(--cyan)); }
 @keyframes tick { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .ticker .run { animation: none; } }
-body.cine:not(.lite) .ticker { opacity: .35; }
+body.cine:not(.lite) .ticker { opacity: .7; border-top-color: rgba(63,230,255,.15); }   /* cinéma : bandeau discret (bordure atténuée), textes à 4,5:1 au moins (ACTU, TECH, « à l'instant » ≈ 6,6:1) */
 body.cine:not(.lite) .ticker:hover { opacity: 1; }
 body:not(.lite) .fps { bottom: 48px; }
 .desk { bottom: 52px; }
@@ -1167,6 +1167,9 @@ body.lite .bar-in { min-width: 0; padding-inline: 14px; } body.lite .bar input {
 .dchips, .dlinks { display: flex; flex-wrap: wrap; gap: 6px; }
 @keyframes dopen { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .panel.dp.dwin { animation: none; } }
+
+/* Banc d'essai (B13) : contour de focus pour tout élément atteint au clavier qui n'a pas le sien (spécificité nulle : les styles existants gardent la main) */
+:where(a, button, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 
 /* Palette tapée d'Outils (ergo-palette) */
 .o-q { width: 100%; box-sizing: border-box; margin: 10px 0 4px; min-height: 40px; padding: 8px 12px; border: 1px solid rgba(63, 230, 255, .3); background: rgba(4, 16, 30, .8); color: #fff; font: 500 14px var(--ui); letter-spacing: .03em; }

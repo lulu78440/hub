@@ -89,7 +89,10 @@ export async function openFile(item) {
   const f = await item.open(); if (!f) return false;
   const url = URL.createObjectURL(f);
   const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener";
-  if (!/^(image\/|text\/|application\/pdf|video\/|audio\/)/.test(f.type || "")) a.download = item.name;
+  // Affichés dans l'onglet : seulement des formats qui ne peuvent pas exécuter de code. HTML, SVG, XML… sont téléchargés :
+  // ouverts en blob:, ils tourneraient avec les droits du hub (même origine) et pourraient lire ses données.
+  const SAFE = /^(image\/(png|jpe?g|gif|webp|avif|bmp)|text\/plain|application\/pdf|video\/[\w.+-]+|audio\/[\w.+-]+)$/i;
+  if (!SAFE.test(f.type || "")) a.download = item.name;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60e3);
   return true;

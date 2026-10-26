@@ -112,13 +112,13 @@ export function initMail() {
     pb.append(bar);
     const ul = document.createElement("ul"); ul.className = "mlist";
     if (!c.gmail && !c.outlook) ul.innerHTML = '<li class="none">Lecture seule de tes mails importants. Commence par « Configurer Gmail » ou « Configurer Outlook » : le mode d\'emploi s\'affiche.</li>';
-    else if (!mails.length) ul.innerHTML = `<li class="none">${busy ? "Lecture…" : Object.keys(errs).length ? Object.values(errs).join(" · ") : "Aucun mail important non lu sur 7 jours."}</li>`;
+    else if (!mails.length) { const li = document.createElement("li"); li.className = "none"; li.textContent = busy ? "Lecture…" : Object.keys(errs).length ? Object.values(errs).join(" · ") : "Aucun mail important non lu sur 7 jours."; ul.append(li); }   // texte, jamais du HTML
     mails.forEach((m) => {
       const li = document.createElement("li"); li.tabIndex = 0; li.title = m.extrait;
       li.innerHTML = '<span class="src"></span><div><b></b><span></span></div><em></em>';
       li.querySelector(".src").textContent = m.src === "Gmail" ? "G" : "O"; li.querySelector(".src").classList.add(m.src.toLowerCase());
       li.querySelector("b").textContent = m.from; li.querySelector("div span").textContent = m.subject; li.querySelector("em").textContent = (m.important ? "★ " : "") + fmt(m.date);
-      const go = () => { const a = document.createElement("a"); a.href = m.lien; a.target = "_blank"; a.rel = "noopener"; a.click(); };
+      const go = () => { if (!/^https:\/\//i.test(m.lien || "")) return; const a = document.createElement("a"); a.href = m.lien; a.target = "_blank"; a.rel = "noopener"; a.click(); };
       li.addEventListener("click", go); li.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
       ul.append(li);
     });

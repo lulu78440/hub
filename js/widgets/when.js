@@ -2,6 +2,7 @@
 const pad = (n) => String(n).padStart(2, "0");
 const JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
 const NOMS = { dim: 0, lun: 1, mar: 2, mer: 3, jeu: 4, ven: 5, sam: 6 };
+const NOMS_LONGS = { dimanche: 0, lundi: 1, mardi: 2, mercredi: 3, jeudi: 4, vendredi: 5, samedi: 6 };
 
 export const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 export const fromKey = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -34,16 +35,16 @@ export function parseDue(text) {
     if (v === "auj" || v === "aujourd'hui" || v === "aujourdhui") due = dayKey(today);
     else if (v === "demain" || v === "dem") due = dayKey(addDays(today, 1));
     else if (v === "apres-demain") due = dayKey(addDays(today, 2));
-    else if (NOMS[v.slice(0, 3)] !== undefined && /^[a-z]+$/.test(v)) {
-      let n = (NOMS[v.slice(0, 3)] - today.getDay() + 7) % 7; if (n === 0) n = 7;
+    else if ((NOMS[v] ?? NOMS_LONGS[v]) !== undefined) {            // « @lun » ou « @lundi » (pas « @mars » ni « @merci »)
+      let n = ((NOMS[v] ?? NOMS_LONGS[v]) - today.getDay() + 7) % 7; if (n === 0) n = 7;
       due = dayKey(addDays(today, n));
     } else {
-      const m = v.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+      const m = v.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/);
       if (m) {
-        let y = m[3] ? +m[3] : today.getFullYear(); if (y < 100) y += 2000;
-        let d = new Date(y, +m[2] - 1, +m[1]);
-        if (!m[3] && dayKey(d) < dayKey(today)) d = new Date(y + 1, +m[2] - 1, +m[1]);
-        if (d.getDate() === +m[1]) due = dayKey(d);
+        // Seulement une date qui existe (pas de 13/13 → janvier, pas de 31/04 → 1er mai)
+        const real = (y) => { const d = new Date(y, +m[2] - 1, +m[1]); return d.getMonth() === +m[2] - 1 && d.getDate() === +m[1] ? d : null; };
+        if (m[3]) { let y = +m[3]; if (y < 100) y += 2000; const d = real(y); if (d) due = dayKey(d); }
+        else for (let y = today.getFullYear(); y <= today.getFullYear() + 8 && !due; y++) { const d = real(y); if (d && dayKey(d) >= dayKey(today)) due = dayKey(d); }   // 29/02 → prochaine année bissextile
       }
     }
     return due ? sp : all;
@@ -55,9 +56,10 @@ export function parseDue(text) {
 export function parseTime(text) {
   let start = null, end = null;
   const hm = "(\\d{1,2})(?:[h:](\\d{2})?|h)";
-  const re = new RegExp("(^|\\s)" + hm + "(?:\\s?[-–à]\\s?" + hm + ")?(?=\\s|$)", "i");
-  const out = text.replace(re, (all, sp, h1, m1, h2, m2) => {
-    if (+h1 > 23 || (m1 && +m1 > 59)) return all;
+  // « à 18h », « vers 9h », « dès 7h » : le petit mot part avec l'heure (sinon la tâche s'appellerait « Appeler maman à »)
+  const re = new RegExp("(^|\\s)(?:(?:à|vers|dès)\\s)?" + hm + "(?:\\s?[-–à]\\s?" + hm + ")?(?=\\s|$)", "i");
+  const out = text.replace(new RegExp(re.source, "gi"), (all, sp, h1, m1, h2, m2) => {
+    if (start || +h1 > 23 || (m1 && +m1 > 59)) return all;         // seulement la première heure valable
     start = pad(+h1) + ":" + (m1 || "00");
     if (h2 !== undefined && +h2 <= 23 && !(m2 && +m2 > 59)) end = pad(+h2) + ":" + (m2 || "00");
     return sp;

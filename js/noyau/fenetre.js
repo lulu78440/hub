@@ -5,6 +5,7 @@
 import { hote } from "./hote.js";
 import { SOURCES, DOMAINES } from "./sources.js";
 import { lire as lireVoix, arreter as arreterVoix, dicter, lectureDispo, dicteeDispo } from "./voix.js";
+import { rendre as rendreComposant } from "./modules/composants.js";
 
 const PHASES = { reflechit: "Je réfléchis", se_souvient: "Je me souviens", cherche: "Je cherche", attend: "J'attends ton accord", parle: "Je réponds", dort: "Je consolide ma mémoire", repos: "Au repos", horsligne: "Hors ligne" };
 const CONFIANCE = { haute: ["sûr", "ok"], moyenne: ["à vérifier", "mid"], basse: ["incertain", "low"] };
@@ -100,7 +101,8 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
       m.local ? h("span", { class: "nx-etiq", title: "Calculé dans le hub, sans requête" }, "local") : null,
       m.refus ? h("span", { class: "nx-etiq bad" }, "refusé") : null,
       m.refaite ? h("span", { class: "nx-etiq" }, "refaite") : null,
-      m.requetes != null ? h("span", { class: "nx-dim", texte: `${m.requetes} req${m.ms ? " · " + secondes(m.ms) : ""}${m.moteurs && m.moteurs.length ? " · " + m.moteurs.join(" + ") : ""}` }) : null);
+      m.requetes != null ? h("span", { class: "nx-dim", texte: `${m.requetes} req${m.ms ? " · " + secondes(m.ms) : ""}${m.moteurs && m.moteurs.length ? " · " + m.moteurs.join(" + ") : ""}` }) : null,
+      m.badges && m.badges.length ? h("span", { class: "nx-etiq" + (m.badges.some((b) => /entraînement/.test(b)) ? " warn" : ""), title: m.secours ? "Secours : " + m.secours.essais.map((e) => e.nom).join(", ") + " indisponible(s), " + m.secours.repondu + " a répondu" : "Où cette réponse a été calculée" }, m.badges.join(" + ")) : null);
     const actions = h("div", { class: "nx-actions" },
       h("button", { class: "nx-lien", type: "button", onclick: () => donnerAvis(carte, m, true) }, "Valider"),
       h("button", { class: "nx-lien", type: "button", onclick: () => demanderRemarque(carte, m) }, "Non validée"),
@@ -275,6 +277,38 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     return z;
   }
 
+  // ---------- IA de secours en ligne (Groq, OpenRouter, Mistral) et ordre de secours ----------
+  const LIBELLES_ORDRE = { gemini: "Gemini", claude: "Claude", relais: "Relais gratuit", groq: "Groq", openrouter: "OpenRouter", mistral: "Mistral", local: "IA locale (modèle déjà téléchargé)", "sans-ia": "Sans IA (règles du hub)" };
+  function secoursBloc(s) {
+    const z = h("div", { class: "nx-claude" }), sc = s.secours || { ordre: [], services: [] };
+    z.append(h("p", { class: "nx-dim", texte: "Si un moteur ne répond pas (réseau, quota atteint, clé absente ou refusée, plus de 20 secondes), le suivant prend le relais tout seul, et le Noyau te dit lequel a répondu. Les clés se créent gratuitement, sans carte bancaire, sur la page de chaque service ; elles sont gardées chiffrées par le coffre (verrouillage actif obligatoire), jamais exportées ni synchronisées, et retirées si tu désactives le verrouillage. Le contenu de la conversation part chez le service qui répond." }));
+    // Ordre réglable
+    const ordre = sc.ordre.filter((x) => x !== "sans-ia"), liste = h("ol", { class: "nx-dim", "aria-label": "Ordre de secours" });
+    const poser = (o) => { noyau.definirOrdreSecours(o); rendreReglages(); };
+    ordre.forEach((id, i) => liste.append(h("li", {}, LIBELLES_ORDRE[id] || id, " ",
+      i > 0 ? h("button", { class: "nx-lien", type: "button", "aria-label": "Monter " + (LIBELLES_ORDRE[id] || id), onclick: () => { const o = ordre.slice(); [o[i - 1], o[i]] = [o[i], o[i - 1]]; poser(o); } }, "↑") : null,
+      i < ordre.length - 1 ? h("button", { class: "nx-lien", type: "button", "aria-label": "Descendre " + (LIBELLES_ORDRE[id] || id), onclick: () => { const o = ordre.slice(); [o[i], o[i + 1]] = [o[i + 1], o[i]]; poser(o); } }, "↓") : null)));
+    liste.append(h("li", {}, LIBELLES_ORDRE["sans-ia"]));
+    z.append(h("b", { texte: "Ordre de secours (mode Auto)" }), liste, h("div", { class: "nx-actions" }, h("button", { class: "nx-btn", type: "button", onclick: () => poser([]) }, "Ordre par défaut")));
+    // Un bloc par service : lien de la page de clé, limite gratuite, champ de clé
+    for (const sv of sc.services) {
+      const msg = h("span", { class: "nx-dim" });
+      const cle = h("input", { class: "nx-champ", type: "password", autocomplete: "off", placeholder: sv.cle ? "Clé " + sv.nom + " enregistrée (chiffrée). Colle-en une autre pour la remplacer." : "Clé API " + sv.nom, "aria-label": "Clé API " + sv.nom });
+      const mod = h("input", { class: "nx-champ", type: "text", value: sv.modele, "aria-label": "Modèle " + sv.nom }); mod.addEventListener("change", () => noyau.reglage("modele-" + sv.id, mod.value.trim()));
+      const bloc = h("div", { class: "nx-av" },
+        h("b", { texte: sv.nom + (sv.entrainement ? " · peut servir à l'entraînement" : "") }),
+        h("p", { class: "nx-dim" }, sv.limite + " Crée ta clé sur ", h("a", { href: sv.page, target: "_blank", rel: "noopener noreferrer" }, sv.page.replace(/^https:\/\//, "") + " ↗"), "."),
+        sv.entrainement ? h("label", { class: "nx-bascule" }, (() => { const cb = h("input", { type: "checkbox" }); cb.checked = sv.autorise; cb.addEventListener("change", () => { noyau.activerService(sv.id, cb.checked); rendreReglages(); }); return cb; })(), h("span", {}, "Utiliser " + sv.nom + " en secours", h("small", { texte: "Désactivé par défaut : avec l'offre gratuite, tes questions et le contexte partagé peuvent servir à entraîner " + sv.nom + ". Ne l'active que si tu l'acceptes." }))) : null,
+        h("label", { class: "nx-dim" }, "Clé " + sv.nom, cle),
+        h("div", { class: "nx-actions" }, h("button", { class: "nx-btn nx-primaire", type: "button", onclick: () => { try { if (!cle.value.trim()) { msg.textContent = "Colle d'abord la clé."; return; } noyau.definirCleService(sv.id, cle.value.trim()); cle.value = ""; msg.textContent = "Clé enregistrée (chiffrée par le coffre)."; rendreReglages(); } catch (e) { msg.textContent = e.message; } } }, "Enregistrer la clé"),
+          sv.cle ? h("button", { class: "nx-btn", type: "button", onclick: () => { noyau.definirCleService(sv.id, null); rendreReglages(); } }, "Retirer la clé") : null, msg),
+        h("label", { class: "nx-dim" }, "Modèle", mod),
+        h("p", { class: "nx-dim", texte: `Aujourd'hui : ${sv.requetes}/${sv.plafond} requêtes ${sv.nom}${sv.cle ? "" : " · pas de clé"}${sv.entrainement && !sv.autorise ? " · désactivé" : ""}.` }));
+      z.append(bloc);
+    }
+    return z;
+  }
+
   // ---------- Recherche par le sens, voix naturelle, interruption à la voix ----------
   function avancesBloc() {
     const z = h("div", { class: "nx-claude" }), msg = h("p", { class: "nx-dim" });
@@ -335,8 +369,8 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   function rendreReglages() {
     vueReglages.textContent = "";
     const s = noyau.statut();
-    const moteur = h("select", { class: "nx-champ", "aria-label": "Moteur" }, h("option", { value: "auto", texte: "Auto : Gemini + Claude (recommandé avec les deux clés)" }), h("option", { value: "gemini", texte: "Gemini seul (gratuit, en ligne)" }), h("option", { value: "claude", texte: "Claude seul (API payante)" }), h("option", { value: "local", texte: "IA locale (PC, secours hors ligne)" }));
-    moteur.value = noyau.reglage("moteur") || (s.claude.cle || s.libre.cle ? "auto" : "gemini"); moteur.addEventListener("change", () => { noyau.reglage("moteur", moteur.value); majBudget(); });
+    const moteur = h("select", { class: "nx-champ", "aria-label": "Moteur" }, h("option", { value: "auto", texte: "Auto : Gemini, Claude puis IA de secours (recommandé)" }), h("option", { value: "gemini", texte: "Gemini seul (gratuit, en ligne)" }), h("option", { value: "claude", texte: "Claude seul (API payante)" }), h("option", { value: "local", texte: "IA locale (PC, secours hors ligne)" }));
+    moteur.value = noyau.reglage("moteur") || (s.claude.cle || s.libre.cle || (s.secours && s.secours.services.some((x) => x.cle && x.autorise)) ? "auto" : "gemini"); moteur.addEventListener("change", () => { noyau.reglage("moteur", moteur.value); majBudget(); });
     const modele = h("select", { class: "nx-champ", "aria-label": "Modèle Gemini" }, h("option", { value: "gemini-flash-lite-latest", texte: "Flash-Lite (quota large, par défaut)" }), h("option", { value: "gemini-flash-latest", texte: "Flash (plus fin, quota plus serré)" }));
     modele.value = noyau.reglage("modele") || "gemini-flash-lite-latest"; modele.addEventListener("change", () => noyau.reglage("modele", modele.value));
     const plafond = h("input", { class: "nx-champ nx-court", type: "number", min: "1", max: "1500", value: String(s.budget.plafond), "aria-label": "Plafond de requêtes par jour" });
@@ -345,7 +379,8 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
     vueReglages.append(
       h("p", { class: "nx-intro", texte: `${s.moteur} · ${s.budget.utilisees}/${s.budget.plafond} requêtes aujourd'hui · ${s.hote}` }),
       h("div", { class: "nx-grille" }, h("label", {}, "Moteur", moteur), h("label", {}, "Modèle", modele), h("label", {}, "Plafond par jour", plafond)),
-      h("p", { class: "nx-dim", texte: "La clé Gemini est celle de l'orbe (gardée chiffrée par le coffre, verrouillage actif obligatoire). Elle se colle dans le panneau de l'orbe : clic sur l'orbe → engrenage." }),
+      h("p", { class: "nx-dim", texte: "La clé Gemini est celle de l'orbe (gardée chiffrée par le coffre, verrouillage actif obligatoire). Elle se colle dans le panneau de l'orbe : clic sur l'orbe → engrenage. Les clés des IA de secours (Groq, OpenRouter, Mistral) se collent juste en dessous." }),
+      h("h4", { texte: "IA de secours en ligne (Groq, OpenRouter, Mistral)" }), secoursBloc(s),
       bascule("Accueil du jour", "accueil", true, "Une phrase par jour, composée sans requête."),
       bascule("Remarques opportunes", "remarques", true, "Au plus une toutes les 2 heures, jamais en Focus ni la nuit."),
       bascule("Test de validation exigeant", "test-strict", true, "Un point n'est validé que si un modèle confirme aussi l'exactitude des fiches (1 requête par test). Désactivé : test local seul."),
@@ -445,6 +480,15 @@ export function monterFenetre(conteneur, noyau, { titre = true } = {}) {
   return {
     racine, poser, note, changerVue,
     ouvrir() { const w = conteneur.closest(".win"); if (w) { document.dispatchEvent(new CustomEvent("hub:focus-win", { detail: w.dataset.id })); w.classList.remove("hid"); } saisie.focus(); },
-    rafraichir() { majBudget(); majNav(); }
+    rafraichir() { majBudget(); majNav(); },
+    /** Lot 2 : affiche un composant (courbe, barres, tableau, chiffre_cle) dans l'échange. Appelable par le code seulement :
+     *  aucun outil du Noyau n'y mène tant que Lucien n'a pas validé afficher_module. Refus clair si le jeu est invalide ou sans source. */
+    afficherComposant(type, jeu, options = {}) {
+      fil.querySelector(".nx-vide")?.remove();
+      const el = rendreComposant(type, jeu, options);
+      fil.append(h("article", { class: "nx-m nx-noyau nx-module" }, el, h("div", { class: "nx-actions" }, h("button", { class: "nx-lien", type: "button", onclick: (e) => e.currentTarget.closest(".nx-m").remove() }, "Fermer"))));
+      fil.scrollTop = fil.scrollHeight;
+      return el;
+    }
   };
 }

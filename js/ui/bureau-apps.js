@@ -209,5 +209,6 @@ export function initApps({ desk, panels: P, wins, plans, direct }) {
   }
   // Fenêtres ouvertes la dernière fois : on les remet (le bureau est caché tant qu'on n'est pas en plan 3)
   Object.keys(BUILD).forEach((k) => { if (st[k] && st[k].open) build(k); });
+  queueMicrotask(paintFocus);   // les icônes sont posées juste après (initBureau) : soulignement des fenêtres remises
   return { open: openApp, close, isOpen: (k) => !!open[k], list: () => Object.keys(open) };
 }

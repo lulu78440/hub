@@ -41,7 +41,7 @@ export function initData() {
     if (!f) return;
     let r, text = await f.text(), opened = null;
     // Export chiffré : il faut la phrase (ou la clé de secours) de l'époque de l'export
-    let obj = null; try { obj = JSON.parse(text); } catch (e) { obj = null; }
+    let obj = null; try { obj = JSON.parse(text.replace(/^\uFEFF/, "")); } catch (e) { obj = null; }
     if (vault.isSealed(obj)) {
       opened = await askSecret("Export verrouillé", "Ce fichier est chiffré. Entre la phrase secrète (ou la clé de secours) en vigueur quand il a été exporté.", (v) => vault.openExport(obj, v));
       if (!opened) { toast("Import annulé"); return; }
@@ -60,6 +60,14 @@ export function initData() {
   });
   const importFile = () => input.click();
 
+  // Écriture refusée par le stockage : on le dit tout de suite (sinon la modification serait perdue en silence)
+  let lastWarn = 0;
+  addEventListener("hub:store-error", (e) => {
+    if (Date.now() - lastWarn < 3000) return; lastWarn = Date.now();
+    const err = e.detail || {}, full = err.name === "QuotaExceededError" || /quota/i.test(err.message || "");
+    toast(full ? "Espace de stockage plein : la dernière modification n'est PAS enregistrée. Exporte tes données, puis retire des images."
+      : "Modification non enregistrée : " + (err.message || "erreur du stockage"), { ms: 9000 });
+  });
   $("b-export").addEventListener("click", exportFile);
   $("b-import").addEventListener("click", importFile);
   showLast();

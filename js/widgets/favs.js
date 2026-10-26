@@ -5,6 +5,7 @@ import { parseBookmarks, groupOf } from "../store/bookmarks.js";
 import { toast } from "../ui/toast.js";
 import { registerMenu } from "../ui/menus.js";
 import { state, pulse } from "../state.js";
+const webUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");   // seuls les liens web (jamais javascript: ni data:)
 
 const C = "favs", ALL = "Tous", MAX_SHOWN = 240;
 const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return u; } };
@@ -43,7 +44,7 @@ export function initFavs() {
       .sort((a, b) => (rank.get(a.group) - rank.get(b.group)) || a.created - b.created);
     grid.innerHTML = "";
     list.slice(0, MAX_SHOWN).forEach((f) => {
-      const a = document.createElement("a"); a.href = f.url; a.target = "_blank"; a.rel = "noopener"; a.dataset.id = f.id; a.title = f.title + "\n" + f.url;
+      const a = document.createElement("a"); if (webUrl(f.url)) a.href = webUrl(f.url); a.target = "_blank"; a.rel = "noopener"; a.dataset.id = f.id; a.title = f.title + "\n" + f.url;
       const hx = document.createElement("span"); hx.className = "hx"; hx.textContent = initials(f); hx.style.setProperty("--c", hue(host(f.url)));
       const t = document.createElement("span"); t.className = "ft"; t.textContent = f.title;
       a.append(hx, t);
@@ -132,7 +133,7 @@ export function initFavs() {
       const f = favs.find((x) => x.id === a.dataset.id);
       if (f) it.push({ h: "Favori · " + f.title.slice(0, 28) },
         { t: "Ouvrir dans un nouvel onglet", fn: () => a.click() },
-        { t: "Ouvrir ici", fn: () => { location.href = f.url; } },
+        { t: "Ouvrir ici", fn: () => { if (webUrl(f.url)) location.href = webUrl(f.url); } },
         { t: "Copier l'adresse", fn: () => copy(f.url) },
         { t: "Modifier (nom, adresse, groupe)", fn: () => openForm(f) },
         { t: "Retirer", fn: () => remove(f.id) }, "-");

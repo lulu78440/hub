@@ -1,4 +1,5 @@
-// Noyau · moteurs (contrat, sections 1 et 7) : Gemini (actif), local WebLLM (secours PC), Claude (écrit mais COUPÉ), script (essais).
+// Noyau · moteurs (contrat, sections 1 et 7) : Gemini, Claude, relais et IA de secours compatibles OpenAI (Groq, OpenRouter, Mistral),
+// local WebLLM (secours PC), script (essais).
 // Tous partagent la même interface :
 //   moteur.generer({ systeme, messages, outils, forcer }) -> { texte, appels: [{ nom, params }], brut, usage, ms }
 // avec des messages neutres : { role: "user", texte } | { role: "assistant", texte, appels, brut } | { role: "outil", resultats: [{ nom, contenu }] }.
@@ -182,11 +183,67 @@ export function moteurClaude({ cle = null, modele = MODELE_CLAUDE_DEFAUT, budget
 }
 
 
-// ---------- Fournisseurs gratuits compatibles OpenAI (relais de durabilité) ----------
+// ---------- Adaptateur générique « compatible OpenAI » ----------
+// Groq, Mistral, OpenRouter (et le relais) parlent tous le format /v1/chat/completions. Un seul adaptateur, appelé directement
+// depuis la page (pas de proxy). La clé ne part que dans l'en-tête Authorization, vers l'adresse fixe de SON service ;
+// elle n'apparaît jamais dans un message d'erreur (masquerCle) ni dans un journal.
+/** Retire d'un texte la clé donnée et tout ce qui ressemble à une clé d'API (gsk_…, sk-…, AIza…). */
+export function masquerCle(texte, cle = null) {
+  let t = String(texte == null ? "" : texte);
+  if (cle && String(cle).length >= 4) t = t.split(String(cle)).join("[clé masquée]");
+  return t.replace(/\b(gsk_[A-Za-z0-9]{6,}|sk-[A-Za-z0-9_-]{6,}|AIza[A-Za-z0-9_-]{6,}|Bearer\s+[A-Za-z0-9._-]{6,})/g, "[clé masquée]");
+}
+export function moteurCompatibleOpenAI({ id = "service", nom = "Service", url, cle = null, modele, entetes = {}, budget = null, delaiMax = 20000, type = "secours", entrainement = false, choixObligatoire = "required" } = {}) {
+  const info = { id, service: nom, entrainement: !!entrainement };
+  if (!cle) return { nom: nom + " (sans clé)", type, ...info, coupe: true, async generer() { throw new ErreurNoyau("cle", "Aucune clé " + nom + " : colle-la dans Noyau → Réglages → IA de secours."); } };
+  return {
+    nom: nom + " · " + modele, modele, type, ...info, url, versOpenAI,
+    async generer({ systeme, messages, outils = [], forcer = null, temperature = 0.6 }) {
+      const t0 = Date.now();
+      if (!hote.enLigne()) throw new ErreurNoyau("hors_ligne", "Hors ligne : " + nom + " n'est pas joignable.");
+      if (budget) budget.reserver();
+      const corps = { model: modele, max_tokens: 1800, temperature, messages: versMessagesOpenAI(messages, systeme) };
+      if (outils.length) { corps.tools = versOpenAI(outils); corps.tool_choice = forcer && forcer.length === 1 ? { type: "function", function: { name: forcer[0] } } : choixObligatoire; }
+      const ctl = typeof AbortController !== "undefined" ? new AbortController() : null, minuteur = ctl ? setTimeout(() => ctl.abort(), delaiMax) : 0; let r;
+      try { r = await hote.fetch(url, { method: "POST", headers: { authorization: "Bearer " + cle, "content-type": "application/json", ...entetes }, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined }); }
+      catch (e) { throw new ErreurNoyau(e && e.name === "AbortError" ? "delai" : "reseau", e && e.name === "AbortError" ? nom + " n'a pas répondu à temps (" + Math.round(delaiMax / 1000) + " s)." : "Connexion à " + nom + " impossible (réseau, ou CORS refusé par le navigateur)."); }
+      finally { clearTimeout(minuteur); }
+      if (!r.ok) {
+        let msg = ""; try { const j = await r.json(); msg = (j.error && (j.error.message || j.error)) || j.message || j.detail || ""; } catch (e) { msg = ""; }
+        msg = masquerCle(typeof msg === "string" ? msg : JSON.stringify(msg), cle).slice(0, 120);
+        if (r.status === 401 || r.status === 403) throw new ErreurNoyau("cle", "Clé " + nom + " refusée : vérifie-la sur la page du service.");
+        if (r.status === 429 || r.status === 402) throw new ErreurNoyau("quota", "Limite gratuite " + nom + " atteinte : réessaie plus tard.");
+        if (r.status >= 500) throw new ErreurNoyau("reseau", nom + " est indisponible (" + r.status + ").");
+        throw new ErreurNoyau("http", nom + " répond " + r.status + (msg ? " : " + msg : ""));
+      }
+      let j; try { j = await r.json(); } catch (e) { throw new ErreurNoyau("reseau", nom + " a renvoyé une réponse illisible."); }
+      const ch = (j.choices || [])[0], mess = ch && ch.message; if (!mess) throw new ErreurNoyau("refus_securite", nom + " n'a pas donné de réponse.");
+      const u = j.usage || {};
+      return { texte: mess.content || "", appels: (mess.tool_calls || []).map((c) => { let p = {}; try { p = JSON.parse((c.function && c.function.arguments) || "{}"); } catch (e) { p = {}; } return { nom: c.function && c.function.name, params: p }; }).filter((a) => a.nom), brut: null, usage: { entree: u.prompt_tokens || 0, sortie: u.completion_tokens || 0, total: u.total_tokens || 0 }, ms: Date.now() - t0 };
+    }
+  };
+}
+
+// ---------- IA de secours en ligne : Groq, OpenRouter, Mistral (offres gratuites, clé créée par Lucien) ----------
+// Vérifié le 25/10/2026 d'après des pages datées du 18/10/2026 ; les offres gratuites changent : le modèle reste modifiable.
+// Mistral (plan Experiment) : les requêtes PEUVENT servir à entraîner Mistral → désactivé tant que Lucien ne l'active pas, badge dédié.
+export const SERVICES_SECOURS = {
+  groq: { nom: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", modele: "openai/gpt-oss-120b", modeles: ["openai/gpt-oss-120b", "openai/gpt-oss-20b"], page: "https://console.groq.com/keys", limite: "Gratuit sans carte : environ 1 000 requêtes par jour et 30 par minute.", plafond: 300, entrainement: false },
+  openrouter: { nom: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", modele: "openai/gpt-oss-20b:free", modeles: ["openai/gpt-oss-20b:free"], page: "https://openrouter.ai/keys", limite: "Modèles « :free » seulement : 50 requêtes par jour sans crédit.", plafond: 45, entrainement: false, entetes: (racine) => ({ "HTTP-Referer": racine || "https://lulu78440.github.io/hub/", "X-Title": "Hub de Lucien" }) },
+  mistral: { nom: "Mistral", url: "https://api.mistral.ai/v1/chat/completions", modele: "mistral-small-latest", modeles: ["mistral-small-latest"], page: "https://console.mistral.ai/api-keys", limite: "Plan Experiment gratuit (téléphone vérifié, sans carte) ; tes requêtes peuvent servir à entraîner Mistral.", plafond: 100, entrainement: true, choixObligatoire: "any" }
+};
+export const IDS_SECOURS = Object.keys(SERVICES_SECOURS);
+/** Moteur d'un service de secours (id : groq | openrouter | mistral). Adresse et en-têtes fixés ici : la clé ne peut aller ailleurs. */
+export function moteurService({ id, cle = null, modele = "", budget = null, delaiMax = 20000, racine = null } = {}) {
+  const s = SERVICES_SECOURS[id]; if (!s) throw new ErreurNoyau("http", "Service de secours inconnu.");
+  return moteurCompatibleOpenAI({ id, nom: s.nom, url: s.url, cle, modele: modele || s.modele, entetes: s.entetes ? s.entetes(racine) : {}, budget, delaiMax, type: "secours", entrainement: s.entrainement, choixObligatoire: s.choixObligatoire || "required" });
+}
+
+// ---------- Relais gratuit (réglage historique : un fournisseur au choix) ----------
 // Les offres gratuites changent : le modèle reste modifiable dans Réglages. Aucune clé n'est dans le code.
 export const FOURNISSEURS_LIBRES = {
   groq: { nom: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", modele: "llama-3.3-70b-versatile", lien: "console.groq.com" },
-  mistral: { nom: "Mistral", url: "https://api.mistral.ai/v1/chat/completions", modele: "mistral-small-latest", lien: "console.mistral.ai" },
+  mistral: { nom: "Mistral", url: "https://api.mistral.ai/v1/chat/completions", modele: "mistral-small-latest", lien: "console.mistral.ai", entrainement: true, choixObligatoire: "any" },
   openrouter: { nom: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", modele: "meta-llama/llama-3.3-70b-instruct:free", lien: "openrouter.ai/keys" },
   cerebras: { nom: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", modele: "llama-3.3-70b", lien: "cloud.cerebras.ai" }
 };
@@ -211,73 +268,92 @@ export function versMessagesOpenAI(messages, systeme) {
 }
 export function moteurLibre({ fournisseur = "groq", cle = null, modele = "", budget = null, delaiMax = 45000 } = {}) {
   const f = FOURNISSEURS_LIBRES[fournisseur] || FOURNISSEURS_LIBRES.groq, mod = modele || f.modele;
-  if (!cle) return { nom: f.nom + " (sans clé)", type: "libre", coupe: true, async generer() { throw new ErreurNoyau("cle", "Aucune clé " + f.nom + "."); } };
-  return {
-    nom: f.nom + " · " + mod, modele: mod, type: "libre", versOpenAI,
-    async generer({ systeme, messages, outils = [], forcer = null, temperature = 0.6 }) {
-      const t0 = Date.now();
-      if (!hote.enLigne()) throw new ErreurNoyau("hors_ligne", "Hors ligne : " + f.nom + " n'est pas joignable.");
-      if (budget) budget.reserver();
-      const corps = { model: mod, max_tokens: 1800, temperature, messages: versMessagesOpenAI(messages, systeme) };
-      if (outils.length) { corps.tools = versOpenAI(outils); corps.tool_choice = forcer && forcer.length === 1 ? { type: "function", function: { name: forcer[0] } } : "required"; }
-      const ctl = typeof AbortController !== "undefined" ? new AbortController() : null, minuteur = ctl ? setTimeout(() => ctl.abort(), delaiMax) : 0; let r;
-      try { r = await hote.fetch(f.url, { method: "POST", headers: { authorization: "Bearer " + cle, "content-type": "application/json" }, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined }); }
-      catch (e) { throw new ErreurNoyau(e && e.name === "AbortError" ? "delai" : "reseau", f.nom + " n'a pas répondu."); }
-      finally { clearTimeout(minuteur); }
-      if (!r.ok) {
-        let msg = ""; try { msg = ((await r.json()).error || {}).message || ""; } catch (e) { msg = ""; }
-        if (r.status === 401 || r.status === 403) throw new ErreurNoyau("cle", "Clé " + f.nom + " refusée.");
-        if (r.status === 429 || r.status === 402) throw new ErreurNoyau("quota", "Limite " + f.nom + " atteinte.");
-        throw new ErreurNoyau("reseau", f.nom + " répond " + r.status + (msg ? " : " + String(msg).slice(0, 120) : ""));
-      }
-      const j = await r.json(), ch = (j.choices || [])[0], mess = ch && ch.message; if (!mess) throw new ErreurNoyau("refus_securite", f.nom + " n'a pas donné de réponse.");
-      const u = j.usage || {};
-      return { texte: mess.content || "", appels: (mess.tool_calls || []).map((c) => { let p = {}; try { p = JSON.parse(c.function.arguments || "{}"); } catch (e) { p = {}; } return { nom: c.function.name, params: p }; }), brut: null, usage: { entree: u.prompt_tokens || 0, sortie: u.completion_tokens || 0, total: u.total_tokens || 0 }, ms: Date.now() - t0 };
-    }
-  };
+  const m = moteurCompatibleOpenAI({ id: "relais", nom: f.nom, url: f.url, cle, modele: mod, budget, delaiMax, type: "libre", entrainement: !!f.entrainement, choixObligatoire: f.choixObligatoire || "required" });
+  if (m.coupe) m.nom = f.nom + " (sans clé)";
+  return m;
 }
 
-// ---------- Routage automatique : les moteurs sont actifs ensemble ----------
+// ---------- Routage automatique et secours : les moteurs sont actifs ensemble ----------
 const RAISONNEMENT = /\b(compare|compar|analyse|analyser|explique pourquoi|argument|strategie|decision|decider|arbitr|critique|relis|plan en|etapes|avantages|inconvenients|synthese|redige|code|algorithme|demonstr|pourquoi)\b/;
 /** Complexité estimée d'une demande, sans requête : 0 (simple) à 4 (exigeante). */
 export function complexite(texte) {
-  const t = String(texte || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); let c = 0;
+  const t = String(texte || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); let c = 0;
   if (t.length > 280) c++; if (t.length > 700) c++;
   if (RAISONNEMENT.test(t)) c++;
   if ((t.match(/\?/g) || []).length >= 2) c++;
   if (/\b(et aussi|ensuite|puis|d'abord)\b/.test(t)) c++;
   return Math.min(c, 4);
 }
+
+/** Ordre de secours par défaut. « sans-ia » termine toujours la chaîne (réponse par les règles du hub). */
+export const ORDRE_SECOURS_DEFAUT = ["gemini", "claude", "relais", "groq", "openrouter", "mistral", "local", "sans-ia"];
+export const LIBELLES_SECOURS = { gemini: "Gemini", claude: "Claude", relais: "Relais gratuit", groq: "Groq", openrouter: "OpenRouter", mistral: "Mistral", local: "IA locale", "sans-ia": "Sans IA" };
+/** On passe au moteur suivant SEULEMENT pour ces erreurs : réseau (et hors ligne), quota (429, plafond du jour, crédit), clé absente ou refusée, délai. */
+export const CODES_SECOURS = ["reseau", "hors_ligne", "quota", "budget", "credit", "cle", "delai"];
+const RAISONS = { reseau: "réseau", hors_ligne: "hors ligne", quota: "quota atteint", budget: "plafond du jour atteint", credit: "crédit épuisé", cle: "clé absente ou refusée", delai: "délai dépassé" };
+/** Lit un ordre réglé (« gemini, groq, … ») : identifiants connus seulement, sans doublon, « sans-ia » toujours à la fin. */
+export function lireOrdreSecours(v) {
+  const brut = Array.isArray(v) ? v : String(v || "").split(/[\s,;>→]+/);
+  const ids = [...new Set(brut.map((x) => String(x).trim().toLowerCase()).filter((x) => ORDRE_SECOURS_DEFAUT.includes(x) && x !== "sans-ia"))];
+  return ids.length ? [...ids, "sans-ia"] : ORDRE_SECOURS_DEFAUT.slice();
+}
+const libelleMoteur = (m) => m.type === "claude" ? "Claude" : m.type === "secours" ? m.service : m.type === "libre" ? String(m.nom || "Relais").split(" ·")[0] : m.type === "local" ? "IA locale" : m.type === "script" ? m.nom : "Gemini";
+
 /**
- * Choisit pour chaque tour : Gemini (gratuit) pour le courant, Claude pour l'exigeant tant qu'il lui reste des jetons ;
- * si le moteur choisi échoue (quota, réseau, crédit), l'autre prend le relais. Le choix reste le même pendant tout un tour.
+ * Choisit pour chaque tour l'ordre des moteurs : l'ordre réglé (par défaut ORDRE_SECOURS_DEFAUT), où le routage peut seulement
+ * échanger Gemini et Claude (Claude pour l'exigeant tant qu'il lui reste des jetons). Si un moteur échoue pour une raison de
+ * CODES_SECOURS, le suivant répond ; sinon l'erreur remonte telle quelle. L'ordre reste le même pendant tout un tour.
+ * `maillons` : { relais, groq, openrouter, mistral, local } (moteur ou fonction qui le renvoie ; `coupe` = sauté ;
+ * `disponible()` facultatif, asynchrone). `delaiMaillon` : délai max par moteur en ligne (20 s par défaut).
  */
-export function moteurAuto({ gemini, claude, libre = null, jetons, preference = () => "auto", seuil = 2, surChoix = () => {} }) {
-  let tour = null;                                        // { choix } pour le tour en cours
-  const L = () => (typeof libre === "function" ? libre() : libre), G = () => (typeof gemini === "function" ? gemini() : gemini), C = () => (typeof claude === "function" ? claude() : claude);
+export function moteurAuto({ gemini, claude, libre = null, maillons = {}, ordre = () => ORDRE_SECOURS_DEFAUT, jetons, preference = () => "auto", seuil = 2, surChoix = () => {}, surSecours = () => {}, delaiMaillon = 20000 }) {
+  let tour = null;                                        // { ordre } pour le tour en cours
+  const val = (x) => (typeof x === "function" ? x() : x);
+  const source = { gemini: () => val(gemini), claude: () => val(claude), relais: () => val(libre), ...Object.fromEntries(Object.entries(maillons).map(([k, v]) => [k, () => val(v)])) };
   const dispo = (m) => m && !m.coupe;
-  const claudeOk = () => dispo(C()) && (!jetons || jetons.restant() > 500);
-  const ordre = (messages) => {
+  const claudeOk = (cla) => dispo(cla) && (!jetons || jetons.restant() > 500);
+  const ids = () => { const d = typeof ordre === "function" ? ordre() : ordre; return lireOrdreSecours(d).filter((x) => x !== "sans-ia"); };
+  const listeTour = (messages) => {
     const dernier = [...messages].reverse().find((m) => m.role === "user"), debut = messages.length <= 1 || messages[messages.length - 1].role === "user";
     if (tour && !debut) return tour.ordre;
-    const pref = preference(), gem = G(), cla = C(), g = dispo(gem), c = claudeOk(); let o;
-    if (pref === "claude" && c) o = [cla, gem]; else if (pref === "gemini" && g) o = [gem, cla];
-    else {
-      const x = complexite(dernier ? dernier.texte : ""), serre = jetons && jetons.restant() < jetons.plafond() * 0.2;
-      o = c && (x >= seuil + (serre ? 1 : 0) || !g) ? [cla, gem] : [gem, cla];
+    const liste = ids(), moteurs = liste.map((id) => (source[id] ? source[id]() : null));
+    const ig = liste.indexOf("gemini"), ic = liste.indexOf("claude");
+    if (ig >= 0 && ic >= 0) {
+      const pref = preference(), g = dispo(moteurs[ig]), c = claudeOk(moteurs[ic]);
+      let claudeDabord = ic < ig;
+      if (pref === "claude" && c) claudeDabord = true; else if (pref === "gemini" && g) claudeDabord = false;
+      else if (pref !== "claude" && pref !== "gemini") { const x = complexite(dernier ? dernier.texte : ""), serre = jetons && jetons.restant() < jetons.plafond() * 0.2; claudeDabord = c && (x >= seuil + (serre ? 1 : 0) || !g); }
+      if (claudeDabord !== ic < ig) { const t = moteurs[ig]; moteurs[ig] = moteurs[ic]; moteurs[ic] = t; }
     }
-    const lib = L(); if (dispo(lib)) o.push(lib);
-    tour = { ordre: o.filter(Boolean) }; return tour.ordre;
+    tour = { ordre: moteurs.filter(Boolean) }; return tour.ordre;
+  };
+  const garde = (p, ms, nom) => {
+    if (!ms) return p; let t = 0;
+    return Promise.race([p, new Promise((_, ko) => { t = setTimeout(() => ko(new ErreurNoyau("delai", nom + " n'a pas répondu en " + Math.round(ms / 1000) + " s.")), ms); })]).finally(() => clearTimeout(t));
   };
   return {
-    get nom() { const l = L(); return "Auto · Gemini + Claude" + (dispo(l) ? " + " + l.nom.split(" ·")[0] : ""); }, type: "auto", auto: true,
+    get nom() { const extra = ["relais", ...IDS_SECOURS, "local"].map((k) => (source[k] ? source[k]() : null)).filter((m) => dispo(m) && !m.disponible).map(libelleMoteur); return "Auto · Gemini + Claude" + (extra.length ? " + " + extra.join(" + ") : ""); },
+    type: "auto", auto: true,
     async generer(entree) {
-      const liste = ordre(entree.messages); let derniere = null;
-      for (const m of liste.filter((x) => x && !x.coupe)) {
-        try { const r = await m.generer(entree); r.moteur = m.type === "claude" ? "Claude" : m.type === "libre" ? m.nom.split(" ·")[0] : "Gemini"; if (tour) tour.ordre = [m, ...tour.ordre.filter((x) => x !== m)]; surChoix(r.moteur); return r; }
-        catch (e) { derniere = e; if (!(e instanceof ErreurNoyau) || !["quota", "reseau", "delai", "credit", "budget", "cle"].includes(e.code)) throw e; }
+      const liste = listeTour(entree.messages || []), essais = []; let derniere = null;
+      for (const m of liste) {
+        if (!dispo(m)) continue;
+        if (m.disponible) { let ok = false; try { ok = await m.disponible(); } catch (e) { ok = false; } if (!ok) continue; }
+        const nom = libelleMoteur(m);
+        try {
+          const r = await garde(m.generer(entree), m.type === "local" ? 0 : delaiMaillon, nom);
+          r.moteur = nom; r.moteurInfo = { type: m.type, nom: m.nom, service: m.service || null, entrainement: !!m.entrainement };
+          if (tour) tour.ordre = [m, ...tour.ordre.filter((x) => x !== m)];
+          surChoix(nom);
+          if (essais.length) { r.secours = { essais: essais.slice(), repondu: nom }; surSecours(essais.map((e) => e.nom + " : " + RAISONS[e.code]).join(" · ") + " → " + nom + " a répondu.", r.secours); }
+          return r;
+        } catch (e) {
+          if (!(e instanceof ErreurNoyau) || !CODES_SECOURS.includes(e.code)) throw e;
+          derniere = e; essais.push({ nom, code: e.code });
+        }
       }
-      throw derniere || new ErreurNoyau("cle", "Aucun moteur disponible (ni clé Gemini, ni clé Claude).");
+      const err = new ErreurNoyau(derniere ? derniere.code : "cle", essais.length ? "Aucune IA n'a répondu (" + essais.map((e) => e.nom + " : " + RAISONS[e.code]).join(" · ") + ") : réponse sans IA." : "Aucun moteur disponible (ni clé Gemini, ni clé Claude, ni IA de secours) : réponse sans IA.");
+      err.chaine = essais; throw err;
     }
   };
 }
@@ -291,7 +367,7 @@ export function moteurLocal({ id = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", surProgr
     async preparer() {
       if (mlc) return;
       if (typeof navigator === "undefined" || !navigator.gpu) throw new ErreurNoyau("local", "WebGPU indisponible : l'IA locale ne marche que sur le PC (Brave récent).");
-      const lib = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2/+esm");
+      const lib = await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm");
       mlc = await lib.CreateMLCEngine(id, { initProgressCallback: (r) => surProgres(r.text) });
     },
     async generer({ systeme, messages }) {
