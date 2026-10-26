@@ -1,6 +1,6 @@
 {
   "_lisezmoi": "Relevé du Suivi du Hub, lu par la fenêtre Progression. Mis à jour par Claude à chaque sous-étape.",
-  "releve": "2026-10-26T17:10:00+01:00",
+  "releve": "2026-10-26T18:00:00+01:00",
   "suivi": "https://claude.ai/artifact/55penHsSCPQaYcWNrhn2da",
   "phases": [
     {
@@ -206,7 +206,12 @@
     "test-statuts",
     "test-suite",
     "lab-csp",
-    "lab-secours"
+    "lab-secours",
+    "p3-fenetres",
+    "p3-lasso",
+    "p3-direct",
+    "p3-ia",
+    "p3-mobile"
   ],
   "prochaine": {
     "id": "ergo-recette",
@@ -261,7 +266,7 @@
     "test-statuts",
     "test-suite"
   ],
-  "maj": "2026-10-26T17:10:00+01:00",
+  "maj": "2026-10-26T18:00:00+01:00",
   "par": "Claude",
   "titres": {
     "p2-focus": "Ramener vers moi",
