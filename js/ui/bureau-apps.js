@@ -126,7 +126,7 @@ export function initApps({ desk, panels: P, wins, plans, direct }) {
     a.onfinish = done; a.oncancel = done;
   }
   function build(k) {
-    const sec = document.createElement("section"); sec.className = "panel dp dwin"; sec.dataset.app = k;
+    const sec = document.createElement("section"); sec.className = "panel dp dwin"; sec.dataset.app = k; sec.tabIndex = -1;   // un clic sur la barre de titre garde le focus dans la fenêtre : Échap la réduit
     const app = HUB_APPS.find((a) => a.k === k), acc = COL[app.a] || "cyan"; sec.dataset.accent = acc === "ok" ? "cyan" : acc; sec.style.setProperty("--a", `var(--${acc})`);
     sec.innerHTML = '<div class="in"><div class="ph"><h2></h2><span class="hatch"></span><span class="tag"></span><button type="button" class="dm" aria-label="Réduire vers l’icône" title="Réduire vers l’icône (Échap)">–</button><button type="button" class="dx" aria-label="Fermer" title="Fermer">×</button></div><div class="dbody"></div></div><span class="dres" aria-hidden="true"></span>';
     sec.querySelector("h2").textContent = TITRE[k];
@@ -201,7 +201,7 @@ export function initApps({ desk, panels: P, wins, plans, direct }) {
     build(k); st[k] = { ...(st[k] || {}), open: true }; save();
   }
   function close(k) {
-    const el = open[k]; if (!el) return;
+    const el = open[k]; if (!el) { if (k === "direct") direct.stop(true); return; }   // sans fenêtre, un partage encore actif est quand même coupé
     delete open[k]; const i = order.indexOf(k); if (i >= 0) order.splice(i, 1); st[k] = { ...(st[k] || {}), open: false, min: false }; save();
     if (k === "direct") direct.stop(true);   // fermer la fenêtre coupe le partage
     const fin = () => { if (el._clean) el._clean(); el.remove(); paintFocus(); };

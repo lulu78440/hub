@@ -1141,6 +1141,7 @@ body.lite .bar-in { min-width: 0; padding-inline: 14px; } body.lite .bar input {
 .dwins { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .panel.dp.dwin { position: absolute; flex: none; height: auto; min-width: 320px; pointer-events: none; animation: dopen .2s ease-out; }
 .desk.on .dwin { pointer-events: auto; }
+.panel.dp.dwin:focus { outline: none; }
 .dwin .ph { cursor: grab; touch-action: none; }
 .dwin.dragging .ph { cursor: grabbing; }
 .dwin.dragging { filter: drop-shadow(0 16px 20px rgba(0, 0, 0, .55)); }

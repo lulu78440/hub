@@ -37,7 +37,7 @@ export function createCommandes({ appli, bureau, plans, direct }) {
     { nom: "ouvrir_appli", perm: "libre", desc: "Ouvre une appli du bureau (ou la fenêtre Mails).", params: { app: { enum: APPS } },
       run: ({ app }) => { if (app !== "mails") plans.goPlan(3); appli.open(app); return ok("Appli ouverte : " + app); } },
     { nom: "fermer_appli", perm: "libre", desc: "Ferme une fenêtre d'appli du bureau (fermer « direct » coupe le partage d'écran).", params: { app: { enum: APPS_FEN } },
-      run: ({ app }) => { if (!appli.isOpen(app)) return ok("Déjà fermée : " + app); appli.close(app); return ok("Appli fermée : " + app); } },
+      run: ({ app }) => { if (!appli.isOpen(app)) { if (app === "direct" && direct.stop(true)) return ok("Partage d'écran coupé (la fenêtre n'était pas ouverte)"); return ok("Déjà fermée : " + app); } appli.close(app); return ok("Appli fermée : " + app); } },
     { nom: "aller_plan", perm: "libre", desc: "Change de plan (1 hub, 2 salle, 3 bureau).", params: { plan: { enum: [1, 2, 3] } },
       run: ({ plan }) => { plans.goPlan(plan); return ok("Plan " + plan); } },
     { nom: "poser_icone", perm: "libre", desc: "Pose une icône du catalogue sur le bureau (une seule par entrée).", params: { cle: { enum: cles } },
