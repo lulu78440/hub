@@ -30,9 +30,27 @@ export function initOutils({ wins, entity, cursor, resetLayout, data, menus, qua
   /** Une tuile : { t: titre, s: état en petit, fn, keep: ne pas fermer après, off }. Les lignes de menu reprises sont marquées « utilisées ». */
   const fromLine = (re, label, st) => { const l = find(re); if (!l) return null; used.add(l); return { t: label || l.t, s: st ? st() : "", fn: l.fn }; };
 
+  /** Liens https posés sur le bureau du PC (clé hub-bureau-v1) : seuls les liens https avec un nom valide sont proposés. */
+  function liensBureau() {
+    try {
+      const d = JSON.parse(prefs.get("bureau-v1", "null")); if (!d || !Array.isArray(d.icons)) return [];
+      return d.icons.filter((i) => i && i.k === "url" && typeof i.u === "string" && /^https:\/\//.test(i.u)).slice(0, 12).map((i) => {
+        let h = ""; try { h = new URL(i.u).hostname.replace(/^www\./, ""); } catch (e) { return null; }
+        return { t: String(i.n || h).slice(0, 24), s: h, fn: () => { window.open(i.u, "_blank", "noopener,noreferrer"); } };
+      }).filter(Boolean);
+    } catch (e) { return []; }
+  }
+
   function groupsMobile() {
     const L = mob.list(), by = (id) => L.find((w) => w.id === id), nHid = L.filter((w) => w.hid).length, nRed = L.filter((w) => w.red).length;
     const G = [];
+    // Applis (p3-mobile) : lanceur du téléphone. Les fenêtres du hub viennent sous le doigt ; les liens https posés sur le bureau du PC
+    // (icônes « lien », transmis par l'export ou la synchro) s'ouvrent dans un nouvel onglet. Fichiers, Ce PC et Écran en direct restent au PC.
+    const fen = (id, nom, st) => (by(id) ? { t: nom, s: st || "", fn: () => mob.reveal(id) } : null);
+    G.push({ h: "Applis", note: "Les applis du plan 3 sont sur PC : Fichiers, Ce PC, écran en direct. Ici, tes fenêtres et tes liens.", tiles: [
+      { t: "Internet", s: "recherche", fn: () => { const q = $("q"); if (q) { scrollTo({ top: 0, behavior: state.reduce ? "auto" : "smooth" }); q.focus({ preventScroll: true }); } } },
+      fen("mails", "Mails", "dans le hub"), fen("favs", "Favoris"), fen("video", "Vidéo"), fen("web", "Page en direct"), fen("notes", "Notes"), fen("music", "Musique"),
+      ...liensBureau() ] });
     G.push({ h: "Gestes", tiles: [
       fromLine(/^Focus 25|^Arrêter le Focus/), fromLine(/^Focus 50/), fromLine(/^Revoir le briefing/, "Revoir le briefing"),
       fromLine(/^Capture rapide/), fromLine(/image ici/i, "Ajouter une image"),

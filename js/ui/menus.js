@@ -170,6 +170,8 @@ export function initMenus({ wins, plans, entity, cursor, resetLayout, data, test
   const mob = {
     list: () => order.map((id) => ({ id, title: titleOf(id), hid: hid.includes(id), red: red.includes(id) })),
     setHidden: (id, on) => { const i = hid.indexOf(id); if (on && i < 0) hid.push(id); else if (!on && i >= 0) hid.splice(i, 1); else return; save(); },
+    /** Amène une fenêtre sous le doigt : la remet si elle était masquée ou réduite, puis « Ramener vers moi » (lanceur d'applis du téléphone, p3-mobile). */
+    reveal: (id) => { if (!byId(id)) return false; hid = hid.filter((x) => x !== id); red = red.filter((x) => x !== id); save(); mFocus(id); return true; },
     setRed, setAllRed: (on) => { red = on ? order.filter((id) => !hid.includes(id)) : []; save(); },
   };
   return { menu, fondLines, mob };
