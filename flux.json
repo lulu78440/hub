@@ -1,0 +1,465 @@
+{
+ "genere": "2026-10-31T17:57:38.216258+00:00",
+ "actus": [
+  {
+   "titre": "« Ce sont des ignares incompétents » : Xavier Niel réagit vivement à la taxe au gigaoctet",
+   "lien": "https://www.frandroid.com/marques/free/3305679_ce-sont-des-ignares-incompetents-xavier-niel-reagit-vivement-a-la-taxe-au-gigaoctet",
+   "date": "2026-10-31T17:44:56+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Boulanger lance le Black Friday en avance et fait chuter la Honor MagicPad 4 avec clavier de 200 €",
+   "lien": "https://www.frandroid.com/bons-plans/3305655_boulanger-lance-le-black-friday-en-avance-et-fait-chuter-la-honor-magicpad-4-avec-clavier-de-200-e",
+   "date": "2026-10-31T17:21:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Les scènes les plus marquantes du cinéma d’horreur qui resteront à jamais dans votre mémoire",
+   "lien": "https://www.numerama.com/pop-culture/2364755-les-scenes-les-plus-marquantes-du-cinema-dhorreur-qui-resteront-a-jamais-dans-votre-memoire.html",
+   "date": "2026-10-31T17:15:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "J’ai testé le TV Philips 65OLED951 : l’OLED Ambilight qui veut reprendre la tête de la course",
+   "lien": "https://www.frandroid.com/marques/philips/3282771_jai-teste-le-tv-philips-65oled951-loled-ambilight-qui-veut-reprendre-la-tete-de-la-course",
+   "date": "2026-10-31T17:01:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Black Friday : on a sélectionné 8 smartphones à prix cassés chez Amazon, Boulanger…",
+   "lien": "https://www.frandroid.com/bons-plans/3304227_black-friday-on-a-selectionne-cinq-smartphones-a-prix-casses-chez-amazon-et-boulanger",
+   "date": "2026-10-31T16:37:33+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "L’usine de l’ID. Polo s’arrête, le Tesla Model Y est le VE le moins polluant et une limite de 80 km/h sur autoroute : le récap Vroom de la semaine",
+   "lien": "https://www.numerama.com/vroom/2364433-lusine-de-lid-polo-sarrete-le-tesla-model-y-est-le-ve-le-moins-polluant-et-une-limite-de-80-km-h-sur-autoroute-le-recap-vroom-de-la-semaine.html",
+   "date": "2026-10-31T16:34:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "iRobot revient dans la course avec le Roomba Plus 415 Combo et le brade déjà à moins de 300 € pour le Black Friday",
+   "lien": "https://www.frandroid.com/bons-plans/3295417_irobot-revient-dans-la-course-avec-le-roomba-plus-415-combo-et-le-brade-deja-a-moins-de-300-euros-pour-le-black-friday",
+   "date": "2026-10-31T16:29:31+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "« Un véritable changement de paradigme » : comment l’agence IA des armées planche sur cette technologie de rupture",
+   "lien": "https://www.numerama.com/tech/2359979-un-veritable-changement-de-paradigme-comment-lagence-ia-des-armees-planche-sur-cette-technologie-de-rupture-interview.html",
+   "date": "2026-10-31T15:58:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Pixel Watch 4, Garmin Venu 4 et Huawei Watch D3 : le Black Friday commence fort sur les montres connectées",
+   "lien": "https://www.frandroid.com/bons-plans/3305637_pixel-watch-4-garmin-venu-4-et-huawei-watch-d3-le-black-friday-commence-fort-sur-les-montres-connectees",
+   "date": "2026-10-31T15:55:05+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Black Friday : voici les premières vraies offres tech à saisir en DIRECT ce samedi 31 octobre 2026",
+   "lien": "https://www.frandroid.com/bons-plans/3303871_le-black-friday-commence-deja-voici-les-meilleures-offres-en-avant-premiere",
+   "date": "2026-10-31T15:09:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Le Google Pixel 11 en 512 Go perd 200 € chez Amazon, avant même le début du Black Friday",
+   "lien": "https://www.frandroid.com/bons-plans/3305615_le-google-pixel-11-en-512-go-perd-200-e-chez-amazon-avant-meme-le-debut-du-black-friday",
+   "date": "2026-10-31T14:56:38+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "La physique quantique en ébullition : la théorie du « surfeur quantique » est de nouveau bousculée",
+   "lien": "https://www.numerama.com/sciences/2363561-la-physique-quantique-en-ebullition-la-theorie-du-surfeur-quantique-est-de-nouveau-bousculee.html",
+   "date": "2026-10-31T14:31:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "L'évacuation de la ville d'Olechky, un exemple réussi mais encore isolé de cessez-le-feu humanitaire entre l'Ukraine et la Russie",
+   "lien": "https://www.franceinfo.fr/monde/europe/manifestations-en-ukraine/l-evacuation-de-la-ville-d-olechky-un-exemple-reussi-mais-encore-isole-de-cessez-le-feu-humanitaire-entre-l-ukraine-et-la-russie_8261840.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-10-31T17:39:57+00:00",
+   "image": "https://www.franceinfo.fr/pictures/TSuLCZ_WK972i17yEOnvA7I1HwE/0x430:8256x5074/432x243/filters:format(jpg)/2026/10/31/6ae5fdad118d9947340996.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Guerre au Moyen-Orient : le régime iranien menace les Etats-Unis d'une \"riposte sans limite géographique\" en cas de reprise des combats",
+   "lien": "https://www.franceinfo.fr/monde/iran/guerre-entre-les-etats-unis-israel-et-l-iran/le-guide-supreme-iranien-met-en-garde-les-etats-unis-contre-une-reprise-d-eventuelles-attaques_8261696.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-10-31T17:35:00+00:00",
+   "image": "https://www.franceinfo.fr/pictures/9_s0DlZx5TkHHDPa8Zz2Umm2P4Q/0x312:6000x3687/432x243/filters:format(jpg)/2026/10/31/6ae5c6e3a86fb570782239.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Mobilisation du 31 octobre : l'intersyndicale recense près d'un demi-million de manifestants, le ministère de l'Intérieur 320 000, en baisse par rapport au 24 octobre",
+   "lien": "https://www.franceinfo.fr/societe/manifestations/mobilisation-du-31-octobre-l-intersyndicale-recense-pres-d-un-demi-million-de-manifestants-le-ministere-de-l-interieur-320-000-en-baisse-par-rapport-au-24-octobre_8262059.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-10-31T17:19:07+00:00",
+   "image": "https://www.franceinfo.fr/pictures/GOLoy2cIrsSeOUQrnyg_grRL5MU/0x53:1024x629/432x243/filters:format(jpg)/2026/10/31/6ae613f658df8581244563.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Mobilisation du 31 octobre : des échauffourées éclatent en fin de cortège dans les grandes villes, dont Paris, Marseille et Lyon",
+   "lien": "https://www.franceinfo.fr/economie/greve/direct-mobilisation-du-31-octobre-suivez-cette-troisieme-journee-de-manifestations-pour-laquelle-le-gouvernement-prevoit-un-dispositif-de-securite-exceptionnel_8260562.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-10-31T17:18:10+00:00",
+   "image": "https://www.franceinfo.fr/pictures/ilqyZtZB_BWiBFTPAIKrPL3Elgs/0x53:1024x629/432x243/filters:format(jpg)/2026/10/31/6ae621abc0ba4007778571.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "L'ambassade américaine avertit la Russie d'une \"menace crédible\" d'attentat à Moscou samedi",
+   "lien": "https://www.franceinfo.fr/monde/russie/l-ambassade-americaine-avertit-la-russie-d-une-menace-credible-d-attentat-a-moscou-samedi_8261987.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-10-31T17:03:51+00:00",
+   "image": "https://www.franceinfo.fr/pictures/6qglkLaIhbNZXD-VvFXziiosKpM/0x53:1024x629/432x243/filters:format(jpg)/2026/10/31/6ae61f71126d4085267350.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Bordeaux, Toulouse, Strasbourg... Le point sur les manifestations du 31 octobre en régions",
+   "lien": "https://www.franceinfo.fr/societe/manifestations/pau-avignon-gueret-les-premiers-corteges-de-la-mobilisation-du-31-octobre-se-sont-elances_8261798.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-10-31T16:44:21+00:00",
+   "image": "https://www.franceinfo.fr/pictures/bHFJi1zuimvmQAgXwz-EdxPv5B0/0x0:1024x576/432x243/filters:format(jpg)/2026/10/31/6ae613ac1a712124582846.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "EN DIRECT, guerre en Ukraine : des habitants d’Olechky, évacués vendredi, sont arrivés dans le nord du pays ; Volodymyr Zelensky en Turquie pour rencontrer Recep Tayyip Erdogan",
+   "lien": "https://www.lemonde.fr/international/live/2026/10/31/en-direct-guerre-en-ukraine-des-habitants-d-olechky-evacues-vendredi-sont-arrives-dans-le-nord-du-pays-volodymyr-zelensky-en-turquie-pour-rencontrer-recep-tayyip-erdogan_6799896_3210.html",
+   "date": "2026-10-31T16:37:31+00:00",
+   "image": "https://img.lemde.fr/2026/10/31/653/0/5152/2576/644/322/60/0/784ef33_ftp-1-chavw3qjptso-2026-10-31t131804z-1803645108-rc2ceoatramw-rtrmadp-3-ukraine-crisis-oleshky.JPG",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "« Dracula : la véritable histoire », sur Arte, livre une lecture géopolitique de l’Europe de l’Est depuis le XVᵉ siècle",
+   "lien": "https://www.lemonde.fr/culture/article/2026/10/31/dracula-la-veritable-histoire-sur-arte-livre-une-lecture-geopolitique-de-l-europe-de-l-est-depuis-le-xv-siecle_6803721_3246.html",
+   "date": "2026-10-31T16:30:02+00:00",
+   "image": "https://img.lemde.fr/2026/10/27/27/0/1920/960/644/322/60/0/3f930e4_upload-1-cusqsdwfxl1n-vlad-tepes-rotoscopie-tsvp.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Le parquet de Paris a ouvert une enquête pour provocation à la haine raciale en raison de menaces racistes visant des livreurs et chauffeurs sur X",
+   "lien": "https://www.lemonde.fr/societe/article/2026/10/31/le-parquet-de-paris-a-ouvert-une-enquete-pour-provocation-a-la-haine-raciale-en-raison-de-menaces-racistes-visant-des-livreurs-et-chauffeurs-sur-x_6803720_3224.html",
+   "date": "2026-10-31T16:24:37+00:00",
+   "image": "https://img.lemde.fr/2026/09/22/101/0/5898/2949/644/322/60/0/29a242d_upload-1-fpmlsvy3xtbv-000-a4e67pm.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "En Angleterre, Manchester United s’enfonce un peu plus dans la crise après sa défaite sur la pelouse de Chelsea",
+   "lien": "https://www.lemonde.fr/sport/article/2026/10/31/en-angleterre-manchester-united-s-enfonce-un-peu-plus-dans-la-crise-apres-sa-defaite-sur-la-pelouse-de-chelsea_6803717_3242.html",
+   "date": "2026-10-31T16:08:29+00:00",
+   "image": "https://img.lemde.fr/2026/10/31/310/0/3587/1793/644/322/60/0/a72c13c_ftp-1-rqg5oadoxqmi-2026-10-31t141126z-1616895055-up1emav13f1ha-rtrmadp-3-soccer-england-che-mun.JPG",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Nathalie Sarraute ou la vie sous les mots",
+   "lien": "https://www.lemonde.fr/culture/article/2026/10/31/nathalie-sarraute-ou-la-vie-sous-les-mots_6803716_3246.html",
+   "date": "2026-10-31T16:00:12+00:00",
+   "image": "https://img.lemde.fr/2026/10/27/44/0/1600/800/644/322/60/0/981e363_upload-1-tvnljvkgadea-sipa-00225413-000004-preview.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "EN DIRECT, manifestations du 31 octobre : entre 320 000 et 500 000 personnes ont défilé dans le calme en France, des heurts en fin de cortège dans plusieurs grandes villes",
+   "lien": "https://www.lemonde.fr/societe/live/2026/10/31/en-direct-manifestations-du-31-octobre-a-paris-la-tete-du-cortege-est-a-la-fin-du-parcours-autorise-retrouvez-les-temoignages-par-nos-journalistes-en-france_6803391_3224.html",
+   "date": "2026-10-31T15:53:46+00:00",
+   "image": "https://img.lemde.fr/2026/10/31/133/0/1600/800/644/322/60/0/a46bde7_upload-1-iqjvmvgreoiw-whatsapp-image-2026-10-31-at-18-05-40-2.jpeg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Face aux spéculations de nouvelles frappes sur l'Iran, Mojtaba Khamenei menace de riposter",
+   "lien": "https://www.france24.com/fr/moyen-orient/20261031-iran-%C3%A9tats-unis-isra%C3%ABl-guere-face-aux-sp%C3%A9culations-de-nouvelles-frappes-mojtaba-khamenei-menace-d-une-riposte-imm%C3%A9diate",
+   "date": "2026-10-31T17:47:09+00:00",
+   "image": "https://s.france24.com/media/display/77114946-d54c-11f1-8f61-a575454bc579/w:1024/p:16x9/AP26285515397254.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "A Moscou, l’ambassade américaine prévient la Russie de la « menace crédible » d’une attaque sur un musée",
+   "lien": "https://www.lemonde.fr/international/article/2026/10/31/a-moscou-l-ambassade-americaine-previent-la-russie-de-la-menace-credible-d-une-attaque-sur-un-musee_6803724_3210.html",
+   "date": "2026-10-31T16:55:12+00:00",
+   "image": "https://img.lemde.fr/2025/04/09/915/0/5809/2904/644/322/60/0/1811d2b_ftp-import-images-1-twzkbui39l8a-2025-04-09t172227z-1601955888-rc2vfdae4vos-rtrmadp-3-usa-trump-tariffs-russia.JPG",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Le Royaume-Uni prêt à présenter des excuses officielles pour son rôle dans l'esclavage",
+   "lien": "https://www.france24.com/fr/europe/20261031-andy-burnham-royaume-uni-pr%C3%AAt-pr%C3%A9senter-excuses-pour-son-r%C3%B4le-dans-esclavage-traite-transatlantique",
+   "date": "2026-10-31T16:54:19+00:00",
+   "image": "https://s.france24.com/media/display/38e2dd38-d542-11f1-9750-bf1914cabd52/w:1024/p:16x9/2026-10-31T100609Z-128435128-RC2MDOA7K8GW-RTRMADP-3-BRITAIN-SLAVERY.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "🔴 Acte III en direct : 320 000 manifestants en France selon le ministère de l'Intérieur, des heurts à Paris",
+   "lien": "https://www.france24.com/fr/france/20261031-31-octobre-en-direct-70-000-policiers-mobilis%C3%A9s-pour-un-acte-iii-%C3%A0-risque-tr%C3%A8s-%C3%A9lev%C3%A9-en-pleine-f%C3%AAte-d-halloween",
+   "date": "2026-10-31T16:43:38+00:00",
+   "image": null,
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "EN DIRECT, guerre en Ukraine : des habitants d’Olechky, évacués vendredi, sont arrivés dans le nord du pays ; Volodymyr Zelensky en Turquie pour rencontrer Recep Tayyip Erdogan",
+   "lien": "https://www.lemonde.fr/international/live/2026/10/31/en-direct-guerre-en-ukraine-des-habitants-d-olechky-evacues-vendredi-sont-arrives-dans-le-nord-du-pays-volodymyr-zelensky-en-turquie-pour-rencontrer-recep-tayyip-erdogan_6799896_3210.html",
+   "date": "2026-10-31T16:37:31+00:00",
+   "image": "https://img.lemde.fr/2026/10/31/653/0/5152/2576/644/322/60/0/784ef33_ftp-1-chavw3qjptso-2026-10-31t131804z-1803645108-rc2ceoatramw-rtrmadp-3-ukraine-crisis-oleshky.JPG",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "D'où viennent les \"jump scares\", cette technique indissociable du cinéma d'horreur ?",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261031-d-o%C3%B9-viennent-jump-scares-technique-indissociable-cin%C3%A9ma-horreur-film-culture-prime",
+   "date": "2026-10-31T16:30:46+00:00",
+   "image": "https://s.france24.com/media/display/5f2d931c-cc90-11f1-aee0-d1d2c32ebb87/w:1024/p:16x9/Miniature-Jump-Scares-Web.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Des caméras sur le dos des dauphins pour mieux comprendre leurs comportements et les protéger",
+   "lien": "https://www.france24.com/fr/plan%C3%A8te/20261031-cam%C3%A9ras-dos-dauphins-mieux-comprendre-leurs-comportements-prot%C3%A9ger-instant-positif",
+   "date": "2026-10-31T16:06:53+00:00",
+   "image": "https://s.france24.com/media/display/5cedd960-d53f-11f1-8ce0-695cb59fade5/w:1024/p:16x9/mvwjynmq.png",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Cédric Chetaille, contre-amiral : « Nous assistons à une forme de nouvelle “guerre des étoiles” sous-marine »",
+   "lien": "https://www.lemonde.fr/international/article/2026/10/31/cedric-chetaille-contre-amiral-nous-assistons-a-une-forme-de-nouvelle-guerre-des-etoiles-sous-marine_6803715_3210.html",
+   "date": "2026-10-31T16:00:09+00:00",
+   "image": "https://img.lemde.fr/2026/10/29/720/0/8640/4320/644/322/60/0/bf66bb0_upload-1-zjrvybpef76q-sipa-ap22998390-000008.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "En Ukraine, des habitants d'Olechky retrouvent leurs proches après avoir été évacués",
+   "lien": "https://www.france24.com/fr/europe/20261031-ukraine-habitants-olechky-retrouvent-leurs-proches-apr%C3%A8s-avoir-%C3%A9t%C3%A9-%C3%A9vacu%C3%A9s-cessez-feu-russie-op%C3%A9ration-humanitaire-melania-trump",
+   "date": "2026-10-31T15:47:39+00:00",
+   "image": "https://s.france24.com/media/display/bff7a79c-d53b-11f1-8be7-a575454bc579/w:1024/p:16x9/AP26304492932574.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Collision de trains en Espagne : une Française parmi les 69 morts, le ministère des affaires étrangères dit sa « très vive émotion »",
+   "lien": "https://www.lemonde.fr/international/article/2026/10/31/collision-de-trains-en-espagne-une-francaise-parmi-les-69-morts-le-ministere-des-affaires-etrangeres-dit-sa-tres-vive-emotion_6803714_3210.html",
+   "date": "2026-10-31T15:38:41+00:00",
+   "image": "https://img.lemde.fr/2026/10/30/458/0/5500/2750/644/322/60/0/f61309e_ftp-1-xh4uotq2qisu-2026-10-30t170722z-495208549-rc2sdoax9ayj-rtrmadp-3-spain-accident.JPG",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "La Turquie ajoute son candidat à la course à la direction de l'ONU",
+   "lien": "https://www.france24.com/fr/asie-pacifique/20261031-turquie-ajoute-candidat-course-direction-onu-antonio-gutteres-feridun-sinirlioglu",
+   "date": "2026-10-31T14:36:41+00:00",
+   "image": "https://s.france24.com/media/display/0c8c6ba0-d533-11f1-8f20-d18c5759e759/w:1024/p:16x9/AP26304313866709.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "L’Ukranienne Alla Didur reçoit le prix du « News Fixer » 2026, remis par le fonds américain dédié à la mémoire du journaliste Kurt Schork",
+   "lien": "https://www.lemonde.fr/international/article/2026/10/31/alla-didur-recoit-le-prix-du-news-fixer-2026-remis-par-le-fonds-americain-kurt-schork_6803672_3210.html",
+   "date": "2026-10-31T14:15:24+00:00",
+   "image": "https://img.lemde.fr/2026/10/31/33/0/1024/512/644/322/60/0/6e0656a_upload-1-88khmxmjwwio-whatsapp-image-2026-10-31-at-14-01-38.jpeg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Persona 5 Royal vient de perdre le record du monde du plus long solo",
+   "lien": "https://www.gamekult.com/actualite/persona-5-royal-vient-de-perdre-le-record-du-monde-du-plus-long-solo-3050872659.html",
+   "date": "2026-10-31T16:16:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050872659/persona-5-royale-vient-de-perdre-le-record-du-monde-du-plus-long-solo-a-terminer-dans-un-jeu-video-5cc452ea__930_300__0-143-1920-764.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Il y a 25 ans, ce jeu Dreamcast noté 7/20 nous a fait prendre conscience des limites de la notation des jeux vidéo",
+   "lien": "https://www.jeuxvideo.com/news/2111505/il-y-a-25-ans-ce-jeu-dreamcast-note-7-20-nous-a-fait-prendre-conscience-des-limites-de-la-notation-des-jeux-video.htm",
+   "date": "2026-10-31T16:15:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179337/1793365831-2870-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "L'anime Death Stranding Isolations se dévoile et ça n'a rien à voir avec le jeu vidéo noté 19/20",
+   "lien": "https://www.jeuxvideo.com/news/2111540/l-anime-death-stranding-isolations-se-devoile-et-ca-n-a-rien-a-voir-avec-le-jeu-video-note-19-20.htm",
+   "date": "2026-10-31T15:30:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179337/1793367922-9446-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Call of Duty Modern Warfare 4 x Monster : Comment récupérer les récompenses exclusives ?",
+   "lien": "https://www.jeuxvideo.com/news/2111103/call-of-duty-modern-warfare-4-x-monster-comment-recuperer-les-recompenses-exclusives.htm",
+   "date": "2026-10-31T15:00:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179318/1793180172-3618-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Final Fantasy Resonance réussit-il à transformer Brave Exvius en l’une des meilleures expériences de la saga ? Mon verdict en vidéo !",
+   "lien": "https://www.jeuxvideo.com/news/2109886/final-fantasy-resonance-reussit-il-a-transformer-brave-exvius-en-l-une-des-meilleures-experiences-de-la-saga-mon-verdict-en-video.htm",
+   "date": "2026-10-31T15:00:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179249/1792489078-1187-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Des lunettes Phantom Blade Zero de réalité augmentée, juste parce que",
+   "lien": "https://www.gamekult.com/actualite/des-lunettes-phantom-blade-zero-de-realite-augmentee-juste-parce-que-3050872638.html",
+   "date": "2026-10-31T14:10:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050872638/des-lunettes-phantom-blade-zero-de-realite-augmentee-juste-parce-que-078fa542__930_300__0-129-1920-751.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Meilleures Lames Spectrales Phantom Blade Zero : lesquelles utiliser et où les trouver ?",
+   "lien": "https://www.jeuxvideo.com/news/2111027/meilleures-lames-spectrales-phantom-blade-zero-lesquelles-utiliser-et-ou-les-trouver.htm",
+   "date": "2026-10-31T12:40:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179311/1793111753-5315-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "\"Une version fictive de Miami définie par le crime et la violence\" : quand la police s'oppose à collaborer avec Rockstar sur GTA 6",
+   "lien": "https://www.gamekult.com/actualite/une-version-fictive-de-miami-definie-par-le-crime-et-la-violence-quand-la-police-s-oppose-a-collaborer-avec-rockstar-sur-gta-6-3050872637.html",
+   "date": "2026-10-31T12:09:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050872637/une-version-fictive-de-miami-definie-par-le-crime-et-la-violence-quand-la-police-refuse-de-collaborer-avec-rockstar-sur-gta-6-a5f766b8__930_300__0-454-1100-810.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Certains jeux vidéo constituent un danger pour les enfants d'après cette nouvelle étude",
+   "lien": "https://www.jeuxvideo.com/news/2110346/certains-jeux-video-constituent-un-danger-pour-les-enfants-d-apres-cette-nouvelle-etude.htm",
+   "date": "2026-10-31T11:50:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179267/1792670886-7630-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Carte interactive Phantom Blade : Armes, trésors, lames spectrales, découvrez tous les points d'intérêt",
+   "lien": "https://www.jeuxvideo.com/news/2111545/carte-interactive-phantom-blade-armes-tresors-lames-spectrales-decouvrez-tous-les-points-d-interet.htm",
+   "date": "2026-10-31T10:20:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179337/1793368759-7873-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Une fin cachée de Resident Evil 7 révélait déjà les Connections, l'organisation qui contrôlait Umbrella",
+   "lien": "https://www.gamekult.com/actualite/une-fin-cachee-de-resident-evil-7-revelait-deja-les-connections-l-organisation-qui-controlait-umbrella-3050872603.html",
+   "date": "2026-10-31T10:19:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050872603/une-fin-cachee-de-resident-evil-7-revelait-deja-les-connections-l-organisation-qui-controlait-umbrella-95cb3523__930_300__0-281-1940-906.png",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Phantom Blade Zero : un 18/20 qui va faire date dans l'histoire du jeu vidéo",
+   "lien": "https://www.jeuxvideo.com/news/2111179/phantom-blade-zero-un-18-20-qui-va-faire-date-dans-l-histoire-du-jeu-video.htm",
+   "date": "2026-10-31T10:10:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179319/1793193448-7612-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  }
+ ],
+ "videos": [],
+ "sites": [
+  {
+   "nom": "Le hub",
+   "url": "https://lulu78440.github.io/hub/",
+   "ok": true,
+   "code": 200,
+   "ms": 166,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "YouTube",
+   "url": "https://www.youtube.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 81,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "GitHub",
+   "url": "https://github.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 13,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  }
+ ],
+ "erreurs": []
+}
