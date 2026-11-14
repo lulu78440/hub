@@ -1,0 +1,465 @@
+{
+ "genere": "2026-11-14T19:45:31.578098+00:00",
+ "actus": [
+  {
+   "titre": "Linky : l’Europe ferme la porte aux réfractaires et on passe une batterie solaire à 2 000 € au crible des chiffres",
+   "lien": "https://www.frandroid.com/survoltes/3323163_linky-leurope-ferme-la-porte-aux-refractaires-et-on-passe-une-batterie-solaire-a-2-000-e-au-crible-des-chiffres",
+   "date": "2026-11-14T19:01:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Moins de 90 € pour un écran 200 Hz : le Samsung Odyssey G3 G30H est le super deal du Black Friday",
+   "lien": "https://www.frandroid.com/bons-plans/3320945_moins-de-90-e-pour-un-ecran-200-hz-le-samsung-odyssey-g3-g30h-est-le-super-deal-du-black-friday",
+   "date": "2026-11-14T18:34:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Smartphones durables : quels téléphones ont les meilleures durées de vie en 2026 ?",
+   "lien": "https://www.frandroid.com/guide-dachat/smartphones/1288951_smartphones-durables-quel-telephone-a-la-meilleure-duree-de-vie",
+   "date": "2026-11-14T18:00:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Une scénic qui dépanne, des nouveautés eco-scorées, trop de commandes de Cybertruck : le récap Vroom de la semaine",
+   "lien": "https://www.numerama.com/vroom/2374153-une-scenic-qui-depanne-des-nouveautes-eco-scorees-trop-de-commandes-de-cybertruck-le-recap-vroom-de-la-semaine.html",
+   "date": "2026-11-14T17:42:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Saison 3 des Anneaux de pouvoir : qu’est-ce que Gundabad, la forteresse au cœur de l’épisode 4 ?",
+   "lien": "https://www.numerama.com/pop-culture/2372829-saison-3-des-anneaux-de-pouvoir-quest-ce-que-gundabad-la-forteresse-au-coeur-de-lepisode-4.html",
+   "date": "2026-11-14T17:01:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Toile grise ou toile blanche : comment bien choisir sa surface de projection ?",
+   "lien": "https://www.frandroid.com/produits-android/tv-connectee-produits/projecteur/3315977_toile-grise-ou-toile-blanche-comment-bien-choisir-sa-surface-de-projection",
+   "date": "2026-11-14T17:00:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Black Friday Week-End du 14-15 novembre : notre direct pour suivre les meilleures offres de la deuxième semaine du Black Month",
+   "lien": "https://www.frandroid.com/bons-plans/3303871_black-friday-2026-la-grande-braderie-de-la-tech-continue-ce-week-end-voici-les-meilleures-offres-du-samedi-14-novembre",
+   "date": "2026-11-14T16:54:25+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "La Fnac et Darty cassent leurs prix pendant le Black Friday : voici notre sélection des meilleures offres sur toute la tech qu’on aime",
+   "lien": "https://www.frandroid.com/bons-plans/3304465_la-fnac-et-darty-cassent-leurs-prix-pendant-le-black-friday-voici-notre-selection-des-meilleures-offres-sur-toute-la-tech-quon-aime",
+   "date": "2026-11-14T16:40:45+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Cette brosse à dents électrique améliore le brossage des dents pour moins de 80 euros pendant le Black Friday",
+   "lien": "https://www.frandroid.com/bons-plans/3320637_cette-brosse-a-dents-electrique-ameliore-le-brossage-des-dents-pour-moins-de-80-euros-pendant-le-black-friday",
+   "date": "2026-11-14T16:20:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Disney+ : les 10 meilleures comédies sur la plateforme de Mickey",
+   "lien": "https://www.numerama.com/pop-culture/2373149-disney-les-10-meilleures-comedies-sur-la-plateforme-de-mickey.html",
+   "date": "2026-11-14T16:15:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Black Friday montre connectée : les prix des Apple Watch, Garmin Fenix et Google Pixel Watch fondent plus vite que les calories",
+   "lien": "https://www.frandroid.com/bons-plans/3305637_black-friday-montre-connectee-les-prix-des-apple-watch-garmin-fenix-et-google-pixel-watch-fondent-plus-vite-que-les-calories",
+   "date": "2026-11-14T15:55:32+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Black Friday PC portable : bureautique, gaming, MacBook, ultrabooks… Les meilleures promos du week-end sont ici",
+   "lien": "https://www.frandroid.com/bons-plans/3302851_black-friday-pc-portable-bureautique-gaming-macbook-ultrabooks-les-meilleures-promos-du-week-end-sont-ici",
+   "date": "2026-11-14T15:33:08+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "En Israël, Gadi Eisenkot dénonce les ruses de Benyamin Nétanyahou, qui plaide pour la formation d’un gouvernement d’union",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/14/en-israel-gadi-eisenkot-denonce-les-ruses-de-benyamin-netanyahou-qui-plaide-pour-la-formation-d-un-gouvernement-d-union_6810511_3210.html",
+   "date": "2026-11-14T19:33:52+00:00",
+   "image": "https://img.lemde.fr/2026/11/10/216/0/2596/1298/644/322/60/0/1307f6b_ftp-1-tkrai4d4vsyw-6dd4ab72bfde45dd83ec57ad49247915-2-77bd5d1930694f2ebd877c35ce6429ef.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "EN DIRECT, guerre en Ukraine : Emmanuel Macron dénonce « ceux qui veulent rationner » l’aide à Kiev et « l’obliger à une paix injuste »",
+   "lien": "https://www.lemonde.fr/international/live/2026/11/14/en-direct-guerre-en-ukraine-emmanuel-macron-denonce-ceux-qui-veulent-rationner-l-aide-a-kiev-et-l-obliger-a-une-paix-injuste_6808609_3210.html",
+   "date": "2026-11-14T19:33:34+00:00",
+   "image": "https://img.lemde.fr/2026/11/12/340/0/4088/2044/644/322/60/0/d7fea01_ftp-1-nzzwjxdu3i42-1167ccbd7c8d41058d02eb9f695e4415-0-bd210e0515be40319792d25e97e6c80f.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "A Antalya, en marge de la COP, des milliers de manifestants en colère contre les atteintes à l’environnement : « Nous ne croyons plus en ceux qui nous dirigent »",
+   "lien": "https://www.lemonde.fr/planete/article/2026/11/14/a-antalya-en-marge-de-la-cop-des-milliers-de-manifestants-en-colere-contre-les-atteintes-a-l-environnement-nous-ne-croyons-plus-en-ceux-qui-nous-dirigent_6810478_3244.html",
+   "date": "2026-11-14T19:18:07+00:00",
+   "image": "https://img.lemde.fr/2026/11/14/688/0/8256/4128/644/322/60/0/9b8ad04_ftp-1-iiy8vpuhmnv2-afp-d7g78xm.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Volodymyr Zelensky affirme que Washington a proposé des concessions territoriales en échange d'une adhésion de l'Ukraine à l'Otan",
+   "lien": "https://www.franceinfo.fr/monde/europe/manifestations-en-ukraine/volodymyr-zelensky-affirme-que-washington-a-propose-des-concessions-territoriales-en-echange-d-une-adhesion-de-l-ukraine-a-l-otan_8282804.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-14T19:15:32+00:00",
+   "image": "https://www.franceinfo.fr/pictures/-Ofaa4yHNvynhLarhKlrXD1O82M/0x341:6550x4025/432x243/filters:format(jpg)/2026/11/14/6af8b2b9ba900879057743.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Manifestations du 14 novembre : la mobilisation est restée \"globalement maîtrisée\", malgré 219 interpellations et 10 policiers légèrement blessés, selon le ministère de l'Intérieur",
+   "lien": "https://www.franceinfo.fr/societe/manifestations/direct-manifestations-du-14-novembre-suivez-la-journee-de-mobilisation-a-l-appel-de-gilets-jaunes-et-d-organisations-de-jeunesse_8281187.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-14T18:57:22+00:00",
+   "image": "https://www.franceinfo.fr/pictures/dnMDVCapN1lXzm0jesfdeo0K9OA/0x625:6000x4000/432x243/filters:format(jpg)/2026/11/14/6af88c76dfad9399075291.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Des milliers de Portugais manifestent contre la crise du logement",
+   "lien": "https://www.franceinfo.fr/economie/pouvoir-achat/logement/des-milliers-de-portugais-manifestent-contre-la-crise-du-logement_8282765.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-14T18:23:08+00:00",
+   "image": "https://www.franceinfo.fr/pictures/wRFYlky8C6OjRIX3lS8LMBPl9Tg/0x625:6000x4000/432x243/filters:format(jpg)/2026/11/14/6af8a5a2e62f2110709803.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Présidentielle 2027 : Gérard Larcher veut réunir les candidats de droite et du centre pour arrêter \"une méthode de départage\" vers une candidature unique",
+   "lien": "https://www.franceinfo.fr/elections/presidentielle-2027-raphael-glucksmann-et-teddy-riner-attendus-au-salon-du-made-in-france_8282213.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-14T17:59:14+00:00",
+   "image": "https://www.franceinfo.fr/pictures/ZFbloxGYOGsripzqOyJ5fTZrw3c/0x209:8256x4853/432x243/filters:format(jpg)/2026/11/14/6af895ed8e3e6771761930.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "La chanteuse Carmelle offre la victoire aux Philippines pour la première édition du concours Eurovision d'Asie",
+   "lien": "https://www.franceinfo.fr/culture/musique/la-chanteuse-carmelle-offre-la-victoire-aux-philippines-pour-la-premiere-edition-du-concours-eurovision-d-asie_8282693.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-14T17:44:43+00:00",
+   "image": "https://www.franceinfo.fr/pictures/-U-mWLFXqZAC5qIMmYeVhw0WqMU/0x0:1024x576/432x243/filters:format(jpg)/2026/11/14/6af89bdaece25288085006.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Que faut-il attendre du sommet inédit entre Xi Jinping, Vladimir Poutine et Donald Trump, prévu jeudi en Chine ?",
+   "lien": "https://www.franceinfo.fr/monde/usa/presidentielle/donald-trump/que-faut-il-attendre-du-sommet-inedit-entre-xi-jinping-vladimir-poutine-et-donald-trump-attendu-jeudi-en-chine_8282519.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-14T17:38:22+00:00",
+   "image": "https://www.franceinfo.fr/pictures/DNKAv1cliEDBwofByHfeh76hu1s/0x344:6613x4063/432x243/filters:format(jpg)/2026/11/14/6af8646b20578252255303.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Avec le « Legend Tour » de Guillaume Pley, l’armée française s’offre une vitrine auprès de la jeunesse",
+   "lien": "https://www.lemonde.fr/politique/article/2026/11/14/avec-le-legend-tour-de-guillaume-pley-l-armee-francaise-s-offre-une-vitrine-aupres-de-la-jeunesse_6810456_823448.html",
+   "date": "2026-11-14T17:00:16+00:00",
+   "image": "https://img.lemde.fr/2026/11/13/74/0/534/267/644/322/60/0/003c1f8_upload-1-zcbby7b0mpnc-capture-d-e-cran-2026-11-13-a-15-34-39.png",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Les « nouveaux Tanguy », ces jeunes adultes qui tiennent à conserver l’alternance entre chez papa et chez maman",
+   "lien": "https://www.lemonde.fr/intimites/article/2026/11/14/les-nouveaux-tanguy-ces-jeunes-adultes-qui-tiennent-a-conserver-l-alternance-entre-chez-papa-et-chez-maman_6810454_6190330.html",
+   "date": "2026-11-14T17:00:10+00:00",
+   "image": "https://img.lemde.fr/2026/11/06/96/0/2503/1251/644/322/60/0/6ccc07b_upload-1-abul0enrdrdh-seto-lemonde-tanguy-2.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Le Pays de Galles signe un exploit en rugby, en battant la Nouvelle-Zélande pour la première fois depuis 1953",
+   "lien": "https://www.lemonde.fr/sport/article/2026/11/14/le-pays-de-galles-signe-un-exploit-en-rugby-en-battant-la-nouvelle-zelande-pour-la-premiere-fois-depuis-1953_6810451_3242.html",
+   "date": "2026-11-14T16:39:10+00:00",
+   "image": "https://img.lemde.fr/2026/11/14/145/0/2849/1424/644/322/60/0/d909819_ftp-1-8lfksxth0kje-2026-11-14t161824z-1614672390-up1embe19an51-rtrmadp-3-rugby-union-nationschamp-wal-nzl.JPG",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "En Israël, Gadi Eisenkot dénonce les ruses de Benyamin Nétanyahou, qui plaide pour la formation d’un gouvernement d’union",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/14/en-israel-gadi-eisenkot-denonce-les-ruses-de-benyamin-netanyahou-qui-plaide-pour-la-formation-d-un-gouvernement-d-union_6810511_3210.html",
+   "date": "2026-11-14T19:33:52+00:00",
+   "image": "https://img.lemde.fr/2026/11/10/216/0/2596/1298/644/322/60/0/1307f6b_ftp-1-tkrai4d4vsyw-6dd4ab72bfde45dd83ec57ad49247915-2-77bd5d1930694f2ebd877c35ce6429ef.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "EN DIRECT, guerre en Ukraine : Emmanuel Macron dénonce « ceux qui veulent rationner » l’aide à Kiev et « l’obliger à une paix injuste »",
+   "lien": "https://www.lemonde.fr/international/live/2026/11/14/en-direct-guerre-en-ukraine-emmanuel-macron-denonce-ceux-qui-veulent-rationner-l-aide-a-kiev-et-l-obliger-a-une-paix-injuste_6808609_3210.html",
+   "date": "2026-11-14T19:33:34+00:00",
+   "image": "https://img.lemde.fr/2026/11/12/340/0/4088/2044/644/322/60/0/d7fea01_ftp-1-nzzwjxdu3i42-1167ccbd7c8d41058d02eb9f695e4415-0-bd210e0515be40319792d25e97e6c80f.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "A Antalya, en marge de la COP, des milliers de manifestants en colère contre les atteintes à l’environnement : « Nous ne croyons plus en ceux qui nous dirigent »",
+   "lien": "https://www.lemonde.fr/planete/article/2026/11/14/a-antalya-en-marge-de-la-cop-des-milliers-de-manifestants-en-colere-contre-les-atteintes-a-l-environnement-nous-ne-croyons-plus-en-ceux-qui-nous-dirigent_6810478_3244.html",
+   "date": "2026-11-14T19:18:07+00:00",
+   "image": "https://img.lemde.fr/2026/11/14/688/0/8256/4128/644/322/60/0/9b8ad04_ftp-1-iiy8vpuhmnv2-afp-d7g78xm.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Ligue des nations : face à la Turquie, Mbappé et les Bleus en mission pour la qualification",
+   "lien": "https://www.france24.com/fr/sports/20261114-ligue-des-nations-france-vs-turquie",
+   "date": "2026-11-14T17:40:46+00:00",
+   "image": "https://s.france24.com/media/display/46a6fb20-e050-11f1-98c3-3f371022a770/w:1024/p:16x9/000-C9EB4KL.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Avec le « Legend Tour » de Guillaume Pley, l’armée française s’offre une vitrine auprès de la jeunesse",
+   "lien": "https://www.lemonde.fr/politique/article/2026/11/14/avec-le-legend-tour-de-guillaume-pley-l-armee-francaise-s-offre-une-vitrine-aupres-de-la-jeunesse_6810456_823448.html",
+   "date": "2026-11-14T17:00:16+00:00",
+   "image": "https://img.lemde.fr/2026/11/13/74/0/534/267/644/322/60/0/003c1f8_upload-1-zcbby7b0mpnc-capture-d-e-cran-2026-11-13-a-15-34-39.png",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Francophonie : la RD Congo menace de quitter l'organisation",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261114-francophonie-la-rd-congo-menace-de-quitter-l-organisation",
+   "date": "2026-11-14T16:51:40+00:00",
+   "image": "https://s.france24.com/media/display/fc771cc4-e04a-11f1-982b-695cb59fade5/w:1024/p:16x9/FR-20261113-224916-225101-CS-01.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Pas-de-Calais : le corps d’un jeune homme retrouvé mort sur une plage en marge de nombreuses tentatives de départs clandestins vers l’Angleterre",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/14/pas-de-calais-le-corps-d-un-jeune-homme-retrouve-mort-sur-une-plage-en-marge-de-nombreuses-tentatives-de-departs-clandestins-vers-l-angleterre_6810452_3210.html",
+   "date": "2026-11-14T16:42:03+00:00",
+   "image": "https://img.lemde.fr/2026/11/14/485/0/5820/2910/644/322/60/0/4161051_ftp-1-34wkp6gykacj-afp-d7fy2cq.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Victorin Lurel, sénateur PS de la Guadeloupe : \"L'oisiveté est la mère de tous les vices\"",
+   "lien": "https://www.france24.com/fr/%C3%A9missions/avec-judith/20261114-victorin-lurel-s%C3%A9nateur-ps-de-la-guadeloupe-l-oisivet%C3%A9-est-la-m%C3%A8re-de-tous-les-vices",
+   "date": "2026-11-14T16:28:10+00:00",
+   "image": "https://s.france24.com/media/display/b33063e2-dec7-11f1-9b9b-29048b396e03/w:1024/p:16x9/Vignette-finale-Victorin.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Rugby : exploit des Gallois, victorieux contre les All Blacks pour la première fois depuis 1953",
+   "lien": "https://www.france24.com/fr/sports/20261114-rugby-exploit-des-gallois-victorieux-contre-les-all-blacks-pour-la-premi%C3%A8re-fois-depuis-1953",
+   "date": "2026-11-14T16:21:30+00:00",
+   "image": "https://s.france24.com/media/display/72db071c-e047-11f1-bb17-f71d22e7fea9/w:1024/p:16x9/3d739ffe3f7618426546eebdb2925342cfe43d5a.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "L’université de Nottingham, symbole extrême de la crise de l’enseignement supérieur britannique, supprime des centaines de postes et ferme des filières",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/14/l-universite-de-nottingham-symbole-extreme-de-la-crise-de-l-enseignement-superieur-britannique-supprime-des-centaines-de-postes-et-ferme-des-filieres_6810447_3210.html",
+   "date": "2026-11-14T16:00:15+00:00",
+   "image": "https://img.lemde.fr/2026/11/14/699/0/8117/4058/644/322/60/0/94e7862_upload-1-iwo4kr4skbf0-gettyimages-1238159690.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Mikhaïl Epstein, philosophe : « Le bolchevisme voulait hâter la fin heureuse de l’histoire, le poutinisme en précipite la fin catastrophique »",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/14/mikhail-epstein-philosophe-le-bolchevisme-voulait-hater-la-fin-heureuse-de-l-histoire-le-poutinisme-en-precipite-la-fin-catastrophique_6810446_3210.html",
+   "date": "2026-11-14T16:00:10+00:00",
+   "image": "https://img.lemde.fr/2026/11/11/12/0/2941/1470/644/322/60/0/cf897cc_upload-1-xndweslopshh-1.png",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "De communiste à conseiller de Macron, le parcours de l'économiste Philippe Aghion",
+   "lien": "https://www.france24.com/fr/%C3%A9missions/avec-judith/20261114-de-communiste-%C3%A0-conseiller-de-macron-le-parcours-de-l-%C3%A9conomiste-philippe-aghion",
+   "date": "2026-11-14T15:50:57+00:00",
+   "image": "https://s.france24.com/media/display/39cdf0b8-d9d2-11f1-ac00-1beafce15fea/w:1024/p:16x9/VIGNETTE-Philippe-Aghion0.png",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Rouge infernal Phantom Blade Zero : Comment obtenir cette arme ?",
+   "lien": "https://www.jeuxvideo.com/news/2113551/rouge-infernal-phantom-blade-zero-comment-obtenir-cette-arme.htm",
+   "date": "2026-11-14T18:15:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179431/1794313478-1742-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Nvidia : plus de 1 000 milliards de dollars de capitalisation en moins en quelques jours, le patron Jensen Huang a fait une bourde coûteuse",
+   "lien": "https://www.jeuxvideo.com/news/2114329/nvidia-plus-de-1-000-milliards-de-dollars-de-capitalisation-en-moins-en-quelques-jours-le-patron-jensen-huang-a-fait-une-bourde-couteuse.htm",
+   "date": "2026-11-14T17:45:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179458/1794583880-7448-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Zelda et Mario ont fait beaucoup pour les jeux en 3D : d'ailleurs, sans eux, GTA 6 ne serait pas le même ! Et ce sont des spécialistes qui le disent...",
+   "lien": "https://www.jeuxvideo.com/news/2114240/zelda-et-mario-ont-fait-beaucoup-pour-les-jeux-en-3d-d-ailleurs-sans-eux-gta-6-ne-serait-pas-le-meme-et-ce-sont-des-specialistes-qui-le-disent.htm",
+   "date": "2026-11-14T17:00:46+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179457/1794565799-8514-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Les développeurs de Palworld auront droit à un congé pour jouer à GTA 6",
+   "lien": "https://www.gamekult.com/actualite/les-developpeurs-de-palworld-auront-droit-a-un-conge-pour-jouer-a-gta-6-3050872968.html",
+   "date": "2026-11-14T16:20:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050872968/les-developpeurs-de-palword-auront-droit-a-un-conge-pour-jouer-a-gta-6-3577bff5__930_300__0-91-1920-711.png",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Rob Run : le jeu gratuit qui s'inspire de GTA 6 et qui cartonne sur Steam vaut-il le coup d'oeil ?",
+   "lien": "https://www.jeuxvideo.com/news/2114298/rob-run-le-jeu-gratuit-qui-s-inspire-de-gta-6-et-qui-cartonne-sur-steam-vaut-il-le-coup-d-oeil.htm",
+   "date": "2026-11-14T16:15:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179458/1794579671-7345-card.jpeg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Le remake de Zelda Ocarina of Time vous spoile toute l'aventure au bout d'une heure de jeu",
+   "lien": "https://www.jeuxvideo.com/news/2113981/le-remake-de-zelda-ocarina-of-time-vous-spoile-toute-l-aventure-au-bout-d-une-heure-de-jeu.htm",
+   "date": "2026-11-14T15:00:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179449/1794494811-96-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Excursion du Fossoyeur Zelda Ocarina of Time : Où trouver ce quart de coeur du cimetière ?",
+   "lien": "https://www.jeuxvideo.com/news/2114450/excursion-du-fossoyeur-zelda-ocarina-of-time-ou-trouver-ce-quart-de-coeur-du-cimetiere.htm",
+   "date": "2026-11-14T14:52:10+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179467/1794667102-9890-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Ratchet & Clank 1 s'offre un portage génial sur PC : c'est la meilleure chose qui pouvait arriver à ce monument de la PS2",
+   "lien": "https://www.gamekult.com/actualite/ratchet-clank-1-s-offre-un-portage-genial-sur-pc-c-est-la-meilleure-chose-qui-pouvait-arriver-a-ce-monument-de-la-ps2-3050872910.html",
+   "date": "2026-11-14T14:31:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050872910/ratchet-clank-1-s-offre-un-portage-genial-sur-pc-c-est-la-meilleure-chose-qui-pouvait-arriver-a-ce-monument-de-la-ps2-866056a2__930_300__24-211-1261-611.png",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Chant du Soleil Zekda Ocarina of Time : Comment débloquez cette partition ?",
+   "lien": "https://www.jeuxvideo.com/news/2113736/chant-du-soleil-zekda-ocarina-of-time-comment-debloquez-cette-partition.htm",
+   "date": "2026-11-14T12:40:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179440/1794403078-8355-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Presque 20 ans plus tard, le code source de Half-Life 2 : Episode 3 vient de fuiter",
+   "lien": "https://www.gamekult.com/actualite/presque-20-ans-plus-tard-le-code-source-de-half-life-2-episode-3-vient-de-fuiter-3050872909.html",
+   "date": "2026-11-14T12:21:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050872909/presque-20-ans-plus-tard-le-code-source-de-half-life-2-episode-3-vient-de-fuiter-8a79dda4__930_300__0-9-739-247.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Le prochain processeur AMD va révolutionner le jeu vidéo, mais à quel prix ?",
+   "lien": "https://www.jeuxvideo.com/news/2113946/le-prochain-processeur-amd-va-revolutionner-le-jeu-video-mais-a-quel-prix.htm",
+   "date": "2026-11-14T11:50:06+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179448/1794481665-7889-card.png",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Attack on Titan 3 : notre avis après 4 heures de jeu, le meilleur épisode de la saga ?",
+   "lien": "https://www.jeuxvideo.com/news/2114436/attack-on-titan-3-notre-avis-apres-4-heures-de-jeu-le-meilleur-episode-de-la-saga.htm",
+   "date": "2026-11-14T10:45:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179463/1794630438-9686-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  }
+ ],
+ "videos": [],
+ "sites": [
+  {
+   "nom": "Le hub",
+   "url": "https://lulu78440.github.io/hub/",
+   "ok": true,
+   "code": 200,
+   "ms": 141,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "YouTube",
+   "url": "https://www.youtube.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 163,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "GitHub",
+   "url": "https://github.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 121,
+   "depuis": "2026-11-08T12:05:03.942979+00:00"
+  }
+ ],
+ "erreurs": []
+}
