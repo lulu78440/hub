@@ -1,0 +1,465 @@
+{
+ "genere": "2026-11-21T18:26:37.027289+00:00",
+ "actus": [
+  {
+   "titre": "NPU des PC portables : à quoi sert vraiment cette puce IA avec ses TOPS, et comment s’en servir ?",
+   "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/3333831_npu-des-pc-portables-a-quoi-sert-vraiment-cette-puce-ia-avec-ses-tops-et-comment-sen-servir",
+   "date": "2026-11-21T18:14:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Meilleurs TV 55 pouces (140 cm) : quel modèle choisir en 2026 ? (OLED, QLED, Mini-LED)",
+   "lien": "https://www.frandroid.com/guide-dachat/guides-dachat-tv/634882_quelles-sont-les-meilleures-tv-4k-hdr-de-55-pouces-en-2019",
+   "date": "2026-11-21T18:12:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "James Bond : on a classé les films de Daniel Craig du pire au meilleur pour célébrer Robert Pattinson",
+   "lien": "https://www.numerama.com/pop-culture/2379985-james-bond-on-a-classe-les-films-de-daniel-craig-du-pire-au-meilleur-film-pour-feter-robert-pattinson.html",
+   "date": "2026-11-21T18:10:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Deux Tesla en FSD bloquées, les mauvais élèves du contrôle technique allemand et les freins à l’achat : le récap Vroom de la semaine",
+   "lien": "https://www.numerama.com/vroom/2380109-deux-tesla-en-fsd-bloquees-les-mauvais-eleves-du-controle-technique-allemand-et-les-freins-a-lachat-le-recap-vroom-de-la-semaine.html",
+   "date": "2026-11-21T17:20:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Test du Dell 14S (2026) : une grande autonomie justifie difficilement son prix",
+   "lien": "https://www.frandroid.com/marques/dell/3291249_test-du-dell-14s-2026-une-grande-autonomie-justifie-difficilement-son-prix",
+   "date": "2026-11-21T17:04:29+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "J'ai testé l'API d'ibou",
+   "lien": "https://korben.info/ibou-api-recherche-tuto.html?utm_source=rss&utm_medium=feed&utm_campaign=flux-principal",
+   "date": "2026-11-21T16:52:08+00:00",
+   "image": "https://korben.info/ibou-api-recherche-tuto/ibou-api-recherche-tuto-1.png",
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "korben.info"
+  },
+  {
+   "titre": "Pour le Black Friday, Amazon brade déjà le nouveau smartphone le moins cher de Nothing",
+   "lien": "https://www.frandroid.com/bons-plans/3330755_pour-le-black-friday-amazon-brade-deja-le-nouveau-smartphone-le-moins-cher-de-nothing",
+   "date": "2026-11-21T16:19:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Robots tueurs autonomes : ce que les armées délèguent vraiment aux machines",
+   "lien": "https://www.numerama.com/tech/2379739-robots-tueurs-autonomes-ou-en-sommes-nous-vraiment.html",
+   "date": "2026-11-21T16:01:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "J’ai testé le Hisense PX4-Pro : un ultra courte focale triple laser avec un haut contraste et taillé pour le jeu",
+   "lien": "https://www.frandroid.com/marques/hisense/3320941_jai-teste-le-hisense-px4-pro-un-ultra-courte-focale-triple-laser-avec-un-haut-contraste-et-taille-pour-le-jeu",
+   "date": "2026-11-21T14:57:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Le dernier Sony Xperia 10 VIII retrouve un prix plus acceptable grâce au Black Friday sur Amazon",
+   "lien": "https://www.frandroid.com/bons-plans/3329875_le-dernier-sony-xperia-10-viii-retrouve-un-prix-plus-acceptable-grace-au-black-friday-sur-amazon",
+   "date": "2026-11-21T14:40:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Faut-il mettre fin à Dragon Quest sans Akira Toriyama ?",
+   "lien": "https://www.numerama.com/pop-culture/2377107-faut-il-mettre-fin-a-dragon-quest-sans-akira-toriyama.html",
+   "date": "2026-11-21T14:31:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Steam Machine, déjà la fin ? Valve ne garantit plus ni le stock ni le prix de sa console",
+   "lien": "https://www.frandroid.com/marques/valve/3333833_steam-machine-deja-la-fin-valve-ne-garantit-plus-ni-le-stock-ni-le-prix-de-sa-console",
+   "date": "2026-11-21T14:00:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Les Etats-Unis déclassifient de nouveaux documents concernant des ovnis et des phénomènes \"anormaux\"",
+   "lien": "https://www.franceinfo.fr/monde/usa/les-etats-unis-declassifient-de-nouveaux-documents-concernant-des-ovnis-et-des-phenomenes-anormaux_8293832.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T18:12:20+00:00",
+   "image": "https://www.franceinfo.fr/pictures/Vg4qBO6c11482YrFSBER6FkhKA8/0x264:5075x3119/432x243/filters:format(jpg)/2026/11/21/6b01bc97eac4b749572890.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "\"Les explosions ont secoué la mer autour de moi\" : le Britannique Lewis Pugh a nagé dans le détroit d'Ormuz pour alerter sur l'impact environnemental de la guerre",
+   "lien": "https://www.franceinfo.fr/monde/moyen-orient/les-explosions-ont-secoue-la-mer-autour-de-moi-un-britannique-a-traverse-le-detroit-d-ormuz-pour-alerter-sur-l-impact-environnemental-de-la-guerre_8293931.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T18:05:06+00:00",
+   "image": "https://www.franceinfo.fr/pictures/HzbbDCDBy68YDWLkym6BmLuUMss/0x312:6000x3687/432x243/filters:format(jpg)/2026/11/21/6b01dae4bc57c370644355.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Hugues Moutouh, le préfet soupçonné de fuites d’informations confidentielles vers le RN, a demandé à être relevé de ses fonctions",
+   "lien": "https://www.lemonde.fr/societe/article/2026/11/21/hugues-moutouh-le-prefet-soupconne-de-fuites-d-informations-confidentielles-vers-le-rn-a-demande-a-etre-releve-de-ses-fonctions_6814056_3224.html",
+   "date": "2026-11-21T18:01:16+00:00",
+   "image": "https://img.lemde.fr/2026/11/21/163/0/5337/2668/644/322/60/0/2b709bc_upload-1-85xefquk4aqg-000-36jg3al.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "François Ruffin retire sa candidature à l'élection présidentielle et souhaite \"bonne campagne\" aux \"candidats de gauche encore en lice\"",
+   "lien": "https://www.franceinfo.fr/elections/francois-ruffin-retire-sa-candidature-a-l-election-presidentielle-et-souhaite-bonne-campagne-aux-candidats-de-gauche-encore-en-lice_8294003.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T17:56:33+00:00",
+   "image": "https://www.franceinfo.fr/pictures/rlFWwm9N5HKXaILkyaORjG6TnIY/0x53:1024x629/432x243/filters:format(jpg)/2026/11/21/6b01d344c3bf8111581813.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Mobilisation du 21 novembre : 82 500 personnes ont manifesté dans l'Hexagone selon le ministère de l'Intérieur, 150 000 selon la CGT",
+   "lien": "https://www.franceinfo.fr/societe/manifestations/direct-mobilisation-du-21-novembre-syndicats-et-gilets-jaunes-appellent-a-manifester-pour-la-jeunesse-et-contre-la-vie-chere-pour-le-sixieme-samedi-d-affilee_8293460.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T17:50:34+00:00",
+   "image": "https://www.franceinfo.fr/pictures/Dp1DAL_uqlCC9lfdn-PuBJnEFEY/0x53:1024x629/432x243/filters:format(jpg)/2026/11/21/6b01cbc538f07508938814.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Roberto Saviano, auteur de « Gomorra » : « Le suicide de l’ancien chef de la police italienne Gianni De Gennaro est un choc immense »",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/21/roberto-saviano-auteur-de-gomorra-le-suicide-de-l-ancien-chef-de-la-police-italienne-gianni-de-gennaro-est-un-choc-immense_6814054_3210.html",
+   "date": "2026-11-21T17:44:51+00:00",
+   "image": "https://img.lemde.fr/2023/07/17/257/0/2362/1181/644/322/60/0/dddc675_1689572631218-34a-camille-millerand-img-0745.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Grosse inquiétude pour Désiré Doué, blessé au genou droit avec le PSG et sorti sur civière face à Nice en Ligue 1",
+   "lien": "https://www.franceinfo.fr/sports/foot/ligue-1/grosse-inquietude-pour-desire-doue-blesse-au-genou-droit-avec-le-psg-et-sorti-sur-civiere-face-a-nice-en-ligue-1_8294027.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T17:42:55+00:00",
+   "image": "https://www.franceinfo.fr/pictures/wxtV6Kbz9BlQMowb_HiBmTy7Agc/0x287:3125x2045/432x243/filters:format(jpg)/2026/11/21/6b01d6e53fb13825321429.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Écosse : un Français qui voulait s'assoir sur une relique royale ancestrale exposée à Perth plaide coupable pour des faits de dégradation volontaire",
+   "lien": "https://www.franceinfo.fr/culture/patrimoine/ecosse-un-francais-qui-voulait-s-assoir-sur-une-relique-royale-ancestrale-exposee-a-perth-plaide-coupable-pour-des-faits-de-degradation-volontaire_8293961.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T17:18:07+00:00",
+   "image": "https://www.franceinfo.fr/pictures/tmfTltjOfeVnC295LsUJ7BxCjHQ/0x190:1024x766/432x243/filters:format(jpg)/2026/11/21/6b01d06ff0196762575549.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Présidentielle 2027 : François Ruffin renonce à sa candidature « face au risque » de l’arrivée de l’extrême droite au pouvoir",
+   "lien": "https://www.lemonde.fr/politique/article/2026/11/21/presidentielle-2027-francois-ruffin-renonce-a-sa-candidature-face-au-risque-de-l-arrivee-de-l-extreme-droite-au-pouvoir_6814051_823448.html",
+   "date": "2026-11-21T17:13:30+00:00",
+   "image": "https://img.lemde.fr/2026/11/21/56/0/4612/2306/644/322/60/0/50d4b32_upload-1-grha8zqpj7hb-000-c7zy796.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Faire l’amour en se faisant la guerre : comment les adeptes du « hate sex » lient colère et coït",
+   "lien": "https://www.lemonde.fr/intimites/article/2026/11/21/faire-l-amour-en-se-faisant-la-guerre-comment-les-adeptes-du-hate-sex-lient-colere-et-coit_6814049_6190330.html",
+   "date": "2026-11-21T17:00:13+00:00",
+   "image": "https://img.lemde.fr/2026/11/20/250/0/3000/1500/644/322/60/0/0aeea5b_upload-1-lraxnvn9l1f5-emotions-colere-sexe.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Mobilité des jeunes, commerce, quotas d'émissions carbone… Ce que prévoient les accords conclus entre le Royaume-Uni et l'Union européenne",
+   "lien": "https://www.franceinfo.fr/monde/royaume-uni/mobilite-des-jeunes-commerce-quotas-d-emissions-carbone-ce-que-prevoient-les-accords-conclus-entre-le-royaume-uni-et-l-union-europeenne_8293715.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T16:48:41+00:00",
+   "image": "https://www.franceinfo.fr/pictures/gE-b6gJBQe3z68U4B3NrH3K6pOQ/0x53:1024x629/432x243/filters:format(jpg)/2026/11/21/6b01af35df473235762087.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Paolo Bulgari, le petit-fils du fondateur de la fameuse marque de joaillerie, est mort à l'âge de 89 ans",
+   "lien": "https://www.franceinfo.fr/culture/mode/paolo-bulgari-le-petit-fils-du-fondateur-de-la-fameuse-marque-de-joaillerie-est-mort-a-l-age-de-89-ans_8293886.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-21T16:15:55+00:00",
+   "image": "https://www.franceinfo.fr/pictures/g_yvWcyBYlRFnlVlIPmnHru_o6c/0x166:3867x2341/432x243/filters:format(jpg)/2026/11/21/6b01bfdb3f2a5729198682.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Avec le lyrique « L’Enclos des esclaves », la romancière Najwa Bin Shatwan ravive Benghazi, en Libye, au tournant du XXᵉ siècle",
+   "lien": "https://www.lemonde.fr/livres/article/2026/11/21/avec-le-lyrique-l-enclos-des-esclaves-la-romanciere-najwa-bin-shatwan-ravive-benghazi-en-libye-au-tournant-du-xx-siecle_6814055_3260.html",
+   "date": "2026-11-21T18:00:06+00:00",
+   "image": "https://asset.lemde.fr/medias/img/social-network/default.png",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Roberto Saviano, auteur de « Gomorra » : « Le suicide de l’ancien chef de la police italienne Gianni De Gennaro est un choc immense »",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/21/roberto-saviano-auteur-de-gomorra-le-suicide-de-l-ancien-chef-de-la-police-italienne-gianni-de-gennaro-est-un-choc-immense_6814054_3210.html",
+   "date": "2026-11-21T17:44:51+00:00",
+   "image": "https://img.lemde.fr/2023/07/17/257/0/2362/1181/644/322/60/0/dddc675_1689572631218-34a-camille-millerand-img-0745.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Présidentielle : prenant \"acte de l’impasse\" de sa campagne, François Ruffin retire sa candidature",
+   "lien": "https://www.france24.com/fr/france/20261121-pr%C3%A9sidentielle-prenant-acte-de-l-impasse-de-sa-campagne-fran%C3%A7ois-ruffin-retire-sa-candidature",
+   "date": "2026-11-21T17:37:20+00:00",
+   "image": "https://s.france24.com/media/display/049bdf84-e5d2-11f1-b9d8-6b451f569414/w:1024/p:16x9/000-D6J962D.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "🔴 En direct : 82 500 personnes ont manifesté en France selon Beauvau, 150 000 d'après la CGT",
+   "lien": "https://www.france24.com/fr/france/20261121-en-direct-acte-vi-de-la-mobilisation-pour-la-jeunesse-et-contre-la-vie-ch%C3%A8re",
+   "date": "2026-11-21T17:07:06+00:00",
+   "image": null,
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Guerre en Ukraine : deux personnes tuées à Kryvyï Rih",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-guerre-en-ukraine-deux-personnes-tu%C3%A9es-%C3%A0-kryvy%C3%AF-rih",
+   "date": "2026-11-21T17:04:30+00:00",
+   "image": "https://s.france24.com/media/display/28289a0c-e5cb-11f1-abf1-13439ca2fe89/w:1024/p:16x9/FR-20261121-170806-170952-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "COP31 à Antalya : bras de fer autour des énergies fossiles et des financements",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-cop31-%C3%A0-antalya-bras-de-fer-autour-des-%C3%A9nergies-fossiles-et-des-financements",
+   "date": "2026-11-21T17:02:33+00:00",
+   "image": "https://s.france24.com/media/display/e041fc42-e5ca-11f1-94e8-13439ca2fe89/w:1024/p:16x9/FR-20261121-170440-170741-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Dakar : la Biennale des arts contemporains ouvre ses portes",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-dakar-la-biennale-des-arts-contemporains-ouvre-ses-portes",
+   "date": "2026-11-21T16:51:24+00:00",
+   "image": "https://s.france24.com/media/display/78b25862-e5b9-11f1-94e7-e56ab3dc0809/w:1024/p:16x9/FR-20261120-215342-215706-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "RD Congo : les combats se poursuivent dans le Sud-Kivu",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-rd-congo-les-combats-se-poursuivent-dans-le-sud-kivu",
+   "date": "2026-11-21T16:50:27+00:00",
+   "image": "https://s.france24.com/media/display/e88592a4-e5b8-11f1-b480-e56ab3dc0809/w:1024/p:16x9/FR-20261120-214625-214807-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Guinée - Burkina Faso : pourquoi les tensions montent",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-guin%C3%A9e-burkina-faso-pourquoi-les-tensions-montent",
+   "date": "2026-11-21T16:48:27+00:00",
+   "image": "https://s.france24.com/media/display/a2d36d12-e5b8-11f1-a29c-e56ab3dc0809/w:1024/p:16x9/FR-20261120-214458-214623-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Manifestation à Paris : le cortège est arrivé à Nation \"sans débordement\"",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-manifestation-%C3%A0-paris-le-cort%C3%A8ge-est-arriv%C3%A9-%C3%A0-nation-sans-d%C3%A9bordement",
+   "date": "2026-11-21T16:46:55+00:00",
+   "image": "https://s.france24.com/media/display/6fd53aa6-e5c9-11f1-b981-13439ca2fe89/w:1024/p:16x9/FR-20261121-170115-170440-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Climat : les négociations s'enlisent à la COP31, sans compromis en vue",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-climat-les-n%C3%A9gociations-s-enlisent-%C3%A0-la-cop31-sans-compromis-en-vue",
+   "date": "2026-11-21T16:36:13+00:00",
+   "image": "https://s.france24.com/media/display/f2067f90-e5c8-11f1-8fd4-1bac47ab2f5d/w:1024/p:16x9/FR-20261121-160319-160918-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Manifestation à Paris : un cortège \"finalement assez fourni\"",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261121-manifestation-%C3%A0-paris-un-cort%C3%A8ge-finalement-assez-fourni",
+   "date": "2026-11-21T16:33:53+00:00",
+   "image": "https://s.france24.com/media/display/f300728a-e5c7-11f1-b330-e56ab3dc0809/w:1024/p:16x9/FR-20261121-160104-160319-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Growler de Vanessa GTA VI : Où trouver cette excellente voiture au chapitre 3 ?",
+   "lien": "https://www.jeuxvideo.com/news/2116156/growler-de-vanessa-gta-vi-ou-trouver-cette-excellente-voiture-au-chapitre-3.htm",
+   "date": "2026-11-21T16:50:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179528/1795279655-8484-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Sega Rally 2 : un circuit caché découvert presque trente ans plus tard, et il est jouable",
+   "lien": "https://www.gamekult.com/actualite/sega-rally-2-un-circuit-cache-decouvert-presque-trente-ans-plus-tard-et-il-est-jouable-3050873054.html",
+   "date": "2026-11-21T16:35:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873054/sega-rally-2-un-circuit-cache-decouvert-presque-trente-ans-plus-tard-et-il-est-jouable-bf8c4f6d__930_300__0-244-1321-669.png",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "8 ans après sa sortie, le meilleur jeu Dragon Ball Z de tous les temps va être amélioré : pourquoi refuse-t-il de mourir ?",
+   "lien": "https://www.jeuxvideo.com/news/2115092/8-ans-apres-sa-sortie-le-meilleur-jeu-dragon-ball-z-de-tous-les-temps-va-etre-ameliore-pourquoi-refuse-t-il-de-mourir.htm",
+   "date": "2026-11-21T16:15:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179493/1794928008-219-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "J'ai résisté à World of Warcraft pendant 22 ans, mais j'ai craqué pour Forever : mon avis de noob",
+   "lien": "https://www.jeuxvideo.com/news/2115989/j-ai-resiste-a-world-of-warcraft-pendant-22-ans-mais-j-ai-craque-pour-forever-mon-avis-de-noob.htm",
+   "date": "2026-11-21T16:00:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179519/1795190429-5176-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "GTA 6 : Comment réussir un braquage de banque ?",
+   "lien": "https://www.jeuxvideo.com/news/2116146/gta-6-comment-reussir-un-braquage-de-banque.htm",
+   "date": "2026-11-21T15:51:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179528/1795276204-4552-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "J'ai passé 3 jours sur GTA 6 et je n'ai toujours rien fait. Comme dans la vraie vie, le jeu me fait procrastiner",
+   "lien": "https://www.jeuxvideo.com/news/2115984/j-ai-passe-3-jours-sur-gta-6-et-je-n-ai-toujours-rien-fait-comme-dans-la-vraie-vie-le-jeu-me-fait-procrastiner.htm",
+   "date": "2026-11-21T15:40:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179519/1795187604-9940-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Le boss le plus macabre de Zelda Ocarina of Time a une tragique histoire cachée",
+   "lien": "https://www.jeuxvideo.com/news/2115164/le-boss-le-plus-macabre-de-zelda-ocarina-of-time-a-une-tragique-histoire-cachee.htm",
+   "date": "2026-11-21T15:00:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179517/1795166256-9837-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Fallout 1 s'offre un remaster HD fait par un fan",
+   "lien": "https://www.gamekult.com/actualite/fallout-1-s-offre-un-remaster-hd-fait-par-un-fan-3050873041.html",
+   "date": "2026-11-21T14:45:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873041/fallout-1-s-offre-un-remaster-hd-fait-par-un-fan-2c1c9084__930_300__0-132-1159-506.png",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Kyle GTA 6 : Comment finir la mission secondaire secrète de Hulk au chapitre 2 ?",
+   "lien": "https://www.jeuxvideo.com/news/2116138/kyle-gta-6-comment-finir-la-mission-secondaire-secrete-de-hulk-au-chapitre-2.htm",
+   "date": "2026-11-21T14:01:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179527/1795268737-1309-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "GTA 6 : Comment activer la conduite automatique ?",
+   "lien": "https://www.jeuxvideo.com/news/2116133/gta-6-comment-activer-la-conduite-automatique.htm",
+   "date": "2026-11-21T13:10:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179526/1795264958-249-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "GTA 6 : comment échapper à la police avec Lucia dans le prologue ?",
+   "lien": "https://www.jeuxvideo.com/news/2116114/gta-6-comment-echapper-a-la-police-avec-lucia-dans-le-prologue.htm",
+   "date": "2026-11-21T12:40:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179525/1795253422-5931-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Quand Les Chroniques de Riddick était annulé et que les développeurs eux-mêmes n'étaient pas au courant",
+   "lien": "https://www.gamekult.com/actualite/quand-les-chroniques-de-riddick-etait-annule-et-que-les-developpeurs-eux-memes-n-etaient-pas-au-courant-3050873040.html",
+   "date": "2026-11-21T12:21:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873040/quand-chronicles-of-riddick-etait-annule-et-que-les-developpeurs-eux-memes-n-etaient-pas-au-courant-0d4e1cf5__930_300__0-148-1012-474.png",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  }
+ ],
+ "videos": [],
+ "sites": [
+  {
+   "nom": "Le hub",
+   "url": "https://lulu78440.github.io/hub/",
+   "ok": true,
+   "code": 200,
+   "ms": 517,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "YouTube",
+   "url": "https://www.youtube.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 172,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "GitHub",
+   "url": "https://github.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 204,
+   "depuis": "2026-11-08T12:05:03.942979+00:00"
+  }
+ ],
+ "erreurs": []
+}
