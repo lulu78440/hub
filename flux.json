@@ -1,0 +1,465 @@
+{
+ "genere": "2026-11-28T12:54:10.252207+00:00",
+ "actus": [
+  {
+   "titre": "Philips 55MLED920 : cette TV QD MiniLED 4K à 120 Hz passe à 609 € pour le Black Friday",
+   "lien": "https://www.frandroid.com/bons-plans/3344473_philips-55mled920-cette-tv-qd-miniled-4k-a-120-hz-passe-a-609-e-pour-le-black-friday",
+   "date": "2026-11-28T12:15:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "On a (enfin) fini GTA 6 et, oui, il est extraordinaire",
+   "lien": "https://www.numerama.com/pop-culture/2386719-on-a-enfin-fini-gta-6-et-oui-il-est-extraordinaire.html",
+   "date": "2026-11-28T12:01:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "numerama.com"
+  },
+  {
+   "titre": "Le Google Pixel 11 brille pendant ce Black Friday avec un prix en chute libre pour la version 512 Go",
+   "lien": "https://www.frandroid.com/bons-plans/3339651_le-google-pixel-11-brille-pendant-ce-black-friday-avec-un-prix-en-chute-libre-pour-la-version-512-go",
+   "date": "2026-11-28T11:28:03+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "C’est parti pour le week-end du Black Friday : voici le TOP 100 des meilleures offres Tech",
+   "lien": "https://www.frandroid.com/bons-plans/3344493_cest-parti-pour-le-week-end-du-black-friday-les-meilleures-offres-tech-en-direct-sont-ici",
+   "date": "2026-11-28T11:24:41+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Black Friday chauffage : il fait frisquet ce samedi, voici donc quelques offres sur les radiateurs et plaids chauffants",
+   "lien": "https://www.frandroid.com/bons-plans/3340623_black-friday-chauffage-il-fait-frisquet-ce-samedi-voici-donc-quelques-offres-sur-les-radiateurs-et-plaids-chauffants",
+   "date": "2026-11-28T11:19:35+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Black Friday éclairage connecté : 5 offres Philips Hue, Tapo et Nanoleaf qui prennent toute la lumière",
+   "lien": "https://www.frandroid.com/bons-plans/3341339_black-friday-eclairage-connecte-5-offres-philips-hue-tapo-et-nanoleaf-qui-prennent-toute-la-lumiere",
+   "date": "2026-11-28T11:03:55+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "J’ai testé le JMGO Iris Ultra Max : enfin un vidéoprojecteur 4K 120 Hz capable de rivaliser avec un TV gaming",
+   "lien": "https://www.frandroid.com/marques/jmgo/3308171_jai-teste-le-jmgo-iris-ultra-max-enfin-un-videoprojecteur-4k-120-hz-capable-de-rivaliser-avec-un-tv-gaming",
+   "date": "2026-11-28T11:00:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Le Black Friday Jeux vidéo et console : le gaming à l’honneur cette année avec des consoles déjà en rupture de stock",
+   "lien": "https://www.frandroid.com/bons-plans/3307371_https-www-frandroid-com-bons-plans-3307371_le-black-friday-vide-les-rayons-jeux-video-et-gaming-voici-les-meilleures-affaires-du-jour-avant-dautres-ruptures-de-stock",
+   "date": "2026-11-28T10:41:39+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Auchan termine son Black Friday avec quatre TV TCL de 349 à 799 € qui misent sur la qualité d’image [Sponso]",
+   "lien": "https://www.frandroid.com/produits-android/tv-connectee-produits/3329341_auchan-termine-son-black-friday-avec-quatre-tv-tcl-de-349-a-799-e-qui-misent-sur-la-qualite-dimage",
+   "date": "2026-11-28T10:30:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Black Friday PcComponentes : les 10 offres au meilleur prix du moment (TV, écrans, PS5…).",
+   "lien": "https://www.frandroid.com/bons-plans/3344409_black-friday-pccomponentes-les-10-offres-au-meilleur-prix-du-moment-tv-ecrans-ps5",
+   "date": "2026-11-28T10:20:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "Z Fold 8, Galaxy Watch ou TV OLED : voici les 10 offres Samsung pour le week-end du Black Friday",
+   "lien": "https://www.frandroid.com/bons-plans/3341483_z-fold-8-galaxy-watch-ou-tv-oled-voici-les-10-offres-samsung-pour-le-week-end-du-black-friday",
+   "date": "2026-11-28T10:09:42+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "19 € par mois pour une Fiat Topolino : moins cher qu’un vélo, mais il va falloir faire vite",
+   "lien": "https://www.frandroid.com/marques/fiat/3344261_19-e-par-mois-pour-une-fiat-topolino-moins-cher-quun-velo-mais-il-va-falloir-faire-vite",
+   "date": "2026-11-28T10:03:00+00:00",
+   "image": null,
+   "cat": "TECH & IA",
+   "couleur": "var(--cyan)",
+   "source": "frandroid.com"
+  },
+  {
+   "titre": "\"Un mois de novembre plutôt remarquable\" : le froid arrive en avance sur l'Hexagone",
+   "lien": "https://www.franceinfo.fr/replay-jt/france-2/13-heures/un-mois-de-novembre-plutot-remarquable-le-froid-arrive-en-avance-sur-l-hexagone_8304639.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T12:34:05+00:00",
+   "image": "https://www.franceinfo.fr/pictures/FhvHyvRZkgEBnvWTuzy26jstEME/0x0:1920x1080/432x243/filters:format(jpg)/2026/11/28/6b0ac8c993d74716128719.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Présidentielle 2027 : Teddy Riner, un candidat hors système en quête de crédibilité",
+   "lien": "https://www.lemonde.fr/politique/article/2026/11/28/presidentielle-2027-teddy-riner-un-candidat-hors-systeme-en-quete-de-credibilite_6816104_823448.html",
+   "date": "2026-11-28T12:30:16+00:00",
+   "image": "https://img.lemde.fr/2026/11/27/467/0/3733/1866/644/322/60/0/9f8d9fc_upload-1-vvod0c2tx5xn-lewisjoly-lemonde-riner-27-11-039.JPG",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "\"On est cinq personnages à être rajeunis\" : Audrey Fleurot justifie le recours à l'IA dans la série \"La Comtesse de Monte-Cristo\"",
+   "lien": "https://www.franceinfo.fr/culture/series/on-est-cinq-personnages-a-etre-rajeunis-audrey-fleurot-justifie-le-recours-a-l-ia-dans-la-serie-la-comtesse-de-monte-cristo_8304525.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T12:28:17+00:00",
+   "image": "https://www.franceinfo.fr/pictures/Zyvzfbpv_F-TcMqShkxoyq9ho9A/604x115:6960x3689/432x243/filters:format(jpg)/2026/11/28/6b0ac4e87cfe2271662228.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Le numéro 2 de la Banque centrale européenne écarte un scénario à la grecque pour la dette française",
+   "lien": "https://www.franceinfo.fr/economie/crise/le-numero-2-de-la-banque-centrale-europeenne-ecarte-un-scenario-a-la-grecque-pour-la-dette-francaise_8304585.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T12:02:26+00:00",
+   "image": "https://www.franceinfo.fr/pictures/ni_lfN9CT9W5icT0I-piTJnO7Yg/0x0:4989x2806/432x243/filters:format(jpg)/2026/11/28/6b0ac0d2adc33023116121.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "A un banquet du Canon français à Biarritz, des manifestants bloquent les participants, qu’ils accusent de véhiculer des idées d’extrême droite",
+   "lien": "https://www.lemonde.fr/societe/article/2026/11/28/a-un-banquet-du-canon-francais-a-biarritz-des-manifestants-bloquent-les-participants-qu-ils-accusent-de-vehiculer-des-idees-d-extreme-droite_6816103_3224.html",
+   "date": "2026-11-28T12:00:17+00:00",
+   "image": "https://img.lemde.fr/2026/11/28/688/0/8256/4128/644/322/60/0/a6c9bbf_ftp-1-jljyi22hgabt-afp-d8vz8t8.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Des centaines de personnes rassemblées à Biarritz contre la tenue d'un banquet du très controversé \"Canon français\"",
+   "lien": "https://www.franceinfo.fr/societe/racisme/des-centaines-de-personnes-rassemblees-a-biarritz-contre-la-tenue-d-un-banquet-du-tres-controverse-canon-francais_8304570.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T11:49:14+00:00",
+   "image": "https://www.franceinfo.fr/pictures/ytny_1hFZL8fCKcZJ4AEC91kkr8/0x151:4712x2801/432x243/filters:format(jpg)/2026/11/28/6b0abe7be828b484753588.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Manifestations : nouvelle journée de mobilisation samedi, notamment contre les violences faites aux femmes",
+   "lien": "https://www.franceinfo.fr/societe/manifestations/direct-manifestations-nouvelle-journee-de-mobilisation-samedi-notamment-contre-les-violences-faites-aux-femmes_8304345.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T11:03:47+00:00",
+   "image": "https://www.franceinfo.fr/pictures/Nmlkcs2Q0yRGCMHnX3i0iuRkIrc/0x395:5000x3207/432x243/filters:format(jpg)/2026/11/28/6b0a897fa8389835483792.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "A Berlin, Jean-Luc Mélenchon défend sa vision de la relation franco-allemande et répond aux accusations de germanophobie",
+   "lien": "https://www.franceinfo.fr/politique/melenchon/a-berlin-jean-luc-melenchon-defend-sa-vision-de-la-relation-franco-allemande-et-repond-aux-accusations-de-germanophobie_8304450.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T10:59:01+00:00",
+   "image": "https://www.franceinfo.fr/pictures/mPyAvx_5hhhccNWM6Irdy3q51GM/0x62:1200x737/432x243/filters:format(jpg)/2026/11/28/6b0aa5c82624d564396178.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Deux syndicats d'Aéroports de Paris appellent à la grève le premier week-end des vacances de Noël",
+   "lien": "https://www.franceinfo.fr/economie/greve/deux-syndicats-d-aeroports-de-paris-appellent-a-la-greve-le-premier-week-end-des-vacances-de-noel_8304435.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T10:48:42+00:00",
+   "image": "https://www.franceinfo.fr/pictures/VRx76ZTNzdzQSWllkBikWrICVHs/0x382:3672x2448/432x243/filters:format(jpg)/2026/11/28/6b0aa31fb0b3f756878632.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Des criminels recherchés par Interpol auraient fait suspendre leur notice rouge contre des millions de dollars",
+   "lien": "https://www.franceinfo.fr/replay-magazine/france-2/complement-d-enquete/video-des-criminels-recherches-par-interpol-auraient-fait-suspendre-leur-notice-rouge-contre-des-millions-de-dollars_8299014.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T10:06:13+00:00",
+   "image": "https://www.franceinfo.fr/pictures/NIRXD-tV1kUtp9ppndg_VbH4aJE/0x0:1920x1080/432x243/filters:format(jpg)/2026/11/27/6b09aa7f453c4583474186.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "\"Le petit Grégory américain\" : on vous raconte l'histoire du meurtre non élucidé de JonBenét Ramsey, 6 ans, au cœur d'une nouvelle série Netflix",
+   "lien": "https://www.franceinfo.fr/culture/series/netflix/le-petit-gregory-americain-on-vous-raconte-l-histoire-du-meurtre-non-elucide-de-jonbenet-ramsey-6-ans-au-c-ur-d-une-nouvelle-serie-netflix_8301855.html#xtor=RSS-3-[lestitres]",
+   "date": "2026-11-28T09:57:14+00:00",
+   "image": "https://www.franceinfo.fr/pictures/QXGo6pftJwUVPQNn9jQrWgqQBxo/0x0:1920x1080/432x243/filters:format(jpg)/2026/11/27/6b09b46f26aa0233113315.png",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "francetvinfo.fr"
+  },
+  {
+   "titre": "Les militants des quartiers populaires veulent compter dans le jeu politique face à LFI et préparer « l’après-Mélenchon »",
+   "lien": "https://www.lemonde.fr/politique/article/2026/11/28/les-militants-des-quartiers-populaires-veulent-compter-dans-le-jeu-politique-face-a-lfi-et-preparer-l-apres-melenchon_6816089_823448.html",
+   "date": "2026-11-28T09:00:02+00:00",
+   "image": "https://img.lemde.fr/2026/11/27/120/0/4256/2128/644/322/60/0/1ba6d3d_upload-1-ijqjxmlmll2g-afp-20200614-hl-kpierre-1158547-v1-highres-franceprotestagainstpolicebrutalityj.jpg",
+   "cat": "FRANCE",
+   "couleur": "var(--violet)",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Ligue 1 : Brest bat le Paris FC et grimpe sur le podium",
+   "lien": "https://www.france24.com/fr/%C3%A9missions/sports/20261128-ligue-1-brest-bat-le-paris-fc-et-grimpe-sur-le-podium",
+   "date": "2026-11-28T12:30:24+00:00",
+   "image": "https://s.france24.com/media/display/b04cfbbc-eada-11f1-a101-174dac1c1bf0/w:1024/p:16x9/J24-BREST-1.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Gaza : deux employés de MSF tués par une frappe israélienne",
+   "lien": "https://www.france24.com/fr/moyen-orient/20261128-gaza-deux-employ%C3%A9s-de-msf-tu%C3%A9s-par-une-frappe-isra%C3%A9lienne",
+   "date": "2026-11-28T12:23:56+00:00",
+   "image": "https://s.france24.com/media/display/9e685032-ff8e-11f0-892f-005056a90284/w:1024/p:16x9/000-92C28KB.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "L’horlogerie suisse rattrapée par les faiblesses de sa stratégie de montée en gamme",
+   "lien": "https://www.lemonde.fr/economie/article/2026/11/28/l-horlogerie-suisse-rattrapee-par-les-faiblesses-de-sa-strategie-de-montee-en-gamme_6816102_3234.html",
+   "date": "2026-11-28T12:00:03+00:00",
+   "image": "https://img.lemde.fr/2026/11/27/394/0/5000/2500/644/322/60/0/7ff4ff9_upload-1-q1kehygf0c57-afp-20260415-a7uk7t3-v1-highres-switzerlandluxurywatches.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "En Espagne, 14 migrants retrouvés morts au large des Canaries",
+   "lien": "https://www.lemonde.fr/international/article/2026/11/28/en-espagne-14-migrants-retrouves-morts-au-large-des-canaries_6816100_3210.html",
+   "date": "2026-11-28T11:21:30+00:00",
+   "image": "https://img.lemde.fr/2026/11/27/500/0/6000/3000/644/322/60/0/1e8ae47_ftp-1-9w95doxajv3h-2026-11-27t203234z-1921779109-rc2iwoajnygp-rtrmadp-3-migration-spain-canary-islands.JPG",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "« Etablir une règle d’or budgétaire n’ôtera pas le besoin de relever l’âge de la retraite ou d’augmenter le temps de travail »",
+   "lien": "https://www.lemonde.fr/idees/article/2026/11/28/etablir-une-regle-d-or-budgetaire-n-otera-pas-le-besoin-de-relever-l-age-de-la-retraite-ou-d-augmenter-le-temps-de-travail_6816099_3232.html",
+   "date": "2026-11-28T11:00:15+00:00",
+   "image": "https://img.lemde.fr/2026/02/25/125/0/1500/750/644/322/60/0/48f8e23_upload-1-cupttdbvkahu-frame-842.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Aux Etats-Unis, une épidémie de rougeole dopée par l’idéologie",
+   "lien": "https://www.lemonde.fr/idees/article/2026/11/28/aux-etats-unis-une-epidemie-de-rougeole-dopee-par-l-ideologie_6816097_3232.html",
+   "date": "2026-11-28T10:30:09+00:00",
+   "image": "https://img.lemde.fr/2026/10/29/603/0/7240/3620/644/322/60/0/53cf342_ftp-1-bkp6xtocuk7b-460dce7481514824824dee069ddba8bc-0-d5eaba7a3423424d97be840a18c8ea09.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "France : nouvelle mobilisation contre les violences faites aux femmes",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261128-france-nouvelle-mobilisation-contre-les-violences-faites-aux-femmes",
+   "date": "2026-11-28T10:15:02+00:00",
+   "image": "https://s.france24.com/media/display/e1fc6db0-eb10-11f1-adf2-81bc2b1dcd65/w:1024/p:16x9/FR-20261128-100728-100843-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Deux employés de MSF tués par une frappe israélienne à Gaza",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261128-deux-employ%C3%A9s-de-msf-tu%C3%A9s-par-une-frappe-isra%C3%A9lienne-%C3%A0-gaza",
+   "date": "2026-11-28T10:05:27+00:00",
+   "image": "https://s.france24.com/media/display/7f878cfe-eb11-11f1-a1c2-81bc2b1dcd65/w:1024/p:16x9/FR-20261128-101131-101326-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Rougeole : l'OMS alerte sur un retour de la maladie",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261128-rougeole-l-oms-alerte-sur-un-retour-de-la-maladie",
+   "date": "2026-11-28T10:04:04+00:00",
+   "image": "https://s.france24.com/media/display/223f1b70-eb11-11f1-8108-81bc2b1dcd65/w:1024/p:16x9/FR-20261128-100939-101131-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Espagne : l'immigration au cœur des élections",
+   "lien": "https://www.france24.com/fr/vid%C3%A9o/20261128-espagne-l-immigration-au-c%C5%93ur-des-%C3%A9lections",
+   "date": "2026-11-28T10:02:09+00:00",
+   "image": "https://s.france24.com/media/display/421d7104-eb10-11f1-b5fc-f9cf020caef6/w:1024/p:16x9/FR-20261128-100433-100636-CS.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "france24.com"
+  },
+  {
+   "titre": "Le lac Trasimène, en Italie, chronique en images d’une disparition annoncée",
+   "lien": "https://www.lemonde.fr/m-le-mag/article/2026/11/28/le-lac-trasimene-en-italie-chronique-en-images-d-une-disparition-annoncee_6816094_4500055.html",
+   "date": "2026-11-28T10:00:08+00:00",
+   "image": "https://img.lemde.fr/2026/11/19/268/0/1500/750/644/322/60/0/6116a82_ftp-1-hieqxsmrydl7-452331-3539592.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "EN DIRECT, guerre en Ukraine : Vladimir Poutine, « grand maître de la politique » ? Les propos de Jared Kushner suscitent des critiques à Kiev et en Europe",
+   "lien": "https://www.lemonde.fr/international/live/2026/11/28/en-direct-guerre-en-ukraine-vladimir-poutine-grand-maitre-de-la-politique-les-propos-de-jared-kushner-suscitent-des-critiques-a-kiev-et-en-europe_6814183_3210.html",
+   "date": "2026-11-28T09:44:39+00:00",
+   "image": "https://img.lemde.fr/2026/11/19/458/0/5500/2750/644/322/60/0/11ab2ca_ftp-1-wnfat1rewklm-37cbd358a4eb4838ade24f539f8b15f8-0-2840e7cb9448416fbe150e17b674dead.jpg",
+   "cat": "MONDE",
+   "couleur": "#ff7a8a",
+   "source": "lemonde.fr"
+  },
+  {
+   "titre": "Il y a les MMO et il y a Jono, un jeu \"massivement solo\" où les joueurs se succèdent pour finir 1 million de niveaux",
+   "lien": "https://www.gamekult.com/actualite/il-y-a-les-mmo-et-il-y-a-jono-un-jeu-massivement-solo-ou-les-joueurs-se-succedent-pour-finir-1-million-de-niveaux-3050873165.html",
+   "date": "2026-11-28T12:10:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873165/il-y-a-les-mmo-et-il-y-a-jono-un-jeu-massivement-solo-ou-les-joueurs-se-succedent-pour-finir-1-million-de-niveaux-279abfae__930_300__0-215-1920-835.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Randy GTA 6 : Liste des véhicules demandés et où les trouver ?",
+   "lien": "https://www.jeuxvideo.com/news/2117518/randy-gta-6-liste-des-vehicules-demandes-et-ou-les-trouver.htm",
+   "date": "2026-11-28T10:20:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179579/1795792488-5666-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Jennifer Hale regrette le BioWare \"indépendant et audacieux qui cartonnait\", mais a un plan pour Mass Effect",
+   "lien": "https://www.gamekult.com/actualite/jennifer-hale-regrette-le-bioware-independant-et-audacieux-qui-cartonnait-mais-a-un-plan-pour-mass-effect-3050873139.html",
+   "date": "2026-11-28T10:10:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873139/jennifer-hale-regrette-le-bioware-independant-et-audacieux-qui-cartonnait-mais-a-un-plan-pour-mass-effect-42541b56__930_300__0-224-1200-612.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "PlayStation ne rigole pas tellement des nudes de GTA 6 (et vous bannit pour ça)",
+   "lien": "https://www.gamekult.com/actualite/playstation-ne-rigole-pas-tellement-des-nudes-de-gta-6-et-vous-bannit-pour-ca-3050873138.html",
+   "date": "2026-11-28T08:16:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873138/playstation-ne-rigole-pas-tellement-des-nudes-de-gta-6-et-vous-bannit-pour-ca-5f3082bb__930_300__0-59-1200-447.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Mémoire cash - 13 Sentinels : Aegis Rim, l'arlésienne qui a épuisé son auteur en valait la peine",
+   "lien": "https://www.gamekult.com/actualite/13-sentinels-aegis-rim-l-arlesienne-qui-a-epuise-son-auteur-en-valait-la-peine-3050867139.html",
+   "date": "2026-11-28T08:00:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050867139/13-sentinels-aegis-rim-c-est-la-pepite-qui-a-failli-signer-sa-propre-apocalypse-9d2d26b8__930_300__0-286-1920-906.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Pourquoi la première PlayStation affichait-elle des textures toutes moches, tremblantes et déformées ?",
+   "lien": "https://www.jeuxvideo.com/news/2114817/pourquoi-la-premiere-playstation-affichait-elle-des-textures-toutes-moches-tremblantes-et-deformees.htm",
+   "date": "2026-11-28T07:40:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179484/1794839863-4529-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Artifact, le seul vrai bide de Valve ?",
+   "lien": "https://www.gamekult.com/actualite/artifact-le-seul-vrai-bide-de-valve-3050873216.html",
+   "date": "2026-11-28T05:01:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873216/artifact-le-seul-vrai-bide-de-valve-722e176e__930_300__0-64-1920-684.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "The Witcher 4 meilleur sur PS5 que sur les autres machines ? Ce que signifie vraiment l'accord de Sony avec CD Projekt",
+   "lien": "https://www.jeuxvideo.com/news/2117300/the-witcher-4-meilleur-sur-ps5-que-sur-les-autres-machines-ce-que-signifie-vraiment-l-accord-de-sony-avec-cd-projekt.htm",
+   "date": "2026-11-27T21:20:09+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179571/1795711519-5045-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Rockstar va ajouter du contenu dans GTA 6 : la map va s'enrichir",
+   "lien": "https://www.jeuxvideo.com/news/2117481/rockstar-va-ajouter-du-contenu-dans-gta-6-la-map-va-s-enrichir.htm",
+   "date": "2026-11-27T20:40:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179579/1795789999-172-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "GTA 6 en multijoueur : des pirates arrivent à faire tourner une version. Rockstar sous pression",
+   "lien": "https://www.jeuxvideo.com/news/2117409/gta-6-en-multijoueur-des-pirates-arrivent-a-faire-tourner-une-version-rockstar-sous-pression.htm",
+   "date": "2026-11-27T19:10:07+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179578/1795775285-6038-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  },
+  {
+   "titre": "Hitman : World of Assassination rencontre 007 : First Light et invite Lenny Kravitz",
+   "lien": "https://www.gamekult.com/actualite/hitman-world-of-assassination-rencontre-007-first-light-et-invite-lenny-kravitz-3050873237.html",
+   "date": "2026-11-27T18:03:00+00:00",
+   "image": "https://cdn.gamekult.com/optim/images/news/30/3050873237/3335e062__930_300__0-144-1920-764.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "gamekult.com"
+  },
+  {
+   "titre": "Certains joueurs jettent Lucia et transforment GTA 6 en simulateur de célibataire geek et détendu...",
+   "lien": "https://www.jeuxvideo.com/news/2117216/certains-joueurs-jettent-lucia-et-transforment-gta-6-en-simulateur-de-celibataire-geek-et-detendu.htm",
+   "date": "2026-11-27T17:45:08+00:00",
+   "image": "https://image.jeuxvideo.com/medias-lg/179571/1795706479-4006-card.jpg",
+   "cat": "JEUX VIDÉO",
+   "couleur": "var(--amber)",
+   "source": "jeuxvideo.com"
+  }
+ ],
+ "videos": [],
+ "sites": [
+  {
+   "nom": "Le hub",
+   "url": "https://lulu78440.github.io/hub/",
+   "ok": true,
+   "code": 200,
+   "ms": 186,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "YouTube",
+   "url": "https://www.youtube.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 170,
+   "depuis": "2026-10-23T23:54:11.495218+00:00"
+  },
+  {
+   "nom": "GitHub",
+   "url": "https://github.com/",
+   "ok": true,
+   "code": 200,
+   "ms": 151,
+   "depuis": "2026-11-08T12:05:03.942979+00:00"
+  }
+ ],
+ "erreurs": []
+}
